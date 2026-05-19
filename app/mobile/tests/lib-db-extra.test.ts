@@ -53,7 +53,10 @@ describe('runMigrations', () => {
     const parsed = JSON.parse(raw!);
     expect(parsed[0].scene_id).toBe('room');
     const meta = await readMeta();
-    expect(meta.schema).toBe(1);
+    // runMigrations sobe até CURRENT_SCHEMA_VERSION (v2 desde a migration DNA);
+    // o renome scenes 'quarto'→'room' é feito pela migration v0→v1, e v1→v2
+    // (DNA) roda em seguida sem efeito aqui (mascots vazio).
+    expect(meta.schema).toBe(2);
   });
 
   it('idempotente: chamar 2x não afeta', async () => {

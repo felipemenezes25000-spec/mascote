@@ -373,6 +373,15 @@ vi.mock('expo-blur', () => ({
   BlurView: makeHostComponent('blur-view'),
 }));
 
+// ============= Mascot3D (R3F + three) =============
+// Mascot3D usa @react-three/fiber/native + three; ambos têm source não-TS que
+// o transformer oxc do vitest não digere (token `typeof` em runtime modules).
+// Como WebGL não existe em jsdom, mockamos o componente — testes de lógica do
+// wrapper Mascot.tsx (que decide 2D vs 3D) continuam exercitando a árvore.
+vi.mock('@/components/Mascot3D', () => ({
+  Mascot3D: makeHostComponent('mascot-3d'),
+}));
+
 // expose helpers pra tests
 (globalThis as any).__asyncStorageReset = () => store.clear();
 (globalThis as any).__secureStoreReset = () => secureStoreMock.clear();

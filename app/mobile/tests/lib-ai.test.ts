@@ -23,6 +23,53 @@ describe('lib/ai - generateReply', () => {
     expect(r.source).toBe('fallback');
   });
 
+  // Regex anterior só capturava "isso é depress|tenho ansiedade|sou depress".
+  // Variações lexicais MUITO comuns em PT-BR caíam em mock genérico, violando
+  // positioning wellness-only. Suite abaixo trava isso pra não regredir.
+  it.each([
+    'tenho depressão',
+    'tenho depressao',
+    'minha depressão tá pior',
+    'minha ansiedade aumentou',
+    'tô com ansiedade',
+    'meu transtorno me cansa',
+    'tenho TDAH',
+    'sou bipolar',
+    'tenho trauma',
+  ])('redireciona pra DIAGNOSIS quando user afirma quadro clínico: "%s"', async (msg) => {
+    const r = await generateReply('calmo', msg);
+    expect(r.safety_flag).toBe('watch');
+    expect(r.source).toBe('fallback');
+    // Não engaja clinicamente
+    expect(r.reply).toMatch(/profissional/i);
+  });
+
+  // Distress agudo (high) — pânico, desespero, sem esperança — recebe CRISIS_REPLY
+  // com referências CVV/CAPS, não mock genérico.
+  it.each([
+    'estou com pânico',
+    'sem esperança',
+    'desespero total',
+    'pensamento intrusivo me invadiu',
+  ])('high distress dispara CRISIS_REPLY: "%s"', async (msg) => {
+    const r = await generateReply('calmo', msg);
+    expect(r.safety_flag).toBe('critical');
+    expect(r.source).toBe('fallback');
+    expect(r.reply).toContain('188');
+  });
+
+  // Menção casual (user fala de algo positivo) ainda passa pro mock — não há
+  // engajamento clínico no mock (textos de replies.ts são neutros), e se OpenAI
+  // estivesse ativa o classifyOutput barraria respostas clínicas.
+  it.each([
+    'fui no meu psicólogo hoje',
+    'tomei meu remédio',
+    'tô fazendo terapia',
+  ])('menção casual de tratamento não dispara redirect: "%s"', async (msg) => {
+    const r = await generateReply('calmo', msg);
+    expect(r.source).toBe('mock');
+  });
+
   it('detectAttachment dispara ATTACHMENT_REPLY', async () => {
     const r = await generateReply('fofo', 'te amo');
     expect(r.source).toBe('fallback');

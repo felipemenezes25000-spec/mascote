@@ -27,6 +27,24 @@ export interface Profile {
   created_at: string;
 }
 
+/**
+ * Genoma procedural. 11 floats em [0.02, 0.98].
+ * Documentação completa em `src/lib/dna/genome.ts`.
+ */
+export interface MascotDNA {
+  empathy: number;
+  curiosity: number;
+  creativity: number;
+  discipline: number;
+  chaos: number;
+  aggression: number;
+  resilience: number;
+  emotionalDepth: number;
+  socialEnergy: number;
+  adaptability: number;
+  intelligence: number;
+}
+
 export interface Mascot {
   id: string;
   user_id: string;
@@ -38,6 +56,13 @@ export interface Mascot {
   level: number;
   energy: number;
   health: number;
+  /**
+   * Genoma procedural. Opcional pra retro-compatibilidade com snapshots v1 —
+   * migration v1→v2 popula com preset da personalidade.
+   */
+  dna?: MascotDNA;
+  /** Seed usado pra gerar variação procedural inicial. Imutável. */
+  dna_seed?: number;
   last_seen_at: string;
   created_at: string;
 }

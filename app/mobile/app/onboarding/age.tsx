@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,6 +21,7 @@ const options: { id: AgeBand; label: string; allowed: boolean }[] = [
 export default function Age() {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
+  const params = useLocalSearchParams<{ display_name?: string }>();
   const [selected, setSelected] = useState<AgeBand | null>(null);
 
   function next() {
@@ -33,7 +34,12 @@ export default function Age() {
       );
       return;
     }
-    router.push({ pathname: '/onboarding/goal', params: { age_band: selected } });
+    // Propaga display_name capturado em /signup pra ser pré-preenchido em /name.
+    // Sem isso, o usuário re-digita o nome duas vezes ao longo do onboarding.
+    router.push({
+      pathname: '/onboarding/goal',
+      params: { age_band: selected, ...(params.display_name ? { display_name: params.display_name } : {}) },
+    });
   }
 
   return (

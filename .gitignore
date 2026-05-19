@@ -88,3 +88,10 @@ race-out*.txt
 test-output.txt
 test-after*.txt
 tsc-output.txt
+
+# Backups locais de refactor (histórico já tá no git)
+*.bak
+
+# Status notes pessoais (contexto privado: saúde, prazos, stakeholders)
+STATUS_NOITE.md
+STATUS_*.md

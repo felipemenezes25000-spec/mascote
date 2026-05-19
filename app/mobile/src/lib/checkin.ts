@@ -21,6 +21,7 @@ import { applyCheckinToStreak } from '@/lib/streak';
 import { processUnlocks } from '@/lib/unlock';
 import { XP_PER_CHECKIN, applyXp, levelFromXp, phaseFromXp } from '@/lib/xp';
 import { phaseLabels } from '@/lib/phaseLabels';
+import { applyHabitDrift, sanitizeGenome } from '@/lib/dna';
 import type { HabitKind, Mascot, MascotPhase, Mission, Profile, Streak } from '@/types';
 
 export const COINS_PER_CHECKIN = 5;
@@ -149,6 +150,16 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
     totalXpGained += bonus.delta;
     await walletDb.add(profile.id, 0, 1);
     gems = 1;
+  }
+
+  // DRIFT DE DNA: hábito cumprido reforça genes correspondentes.
+  // SEMPRE não-negativo (princípio: sem culpa). Pula se mascot é pré-migration.
+  if (finalMascot.dna) {
+    const driftedDna = applyHabitDrift(sanitizeGenome(finalMascot.dna), {
+      habit: kind,
+      intensity: 1,
+    });
+    finalMascot = { ...finalMascot, dna: driftedDna };
   }
 
   await mascotsDb.upsert(finalMascot);

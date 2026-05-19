@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { Mascot, Profile, Settings, Streak, Wallet } from '@/types';
+import type { HabitKind, Mascot, MascotDNA, Profile, Settings, Streak, Wallet } from '@/types';
+import { applyHabitDrift, sanitizeGenome } from '@/lib/dna';
 import { mascots, profiles, runMigrations, settings, streaks, wallet as walletDb } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { SECURE_KEYS, secureGet, secureRemove, secureSet } from '@/lib/secureStore';
@@ -28,6 +29,10 @@ interface AppState {
   setOpenAiKey: (key: string | null) => void;
   enqueueToast: (t: UnlockToastData) => void;
   shiftToast: () => void;
+  /** Aplica drift de hábito no DNA. SEMPRE não-negativo (sem culpa). */
+  driftDnaFromHabit: (habit: HabitKind, intensity?: number) => Promise<void>;
+  /** Sobrescreve DNA arbitrariamente (debug/preset). Sanitiza na borda. */
+  setDna: (dna: MascotDNA) => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -161,5 +166,24 @@ export const useStore = create<AppState>((set, get) => ({
     } else {
       set({ currentToast: null });
     }
+  },
+
+  async driftDnaFromHabit(habit, intensity) {
+    const state = get();
+    const m = state.mascot;
+    if (!m || !m.dna) return;
+    const nextDna = applyHabitDrift(m.dna, { habit, intensity });
+    const persisted = await mascots.updateDna(m.user_id, nextDna);
+    if (persisted) set({ mascot: persisted });
+    else logger.warn('[store] driftDnaFromHabit: mascot não encontrado');
+  },
+
+  async setDna(dna) {
+    const state = get();
+    const m = state.mascot;
+    if (!m) return;
+    const safe = sanitizeGenome(dna);
+    const persisted = await mascots.updateDna(m.user_id, safe);
+    if (persisted) set({ mascot: persisted });
   },
 }));

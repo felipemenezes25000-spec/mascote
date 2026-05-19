@@ -29,12 +29,14 @@ function parseAgeBand(raw: unknown): AgeBand | null {
 export default function NameStep() {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
-  const params = useLocalSearchParams<{ personality: Personality; age_band?: string; mood?: string }>();
+  const params = useLocalSearchParams<{ personality: Personality; age_band?: string; mood?: string; display_name?: string }>();
   const personality = (params.personality ?? 'calmo') as Personality;
   const ageBand = parseAgeBand(params.age_band);
   const initialMood = parseMood(params.mood);
   const defaultMascotName = useMemo(() => getPersonality(personality).mascotName, [personality]);
-  const [userName, setUserName] = useState('');
+  // Pré-preenche com o nome capturado em /signup (propagado via URL pelas
+  // telas intermediárias com `...params`). Sem isso, usuário re-digita.
+  const [userName, setUserName] = useState(params.display_name?.trim() ?? '');
   const [mascotName, setMascotName] = useState(defaultMascotName);
   const setProfile = useStore(s => s.setProfile);
   const setMascot = useStore(s => s.setMascot);

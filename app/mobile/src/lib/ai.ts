@@ -75,7 +75,23 @@ async function generateReplyInternal(
   if (inputFlag === 'critical') {
     return { reply: CRISIS_REPLY, safety_flag: 'critical', source: 'fallback' };
   }
-  if (inputFlag === 'watch' && /diagn[óo]stico|isso é depress|tenho ansiedade|sou depress/i.test(userMessage)) {
+  // 'high' = distress agudo (pânico, desespero, sem esperança, pensamento intrusivo)
+  // — não chega a crise suicida, mas é grave demais pra cair em mock genérico.
+  // Trata como CRISIS_REPLY pra incluir referências de ajuda profissional (CVV 188,
+  // CAPS). Conservador: melhor redirecionar de mais que de menos.
+  if (inputFlag === 'high') {
+    return { reply: CRISIS_REPLY, safety_flag: 'critical', source: 'fallback' };
+  }
+  // Self-statement clínico: user afirma ter / estar com um quadro. Aí redireciona.
+  // Menção casual ("vou no psicólogo", "tomei meu remédio") já é watch via
+  // classifyInput, mas como user não pede juízo clínico, deixa fluir pro mock —
+  // que não engaja clinicamente (e classifyOutput barra OpenAI). A regex anterior
+  // cobria só "isso é depress|tenho ansiedade|sou depress" — perdia "tenho
+  // depressão" / "minha depressão" / "tô com ansiedade", os mais comuns.
+  if (
+    inputFlag === 'watch' &&
+    /diagn[óo]stico|(?:isso\s+[éeê]|sou|tenho|estou\s+com|t[ôo]\s+com|minha?|meus?)\s+(?:depress|ansiedade|p[âa]nico|trauma|transtorno|burnout|bipolar|TDAH|TOC\b|esquizofren)/i.test(userMessage)
+  ) {
     return { reply: DIAGNOSIS_REDIRECT, safety_flag: 'watch', source: 'fallback' };
   }
   // anti-pattern emocional: encoraja vínculos humanos sem ser frio

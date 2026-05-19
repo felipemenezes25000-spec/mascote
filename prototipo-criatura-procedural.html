@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Criatura Procedural — Digital Living Identity</title>
+<style>
+  :root {
+    --bg-1: #0a0e1a;
+    --bg-2: #1a1f3a;
+    --panel: rgba(12, 16, 28, 0.78);
+    --panel-border: rgba(140, 180, 255, 0.18);
+    --text: #e8ecff;
+    --muted: #8090b8;
+    --accent: #7ab8ff;
+    --accent-2: #ff9bd0;
+    --good: #6fffb0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    background: radial-gradient(ellipse at 50% 30%, var(--bg-2), var(--bg-1) 70%);
+    color: var(--text);
+    user-select: none;
+  }
+  #scene { position: fixed; inset: 0; z-index: 0; }
+  .ui-shell {
+    position: fixed; inset: 0; z-index: 10;
+    display: grid;
+    grid-template-columns: 320px 1fr 340px;
+    pointer-events: none;
+  }
+  .panel {
+    background: var(--panel);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--panel-border);
+    border-radius: 18px;
+    margin: 18px;
+    padding: 18px 18px 14px;
+    pointer-events: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 36px);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+  }
+  .panel::-webkit-scrollbar { width: 6px; }
+  .panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+  .panel h2 {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .panel h2 .dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--good); margin-right: 8px; vertical-align: middle;
+    box-shadow: 0 0 8px var(--good);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+  /* Identity card */
+  .id-card { text-align: center; padding: 6px 0 14px; }
+  .id-name {
+    font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #fff 0%, #a8c8ff 50%, #ff9bd0 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+  }
+  .id-tagline {
+    font-size: 11px; color: var(--muted); letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .id-seed {
+    font-size: 10px; color: var(--muted); margin-top: 6px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  /* Mood / emotion display */
+  .mood-bar { margin: 8px 0 14px; }
+  .mood-label {
+    font-size: 10px; color: var(--muted); letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 6px;
+    display: flex; justify-content: space-between;
+  }
+  .mood-bar .mood-text {
+    font-size: 16px; font-weight: 600; color: var(--text);
+    margin-bottom: 8px;
+  }
+  .mood-track {
+    height: 5px; background: rgba(255,255,255,0.06);
+    border-radius: 3px; overflow: hidden; position: relative;
+  }
+  .mood-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border-radius: 3px;
+    transition: width 0.4s cubic-bezier(.2,.7,.3,1);
+    box-shadow: 0 0 12px rgba(122, 184, 255, 0.6);
+  }
+
+  /* Gene sliders */
+  .gene { margin-bottom: 11px; }
+  .gene-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .gene-name { font-size: 12px; font-weight: 500; }
+  .gene-val {
+    font-size: 11px; font-variant-numeric: tabular-nums;
+    color: var(--accent); font-family: ui-monospace, monospace;
+  }
+  .gene-bar {
+    position: relative;
+    height: 22px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 11px;
+    cursor: pointer;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .gene-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: linear-gradient(90deg,
+      rgba(122,184,255,0.6),
+      rgba(255,155,208,0.6));
+    border-radius: 11px;
+    transition: width 0.2s ease-out;
+  }
+  .gene-bar:hover .gene-fill {
+    background: linear-gradient(90deg,
+      rgba(122,184,255,0.85),
+      rgba(255,155,208,0.85));
+  }
+  .gene-desc {
+    font-size: 10px; color: var(--muted);
+    margin-top: 3px; font-style: italic;
+    opacity: 0; max-height: 0;
+    transition: all 0.2s;
+  }
+  .gene:hover .gene-desc {
+    opacity: 0.7; max-height: 30px;
+  }
+
+  /* Action buttons */
+  .actions { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .btn {
+    padding: 12px 14px;
+    background: rgba(122, 184, 255, 0.08);
+    border: 1px solid rgba(122, 184, 255, 0.22);
+    color: var(--text);
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: flex; align-items: center; gap: 10px;
+    font-family: inherit;
+  }
+  .btn:hover {
+    background: rgba(122, 184, 255, 0.18);
+    border-color: rgba(122, 184, 255, 0.5);
+    transform: translateY(-1px);
+  }
+  .btn:active { transform: translateY(0); }
+  .btn-primary {
+    background: linear-gradient(135deg, rgba(122,184,255,0.25), rgba(255,155,208,0.25));
+    border-color: rgba(255,155,208,0.4);
+  }
+  .btn-primary:hover {
+    background: linear-gradient(135deg, rgba(122,184,255,0.4), rgba(255,155,208,0.4));
+  }
+  .btn-icon { font-size: 16px; }
+  .btn-sub {
+    font-size: 10px; color: var(--muted); font-weight: 400;
+    margin-left: auto;
+  }
+
+  /* Right panel - traits */
+  .trait { margin-bottom: 11px; }
+  .trait-name {
+    font-size: 11px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 3px;
+  }
+  .trait-value {
+    font-size: 13px; color: var(--text);
+    font-weight: 500;
+  }
+  .trait-value .accent { color: var(--accent); }
+
+  .memory-list { font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .memory-list li { list-style: none; padding-left: 14px; position: relative; }
+  .memory-list li::before {
+    content: ''; position: absolute; left: 0; top: 9px;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); opacity: 0.5;
+  }
+
+  /* Center hint */
+  .center-hint {
+    align-self: end; justify-self: center;
+    margin-bottom: 20px;
+    pointer-events: none;
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    opacity: 0.55;
+  }
+  .center-hint .big {
+    font-size: 13px; color: var(--text); letter-spacing: 1px;
+    text-transform: none; opacity: 0.8;
+  }
+
+  /* Title overlay */
+  .brand {
+    align-self: start; justify-self: center;
+    margin-top: 22px;
+    pointer-events: none;
+    text-align: center;
+  }
+  .brand-title {
+    font-size: 13px; letter-spacing: 6px; text-transform: uppercase;
+    color: var(--muted); font-weight: 600;
+  }
+  .brand-sub {
+    font-size: 10px; color: var(--muted); opacity: 0.5;
+    letter-spacing: 2px; margin-top: 4px;
+  }
+
+  /* Stage badge */
+  .stage-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    background: rgba(255,155,208,0.12);
+    border: 1px solid rgba(255,155,208,0.3);
+    border-radius: 999px;
+    font-size: 10px;
+    color: var(--accent-2);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* Preset chips — 4 personalidades base */
+  .presets {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    margin-bottom: 6px;
+  }
+  .preset-chip {
+    padding: 10px 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: all 0.15s ease;
+    color: var(--text);
+  }
+  .preset-chip:hover {
+    background: rgba(122, 184, 255, 0.12);
+    border-color: rgba(122, 184, 255, 0.35);
+    transform: translateY(-1px);
+  }
+  .preset-chip.active {
+    background: linear-gradient(135deg, rgba(122,184,255,0.18), rgba(255,155,208,0.18));
+    border-color: rgba(255,155,208,0.45);
+  }
+  .preset-name { font-size: 13px; font-weight: 700; }
+  .preset-tag { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* Essence card — princípios invioláveis */
+  .essence-card {
+    margin-top: 14px;
+    padding: 12px;
+    background: linear-gradient(135deg,
+      rgba(111, 255, 176, 0.06),
+      rgba(122, 184, 255, 0.06));
+    border: 1px solid rgba(111, 255, 176, 0.18);
+    border-radius: 12px;
+  }
+  .essence-title {
+    font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--good); margin-bottom: 8px; font-weight: 700;
+  }
+  .essence-grid {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px;
+  }
+  .essence-grid span {
+    font-size: 10px; padding: 3px 8px;
+    background: rgba(111, 255, 176, 0.1);
+    border: 1px solid rgba(111, 255, 176, 0.25);
+    color: var(--good);
+    border-radius: 999px;
+    letter-spacing: 0.5px;
+  }
+  .essence-note {
+    font-size: 10.5px; color: var(--muted); line-height: 1.5;
+    font-style: italic;
+  }
+
+  @media (max-width: 1100px) {
+    .ui-shell { grid-template-columns: 280px 1fr 280px; }
+  }
+  @media (max-width: 900px) {
+    .ui-shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+    .panel { max-height: 38vh; }
+  }
+</style>
+</head>
+<body>
+
+<div id="scene"></div>
+
+<div class="ui-shell">
+
+  <!-- LEFT: identity + genes -->
+  <div class="panel" id="left-panel">
+    <div class="id-card">
+      <div class="id-name" id="creature-name">—</div>
+      <div class="id-tagline" id="creature-tagline">organismo digital</div>
+      <div class="stage-badge" id="stage-badge">EMERGENTE</div>
+      <div class="id-seed" id="creature-seed">seed: —</div>
+    </div>
+
+    <div class="mood-bar">
+      <div class="mood-label">
+        <span>Estado emocional</span>
+        <span id="mood-pct">—</span>
+      </div>
+      <div class="mood-text" id="mood-text">—</div>
+      <div class="mood-track"><div class="mood-fill" id="mood-fill" style="width: 50%"></div></div>
+    </div>
+
+    <h2><span class="dot"></span>Genoma procedural</h2>
+    <div id="genes"></div>
+
+    <h2 style="margin-top:18px"><span class="dot"></span>Presets · 4 personalidades base</h2>
+    <div class="presets" id="presets"></div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="btn-random">
+        <span class="btn-icon">🧬</span>
+        Nascer nova criatura
+        <span class="btn-sub">novo DNA</span>
+      </button>
+      <button class="btn" id="btn-mutate">
+        <span class="btn-icon">✨</span>
+        Variação natural
+        <span class="btn-sub">drift orgânico</span>
+      </button>
+      <button class="btn" id="btn-evolve">
+        <span class="btn-icon">🌱</span>
+        7 dias de hábitos cuidados
+        <span class="btn-sub">sono · água · respiração</span>
+      </button>
+    </div>
+
+    <div class="essence-card">
+      <div class="essence-title">Princípios invioláveis</div>
+      <div class="essence-grid">
+        <span>sem culpa</span>
+        <span>sem ranking</span>
+        <span>sem terapia</span>
+        <span>local-first</span>
+        <span>anti-attachment</span>
+        <span>safety net</span>
+      </div>
+      <div class="essence-note">
+        a criatura nunca cobra. nunca compara. nunca diagnostica.
+        ela só reflete o cuidado que você se dá.
+      </div>
+    </div>
+  </div>
+
+  <div class="brand">
+    <div class="brand-title">Mascote</div>
+    <div class="brand-sub">digital living identity · protótipo procedural</div>
+  </div>
+
+  <div class="center-hint">
+    <div class="big" id="hint-text">mova o mouse — ela está te observando</div>
+    <div style="margin-top:8px">arraste sliders · clique nos botões · cada criatura é única</div>
+  </div>
+
+  <!-- RIGHT: traits + memory -->
+  <div class="panel" id="right-panel">
+    <h2><span class="dot"></span>Identidade emergente</h2>
+    <div class="trait">
+      <div class="trait-name">Idade biológica</div>
+      <div class="trait-value" id="trait-age">— dias</div>
+    </div>
+    <div class="trait">
+      <div class="trait-name">Arquétipo dominante</div>
+      <div class="trait-value" id="trait-archetype">—</div>
+    </div>
+    <div class="trait">
+      <div class="trait-name">Morfologia</div>
+      <div class="trait-value" id="trait-morph">—</div>
+    </div>
+    <div class="trait">
+      <div class="trait-name">Bioluminescência</div>
+      <div class="trait-value" id="trait-glow">—</div>
+    </div>
+    <div class="trait">
+      <div class="trait-name">Mutações raras</div>
+      <div class="trait-value" id="trait-mutations">nenhuma ainda</div>
+    </div>
+
+    <h2 style="margin-top:18px"><span class="dot"></span>Memória emocional</h2>
+    <ul class="memory-list" id="memory-list">
+      <li>nascida há instantes…</li>
+    </ul>
+
+    <h2 style="margin-top:18px"><span class="dot"></span>Como ela reage</h2>
+    <ul class="memory-list" id="behavior-list">
+      <li>observando o ambiente</li>
+    </ul>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* =========================================================================
+   GENOMA PROCEDURAL
+   11 genes contínuos. Cada gene afeta múltiplas características visuais
+   e comportamentais. Nenhuma combinação produz a mesma criatura.
+   ========================================================================= */
+const GENES = [
+  { key: 'empathy',           label: 'Empatia',          desc: 'tamanho dos olhos, inclinação da cabeça, suavidade dos movimentos' },
+  { key: 'curiosity',         label: 'Curiosidade',      desc: 'velocidade do eye-tracking, dilatação da pupila' },
+  { key: 'creativity',        label: 'Criatividade',     desc: 'tentáculos, padrões, formas exóticas, partículas' },
+  { key: 'discipline',        label: 'Disciplina',       desc: 'simetria, postura ereta, brilho refinado' },
+  { key: 'chaos',             label: 'Caos',             desc: 'assimetria, número de membros, mutações' },
+  { key: 'aggression',        label: 'Agressividade',    desc: 'espinhos, ângulos, postura defensiva' },
+  { key: 'resilience',        label: 'Resiliência',      desc: 'densidade corporal, robustez, recuperação' },
+  { key: 'emotionalDepth',    label: 'Profundidade emocional', desc: 'expressividade facial, mudanças de cor' },
+  { key: 'socialEnergy',      label: 'Energia social',   desc: 'aura, calor da paleta, abertura corporal' },
+  { key: 'adaptability',      label: 'Adaptabilidade',   desc: 'fluidez, transições suaves' },
+  { key: 'intelligence',      label: 'Inteligência',     desc: 'proporção crânio, brilho dos olhos' },
+];
+
+/* =========================================================================
+   4 PERSONALIDADES BASE — preservam a essência do app atual.
+   Cada preset é um perfil de DNA que serve como ponto de partida.
+   O procedural amplifica, mas a essência não se perde.
+   ========================================================================= */
+const PERSONALITIES = {
+  bipo: {
+    name: 'Bipo', tag: 'O calmo',
+    desc: 'presença suave, respiração medida, voz tranquilizadora',
+    dna: {
+      empathy: 0.82, curiosity: 0.45, creativity: 0.50, discipline: 0.70,
+      chaos: 0.15, aggression: 0.08, resilience: 0.78, emotionalDepth: 0.70,
+      socialEnergy: 0.55, adaptability: 0.75, intelligence: 0.62,
+    },
+  },
+  zip: {
+    name: 'Zip', tag: 'O motivador',
+    desc: 'energia luminosa, ritmo vivo, celebra cada vitória pequena',
+    dna: {
+      empathy: 0.65, curiosity: 0.85, creativity: 0.72, discipline: 0.55,
+      chaos: 0.40, aggression: 0.18, resilience: 0.65, emotionalDepth: 0.58,
+      socialEnergy: 0.92, adaptability: 0.70, intelligence: 0.65,
+    },
+  },
+  lulu: {
+    name: 'Lulu', tag: 'O fofo',
+    desc: 'afeto puro, olhos grandes, quer estar perto sem cobrar',
+    dna: {
+      empathy: 0.95, curiosity: 0.60, creativity: 0.55, discipline: 0.40,
+      chaos: 0.22, aggression: 0.05, resilience: 0.55, emotionalDepth: 0.88,
+      socialEnergy: 0.78, adaptability: 0.65, intelligence: 0.50,
+    },
+  },
+  aro: {
+    name: 'Aro', tag: 'O sábio',
+    desc: 'olhar profundo, fala pouca e certeira, observa antes de reagir',
+    dna: {
+      empathy: 0.75, curiosity: 0.78, creativity: 0.62, discipline: 0.82,
+      chaos: 0.18, aggression: 0.10, resilience: 0.80, emotionalDepth: 0.72,
+      socialEnergy: 0.45, adaptability: 0.68, intelligence: 0.95,
+    },
+  },
+};
+
+/* =========================================================================
+   HÁBITOS SAUDÁVEIS → mapeamento para genes
+   A evolução é DRIVEN BY CARE, não por punição.
+   ========================================================================= */
+const HABIT_GENE_MAP = {
+  sono:        { discipline: 0.04, resilience: 0.05, emotionalDepth: 0.02 },
+  agua:        { resilience: 0.04, adaptability: 0.03 },
+  respiracao:  { empathy: 0.03, emotionalDepth: 0.04, discipline: 0.03 },
+  leitura:     { intelligence: 0.05, curiosity: 0.04, creativity: 0.03 },
+  journaling:  { emotionalDepth: 0.05, empathy: 0.03, intelligence: 0.02 },
+  conexao:     { socialEnergy: 0.05, empathy: 0.03 },
+  movimento:   { resilience: 0.04, adaptability: 0.04, socialEnergy: 0.02 },
+};
+
+/* =========================================================================
+   PRNG seedable — toda criatura nasce de um seed inteiro.
+   Mesmo seed = mesma criatura. SEMPRE.
+   ========================================================================= */
+function mulberry32(seed) {
+  return function() {
+    seed = (seed + 0x6D2B79F5) | 0;
+    let t = seed;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function generateDNA(seed, presetKey) {
+  const rng = mulberry32(seed);
+  const dna = {};
+  if (presetKey && PERSONALITIES[presetKey]) {
+    // base on personality preset, with procedural variation around it
+    const base = PERSONALITIES[presetKey].dna;
+    for (const g of GENES) {
+      const variation = (rng() - 0.5) * 0.2;
+      dna[g.key] = Math.max(0.02, Math.min(0.98, base[g.key] + variation));
+    }
+    return dna;
+  }
+  for (const g of GENES) {
+    // Beta-ish distribution to favor character (avoid mediocre 0.5 everywhere)
+    const a = rng(), b = rng();
+    let v = (a + b) / 2;
+    // push toward extremes occasionally
+    if (rng() < 0.18) v = rng() < 0.5 ? v * 0.3 : 1 - (1 - v) * 0.3;
+    dna[g.key] = Math.max(0.02, Math.min(0.98, v));
+  }
+  return dna;
+}
+
+/* =========================================================================
+   NAMING — nome procedural derivado do DNA + seed.
+   Sílabas suaves se empatia alta, duras se agressividade alta.
+   ========================================================================= */
+const SOFT_SYL = ['lu','mi','no','ya','re','si','ka','to','vi','la','no','pa','ze','ji'];
+const HARD_SYL = ['kru','grix','zar','vox','tark','myx','dru','skar','vek','nyx','kor','drax'];
+const VOWEL_END = ['a','o','i','u','en','el','ia'];
+function generateName(dna, seed) {
+  const rng = mulberry32(seed ^ 0xCAFE);
+  const softness = (dna.empathy + dna.adaptability) / 2 - (dna.aggression + dna.chaos) / 2;
+  const pool = softness > 0 ? SOFT_SYL : HARD_SYL;
+  const n = 2 + Math.floor(rng() * 2);
+  let name = '';
+  for (let i = 0; i < n; i++) name += pool[Math.floor(rng() * pool.length)];
+  if (rng() < 0.5) name += VOWEL_END[Math.floor(rng() * VOWEL_END.length)];
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+/* =========================================================================
+   ARQUÉTIPO — qual gene domina define um arquétipo emergente.
+   ========================================================================= */
+function getArchetype(dna) {
+  const dominant = Object.entries(dna).sort((a,b) => b[1] - a[1])[0];
+  const map = {
+    empathy: { name: 'O Acolhedor', tag: 'criatura empática', tagline: 'aprende observando emoções' },
+    curiosity: { name: 'O Explorador', tag: 'criatura inquieta', tagline: 'persegue todos os estímulos' },
+    creativity: { name: 'O Sonhador', tag: 'criatura abstrata', tagline: 'mutações fora do padrão' },
+    discipline: { name: 'O Refinado', tag: 'criatura simétrica', tagline: 'evolução controlada e elegante' },
+    chaos: { name: 'O Errático', tag: 'criatura imprevisível', tagline: 'cresce em direções inesperadas' },
+    aggression: { name: 'O Guardião', tag: 'criatura protetora', tagline: 'estrutura defensiva' },
+    resilience: { name: 'O Persistente', tag: 'criatura robusta', tagline: 'corpo denso e estável' },
+    emotionalDepth: { name: 'O Sensível', tag: 'criatura expressiva', tagline: 'mudança constante de humor' },
+    socialEnergy: { name: 'O Caloroso', tag: 'criatura radiante', tagline: 'aura quente e aberta' },
+    adaptability: { name: 'O Fluido', tag: 'criatura mutável', tagline: 'absorve mudanças sem atrito' },
+    intelligence: { name: 'O Atento', tag: 'criatura observadora', tagline: 'olhar profundo e calculado' },
+  };
+  return map[dominant[0]];
+}
+
+/* =========================================================================
+   COR — paleta HSL derivada do DNA.
+   Hue rotaciona com criatividade, saturação com energia, lightness com resiliência.
+   ========================================================================= */
+function getPalette(dna) {
+  const hue = (dna.creativity * 280 + dna.empathy * 80 + dna.chaos * 60) % 360;
+  const sat = 35 + dna.socialEnergy * 50 + dna.emotionalDepth * 15;
+  const light = 45 + dna.resilience * 18 - dna.aggression * 8;
+  const accentHue = (hue + 30 + dna.chaos * 90) % 360;
+  return {
+    body: `hsl(${hue}, ${sat}%, ${light}%)`,
+    bodyHSL: [hue, sat, light],
+    accent: `hsl(${accentHue}, ${sat + 10}%, ${light + 15}%)`,
+    accentHSL: [accentHue, sat + 10, light + 15],
+    glow: `hsl(${(hue + 60) % 360}, 80%, 65%)`,
+    glowHSL: [(hue + 60) % 360, 80, 65],
+  };
+}
+
+/* =========================================================================
+   THREE.JS — cena, render, criatura procedural
+   ========================================================================= */
+const sceneRoot = document.getElementById('scene');
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0a0e1a, 0.022);
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 0.6, 6.2);
+camera.lookAt(0, 0.3, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x000000, 0);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+sceneRoot.appendChild(renderer.domElement);
+
+// Lights — soft key + rim + ambient (Pixar-ish)
+const ambient = new THREE.AmbientLight(0x4060a0, 0.55);
+scene.add(ambient);
+const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+keyLight.position.set(3, 4, 4);
+scene.add(keyLight);
+const rimLight = new THREE.DirectionalLight(0xff9bd0, 0.55);
+rimLight.position.set(-4, 2, -3);
+scene.add(rimLight);
+const fillLight = new THREE.PointLight(0x7ab8ff, 0.45, 12);
+fillLight.position.set(0, -2, 3);
+scene.add(fillLight);
+
+// Ground shadow disc (stylized)
+const shadowGeo = new THREE.CircleGeometry(2.2, 48);
+const shadowMat = new THREE.MeshBasicMaterial({
+  color: 0x000000, transparent: true, opacity: 0.32
+});
+const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
+shadowMesh.rotation.x = -Math.PI / 2;
+shadowMesh.position.y = -1.55;
+scene.add(shadowMesh);
+
+// Atmospheric particles
+const atmoCount = 220;
+const atmoGeo = new THREE.BufferGeometry();
+const atmoPos = new Float32Array(atmoCount * 3);
+for (let i = 0; i < atmoCount; i++) {
+  atmoPos[i*3]   = (Math.random() - 0.5) * 18;
+  atmoPos[i*3+1] = (Math.random() - 0.5) * 10;
+  atmoPos[i*3+2] = (Math.random() - 0.5) * 12 - 2;
+}
+atmoGeo.setAttribute('position', new THREE.BufferAttribute(atmoPos, 3));
+const atmoMat = new THREE.PointsMaterial({
+  color: 0x7ab8ff, size: 0.04, transparent: true, opacity: 0.35,
+  blending: THREE.AdditiveBlending, depthWrite: false
+});
+const atmoPoints = new THREE.Points(atmoGeo, atmoMat);
+scene.add(atmoPoints);
+
+/* =========================================================================
+   CREATURE — construído proceduralmente a partir do DNA
+   ========================================================================= */
+class Creature {
+  constructor(dna, seed) {
+    this.dna = dna;
+    this.seed = seed;
+    this.rng = mulberry32(seed ^ 0xBEEF);
+    this.group = new THREE.Group();
+    this.parts = {};
+    this.palette = getPalette(dna);
+    this.build();
+  }
+
+  build() {
+    while (this.group.children.length) this.group.remove(this.group.children[0]);
+    this.buildBody();
+    this.buildEyes();
+    this.buildLimbs();
+    this.buildTail();
+    this.buildSpikes();
+    this.buildAntennae();
+    this.buildAura();
+  }
+
+  /* BODY — icosahedron com deslocamento procedural baseado em DNA */
+  buildBody() {
+    const detail = 4;
+    const geo = new THREE.IcosahedronGeometry(1, detail);
+    const pos = geo.attributes.position;
+    const rng = mulberry32(this.seed);
+
+    // pre-generate per-vertex noise offsets (deterministic by seed)
+    const noise = [];
+    for (let i = 0; i < pos.count; i++) noise.push(rng() - 0.5);
+
+    const heightStretch = 0.7 + this.dna.intelligence * 0.7 + this.dna.empathy * 0.35;
+    const widthSquash   = 0.85 + this.dna.resilience * 0.45 - this.dna.discipline * 0.15;
+    const bottomBias    = 0.3 + this.dna.resilience * 0.5;
+    const chaosBumps    = this.dna.chaos * 0.35;
+    const creativityBumps = this.dna.creativity * 0.25;
+
+    for (let i = 0; i < pos.count; i++) {
+      let x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+      // stretch vertically
+      y *= heightStretch;
+      // squash horizontally based on resilience
+      x *= widthSquash;
+      z *= widthSquash;
+      // bottom bias: heavier bottom for resilient creatures
+      if (y < 0) {
+        x *= 1 + bottomBias * 0.3;
+        z *= 1 + bottomBias * 0.3;
+        y *= 1 + bottomBias * 0.2;
+      }
+      // chaos lumps (per-vertex random displacement)
+      const lump = noise[i] * chaosBumps;
+      x += x * lump * 0.4;
+      z += z * lump * 0.4;
+      // creative protrusions (sinusoidal patterns)
+      const protrude = Math.sin(x * 4 + this.seed) * Math.cos(z * 3.5 - this.seed)
+                     * creativityBumps;
+      const len = Math.sqrt(x*x + y*y + z*z);
+      if (len > 0) {
+        x += (x / len) * protrude;
+        y += (y / len) * protrude * 0.5;
+        z += (z / len) * protrude;
+      }
+      pos.setXYZ(i, x, y, z);
+    }
+    geo.computeVertexNormals();
+
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(this.palette.body),
+      roughness: 0.55 - this.dna.discipline * 0.3,
+      metalness: 0.05 + this.dna.discipline * 0.18,
+      flatShading: this.dna.chaos > 0.65,
+      emissive: new THREE.Color(this.palette.glow),
+      emissiveIntensity: 0.05 + this.dna.socialEnergy * 0.15,
+    });
+
+    this.parts.body = new THREE.Mesh(geo, mat);
+    this.parts.body.position.y = -0.05 + bottomBias * 0.1;
+    this.group.add(this.parts.body);
+
+    // store baseline for breathing
+    this.parts.bodyBaseScale = 1;
+    this.parts.bodyHeight = heightStretch;
+  }
+
+  /* EYES — proporção dirigida por empatia e inteligência */
+  buildEyes() {
+    const eyeGroup = new THREE.Group();
+    const eyeSize = 0.16 + this.dna.empathy * 0.12 + this.dna.intelligence * 0.05;
+    const eyeSpread = 0.32 + (1 - this.dna.intelligence) * 0.1;
+    const eyeY = 0.45 + this.dna.intelligence * 0.25;
+    const eyeZ = 0.72;
+
+    // sclera
+    const scleraGeo = new THREE.SphereGeometry(eyeSize, 28, 28);
+    const scleraMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.15,
+      metalness: 0.05,
+      emissive: 0xffffff,
+      emissiveIntensity: 0.12,
+    });
+
+    // pupil — escuro com brilho. Cor pode shiftar com humor.
+    const pupilSize = eyeSize * (0.4 + this.dna.curiosity * 0.25);
+    const pupilGeo = new THREE.SphereGeometry(pupilSize, 20, 20);
+    const pupilColor = new THREE.Color().setHSL(
+      this.palette.bodyHSL[0] / 360, 0.35, 0.12
+    );
+    const pupilMat = new THREE.MeshStandardMaterial({
+      color: pupilColor, roughness: 0.3, metalness: 0.2,
+      emissive: new THREE.Color(this.palette.glow),
+      emissiveIntensity: 0.4 + this.dna.intelligence * 0.5,
+    });
+
+    // highlight (catch-light)
+    const hlGeo = new THREE.SphereGeometry(pupilSize * 0.3, 12, 12);
+    const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+    for (const sign of [-1, 1]) {
+      const e = new THREE.Group();
+      const s = new THREE.Mesh(scleraGeo, scleraMat);
+      e.add(s);
+      const p = new THREE.Mesh(pupilGeo, pupilMat);
+      p.position.z = eyeSize * 0.6;
+      e.add(p);
+      const hl = new THREE.Mesh(hlGeo, hlMat);
+      hl.position.set(pupilSize * 0.4, pupilSize * 0.3, eyeSize * 0.85);
+      e.add(hl);
+      e.position.set(sign * eyeSpread, eyeY, eyeZ);
+      e.userData.basePos = e.position.clone();
+      e.userData.pupil = p;
+      e.userData.sclera = s;
+      eyeGroup.add(e);
+    }
+    this.parts.eyes = eyeGroup;
+    this.parts.eyeArray = eyeGroup.children;
+    this.group.add(eyeGroup);
+  }
+
+  /* LIMBS — número derivado de chaos e creativity (0 a 4 pares) */
+  buildLimbs() {
+    const limbCount = Math.floor(this.dna.creativity * 3 + this.dna.chaos * 2);
+    const limbGroup = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(this.palette.body).multiplyScalar(0.85),
+      roughness: 0.5, metalness: 0.05,
+    });
+    for (let i = 0; i < limbCount; i++) {
+      for (const sign of [-1, 1]) {
+        const length = 0.4 + this.rng() * 0.5 + this.dna.creativity * 0.3;
+        const thick = 0.07 + this.dna.resilience * 0.07;
+        const geo = new THREE.CylinderGeometry(thick * 0.6, thick, length, 12);
+        geo.translate(0, -length / 2, 0);
+        const limb = new THREE.Mesh(geo, mat);
+
+        const angleY = (Math.PI / 5) * (i + 1) * sign + this.rng() * 0.3;
+        const heightOffset = -0.2 + (i / (limbCount + 1)) * 0.9;
+        limb.position.set(sign * 0.55, heightOffset, 0);
+        limb.rotation.z = sign * (Math.PI / 3 + this.rng() * 0.3);
+        limb.rotation.x = -Math.PI / 6 + this.rng() * 0.3;
+        limb.userData.phase = this.rng() * Math.PI * 2;
+        limb.userData.baseRotZ = limb.rotation.z;
+        limb.userData.baseRotX = limb.rotation.x;
+        limbGroup.add(limb);
+
+        // tip ball
+        const tipGeo = new THREE.SphereGeometry(thick * 1.2, 12, 12);
+        const tip = new THREE.Mesh(tipGeo, mat);
+        tip.position.y = -length;
+        limb.add(tip);
+      }
+    }
+    this.parts.limbs = limbGroup;
+    this.parts.limbArray = limbGroup.children;
+    this.group.add(limbGroup);
+  }
+
+  /* TAIL — existe se creativity > 0.4 */
+  buildTail() {
+    if (this.dna.creativity < 0.4) return;
+    const segments = 8;
+    const tailGroup = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(this.palette.accent),
+      roughness: 0.4, metalness: 0.1,
+      emissive: new THREE.Color(this.palette.glow),
+      emissiveIntensity: 0.15 + this.dna.socialEnergy * 0.2,
+    });
+    for (let i = 0; i < segments; i++) {
+      const t = i / segments;
+      const size = 0.18 * (1 - t * 0.7);
+      const geo = new THREE.SphereGeometry(size, 16, 16);
+      const seg = new THREE.Mesh(geo, mat);
+      seg.userData.t = t;
+      tailGroup.add(seg);
+    }
+    this.parts.tail = tailGroup;
+    this.parts.tailSegments = tailGroup.children;
+    this.parts.tailLength = 0.18 + this.dna.creativity * 0.5;
+    this.group.add(tailGroup);
+  }
+
+  /* SPIKES — se aggression > 0.55 */
+  buildSpikes() {
+    if (this.dna.aggression < 0.55) return;
+    const count = Math.floor(3 + this.dna.aggression * 7);
+    const spikeGroup = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(this.palette.accent).multiplyScalar(0.7),
+      roughness: 0.3, metalness: 0.4,
+    });
+    for (let i = 0; i < count; i++) {
+      const len = 0.18 + this.rng() * 0.18 + this.dna.aggression * 0.15;
+      const geo = new THREE.ConeGeometry(0.08, len, 10);
+      const spike = new THREE.Mesh(geo, mat);
+      // distribute on upper hemisphere
+      const theta = this.rng() * Math.PI * 2;
+      const phi = (0.2 + this.rng() * 0.5) * Math.PI;
+      const r = 0.95;
+      const x = r * Math.sin(phi) * Math.cos(theta);
+      const y = r * Math.cos(phi);
+      const z = r * Math.sin(phi) * Math.sin(theta) * 0.6;
+      spike.position.set(x, y + 0.1, z);
+      spike.lookAt(spike.position.clone().multiplyScalar(3));
+      spike.rotateX(Math.PI / 2);
+      spikeGroup.add(spike);
+    }
+    this.parts.spikes = spikeGroup;
+    this.group.add(spikeGroup);
+  }
+
+  /* ANTENNAE — se curiosity > 0.55 */
+  buildAntennae() {
+    if (this.dna.curiosity < 0.55) return;
+    const antennaGroup = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(this.palette.body).multiplyScalar(0.7),
+      roughness: 0.4, metalness: 0.1,
+    });
+    const bulbMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(this.palette.glow),
+      emissive: new THREE.Color(this.palette.glow),
+      emissiveIntensity: 0.9,
+      roughness: 0.2,
+    });
+    for (const sign of [-1, 1]) {
+      const len = 0.5 + this.dna.curiosity * 0.4;
+      const geo = new THREE.CylinderGeometry(0.025, 0.04, len, 8);
+      geo.translate(0, len / 2, 0);
+      const a = new THREE.Mesh(geo, mat);
+      a.position.set(sign * 0.15, 0.85, 0.4);
+      a.rotation.z = sign * 0.25;
+      a.rotation.x = -0.15;
+      a.userData.phase = this.rng() * Math.PI * 2;
+
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.07, 14, 14), bulbMat);
+      bulb.position.y = len;
+      a.add(bulb);
+      antennaGroup.add(a);
+    }
+    this.parts.antennae = antennaGroup;
+    this.parts.antennaeArray = antennaGroup.children;
+    this.group.add(antennaGroup);
+  }
+
+  /* AURA — partículas orbitando, mais intensas com socialEnergy */
+  buildAura() {
+    const count = Math.floor(40 + this.dna.socialEnergy * 80 + this.dna.creativity * 60);
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(count * 3);
+    const orbits = new Float32Array(count * 3); // radius, speed, phase
+    for (let i = 0; i < count; i++) {
+      const r = 1.3 + Math.random() * 0.6;
+      const phase = Math.random() * Math.PI * 2;
+      const tilt = (Math.random() - 0.5) * 0.6;
+      orbits[i*3] = r;
+      orbits[i*3+1] = 0.3 + Math.random() * 0.5;
+      orbits[i*3+2] = phase + tilt;
+      pos[i*3] = Math.cos(phase) * r;
+      pos[i*3+1] = (Math.random() - 0.5) * 1.2;
+      pos[i*3+2] = Math.sin(phase) * r;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.userData = { orbits };
+    const mat = new THREE.PointsMaterial({
+      color: new THREE.Color(this.palette.glow),
+      size: 0.045 + this.dna.socialEnergy * 0.04,
+      transparent: true,
+      opacity: 0.55 + this.dna.socialEnergy * 0.3,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    this.parts.aura = new THREE.Points(geo, mat);
+    this.group.add(this.parts.aura);
+  }
+
+  /* PER-FRAME UPDATE */
+  update(t, dt, mouse, mood) {
+    // BREATHING — frequência ligada à profundidade emocional
+    const breathFreq = 1.0 - this.dna.emotionalDepth * 0.4;
+    const breathAmp = 0.04 + this.dna.empathy * 0.04;
+    const breath = 1 + Math.sin(t * breathFreq * 2) * breathAmp;
+    if (this.parts.body) {
+      this.parts.body.scale.set(breath, breath * (1 + breathAmp * 0.3), breath);
+    }
+
+    // IDLE WOBBLE — figura em 8 leve
+    const wobbleAmt = 0.05 + this.dna.chaos * 0.06;
+    this.group.position.x = Math.sin(t * 0.6) * wobbleAmt;
+    this.group.position.y = Math.cos(t * 0.4) * wobbleAmt * 0.7 + 0.05;
+
+    // ROTATION drift — adaptabilidade dá um leve sway
+    const sway = this.dna.adaptability * 0.18;
+    this.group.rotation.y = Math.sin(t * 0.3) * sway + mouse.x * 0.25;
+    this.group.rotation.x = mouse.y * 0.1;
+    this.group.rotation.z = Math.sin(t * 0.5) * 0.04;
+
+    // EYE TRACKING — pupilas seguem cursor + dilatação com curiosidade
+    if (this.parts.eyeArray) {
+      for (const eye of this.parts.eyeArray) {
+        const targetX = mouse.x * 0.06 * (1 + this.dna.curiosity);
+        const targetY = mouse.y * 0.06 * (1 + this.dna.curiosity);
+        const pupil = eye.userData.pupil;
+        if (pupil) {
+          pupil.position.x += (targetX - pupil.position.x) * 0.08;
+          pupil.position.y += (targetY - pupil.position.y) * 0.08;
+        }
+        // BLINKING
+        const blinkCycle = (t * 0.7 + eye.userData.basePos.x * 10) % (4 + this.dna.discipline * 2);
+        if (blinkCycle < 0.12) {
+          const k = Math.sin((blinkCycle / 0.12) * Math.PI);
+          eye.scale.y = 1 - k * 0.9;
+        } else {
+          eye.scale.y = 1;
+        }
+      }
+    }
+
+    // LIMB SWAY — gentle pendulum
+    if (this.parts.limbArray) {
+      for (const limb of this.parts.limbArray) {
+        const phase = limb.userData.phase;
+        const swayK = 0.15 + this.dna.socialEnergy * 0.2;
+        limb.rotation.x = limb.userData.baseRotX + Math.sin(t * 1.2 + phase) * swayK;
+      }
+    }
+
+    // ANTENNAE wiggle
+    if (this.parts.antennaeArray) {
+      for (const a of this.parts.antennaeArray) {
+        const phase = a.userData.phase;
+        a.rotation.x = -0.15 + Math.sin(t * 2 + phase) * 0.15 * this.dna.curiosity;
+      }
+    }
+
+    // TAIL — curva sinusoidal segmentada
+    if (this.parts.tailSegments) {
+      const segs = this.parts.tailSegments;
+      const len = this.parts.tailLength;
+      for (let i = 0; i < segs.length; i++) {
+        const t01 = segs[i].userData.t;
+        const wave = Math.sin(t * 1.5 - t01 * 4) * 0.3 * (0.5 + t01);
+        const cx = -t01 * len * segs.length * 0.5;
+        const cy = -0.3 - t01 * 0.3;
+        const cz = -0.4 - t01 * len * segs.length * 0.5;
+        segs[i].position.set(cx + wave * 0.2, cy + wave * 0.2, cz);
+        segs[i].scale.setScalar(1 - t01 * 0.3);
+      }
+    }
+
+    // AURA orbit
+    if (this.parts.aura) {
+      const pos = this.parts.aura.geometry.attributes.position.array;
+      const orbits = this.parts.aura.geometry.userData.orbits;
+      for (let i = 0; i < pos.length / 3; i++) {
+        const r = orbits[i*3];
+        const speed = orbits[i*3+1];
+        const phase = orbits[i*3+2] + t * speed;
+        pos[i*3]   = Math.cos(phase) * r;
+        pos[i*3+2] = Math.sin(phase) * r;
+        pos[i*3+1] += Math.sin(t * 2 + i) * 0.001;
+        if (pos[i*3+1] > 1.2) pos[i*3+1] = -1.2;
+      }
+      this.parts.aura.geometry.attributes.position.needsUpdate = true;
+    }
+
+    // MOOD-driven emissive intensity
+    if (this.parts.body) {
+      this.parts.body.material.emissiveIntensity =
+        0.05 + this.dna.socialEnergy * 0.15 + mood * 0.18;
+    }
+  }
+
+  dispose() {
+    this.group.traverse(obj => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+        else obj.material.dispose();
+      }
+    });
+  }
+}
+
+/* =========================================================================
+   STATE — current creature
+   ========================================================================= */
+let state = {
+  seed: Math.floor(Math.random() * 1_000_000),
+  dna: null,
+  creature: null,
+  birthTime: Date.now(),
+  ageDays: 0,
+  mutations: [],
+  memories: [],
+};
+
+function spawnCreature(seed, presetKey) {
+  if (state.creature) {
+    scene.remove(state.creature.group);
+    state.creature.dispose();
+  }
+  state.seed = seed;
+  state.preset = presetKey || null;
+  state.dna = generateDNA(seed, presetKey);
+  state.creature = new Creature(state.dna, seed);
+  state.birthTime = Date.now();
+  state.ageDays = 0;
+  state.mutations = [];
+  state.memories = [
+    `nasceu há instantes com seed #${seed}`,
+    `primeira sensação: ${getInitialFeeling(state.dna)}`,
+  ];
+  scene.add(state.creature.group);
+  updateSceneTint(state.dna);
+  renderAllUI();
+}
+
+function getInitialFeeling(dna) {
+  const dominant = Object.entries(dna).sort((a,b) => b[1] - a[1])[0][0];
+  const feelings = {
+    empathy: 'reconhecimento — você é o primeiro rosto que ela vê',
+    curiosity: 'estímulo — quer entender o que existe ao redor',
+    creativity: 'desejo de criar algo que ainda não existe',
+    discipline: 'cálculo — observa antes de se mover',
+    chaos: 'inquietação — quer testar todos os limites',
+    aggression: 'alerta — está em modo defensivo',
+    resilience: 'estabilidade — sente que existe sem esforço',
+    emotionalDepth: 'onda de afeto difícil de classificar',
+    socialEnergy: 'calor — quer interagir com tudo',
+    adaptability: 'fluidez — aceita o que vier',
+    intelligence: 'foco — está te analisando agora',
+  };
+  return feelings[dominant];
+}
+
+function updateSceneTint(dna) {
+  const pal = getPalette(dna);
+  const [h, s, l] = pal.bodyHSL;
+  // shadow color tint
+  shadowMesh.material.color.setHSL(h / 360, 0.3, 0.05);
+  // fog tint
+  const fogColor = new THREE.Color().setHSL(h / 360, 0.3, 0.08);
+  scene.fog.color = fogColor;
+  // atmo particles color
+  atmoMat.color.setHSL(pal.glowHSL[0] / 360, 0.8, 0.7);
+  // background body radial via CSS var
+  document.body.style.background =
+    `radial-gradient(ellipse at 50% 25%,
+      hsl(${h}, 30%, 14%),
+      hsl(${(h + 30) % 360}, 25%, 6%) 65%,
+      #050810 100%)`;
+}
+
+/* =========================================================================
+   MOUSE TRACKING
+   ========================================================================= */
+const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+window.addEventListener('mousemove', e => {
+  mouse.tx = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.ty = -((e.clientY / window.innerHeight) * 2 - 1);
+});
+
+/* =========================================================================
+   RENDER LOOP
+   ========================================================================= */
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  const t = clock.elapsedTime;
+
+  // smooth mouse
+  mouse.x += (mouse.tx - mouse.x) * 0.06;
+  mouse.y += (mouse.ty - mouse.y) * 0.06;
+
+  // mood = function of trait composition + time
+  const mood = Math.sin(t * 0.2) * 0.2 + 0.5
+             + (state.dna ? state.dna.socialEnergy * 0.2 - state.dna.aggression * 0.15 : 0);
+
+  // atmo gentle drift
+  atmoPoints.rotation.y = t * 0.015;
+
+  if (state.creature) {
+    state.creature.update(t, dt, mouse, mood);
+  }
+
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* =========================================================================
+   UI — sliders + cards + actions
+   ========================================================================= */
+function renderGenes() {
+  const container = document.getElementById('genes');
+  container.innerHTML = '';
+  for (const g of GENES) {
+    const div = document.createElement('div');
+    div.className = 'gene';
+    div.innerHTML = `
+      <div class="gene-head">
+        <span class="gene-name">${g.label}</span>
+        <span class="gene-val" data-val="${g.key}">${(state.dna[g.key]*100).toFixed(0)}</span>
+      </div>
+      <div class="gene-bar" data-key="${g.key}">
+        <div class="gene-fill" style="width:${state.dna[g.key]*100}%"></div>
+      </div>
+      <div class="gene-desc">${g.desc}</div>
+    `;
+    container.appendChild(div);
+
+    const bar = div.querySelector('.gene-bar');
+    const fill = div.querySelector('.gene-fill');
+    const valSpan = div.querySelector('.gene-val');
+
+    let dragging = false;
+    const setFromX = (clientX) => {
+      const rect = bar.getBoundingClientRect();
+      const v = Math.max(0.02, Math.min(0.98, (clientX - rect.left) / rect.width));
+      state.dna[g.key] = v;
+      fill.style.width = (v * 100) + '%';
+      valSpan.textContent = (v * 100).toFixed(0);
+      rebuildLightly();
+    };
+    bar.addEventListener('pointerdown', e => {
+      dragging = true; bar.setPointerCapture(e.pointerId); setFromX(e.clientX);
+    });
+    bar.addEventListener('pointermove', e => { if (dragging) setFromX(e.clientX); });
+    bar.addEventListener('pointerup', e => {
+      dragging = false; bar.releasePointerCapture(e.pointerId);
+      addMemory(`mutação manual em ${g.label.toLowerCase()}`);
+      renderTraits(); renderIdentity();
+    });
+  }
+}
+
+function refreshGeneUI() {
+  for (const g of GENES) {
+    const valSpan = document.querySelector(`[data-val="${g.key}"]`);
+    const fill = document.querySelector(`[data-key="${g.key}"] .gene-fill`);
+    if (valSpan) valSpan.textContent = (state.dna[g.key] * 100).toFixed(0);
+    if (fill) fill.style.width = (state.dna[g.key] * 100) + '%';
+  }
+}
+
+let rebuildTimer = null;
+function rebuildLightly() {
+  // debounce: rebuild creature mesh after small pause
+  clearTimeout(rebuildTimer);
+  rebuildTimer = setTimeout(() => {
+    if (!state.creature) return;
+    state.creature.palette = getPalette(state.dna);
+    scene.remove(state.creature.group);
+    state.creature.dispose();
+    state.creature = new Creature(state.dna, state.seed);
+    scene.add(state.creature.group);
+    updateSceneTint(state.dna);
+  }, 90);
+}
+
+function renderIdentity() {
+  const arch = getArchetype(state.dna);
+  document.getElementById('creature-name').textContent = generateName(state.dna, state.seed);
+  document.getElementById('creature-tagline').textContent = arch.tagline;
+  document.getElementById('creature-seed').textContent = `seed: #${state.seed}`;
+  const ageBucket = state.ageDays < 1 ? 'EMERGENTE'
+                  : state.ageDays < 7 ? 'JOVEM'
+                  : state.ageDays < 30 ? 'AMADURECENDO'
+                  : 'EVOLUÍDO';
+  document.getElementById('stage-badge').textContent = ageBucket;
+}
+
+function moodLabel(dna) {
+  // simplistic composite mood
+  const positive = dna.empathy + dna.socialEnergy + dna.resilience + dna.adaptability;
+  const negative = dna.aggression + dna.chaos;
+  const score = (positive / 4) - (negative / 2) * 0.5;
+  const pct = Math.max(0, Math.min(1, (score + 0.3) / 1.0));
+  let label;
+  if (pct > 0.75) label = 'radiante · alta receptividade';
+  else if (pct > 0.55) label = 'serena · disposta a interagir';
+  else if (pct > 0.4) label = 'curiosa · observando você';
+  else if (pct > 0.25) label = 'inquieta · processando estímulos';
+  else label = 'defensiva · pedindo espaço';
+  return { pct, label };
+}
+
+function renderMood() {
+  const m = moodLabel(state.dna);
+  document.getElementById('mood-text').textContent = m.label;
+  document.getElementById('mood-fill').style.width = (m.pct * 100) + '%';
+  document.getElementById('mood-pct').textContent = (m.pct * 100).toFixed(0) + '%';
+}
+
+function renderTraits() {
+  const arch = getArchetype(state.dna);
+  document.getElementById('trait-age').textContent =
+    state.ageDays < 1
+      ? `${Math.max(0, Math.floor((Date.now() - state.birthTime) / 1000))}s`
+      : `${state.ageDays.toFixed(1)} dias`;
+  document.getElementById('trait-archetype').textContent = arch.name;
+
+  const morphTraits = [];
+  if (state.dna.creativity > 0.4) morphTraits.push('cauda segmentada');
+  if (state.dna.aggression > 0.55) morphTraits.push(`${Math.floor(3 + state.dna.aggression * 7)} espinhos`);
+  if (state.dna.curiosity > 0.55) morphTraits.push('antenas luminescentes');
+  if (state.dna.chaos > 0.65) morphTraits.push('assimetria orgânica');
+  if (state.dna.intelligence > 0.7) morphTraits.push('crânio alongado');
+  if (state.dna.resilience > 0.7) morphTraits.push('base densa');
+  const limbCount = Math.floor(state.dna.creativity * 3 + state.dna.chaos * 2);
+  if (limbCount > 0) morphTraits.push(`${limbCount * 2} membros`);
+  if (state.dna.discipline > 0.7) morphTraits.push('superfície refinada');
+  document.getElementById('trait-morph').textContent = morphTraits.join(' · ') || 'forma minimal';
+
+  document.getElementById('trait-glow').textContent =
+    (state.dna.socialEnergy * 100).toFixed(0) + '% intensidade · ' +
+    `hue ${Math.round(state.creature.palette.glowHSL[0])}°`;
+
+  document.getElementById('trait-mutations').textContent =
+    state.mutations.length
+      ? state.mutations.slice(-3).join(' · ')
+      : 'nenhuma ainda — surgem com tempo e uso';
+}
+
+function renderMemory() {
+  const list = document.getElementById('memory-list');
+  list.innerHTML = state.memories.slice(-6).map(m => `<li>${m}</li>`).join('');
+
+  // behavior commentary
+  const bList = document.getElementById('behavior-list');
+  const behaviors = [];
+  if (state.dna.empathy > 0.6) behaviors.push('inclina a cabeça quando você se aproxima do centro');
+  if (state.dna.curiosity > 0.5) behaviors.push('os olhos seguem seu cursor mais rápido');
+  if (state.dna.aggression > 0.6) behaviors.push('postura mais rígida e contraída');
+  if (state.dna.socialEnergy > 0.65) behaviors.push('a aura se expande quando você interage');
+  if (state.dna.chaos > 0.6) behaviors.push('movimentos imprevisíveis e fora de ritmo');
+  if (state.dna.discipline > 0.65) behaviors.push('respiração medida, quase ritmada');
+  if (state.dna.emotionalDepth > 0.7) behaviors.push('cor muda sutilmente com seu silêncio');
+  if (behaviors.length === 0) behaviors.push('processando ambiente em silêncio');
+  bList.innerHTML = behaviors.slice(0, 4).map(b => `<li>${b}</li>`).join('');
+}
+
+function addMemory(text) {
+  state.memories.push(text);
+  renderMemory();
+}
+
+function renderAllUI() {
+  renderGenes();
+  renderPresets();
+  renderIdentity();
+  renderMood();
+  renderTraits();
+  renderMemory();
+}
+
+/* =========================================================================
+   ACTIONS
+   ========================================================================= */
+document.getElementById('btn-random').addEventListener('click', () => {
+  const newSeed = Math.floor(Math.random() * 1_000_000);
+  spawnCreature(newSeed);
+});
+
+document.getElementById('btn-mutate').addEventListener('click', () => {
+  // random drift on each gene
+  const drifted = [];
+  for (const g of GENES) {
+    const drift = (Math.random() - 0.5) * 0.2;
+    const before = state.dna[g.key];
+    state.dna[g.key] = Math.max(0.02, Math.min(0.98, before + drift));
+    if (Math.abs(state.dna[g.key] - before) > 0.08) drifted.push(g.label.toLowerCase());
+  }
+  rebuildLightly();
+  refreshGeneUI();
+  renderTraits(); renderMood(); renderIdentity();
+  const note = drifted.length
+    ? `mutação espontânea: ${drifted.slice(0,3).join(', ')}`
+    : 'mutação sutil — quase imperceptível';
+  state.mutations.push(note.replace('mutação espontânea: ', ''));
+  addMemory(note);
+});
+
+document.getElementById('btn-evolve').addEventListener('click', () => {
+  state.ageDays += 7;
+  // Simula 7 dias de hábitos saudáveis cumpridos — NÃO há punição se faltar.
+  // A criatura só evolui PELO cuidado, nunca por culpa.
+  const habitsAtended = ['sono', 'agua', 'respiracao', 'leitura', 'journaling', 'movimento'];
+  const habitsThisWeek = [];
+  for (const habit of habitsAtended) {
+    // realismo: nem todo hábito é cumprido todo dia — entre 4 e 7 vezes
+    const completions = 4 + Math.floor(Math.random() * 4);
+    const intensity = completions / 7;
+    if (intensity < 0.4) continue;
+    habitsThisWeek.push({ habit, intensity });
+    const effects = HABIT_GENE_MAP[habit] || {};
+    for (const [gene, delta] of Object.entries(effects)) {
+      state.dna[gene] = Math.min(0.98, state.dna[gene] + delta * intensity);
+    }
+  }
+  rebuildLightly();
+  refreshGeneUI();
+  renderTraits(); renderMood(); renderIdentity();
+  const habitNames = habitsThisWeek.map(h => h.habit).slice(0, 3).join(' · ');
+  addMemory(`7 dias com cuidado: ${habitNames}`);
+  if (state.ageDays >= 30 && state.mutations.length < 3) {
+    state.mutations.push('marca de longevidade');
+    addMemory('mutação rara desbloqueada após 30 dias de cuidado consistente');
+  }
+  if (state.ageDays >= 14 && !state.mutations.includes('estabilidade')) {
+    state.mutations.push('estabilidade');
+    addMemory('a criatura ganhou estabilidade emocional');
+  }
+});
+
+/* PRESETS — 4 personalidades base */
+function renderPresets() {
+  const container = document.getElementById('presets');
+  container.innerHTML = '';
+  for (const [key, p] of Object.entries(PERSONALITIES)) {
+    const btn = document.createElement('button');
+    btn.className = 'preset-chip' + (state.preset === key ? ' active' : '');
+    btn.innerHTML = `
+      <div class="preset-name">${p.name}</div>
+      <div class="preset-tag">${p.tag}</div>
+    `;
+    btn.title = p.desc;
+    btn.addEventListener('click', () => {
+      const seed = Math.floor(Math.random() * 1_000_000);
+      spawnCreature(seed, key);
+      addMemory(`base ${p.name} ativada — ${p.tag.toLowerCase()}`);
+    });
+    container.appendChild(btn);
+  }
+}
+
+/* =========================================================================
+   BOOT
+   ========================================================================= */
+spawnCreature(state.seed);
+animate();
+
+// poll seconds for age display
+setInterval(() => {
+  if (state.ageDays < 1) renderTraits();
+}, 1000);
+
+// occasional ambient memory
+setInterval(() => {
+  if (!state.creature) return;
+  const ambientThoughts = [
+    'sentiu uma variação no ambiente',
+    'percebeu o cursor parado por um instante',
+    'piscou três vezes seguidas',
+    'a aura oscilou levemente',
+  ];
+  if (Math.random() < 0.4) {
+    addMemory(ambientThoughts[Math.floor(Math.random() * ambientThoughts.length)]);
+  }
+}, 9000);
+</script>
+</body>
+</html>
