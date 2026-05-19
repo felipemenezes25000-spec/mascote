@@ -75,6 +75,10 @@ export function classifySafetyEnsemble(
 
   // 3. Bayes treinado — usa seed embarcado se nenhum modelo for passado.
   // Threshold de confiança alto (0.6) pra evitar falsos positivos casuais.
+  // Pra críticos sutis ("preferia não acordar"), confiamos na expansão de
+  // regex em safety.ts em vez de reduzir o threshold do Bayes — o corpus
+  // seed (65 itens) é pequeno demais pra confiar em confiança 0.4-0.55:
+  // palavras compartilhadas como "tudo" puxavam frases neutras pra crítico.
   const model = bayesModel ?? getSeedModel();
   let bayesFlag: SafetyFlag | undefined;
   let bayesConfidence: number | undefined;

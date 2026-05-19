@@ -59,6 +59,9 @@ function Piece({ color, x, y, delay, square }: { color: string; x: number; y: nu
     py.value = withDelay(delay, withTiming(y, { duration: 900 }));
     opacity.value = withDelay(delay, withTiming(0, { duration: 900 }));
     scale.value = withDelay(delay, withTiming(1, { duration: 900 }));
+    // deps array vazio intencional: sharedValues do Reanimated são refs
+    // mutáveis (não state) e props (x/y/delay) são fixas por instância de
+    // Piece — animação one-shot no mount, sem re-execução em re-render.
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({

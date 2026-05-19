@@ -73,7 +73,10 @@ export function bm25Search(
   const queryTokens = tokenize(query);
   if (queryTokens.length === 0 || index.docs.size === 0) return [];
   const N = index.docs.size;
-  const avgDL = index.totalDocLen / N;
+  // Guard div/0: docs todos tokenizados pra vazio (whitespace-only) zeram
+  // totalDocLen mesmo com N > 0. Sem essa proteção, `(b * dl) / avgDL` na
+  // linha 102 vira NaN/Infinity e propaga pro score final.
+  const avgDL = index.totalDocLen > 0 ? index.totalDocLen / N : 1;
 
   // IDF cache
   const idfMap = new Map<string, number>();

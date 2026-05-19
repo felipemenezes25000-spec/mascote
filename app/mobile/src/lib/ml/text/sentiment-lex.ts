@@ -108,12 +108,21 @@ export interface SentimentResult {
   contributors: Array<{ token: string; weight: number }>;
 }
 
+// Keys do léxico ordenadas por comprimento decrescente — garante que prefixos
+// MAIS LONGOS sejam testados primeiro. Sem isso, `Object.keys` segue ordem de
+// inserção, e tokens como 'esperancoso' podem casar com `'esperanca'` (5 chars)
+// antes de `'esperancos'` (10 chars) dependendo da ordem do source — bug
+// engine-dependent. Computado uma vez na carga do módulo.
+const LEXICON_PREFIX_KEYS = Object.keys(LEXICON)
+  .filter(k => k.length >= 4)
+  .sort((a, b) => b.length - a.length);
+
 /** Procura match no léxico considerando prefixos (lemmas truncados). */
 function lookupLexicon(token: string): number | undefined {
   if (LEXICON[token] !== undefined) return LEXICON[token];
   // tentativa por prefixo (cobrir flexões: "cansada", "cansado", "cansei" → 'cansad')
-  for (const key of Object.keys(LEXICON)) {
-    if (key.length >= 4 && token.startsWith(key)) return LEXICON[key];
+  for (const key of LEXICON_PREFIX_KEYS) {
+    if (token.startsWith(key)) return LEXICON[key];
   }
   return undefined;
 }
@@ -183,14 +192,18 @@ export function analyzeSentiment(text: string): SentimentResult {
   if (exclam > 0 && raw < 0) raw *= 1 + Math.min(exclam, 3) * 0.05;
   if (quest > 1 && raw !== 0) raw *= 1 + Math.min(quest - 1, 2) * 0.03;
 
-  // Normalização: tanh-like clamping pra [-1, 1]
-  const normalized_score = raw / Math.sqrt(raw * raw + 15);
+  // Normalização: tanh-like clamping pra [-1, 1].
+  // Guard: `raw` poderia teoricamente virar NaN/Infinity se um intensifier
+  // acumulado escalar muito (pendingIntensifier multiplicado em sequência).
+  // Clampa pra 0 nesse caso — sentiment indeterminado é mais seguro que NaN.
+  const safeRaw = Number.isFinite(raw) ? raw : 0;
+  const normalized_score = safeRaw / Math.sqrt(safeRaw * safeRaw + 15);
 
   contributors.sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight));
 
   return {
     score: normalized_score,
-    raw,
+    raw: safeRaw,
     hits,
     hasNegation,
     magnitude: Math.abs(normalized_score),

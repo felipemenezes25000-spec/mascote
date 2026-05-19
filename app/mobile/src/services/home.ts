@@ -16,15 +16,17 @@ import {
   combo as comboDb,
   dailyReward,
   inventory,
-  mascots as mascotsDb,
   missions as missionsDb,
   mysteryBox,
   todayLocal,
   userScenes,
-  wallet as walletDb,
-  xpEvents,
 } from '@/lib/db';
-import { applyCheckinFully, type CheckinOutcome } from '@/lib/checkin';
+import {
+  applyCheckinFully,
+  applyMissionCompletion,
+  type CheckinOutcome,
+  type MissionCompletionOutcome,
+} from '@/lib/checkin';
 import type { HabitKind, Mascot, Mission, Profile } from '@/types';
 
 export interface HomeBootstrap {
@@ -124,32 +126,31 @@ export interface MissionCompletionResult {
 /**
  * Marca a missão de hoje como completa + paga XP + moedas, idempotente.
  * Retorna `alreadyCompleted=true` se já estava completa (no-op).
+ *
+ * Delega ao pipeline canônico [applyMissionCompletion](../lib/checkin.ts) —
+ * que tem withLock por-missão, re-busca status fresh do DB (evita race em
+ * taps duplos), respeita XP daily cap, recalcula level/phase e dispara
+ * xpEvents. O caminho legado (sem lock, sem recálculo de level/phase, sem
+ * cap diário) foi removido em 2026-05.
+ *
+ * `_coinsRewardLegacy` é aceito por compatibilidade com callers antigos
+ * mas ignorado — pagamento usa `COINS_PER_MISSION` (fixo em 15) via pipeline.
  */
 export async function completeMissionForToday(
   profile: Profile,
   mascot: Mascot,
   mission: Mission,
-  coinsReward: number,
+  _coinsRewardLegacy?: number,
 ): Promise<MissionCompletionResult> {
-  if (mission.status === 'completed') {
-    return { mascot, xpGained: 0, coins: 0, alreadyCompleted: true };
-  }
-  await missionsDb.update(mission.id, {
-    status: 'completed',
-    completed_at: new Date().toISOString(),
+  const out: MissionCompletionOutcome = await applyMissionCompletion({
+    profile,
+    mascot,
+    mission,
   });
-  await xpEvents.add({
-    user_id: profile.id,
-    amount: mission.xp_reward,
-    reason: 'mission',
-    reference: { mission_id: mission.id },
-  });
-  const xpGained = mission.xp_reward;
-  // Atualiza XP do mascote via upsert direto (lib não tem helper "addXp").
-  const updatedMascot = await mascotsDb.upsert({
-    user_id: profile.id,
-    xp: mascot.xp + xpGained,
-  });
-  await walletDb.add(profile.id, coinsReward);
-  return { mascot: updatedMascot, xpGained, coins: coinsReward, alreadyCompleted: false };
+  return {
+    mascot: out.mascot,
+    xpGained: out.xpGained,
+    coins: out.coinsGained,
+    alreadyCompleted: out.alreadyCompleted,
+  };
 }

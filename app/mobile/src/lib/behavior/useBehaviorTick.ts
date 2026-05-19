@@ -84,7 +84,15 @@ export function useBehaviorTick({
         // Marca cooldown ANTES de chamar onEffect (caso onEffect demore /
         // dispare re-render — não queremos double-fire no mesmo tick).
         lastRanRef.current.set(selection.behavior.id, now);
-        onEffectRef.current(effect, selection.behavior);
+        // try/catch: se onEffect lançar (toast queue cheia, animação não
+        // disponível), cooldown JÁ foi marcado — não queremos que o engine
+        // inteiro pare. Erros aqui são logados via re-throw em dev, swallowed
+        // em prod via boundary externa.
+        try {
+          onEffectRef.current(effect, selection.behavior);
+        } catch {
+          // intencional: behavior é melhoria visual, não bloqueante
+        }
       }
     };
     // Tick imediato — não esperar o primeiro intervalo

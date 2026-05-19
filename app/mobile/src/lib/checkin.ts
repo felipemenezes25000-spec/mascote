@@ -20,6 +20,7 @@ import {
 } from '@/lib/db';
 import { applyCheckinToStreak } from '@/lib/streak';
 import { processUnlocks } from '@/lib/unlock';
+import { logger } from '@/lib/logger';
 import { XP_PER_CHECKIN, applyXp, levelFromXp, phaseFromXp } from '@/lib/xp';
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import {
@@ -206,8 +207,14 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
         await dnaMutations.unlock(profile.id, m.id);
         newMutations.push(m);
       }
-    } catch {
-      // mutations é additive layer — falha aqui NÃO bloqueia check-in
+    } catch (err) {
+      // mutations é additive layer — falha aqui NÃO bloqueia check-in.
+      // Antes era catch totalmente silencioso; agora logamos pra que erros
+      // recorrentes em produção (e.g. mutation_id corrompido) sejam visíveis
+      // no telemetry sem precisar reproduzir localmente.
+      logger.warn('[checkin] mutation eval failed (non-fatal)', {
+        reason: err instanceof Error ? err.message : 'unknown',
+      });
     }
   }
 

@@ -14,6 +14,24 @@
 import type { MascotCustomization } from '@/types';
 import type { Morphology } from './morphology';
 
+// Padrões visuais aceitos. Sincronizado com `BodyPattern` em `@/types`.
+// Payload corrompido com `preferred_pattern: 'evil'` passava direto pro
+// renderer e causava modo de fallback silencioso. Whitelist explícita resolve.
+const ALLOWED_PATTERNS = new Set<MascotCustomization['preferred_pattern']>([
+  'plain',
+  'stripes',
+  'spots',
+  'fractal',
+  'cells',
+]);
+
+function sanitizePattern(
+  p: MascotCustomization['preferred_pattern'] | undefined,
+): MascotCustomization['preferred_pattern'] {
+  if (p && ALLOWED_PATTERNS.has(p)) return p;
+  return 'plain';
+}
+
 export const MIN_MULT = 0.7;
 export const MAX_MULT = 1.3;
 /** Range absoluto da inclinação postural em radianos. ±0.2 ≈ ±11.5°. */
@@ -104,7 +122,7 @@ export function sanitizeCustomization(
     body_width: clampMultiplier(input.body_width ?? 1),
     aura_intensity: clampMultiplier(input.aura_intensity ?? 1),
     pattern_density: clampMultiplier(input.pattern_density ?? 1),
-    preferred_pattern: input.preferred_pattern ?? 'plain',
+    preferred_pattern: sanitizePattern(input.preferred_pattern),
     posture_lean: clampPosture(input.posture_lean ?? 0),
     force_hide_tail: Boolean(input.force_hide_tail ?? false),
     force_hide_antennae: Boolean(input.force_hide_antennae ?? false),

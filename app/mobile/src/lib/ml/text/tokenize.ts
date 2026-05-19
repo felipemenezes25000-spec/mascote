@@ -31,7 +31,9 @@ const STOPWORDS_PT = new Set([
   'aos','das','dos',
 ]);
 
-const NEGATION_WORDS = new Set(['não', 'nao', 'nunca', 'jamais', 'nenhum', 'nenhuma', 'nem']);
+// Tokens chegam aqui SEMPRE pós `stripDiacritics` (linha 100), então entradas
+// acentuadas seriam dead code. Mantemos só as formas sem acento.
+const NEGATION_WORDS = new Set(['nao', 'nunca', 'jamais', 'nenhum', 'nenhuma', 'nem']);
 
 const PRESERVE_NEGATIONS = true;
 

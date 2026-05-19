@@ -16,6 +16,7 @@ import { embed, detectMode, type EmbedConfig } from '@/lib/ml/embedding';
 import { addDocument, deserializeStats, emptyStats, serializeStats, type TfIdfStats } from '@/lib/ml/text/tfidf';
 import { VectorStore } from '@/lib/ml/store/vector-store';
 import { buildGraph, rerankByGraph, type RerankItem } from '@/lib/memory/graph';
+import { withLock } from '@/lib/db';
 
 export type MemoryKind =
   | 'event'      // "tenho prova quarta", "vou viajar"
@@ -146,8 +147,22 @@ async function write(uid: string, items: MemoryItem[]): Promise<void> {
   await AsyncStorage.setItem(KEY(uid), JSON.stringify(sliced));
 }
 
+// Counter de IDs: incrementa quando duas memórias são criadas no mesmo ms
+// (caso comum quando `extractMemories` casa 3+ padrões na mesma mensagem
+// e os 3 mkId() rodam sucessivamente). Sem isso, 4 chars de Math.random
+// colidem ocasionalmente em rajada.
+let memIdCounter = 0;
+let memIdLastMs = 0;
 function mkId(): string {
-  return `mem_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  const now = Date.now();
+  if (now === memIdLastMs) {
+    memIdCounter++;
+  } else {
+    memIdCounter = 0;
+    memIdLastMs = now;
+  }
+  const rand = Math.random().toString(36).slice(2, 6);
+  return `mem_${now.toString(36)}${memIdCounter.toString(36)}_${rand}`;
 }
 
 /**
@@ -185,6 +200,24 @@ export async function rememberFromMessage(
   userMessage: string,
   now: Date = new Date(),
   embedConfig?: Partial<EmbedConfig>
+): Promise<MemoryItem[]> {
+  // Lock per-user pra serializar TODO o read-modify-write — sem isso, duas
+  // chamadas paralelas (ex: surfaces de chat + onboarding ao mesmo tempo)
+  // disputavam:
+  //  - addDocument(stats, ...) mutava o cache em paralelo, IDF inconsistente
+  //  - write(uid, [...existing, ...dedup]) usava o mesmo `existing` lido por
+  //    ambos, last-writer-wins perdia memórias.
+  // Padrão idêntico ao [withLock('checkin:${user}')](./checkin.ts).
+  return withLock(`memory:${userId}`, () =>
+    rememberFromMessageCore(userId, userMessage, now, embedConfig),
+  );
+}
+
+async function rememberFromMessageCore(
+  userId: string,
+  userMessage: string,
+  now: Date,
+  embedConfig?: Partial<EmbedConfig>,
 ): Promise<MemoryItem[]> {
   const extracted = extractMemories(userId, userMessage, now);
 

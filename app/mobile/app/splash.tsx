@@ -14,7 +14,6 @@ import { useStore } from '@/store';
 
 export default function Splash() {
   const theme = useTheme();
-  const profile = useStore(s => s.profile);
   const scale = useSharedValue(0.85);
   const opacity = useSharedValue(0);
 
@@ -26,6 +25,11 @@ export default function Splash() {
     scale.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) });
     opacity.value = withTiming(1, { duration: 300 });
     const t = setTimeout(() => {
+      // Lê o profile MAIS RECENTE do snapshot do store — não do closure
+      // capturado no mount. Sem isso, se a hidratação do AsyncStorage terminar
+      // ENTRE o mount e o timeout, o profile capturado era null e mandávamos
+      // user já cadastrado pro onboarding (regressão silenciosa).
+      const profile = useStore.getState().profile;
       if (profile) router.replace('/(tabs)');
       else router.replace('/onboarding/welcome');
     }, 700);

@@ -98,6 +98,10 @@ export function playVoiceLine(profile: VoiceProfile, line: VoiceLine): VoiceHand
 
 function createWebBackend(Ctor: typeof AudioContext): AudioBackend {
   let ctx: AudioContext | null = null;
+  // Set de timeouts em vôo. dispose() os cancela pra Promise.done não pendurar
+  // após unmount da tela (player.dispose() chamava só ctx.close(), e o timer
+  // continuava agendado, segurando microtask + ref ao resolve).
+  const pendingTimers = new Set<ReturnType<typeof setTimeout>>();
 
   function getCtx(): AudioContext | null {
     if (!ctx) {
@@ -138,12 +142,20 @@ function createWebBackend(Ctor: typeof AudioContext): AudioBackend {
     }
     const done = new Promise<void>(resolve => {
       const ms = Math.max(50, (endTime - now) * 1000 + 20);
-      setTimeout(() => resolve(), ms);
+      const t = setTimeout(() => {
+        pendingTimers.delete(t);
+        resolve();
+      }, ms);
+      pendingTimers.add(t);
     });
     return { id, done };
   }
 
   function dispose(): void {
+    // Cancela timers em vôo antes de fechar o ctx — caso contrário a Promise
+    // fica pendurada esperando handle.done que nunca resolve.
+    for (const t of pendingTimers) clearTimeout(t);
+    pendingTimers.clear();
     if (ctx) {
       ctx.close().catch(() => undefined);
       ctx = null;

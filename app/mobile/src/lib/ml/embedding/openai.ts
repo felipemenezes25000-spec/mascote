@@ -51,12 +51,19 @@ async function evictIfNeeded(): Promise<void> {
     const keys = await AsyncStorage.getAllKeys();
     const cacheKeys = keys.filter(k => k.startsWith(CACHE_PREFIX));
     if (cacheKeys.length < MAX_CACHE_ENTRIES) return;
-    // Sem timestamp por chave (custo extra de read), evict aleatório 20%
-    /* v8 ignore next — `() => Math.random() - 0.5` é compare function de sort;
-       só executa se cacheKeys >= MAX_CACHE_ENTRIES (timing-dependent). */
-    const toRemove = cacheKeys
-      .sort(() => Math.random() - 0.5)
-      .slice(0, Math.floor(MAX_CACHE_ENTRIES * 0.2));
+    // Eviction aleatório 20% — Fisher-Yates puro pra distribuição uniforme.
+    // O padrão antigo `sort(() => Math.random() - 0.5)` é shuffle ENVIESADO
+    // notório (algumas keys ficam super-protegidas, outras sempre evictadas).
+    const target = Math.floor(MAX_CACHE_ENTRIES * 0.2);
+    const toRemove: string[] = [];
+    const pool = cacheKeys.slice(); // copia mutável
+    for (let i = 0; i < target && pool.length > 0; i++) {
+      const idx = Math.floor(Math.random() * pool.length);
+      toRemove.push(pool[idx]);
+      // swap-pop pra remover em O(1) sem preservar ordem
+      pool[idx] = pool[pool.length - 1];
+      pool.pop();
+    }
     await AsyncStorage.multiRemove(toRemove);
   } catch {
     /* v8 ignore next — falha de storage no eviction não é fatal:

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Icon } from '@/components/Icon';
@@ -16,14 +16,21 @@ export function NotificationBell({ profileId, refreshKey }: Props) {
   const styles = useStyles(makeStyles);
   const theme = useTheme();
   const [unread, setUnread] = useState(0);
+  // Guard contra "setState after unmount" — header pode desmontar rápido em
+  // navegação entre tabs enquanto o read do AsyncStorage ainda está pending.
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
     void refresh();
+    return () => {
+      mountedRef.current = false;
+    };
   }, [profileId, refreshKey]);
 
   async function refresh() {
     const count = await notifications.unreadCount(profileId);
-    setUnread(count);
+    if (mountedRef.current) setUnread(count);
   }
 
   return (

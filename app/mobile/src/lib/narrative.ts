@@ -69,11 +69,13 @@ function countByDay(checkins: Checkin[]): Map<string, number> {
 
 function dayLabel(yyyymmdd: string): string {
   const [y, mo, d] = yyyymmdd.split('-').map(Number);
-  /* v8 ignore next — `?? 1` guard pra strings mal-formadas; callers passam
-     YYYY-MM-DD válido. */
-  const date = new Date(Date.UTC(y, (mo ?? 1) - 1, d ?? 1));
   const names = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
-  return names[date.getUTCDay()];
+  // Guard contra strings mal-formadas: se y for NaN, Date.UTC retorna NaN,
+  // `getUTCDay()` retorna NaN, `names[NaN]` é undefined. Fallback p/ string vazia
+  // protege o template literal de chegar "undefined" na narrativa.
+  if (!Number.isFinite(y)) return '';
+  const date = new Date(Date.UTC(y, (mo ?? 1) - 1, d ?? 1));
+  return names[date.getUTCDay()] ?? '';
 }
 
 const PERSONALITY_TONE: Record<Personality, {

@@ -879,14 +879,19 @@ export const wallet = {
     return rows.find(w => w.user_id === user_id) ?? freshWallet(user_id);
   },
   async add(user_id: string, coins: number, gems: number = 0): Promise<Wallet> {
+    // Sanitiza inputs: NaN/Infinity/strings entram aqui se caller passar lixo.
+    // Math.max(0, NaN) = NaN, e NaN persistido na wallet corrompe todos os
+    // saldos futuros — esse guard converte lixo em zero antes de somar.
+    const safeCoins = Number.isFinite(coins) ? coins : 0;
+    const safeGems = Number.isFinite(gems) ? gems : 0;
     return withLock('wallet', async () => {
       const rows = await read<Wallet>('wallet');
       /* v8 ignore next — `?? freshWallet` para 1ª chamada wallet.add. */
       const current = rows.find(w => w.user_id === user_id) ?? freshWallet(user_id);
       const next: Wallet = {
         ...current,
-        coins: Math.max(0, current.coins + coins),
-        gems: Math.max(0, current.gems + gems),
+        coins: Math.max(0, current.coins + safeCoins),
+        gems: Math.max(0, current.gems + safeGems),
         updated_at: new Date().toISOString(),
       };
       /* v8 ignore next 3 — ternário wallet.add exists/new. */
@@ -898,14 +903,19 @@ export const wallet = {
     });
   },
   async spend(user_id: string, coins: number = 0, gems: number = 0): Promise<Wallet | null> {
+    // Inputs negativos/NaN viram 0 — spend só subtrai valores válidos não-negativos.
+    // NaN < n é sempre false, então sem guard `current.coins < NaN` retornaria
+    // false e a subtração persistiria NaN.
+    const safeCoins = Number.isFinite(coins) && coins > 0 ? coins : 0;
+    const safeGems = Number.isFinite(gems) && gems > 0 ? gems : 0;
     return withLock('wallet', async () => {
       const rows = await read<Wallet>('wallet');
       const current = rows.find(w => w.user_id === user_id) ?? freshWallet(user_id);
-      if (current.coins < coins || current.gems < gems) return null;
+      if (current.coins < safeCoins || current.gems < safeGems) return null;
       const next: Wallet = {
         ...current,
-        coins: current.coins - coins,
-        gems: current.gems - gems,
+        coins: current.coins - safeCoins,
+        gems: current.gems - safeGems,
         updated_at: new Date().toISOString(),
       };
       /* v8 ignore next 3 — spend só roda quando `current.coins >= coins`,
@@ -1096,7 +1106,11 @@ export const combo = {
 };
 
 export function comboXpBonus(level: number): number {
-  // +25% por nível de combo, partindo de ×1 (0% extra)
+  // +25% por nível de combo, partindo de ×1 (0% extra).
+  // Guard contra NaN/Infinity: comboAfter.current vem do DB, e seed corrompido
+  // poderia trazer lixo — NaN propagaria pro multiplicador de XP via
+  // `Math.round(baseXp * (1 + NaN/100))` virando 0 silenciosamente.
+  if (!Number.isFinite(level) || level < 1) return 0;
   return (level - 1) * 25;
 }
 

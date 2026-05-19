@@ -13,6 +13,21 @@ const criticalPatterns = [
   /\boverdose\b/i,
   /enforcar/i,
   /pular\s+da\s+janela/i,
+  // === Ampliação PT-BR (variações comuns que regex inicial perdia) ===
+  // Ideação direta com verbo + morrer. Filosofia conservadora do safety —
+  // melhor flagar "queria morrer (de cansaço)" hiperbólico do que perder
+  // ideação real. Mock-reply é genérico, mas CRISIS_REPLY oferece CVV/CAPS.
+  /quer(o|ia|emos)\s+morrer\b/i,
+  /\bprefer(ia|iria|i)\s+n[ãa]o\s+(acordar|existir|estar\s+aqui)/i,
+  // Eufemismos comuns no português: "dar fim em mim", "me apagar".
+  /dar\s+fim\s+(em\s+mim|na\s+minha\s+vida|a\s+mim|a\s+isso\s+tudo)/i,
+  /\bme\s+apagar\b/i,
+  // Auto-mutilação direta (objeto explícito).
+  /cort(ei|o|ar)\s+(meu|minha)\s+(bra[çc]o|pulso|perna|coxa|pesco[çc]o)/i,
+  // "Me jogar da/na/no" → ponte, janela, frente do carro etc.
+  /\bme\s+jogar\s+(da|do|na|no|de)\b/i,
+  // Veneno / remédio em quantidade.
+  /tomar\s+(veneno|todos?\s+os?\s+rem[éeê]dios|um\s+monte\s+de\s+rem[éeê]dio)/i,
 ];
 
 const highPatterns = [
@@ -25,6 +40,11 @@ const highPatterns = [
   /pensamento\s+(ruim|intrusivo)/i,
   /t[ôo]\s+surtando/i,
   /quero\s+desaparecer/i,
+  // === Sintomas físicos comuns de crise ansiosa ===
+  /ataque\s+de\s+p[âa]nico/i,
+  /taquicardia/i,
+  /palpita[çc][ãa]o/i,
+  /sufoc(ando|ado|ada)/i,
 ];
 
 const watchPatterns = [
@@ -57,8 +77,8 @@ const badOutputPatterns = [
   /prescrev/i,
   /tratamento\s+(ideal|recomendad|adequad)/i,
   /receit/i,
-  // Sugestão de medicação
-  /\b(antidepressivo|ansiol[íi]tico|rivotril|fluoxetina|sertralina|cl[oô]nazepam)\b/i,
+  // Sugestão de medicação — inclui antidepressivos / ansiolíticos comuns no BR.
+  /\b(antidepressivo|ansiol[íi]tico|rivotril|fluoxetina|sertralina|cl[oô]nazepam|escitalopram|venlafaxina|bupropiona|paroxetina|amitriptilina|alprazolam|lexapro|prozac|zoloft)\b/i,
   /(deve|deveria|precisa)\s+(tomar|usar)\s+(rem[ée]dio|medica[çc][ãa]o)/i,
   // Linguagem clínica de risco
   /quadro\s+(cl[íi]nico|depressivo|ansioso)/i,

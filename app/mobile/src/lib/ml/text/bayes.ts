@@ -98,6 +98,15 @@ export function predict<L extends string>(
   // Softmax pra normalizar em [0,1]
   let max = -Infinity;
   for (const v of logScores.values()) if (v > max) max = v;
+  // Guard contra underflow extremo: se TODAS as labels têm logProb = -Infinity
+  // (doc com tokens ultra-raros em label grande), `v - max = -Inf - (-Inf) = NaN`.
+  // Fallback: retorna a primeira label com confiança uniforme (prior).
+  if (!Number.isFinite(max)) {
+    const firstLabel = logScores.keys().next().value as L | undefined;
+    if (!firstLabel) return null;
+    const uniform = 1 / logScores.size;
+    return { label: firstLabel, confidence: uniform, scores: logScores };
+  }
   let sumExp = 0;
   const expScores = new Map<L, number>();
   for (const [label, v] of logScores) {
@@ -108,6 +117,7 @@ export function predict<L extends string>(
   let bestLabel: L | undefined;
   let bestConf = -1;
   for (const [label, e] of expScores) {
+    // sumExp >= 1 sempre (max-shifted: pelo menos uma label tem e=1)
     const conf = e / sumExp;
     if (conf > bestConf) {
       bestConf = conf;

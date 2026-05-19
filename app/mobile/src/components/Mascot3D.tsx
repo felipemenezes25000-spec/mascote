@@ -137,7 +137,7 @@ export function Mascot3D({
       <Canvas
         gl={{ antialias: true, alpha: !background }}
         camera={{ position: [0, 0.5, 5], fov: 45 }}
-        onCreated={({ gl, scene }: { gl: any; scene: any }) => {
+        onCreated={({ gl, scene }: { gl: THREE.WebGLRenderer; scene: THREE.Scene }) => {
           gl.setClearColor(background ?? '#000000', background ? 1 : 0);
           scene.fog = new THREE.FogExp2(0x0a0e1a, 0.022);
         }}
@@ -837,7 +837,7 @@ function Limbs({
   useFrame(() => {
     if (reduceMotion || !groupRef.current) return;
     const t = performance.now() / 1000 - tStart.current;
-    groupRef.current.children.forEach((child: any, idx: number) => {
+    groupRef.current.children.forEach((child: THREE.Object3D, idx: number) => {
       const data = limbs[idx];
       if (!data) return;
       child.rotation.x = data.rotX + Math.sin(t * 1.2 + data.phase) * morph.limbSwayAmplitude;
@@ -924,7 +924,7 @@ function Antennae({
   useFrame(() => {
     if (reduceMotion || !groupRef.current) return;
     const t = performance.now() / 1000 - tStart.current;
-    groupRef.current.children.forEach((child: any, i: number) => {
+    groupRef.current.children.forEach((child: THREE.Object3D, i: number) => {
       child.rotation.x = -0.15 + Math.sin(t * 2 + i) * morph.antennaWiggle;
     });
   });

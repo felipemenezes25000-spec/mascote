@@ -8,6 +8,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cosine } from '@/lib/ml/text/tokenize';
+import { logger } from '@/lib/logger';
 
 export interface VectorRecord<M = Record<string, unknown>> {
   id: string;
@@ -84,11 +85,25 @@ export class VectorStore<M = Record<string, unknown>> {
     await this.load();
     const { limit = 5, minScore = 0, filter } = opts;
     const scored: SearchResult<M>[] = [];
+    let dimMismatches = 0;
     for (const r of this.records) {
       if (filter && !filter(r)) continue;
-      if (r.vector.length !== queryVec.length) continue; // dim mismatch (mode trocou)
+      // dim mismatch típico: user trocou apiKey (1536 dims OpenAI) ↔ modo local
+      // (256 dims TF-IDF). Antes era silencioso e produzia 0 resultados sem
+      // sinal — agora logamos contagem pra debug. Reindexar é a saída.
+      if (r.vector.length !== queryVec.length) {
+        dimMismatches++;
+        continue;
+      }
       const s = cosine(queryVec, r.vector);
       if (s > minScore) scored.push({ record: r, score: s });
+    }
+    if (dimMismatches > 0 && scored.length === 0) {
+      logger.warn(`[vector-store] all ${dimMismatches} records have dim mismatch; reindex needed`, {
+        namespace: this.namespace,
+        queryDim: queryVec.length,
+        mismatches: dimMismatches,
+      });
     }
     scored.sort((a, b) => b.score - a.score);
     return scored.slice(0, limit);

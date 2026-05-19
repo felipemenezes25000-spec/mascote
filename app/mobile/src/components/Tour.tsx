@@ -56,8 +56,10 @@ export function Tour({ visible, onDone }: Props) {
   const opacity = useSharedValue(1);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => () => {
-    if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+  useEffect(() => {
+    return () => {
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+    };
   }, []);
 
   function next() {

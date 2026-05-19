@@ -28,10 +28,11 @@ function isContextAppropriate(t: MissionTemplate, ctx: RankingContext): boolean 
   if (ctx.doneToday.has(t.habit_kind)) return false;
   // Sleep só faz sentido à noite (≥18h)
   if (t.habit_kind === 'sleep' && ctx.hour < 18) return false;
-  // Sol só faz sentido de dia (8-17h)
-  if (t.habit_kind === 'sun' && (ctx.hour < 8 || ctx.hour > 17)) return false;
-  // Outdoor / exercise: evitar madrugada (1-5h)
-  if ((t.habit_kind === 'outdoor' || t.habit_kind === 'exercise') && ctx.hour >= 1 && ctx.hour < 5) {
+  // Sol só faz sentido de dia (8-17h, intervalos fechados para simetria com sleep `< 18`)
+  if (t.habit_kind === 'sun' && (ctx.hour < 8 || ctx.hour >= 18)) return false;
+  // Outdoor / exercise: evitar madrugada (0-5h). Antes o range era `>= 1 && < 5`
+  // que permitia 0h (meia-noite), claramente madrugada também — bug de borda.
+  if ((t.habit_kind === 'outdoor' || t.habit_kind === 'exercise') && ctx.hour < 5) {
     return false;
   }
   // Em mood triste/exausto, evita exercise pesado

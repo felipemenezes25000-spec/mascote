@@ -12,6 +12,7 @@
  */
 
 import { type ReactNode } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
 import Animated, { FadeInDown, type EntryExitAnimationFunction } from 'react-native-reanimated';
 import { useStore } from '@/store';
 
@@ -26,7 +27,7 @@ interface Props {
   /** Override do entering (ex: SlideInRight). */
   entering?: EntryExitAnimationFunction;
   children: ReactNode;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function StaggeredView({

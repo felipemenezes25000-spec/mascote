@@ -406,15 +406,20 @@ export function applyMutationVisualImpact(
       (out as Record<MorphKeys, unknown>)[k] = cur * mult;
     }
   }
-  // glowBoost: incremento aditivo no emissive intensity do corpo
-  if (impact.glowBoost > 0) {
-    out.bodyEmissiveIntensity += impact.glowBoost;
+  // glowBoost: incremento aditivo no emissive intensity do corpo.
+  // CAP obrigatório: sem isso, mutations futuras com glowBoost mal-calibrado
+  // (ou um payload corrompido com Infinity) propagavam direto pro renderer
+  // 3D e causavam bloom branco overwhelming. Faixa física ≤ 5.
+  if (impact.glowBoost > 0 && Number.isFinite(impact.glowBoost)) {
+    out.bodyEmissiveIntensity = Math.min(5, out.bodyEmissiveIntensity + impact.glowBoost);
   }
-  // auraParticleMultiplier: scale na contagem de partículas
-  if (impact.auraParticleMultiplier !== 1) {
-    out.auraParticleCount = Math.max(
-      0,
-      Math.floor(out.auraParticleCount * impact.auraParticleMultiplier),
+  // auraParticleMultiplier: scale na contagem de partículas. Cap em 200 pra
+  // evitar regressão de performance se mutations compostas (cap implícito
+  // anterior era confiança no catálogo — agora explicit).
+  if (impact.auraParticleMultiplier !== 1 && Number.isFinite(impact.auraParticleMultiplier)) {
+    out.auraParticleCount = Math.min(
+      200,
+      Math.max(0, Math.floor(out.auraParticleCount * impact.auraParticleMultiplier)),
     );
   }
   // Pattern: mutation override > DNA default. Só substitui se mutation

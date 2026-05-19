@@ -99,11 +99,18 @@ export function selectArm(
   /* v8 ignore stop */
 }
 
-/** Registra reward (1 = sucesso, 0 = falha) pra um arm. */
-export function recordReward(state: BanditState, armId: string, reward: 0 | 1): void {
+/** Registra reward (1 = sucesso, 0 = falha) pra um arm.
+ *
+ * Aceita qualquer valor em [0, 1] e usa fracional como peso entre α e β.
+ * Valores fora desse range (negativos, NaN, > 1) são ignorados — type signature
+ * é `0 | 1` mas em runtime payload corrompido via deserialize pode vazar.
+ */
+export function recordReward(state: BanditState, armId: string, reward: 0 | 1 | number): void {
+  if (!Number.isFinite(reward)) return;
+  const clamped = Math.max(0, Math.min(1, reward));
   const arm = ensureArm(state, armId);
-  if (reward === 1) arm.alpha += 1;
-  else arm.beta += 1;
+  arm.alpha += clamped;
+  arm.beta += 1 - clamped;
 }
 
 /** Probabilidade estimada de sucesso (média da Beta). */
