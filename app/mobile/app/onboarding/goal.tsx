@@ -1,11 +1,12 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
 import { StaggeredView } from '@/components/StaggeredView';
+import { stepLabel } from '@/lib/onboarding-flow';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
@@ -19,11 +20,22 @@ const GOALS: { id: string; label: string; icon: IconName }[] = [
   { id: 'companhia', label: 'Só ter companhia leve', icon: 'heart' },
 ];
 
+const MOODS = [
+  { id: '1', emoji: '😞' },
+  { id: '2', emoji: '😕' },
+  { id: '3', emoji: '😐' },
+  { id: '4', emoji: '🙂' },
+  { id: '5', emoji: '😄' },
+];
+
 export default function Goal() {
   const theme = useTheme();
   const styles = makeStyles(theme);
-  const params = useLocalSearchParams<{ display_name: string }>();
-  const [selected, setSelected] = useState<string | null>(null);
+  const params = useLocalSearchParams<{ display_name?: string; age_band?: string }>();
+  const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
+  const [selectedMood, setSelectedMood] = useState<string | null>(null);
+
+  const canContinue = !!(selectedGoal && selectedMood);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -32,45 +44,60 @@ export default function Goal() {
           <View>
             <View style={styles.kickerRow}>
               <Icon name="target" size={12} color={theme.colors.primary} strokeWidth={2.4} />
-              <Text style={styles.kicker}>OBJETIVO</Text>
+              <Text style={styles.kicker}>{stepLabel('goal')}</Text>
             </View>
             <Text style={styles.title}>O que tá te chamando pra cá?</Text>
             <Text style={styles.subtitle}>Pode mudar depois. Vou usar pra começar com o pé direito.</Text>
           </View>
         </StaggeredView>
-        <ScrollView contentContainerStyle={{ gap: theme.spacing.sm }}>
+        <ScrollView contentContainerStyle={{ gap: theme.spacing.sm, paddingBottom: theme.spacing.md }}>
           {GOALS.map((g, i) => (
-            <StaggeredView key={g.id} index={i + 1} step={50} distance={12}>
+            <StaggeredView key={g.id} index={i + 1} step={45} distance={10}>
               <PressableScale
-                style={[styles.opt, selected === g.id && styles.optSelected]}
-                onPress={() => setSelected(g.id)}
+                style={[styles.opt, selectedGoal === g.id && styles.optSelected]}
+                onPress={() => setSelectedGoal(g.id)}
                 accessibilityLabel={g.label}
               >
-                <View style={[styles.optIconWrap, selected === g.id && styles.optIconWrapSelected]}>
+                <View style={[styles.optIconWrap, selectedGoal === g.id && styles.optIconWrapSelected]}>
                   <Icon
                     name={g.icon}
                     size={18}
-                    color={selected === g.id ? '#fff' : theme.colors.primary}
+                    color={selectedGoal === g.id ? '#fff' : theme.colors.primary}
                     strokeWidth={2.2}
                   />
                 </View>
-                <Text style={[styles.optLabel, selected === g.id && styles.optLabelSelected]}>
+                <Text style={[styles.optLabel, selectedGoal === g.id && styles.optLabelSelected]}>
                   {g.label}
                 </Text>
-                {selected === g.id && (
+                {selectedGoal === g.id && (
                   <Icon name="check" size={18} color="#fff" strokeWidth={2.8} />
                 )}
               </PressableScale>
             </StaggeredView>
           ))}
         </ScrollView>
+        <View style={styles.moodSection}>
+          <Text style={styles.moodKicker}>E como você tá agora?</Text>
+          <View style={styles.moodRow}>
+            {MOODS.map(m => (
+              <Pressable
+                key={m.id}
+                style={[styles.moodOpt, selectedMood === m.id && styles.moodOptSelected]}
+                onPress={() => setSelectedMood(m.id)}
+                accessibilityLabel={`Humor ${m.id} de 5`}
+              >
+                <Text style={styles.moodEmoji}>{m.emoji}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
         <Button
           label="Continuar"
-          disabled={!selected}
+          disabled={!canContinue}
           onPress={() =>
             router.push({
-              pathname: '/onboarding/mood',
-              params: { ...params, goal: selected ?? '' },
+              pathname: '/onboarding/mascot',
+              params: { ...params, goal: selectedGoal ?? '', mood: selectedMood ?? '' },
             })
           }
         />
@@ -87,7 +114,7 @@ function makeStyles(theme: Theme) {
       paddingHorizontal: theme.spacing.lg,
       paddingTop: theme.spacing.xl,
       paddingBottom: theme.spacing.lg,
-      gap: theme.spacing.lg,
+      gap: theme.spacing.md,
     },
     kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
     kicker: {
@@ -102,9 +129,9 @@ function makeStyles(theme: Theme) {
       ...theme.text.h1,
       color: theme.colors.text,
       marginTop: theme.spacing.sm,
-      fontSize: 32,
+      fontSize: 30,
       letterSpacing: -0.6,
-      lineHeight: 36,
+      lineHeight: 34,
     },
     subtitle: {
       ...theme.text.body,
@@ -148,5 +175,28 @@ function makeStyles(theme: Theme) {
       fontSize: 14.5,
     },
     optLabelSelected: { color: '#fff', fontWeight: '700', fontFamily: 'PlusJakartaSans_700Bold' },
+    moodSection: {
+      gap: theme.spacing.sm,
+      paddingTop: theme.spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.border,
+    },
+    moodKicker: {
+      ...theme.text.sm,
+      color: theme.colors.textSecondary,
+      fontWeight: '600',
+    },
+    moodRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 6 },
+    moodOpt: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 10,
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.radius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    moodOptSelected: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+    moodEmoji: { fontSize: 26 },
   });
 }

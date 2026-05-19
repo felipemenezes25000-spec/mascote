@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
 import { useStyles, useTheme } from '@/lib/useTheme';
-import type { Theme } from '@/lib/themes';
+import { noShadow, type Theme } from '@/lib/themes';
 
 /**
  * Daily reward strip premium — 7 dias com SVG icons em vez de emoji.
@@ -149,7 +149,7 @@ function makeStyles(theme: Theme) {
       borderRadius: theme.radius.pill,
       ...theme.shadow.sm,
     },
-    claimBtnDone: { backgroundColor: theme.colors.bg2, shadowOpacity: 0, elevation: 0 },
+    claimBtnDone: { backgroundColor: theme.colors.bg2, ...noShadow() },
     claimText: {
       color: '#fff',
       fontWeight: '800',

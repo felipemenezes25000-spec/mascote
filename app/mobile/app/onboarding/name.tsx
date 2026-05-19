@@ -72,7 +72,8 @@ export default function NameStep() {
     setStreak(streak);
     setSettings(settings);
     setWallet(wallet);
-    router.push({ pathname: '/onboarding/push', params: { personality } });
+    // Flow v2: skip push.tsx — notice.tsx agora tem toggle de push inline
+    router.push({ pathname: '/onboarding/notice', params: { personality } });
   }
 
   return (

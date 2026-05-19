@@ -82,3 +82,9 @@ expo-go-install.log
 emu-boot.log
 rebuild.log
 sdk-install.log
+
+# Outputs descartáveis de comandos ad-hoc (typecheck, race tests, etc)
+race-out*.txt
+test-output.txt
+test-after*.txt
+tsc-output.txt

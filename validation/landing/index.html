@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Mascote — autocuidado leve com um companheiro que evolui com você. Sem cobrança, sem culpa." />
+  <meta name="theme-color" content="#E8A754" />
+  <meta property="og:title" content="Mascote — cuide de você, ele evolui junto" />
+  <meta property="og:description" content="Em 30 segundos por dia, você cuida de você. Sem cobrança, sem culpa." />
+  <meta property="og:type" content="website" />
+  <title>Mascote — cuide de você, ele evolui junto</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <div class="logo">
+        <div class="logo-mark" aria-hidden="true">🐣</div>
+        <div class="wordmark">mascote</div>
+      </div>
+      <h1>Cuide de você.<br />Seu Mascote evolui junto.</h1>
+      <p class="subtitle">
+        Em 30 segundos por dia, você cuida de você e ele cresce.
+        Sem cobrança, sem culpa.
+      </p>
+      <p class="kicker">Lançamento em breve — entre na lista de espera</p>
+
+      <form id="waitlist" class="waitlist" action="#" method="POST" novalidate>
+        <label class="visually-hidden" for="email">Seu email</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="seu@email.com"
+          required
+          autocomplete="email"
+        />
+        <button type="submit">Quero saber quando lançar</button>
+      </form>
+      <p id="form-msg" class="form-msg" role="status" aria-live="polite"></p>
+      <p class="legal">
+        Sem spam. Só te avisamos quando puder testar. Você desliga quando quiser.
+      </p>
+    </header>
+
+    <section class="cards" aria-label="Diferenciais">
+      <article class="card">
+        <div class="card-icon" aria-hidden="true">🌱</div>
+        <h2>Evolui com hábitos</h2>
+        <p>Ovo → bebê → criança → adolescente → adulto → evoluído. Cuidar de você cuida dele.</p>
+      </article>
+      <article class="card">
+        <div class="card-icon" aria-hidden="true">💛</div>
+        <h2>4 personalidades</h2>
+        <p>Calmo, Motivador, Fofo, Sábio. Ele tem jeito. Você escolhe o que combina.</p>
+      </article>
+      <article class="card">
+        <div class="card-icon" aria-hidden="true">🔒</div>
+        <h2>Tudo no seu celular</h2>
+        <p>Sem nuvem. Sem rastreio. Seu progresso fica com você. Só você decide.</p>
+      </article>
+    </section>
+
+    <section class="safety" aria-label="Aviso de uso">
+      <h2>O Mascote é wellness</h2>
+      <p>
+        Esse app é pra <strong>autocuidado e bem-estar</strong>. Ele NÃO é
+        terapia, não dá diagnóstico, não prescreve remédio e não substitui
+        psicólogo, psiquiatra ou médico.
+      </p>
+      <p class="crisis">
+        Em momentos de crise emocional —
+        <strong>CVV 188</strong> (24h, gratuito) ou
+        <a href="https://cvv.org.br" rel="noopener">cvv.org.br</a>.
+        Emergência médica — <strong>SAMU 192</strong>.
+      </p>
+    </section>
+
+    <footer>
+      <p>© 2026 Mascote · feito no Brasil 🇧🇷</p>
+      <p class="footer-links">
+        <a href="#privacy">Privacidade</a> ·
+        <a href="#terms">Termos</a> ·
+        <a href="mailto:oi@mascote.app">oi@mascote.app</a>
+      </p>
+    </footer>
+  </main>
+
+  <script>
+    // Captura de waitlist client-side. Em prod, swap por endpoint real
+    // (Tally, ConvertKit, Resend, ou Edge Function do Supabase).
+    // Por enquanto, salva em localStorage pra contagem manual de inscritos
+    // até backend estar pronto.
+    (function () {
+      var form = document.getElementById('waitlist');
+      var msg = document.getElementById('form-msg');
+      if (!form) return;
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var input = form.querySelector('input[name="email"]');
+        var email = (input && input.value || '').trim().toLowerCase();
+        if (!email || email.indexOf('@') === -1) {
+          msg.textContent = 'Ops — coloca um email válido?';
+          msg.className = 'form-msg form-msg-error';
+          return;
+        }
+        try {
+          var key = 'mascote_waitlist';
+          var raw = localStorage.getItem(key);
+          var list = raw ? JSON.parse(raw) : [];
+          if (list.indexOf(email) === -1) list.push(email);
+          localStorage.setItem(key, JSON.stringify(list));
+        } catch (err) { /* silent */ }
+        msg.textContent = 'Te avisamos quando lançar. Cuida de você ✨';
+        msg.className = 'form-msg form-msg-ok';
+        if (input) input.value = '';
+      });
+    })();
+  </script>
+</body>
+</html>

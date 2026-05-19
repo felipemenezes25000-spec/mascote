@@ -14,6 +14,7 @@ import {
   notifications,
   todayLocal,
   wallet as walletDb,
+  withLock,
   xpEvents,
 } from '@/lib/db';
 import { applyCheckinToStreak } from '@/lib/streak';
@@ -64,7 +65,23 @@ export interface CheckinOutcome {
   checkin: Awaited<ReturnType<typeof checkinsDb.add>>;
 }
 
+/**
+ * Lock por-usuário pra serializar o pipeline INTEIRO de check-in.
+ *
+ * Sem este lock, dois taps rápidos em paralelo causam double-spend:
+ * - Ambos leem `dailyXpSoFar=0` simultaneamente
+ * - `idempotency_key` colide → checkinsDb.add dedup só A ROW
+ * - Mas wallet.add, xpEvents.add, mascots.upsert rodam 2× cada
+ *
+ * Resultado real (sem lock): 1 checkin row, 10 moedas, 2× XP events.
+ * Com lock: 2ª call lê estado pós-A, computa idempotency_key diferente,
+ * trata como check-in legítimo separado (cap diário de XP limita abuso).
+ */
 export async function applyCheckinFully(input: CheckinInput): Promise<CheckinOutcome> {
+  return withLock(`checkin:${input.profile.id}`, () => applyCheckinFullyCore(input));
+}
+
+async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcome> {
   const { profile, mascot, kind } = input;
   const value = input.value ?? 1;
   const unit = input.unit ?? defaultUnit(kind);
@@ -200,11 +217,27 @@ export async function applyMissionCompletion(input: {
   mascot: Mascot;
   mission: Mission;
 }): Promise<MissionCompletionOutcome> {
+  // Lock por-missão: duas conclusões paralelas da mesma missão (deep-link,
+  // re-mount do checkin-result) liam status='pending' do input args e
+  // double-spend XP/moedas. Lock força a 2ª call a esperar a 1ª, depois
+  // re-busca o status do DB e curto-circuita via alreadyCompleted.
+  return withLock(`mission:${input.mission.id}`, () => applyMissionCompletionCore(input));
+}
+
+async function applyMissionCompletionCore(input: {
+  profile: Profile;
+  mascot: Mascot;
+  mission: Mission;
+}): Promise<MissionCompletionOutcome> {
   const { profile, mascot, mission } = input;
-  if (mission.status === 'completed') {
+  // Re-busca status do DB pra detectar conclusão que ocorreu enquanto
+  // esperávamos o lock (caso input.mission tenha status='pending' stale).
+  const fresh = (await missionsDb.list(profile.id)).find(m => m.id === mission.id);
+  const effectiveStatus = fresh?.status ?? mission.status;
+  if (effectiveStatus === 'completed') {
     return {
       mascot,
-      mission,
+      mission: fresh ?? mission,
       xpGained: 0,
       coinsGained: 0,
       leveledUp: false,

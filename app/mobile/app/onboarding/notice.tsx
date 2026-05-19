@@ -1,12 +1,21 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { inventory, mascots as mascotsDb, settings as settingsDb, wallet as walletDb } from '@/lib/db';
+import { stepLabel } from '@/lib/onboarding-flow';
 import { useStore } from '@/store';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
+/**
+ * Tela combinada (push + notice) — toggle de avisos + disclaimer wellness
+ * + entrega idempotente do Welcome Pack (50 XP, 25 moedas, boné azul).
+ *
+ * Antes: push.tsx ('posso te avisar?') → notice.tsx (disclaimer).
+ * Agora: tela única; consent + push toggle + finish().
+ */
 export default function Notice() {
   const theme = useTheme();
   const styles = makeStyles(theme);
@@ -17,9 +26,12 @@ export default function Notice() {
   const setMascot = useStore(s => s.setMascot);
   const setWallet = useStore(s => s.setWallet);
 
+  // default: push ON (opt-out). Se vem com ?push=no de uma rota legacy, respeita.
+  const [pushEnabled, setPushEnabled] = useState<boolean>(params.push !== 'no');
+
   async function finish() {
-    if (profile && params.push === 'no') {
-      const updated = await settingsDb.update(profile.id, { push_enabled: false });
+    if (profile) {
+      const updated = await settingsDb.update(profile.id, { push_enabled: pushEnabled });
       setSettings(updated);
     }
     // === Pacote Bem-Vindo ===
@@ -57,8 +69,33 @@ export default function Notice() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <ScrollView contentContainerStyle={{ gap: theme.spacing.md, flexGrow: 1 }}>
-          <Text style={styles.kicker}>IMPORTANTE</Text>
-          <Text style={styles.title}>O Mascote é wellness</Text>
+          <Text style={styles.kicker}>{stepLabel('notice')}</Text>
+          <Text style={styles.title}>Última coisa antes de começar</Text>
+
+          {/* Push toggle (antes era tela separada push.tsx) */}
+          <Pressable
+            onPress={() => setPushEnabled(v => !v)}
+            style={styles.pushRow}
+            accessibilityLabel="Permitir lembretes"
+            accessibilityRole="switch"
+            accessibilityState={{ checked: pushEnabled }}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.pushTitle}>Posso te avisar?</Text>
+              <Text style={styles.pushBody}>
+                No máximo 2 vezes por dia. Nunca com culpa. Desliga quando quiser.
+              </Text>
+            </View>
+            <Switch
+              value={pushEnabled}
+              onValueChange={setPushEnabled}
+              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              thumbColor="#fff"
+              accessibilityLabel="Toggle lembretes"
+            />
+          </Pressable>
+
+          {/* Disclaimer wellness */}
           <Text style={styles.body}>
             Esse app é pra <Text style={styles.bold}>autocuidado e bem-estar</Text>. Ele NÃO é
             terapia, não dá diagnóstico, não prescreve remédio e não substitui psicólogo,
@@ -98,6 +135,18 @@ function makeStyles(theme: Theme) {
     title: { ...theme.text.h1, color: theme.colors.text },
     body: { ...theme.text.body, color: theme.colors.textSecondary, lineHeight: 22 },
     bold: { fontWeight: '700', color: theme.colors.text },
+    pushRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.md,
+      backgroundColor: theme.colors.surface,
+      padding: theme.spacing.md,
+      borderRadius: theme.radius.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    pushTitle: { ...theme.text.bodyBold, color: theme.colors.text },
+    pushBody: { ...theme.text.sm, color: theme.colors.textSecondary, marginTop: 4, lineHeight: 18 },
     alertBox: {
       backgroundColor: theme.colors.error + '15',
       borderColor: theme.colors.error,

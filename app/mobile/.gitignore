@@ -6,4 +6,6 @@ web-build/
 .DS_Store
 .env*
 !.env.example
+.fuse_hidden*
+Thumbs.db
 

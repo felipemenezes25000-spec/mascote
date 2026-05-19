@@ -15,6 +15,7 @@ import { PressableScale } from '@/components/PressableScale';
 import { StaggeredView } from '@/components/StaggeredView';
 import { habitMeta } from '@/content/missions';
 import { addDays, checkins, todayLocal, xpEvents } from '@/lib/db';
+import { isStreakMilestone, nextMilestone } from '@/lib/share';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
@@ -122,6 +123,31 @@ export default function ReportTab() {
         </StaggeredView>
 
         <StaggeredView index={5}>
+          {(() => {
+            const cur = streak?.current_streak ?? 0;
+            const milestone = isStreakMilestone(cur);
+            const next = nextMilestone(cur);
+            const headline = milestone
+              ? `${cur} dias! Convida alguém pra essa jornada?`
+              : next
+                ? `Faltam ${next - cur} dias pro próximo marco — bora junto?`
+                : 'Conta pra alguém que precisa cuidar de si';
+            return (
+              <PressableScale
+                style={styles.shareBtn}
+                onPress={() => router.push('/share')}
+                accessibilityRole="button"
+                accessibilityLabel="Compartilhar ou convidar amigo"
+              >
+                <Icon name="heart" size={14} color={theme.colors.primary} strokeWidth={2.4} />
+                <Text style={styles.shareBtnText}>{headline}</Text>
+                <Icon name="arrow-right" size={14} color={theme.colors.primary} strokeWidth={2.4} />
+              </PressableScale>
+            );
+          })()}
+        </StaggeredView>
+
+        <StaggeredView index={6}>
           <Text style={styles.totalXp}>Total acumulado · {totalXp} XP</Text>
           <Text style={styles.disclaimer}>
             Gerado localmente. Nada saiu do seu dispositivo.
@@ -237,6 +263,26 @@ function makeStyles(theme: Theme) {
       gap: theme.spacing.sm,
       justifyContent: 'center',
       ...theme.shadow.md,
+    },
+    shareBtn: {
+      marginHorizontal: theme.spacing.lg,
+      backgroundColor: theme.colors.primaryTint,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.lg,
+      borderRadius: theme.radius.lg,
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.primary + '33',
+    },
+    shareBtnText: {
+      ...theme.text.bodyBold,
+      color: theme.colors.primary,
+      flex: 1,
+      textAlign: 'center',
+      fontSize: 13,
     },
     bigBtnText: {
       color: '#fff',

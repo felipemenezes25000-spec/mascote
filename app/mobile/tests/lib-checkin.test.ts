@@ -358,3 +358,56 @@ describe('undoLastCheckin', () => {
     expect(undo.mascot.xp).toBe(mascot.xp);
   });
 });
+
+describe('applyCheckinFully — race condition (regressão)', () => {
+  // Antes do fix com withLock per-user, dois taps paralelos viam dailyXpSoFar=0,
+  // colidiam no idempotency_key → checkins.add dedup só A ROW. Mas wallet,
+  // xpEvents e mascots.upsert rodavam 2× cada (double-spend silencioso).
+  it('dois check-ins paralelos não duplicam moedas (era 2× antes do lock)', async () => {
+    const { profile, mascot } = await setupUser();
+    const [a, b] = await Promise.all([
+      applyCheckinFully({ profile, mascot, kind: 'water' }),
+      applyCheckinFully({ profile, mascot, kind: 'water' }),
+    ]);
+    // Pós-lock: cada call vê estado fresco e roda integralmente. Moedas
+    // recebidas == soma de coinsGained de cada outcome — não inflado.
+    const w = await walletDb.get(profile.id);
+    expect(w.coins).toBe(a.coinsGained + b.coinsGained);
+    // Wallet bate exatamente com 2× COINS_PER_CHECKIN (não 4×).
+    expect(w.coins).toBe(2 * COINS_PER_CHECKIN);
+  });
+
+  it('total de XP events bate com soma dos outcomes (sem double-event)', async () => {
+    const { profile, mascot } = await setupUser();
+    const [a, b] = await Promise.all([
+      applyCheckinFully({ profile, mascot, kind: 'water' }),
+      applyCheckinFully({ profile, mascot, kind: 'water' }),
+    ]);
+    const total = await xpEvents.total(profile.id);
+    // total == a.xpGained + b.xpGained (sem duplicar evento por causa de
+    // checkin "deduplicado"). Antes do fix, total chegava perto de 2× isso.
+    expect(total).toBe(a.xpGained + b.xpGained);
+  });
+});
+
+describe('applyMissionCompletion — race condition (regressão)', () => {
+  // Idêntico: dois callsites (deep link + screen re-mount) podiam disparar
+  // applyMissionCompletion em paralelo com a mesma mission.status='pending',
+  // ambos passavam pela guard inicial e double-spend.
+  it('duas conclusões paralelas pagam moedas só 1×', async () => {
+    const { profile, mascot } = await setupUser();
+    const mission = await makeMission(profile);
+    const [a, b] = await Promise.all([
+      applyMissionCompletion({ profile, mascot, mission }),
+      applyMissionCompletion({ profile, mascot, mission }),
+    ]);
+    // Exatamente uma das duas precisa retornar alreadyCompleted=true
+    const completed = [a, b].filter(r => !r.alreadyCompleted).length;
+    const skipped = [a, b].filter(r => r.alreadyCompleted).length;
+    expect(completed).toBe(1);
+    expect(skipped).toBe(1);
+    // Moedas: COINS_PER_MISSION uma vez, não 2×
+    const w = await walletDb.get(profile.id);
+    expect(w.coins).toBe(COINS_PER_MISSION);
+  });
+});

@@ -13,7 +13,7 @@
  *  - Acessórios: cap, bow, glasses, scarf, crown, flower, headphones
  */
 
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
@@ -21,6 +21,7 @@ import Animated, {
   useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withRepeat,
   withSequence,
   withSpring,
@@ -108,6 +109,14 @@ function MascotImpl({
   const breath = useSharedValue(1);
   const hop = useSharedValue(0);
   const blink = useSharedValue(1);
+  // Phase transition cinematics: quando phase muda, dispara wobble + flash + scale-pop
+  const phaseScale = useSharedValue(1);
+  const phaseFlash = useSharedValue(0);
+  const phaseRotate = useSharedValue(0);
+  // Mood-aware tilt: triste cabeça pra baixo, empolgado pra cima
+  const moodTilt = useSharedValue(0);
+  // Track previous phase pra detectar transição real (não primeira render)
+  const prevPhaseRef = useRef<MascotPhase | null>(null);
 
   useEffect(() => {
     // cancela qualquer animação ativa antes de re-iniciar ou parar
@@ -141,6 +150,52 @@ function MascotImpl({
     };
   }, [reduceMotion]);
 
+  // Mood-aware idle tilt: muda postura conforme humor (sutil, ~3deg)
+  useEffect(() => {
+    cancelAnimation(moodTilt);
+    if (reduceMotion) {
+      moodTilt.value = 0;
+      return;
+    }
+    const target =
+      hMood === 'proud' ? -2 :
+      hMood === 'happy' ? -1 :
+      hMood === 'sad' ? 3 :
+      hMood === 'sleepy' ? 2 : 0;
+    moodTilt.value = withSpring(target, { damping: 18, stiffness: 80 });
+  }, [hMood, reduceMotion]);
+
+  // Phase transition: ovo→bebê e demais — wobble + scale-pop + flash radial
+  useEffect(() => {
+    const prev = prevPhaseRef.current;
+    prevPhaseRef.current = phase;
+    // Primeira render: não dispara animação de evolução
+    if (prev === null || prev === phase || reduceMotion) return;
+
+    cancelAnimation(phaseScale);
+    cancelAnimation(phaseFlash);
+    cancelAnimation(phaseRotate);
+
+    // Scale pop: encolhe, infla, normaliza
+    phaseScale.value = withSequence(
+      withTiming(0.82, { duration: 180, easing: Easing.in(Easing.cubic) }),
+      withSpring(1.18, { damping: 8, stiffness: 160 }),
+      withSpring(1, { damping: 12, stiffness: 140 }),
+    );
+    // Wobble: pequenas oscilações de rotação
+    phaseRotate.value = withSequence(
+      withTiming(-6, { duration: 90 }),
+      withTiming(6, { duration: 120 }),
+      withTiming(-4, { duration: 110 }),
+      withTiming(0, { duration: 140 }),
+    );
+    // Flash radial: opacidade do glow vai a 1 e desce
+    phaseFlash.value = withSequence(
+      withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) }),
+      withDelay(180, withTiming(0, { duration: 600, easing: Easing.in(Easing.cubic) })),
+    );
+  }, [phase, reduceMotion]);
+
   useEffect(() => {
     if (reactTrigger > 0) {
       hop.value = withSequence(
@@ -151,7 +206,16 @@ function MascotImpl({
   }, [reactTrigger]);
 
   const wrapStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: hop.value }, { scale: breath.value }],
+    transform: [
+      { translateY: hop.value },
+      { scale: breath.value * phaseScale.value },
+      { rotate: `${phaseRotate.value + moodTilt.value}deg` },
+    ],
+  }));
+
+  const flashStyle = useAnimatedStyle(() => ({
+    opacity: phaseFlash.value * 0.85,
+    transform: [{ scale: 1 + phaseFlash.value * 0.4 }],
   }));
 
   // CORREÇÃO: antes brand=theme.colors.primary fazia TODOS os mascotes parecerem
@@ -190,6 +254,22 @@ function MascotImpl({
           opacity: 0.18,
           pointerEvents: 'none',
         }}
+      />
+      {/* phase-transition flash — só aparece durante evolução (opacity 0 idle) */}
+      <Animated.View
+        style={[
+          {
+            position: 'absolute',
+            top: -size * 0.1,
+            left: -size * 0.1,
+            right: -size * 0.1,
+            bottom: -size * 0.1,
+            borderRadius: size,
+            backgroundColor: brand,
+            pointerEvents: 'none',
+          },
+          flashStyle,
+        ]}
       />
       <Animated.View style={[styles.inner, wrapStyle]}>
         <Svg width={size} height={size + 20} viewBox="0 0 200 220">

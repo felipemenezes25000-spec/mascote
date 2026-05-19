@@ -506,7 +506,7 @@ export default function Home() {
                 <Text style={styles.kicker} numberOfLines={1}>{greet}</Text>
                 {/* accessibilityRole=header → role=heading no DOM (RN Web). */}
                 <Text accessibilityRole="header" style={styles.greeting} numberOfLines={1} ellipsizeMode="tail">
-                  {profile.display_name.split(' ')[0]}
+                  {profile.display_name?.split(' ')[0] ?? 'Você'}
                 </Text>
               </View>
             </View>
