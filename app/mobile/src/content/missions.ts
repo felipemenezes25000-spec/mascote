@@ -1,4 +1,5 @@
 import type { HabitKind, Personality } from '@/types';
+import { extendedMissionCatalog } from './missions-extended';
 
 export interface MissionTemplate {
   id: string;
@@ -75,6 +76,12 @@ export const missionCatalog: MissionTemplate[] = [
   { id: 'm-sun-4', title: 'Vitamina D natural', description: '15min com braços expostos no sol.', habit_kind: 'sun', target_value: 15, xp_reward: 25, preferred_personalities: ['motivador'] },
 ];
 
+/** Catálogo completo: base + expandido (150+ missões). */
+export const fullMissionCatalog: MissionTemplate[] = [
+  ...missionCatalog,
+  ...extendedMissionCatalog.filter(e => !missionCatalog.some(m => m.id === e.id)),
+];
+
 // Hash determinístico para uma string. Usado para gerar seed estável que
 // rotaciona missões sem colisões previsíveis entre meses.
 function djb2(input: string): number {
@@ -95,10 +102,10 @@ export function pickDailyMission(
   personality: Personality,
   dateKey: string | number
 ): MissionTemplate {
-  const preferred = missionCatalog.filter(m => m.preferred_personalities.includes(personality));
+  const preferred = fullMissionCatalog.filter(m => m.preferred_personalities.includes(personality));
   /* v8 ignore next — todos as personalities têm missions preferidas no
      catálogo atual; fallback ao catálogo completo cobre extensão futura. */
-  const pool = preferred.length > 0 ? preferred : missionCatalog;
+  const pool = preferred.length > 0 ? preferred : fullMissionCatalog;
   const seed = typeof dateKey === 'string' ? djb2(`${personality}:${dateKey}`) : dateKey;
   return pool[seed % pool.length];
 }

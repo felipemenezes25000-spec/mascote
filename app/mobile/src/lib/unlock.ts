@@ -2,17 +2,20 @@ import {
   achievements as achievementsDb,
   checkins as checkinsDb,
   inventory,
+  mascots,
   messages as messagesDb,
   missions as missionsDb,
   userScenes,
 } from '@/lib/db';
 import { accessoryCatalog, checkUnlock as checkAccessoryUnlock } from '@/content/accessories';
 import { achievementCatalog } from '@/content/achievements';
+import { applyAchievementReward } from '@/lib/achievement-rewards';
 import { checkSceneUnlock, scenesCatalog } from '@/content/scenes';
 import { activeSeasonalEvent } from '@/content/seasonal';
 import type { Mascot, Profile, Streak } from '@/types';
 
 export interface UnlockResult {
+  mascot: Mascot;
   accessories: { id: string; name: string; emoji: string }[];
   scenes: { id: string; name: string; emoji: string }[];
   achievements: { id: string; title: string; emoji: string; description: string }[];
@@ -23,7 +26,8 @@ export async function processUnlocks(
   mascot: Mascot,
   streak: Streak
 ): Promise<UnlockResult> {
-  const result: UnlockResult = { accessories: [], scenes: [], achievements: [] };
+  const result: UnlockResult = { mascot, accessories: [], scenes: [], achievements: [] };
+  let currentMascot = mascot;
 
   // Paraleliza reads (eram 6 sequenciais ~150ms+ no AsyncStorage).
   const [allCheckins, allMissions, messagesCount, ownedAchievements, ownedAcc, ownedScenes] =
@@ -59,11 +63,13 @@ export async function processUnlocks(
          retorna null se já desbloqueado, mas o `ownedAchIds.has(ach.id)` acima
          já filtra esse caso. Race condition entre 2 scans simultâneos. */
       if (unlocked) {
+        const applied = await applyAchievementReward(profile, currentMascot, ach);
+        currentMascot = applied.mascot;
         result.achievements.push({
           id: ach.id,
           title: ach.title,
           emoji: ach.emoji,
-          description: ach.description,
+          description: ach.description + (applied.label ? ` · ${applied.label}` : ''),
         });
       }
     }
@@ -113,5 +119,15 @@ export async function processUnlocks(
     }
   }
 
+  if (currentMascot.xp !== mascot.xp || currentMascot.level !== mascot.level) {
+    currentMascot = await mascots.upsert({
+      user_id: currentMascot.user_id,
+      xp: currentMascot.xp,
+      level: currentMascot.level,
+      phase: currentMascot.phase,
+    });
+  }
+
+  result.mascot = currentMascot;
   return result;
 }

@@ -170,7 +170,14 @@ describe('shouldTrigger — paywall ético', () => {
   });
 
   it('todos vistos → null', async () => {
-    const all: PaywallTrigger[] = ['first_evolution', 'streak_7', 'level_5', 'checkin_30', 'first_box_opened'];
+    const all: PaywallTrigger[] = [
+      'first_evolution',
+      'streak_7',
+      'level_5',
+      'checkin_30',
+      'first_box_opened',
+      'rare_evolution',
+    ];
     for (const t of all) await markShown(t);
     const t = await shouldTrigger({
       mascot: fakeMascot(10, 'adulto'),

@@ -13,10 +13,12 @@
 
 export const ONBOARDING_STEPS = [
   'age',
-  'goal',   // contém mood agora
-  'mascot', // contém meet agora; alt: quiz, personality
+  'goal',
+  'style',
+  'quick',
+  'mascot',
   'name',
-  'notice', // contém push agora
+  'notice',
 ] as const;
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
@@ -28,6 +30,8 @@ const STEP_ALIASES: Record<string, OnboardingStep> = {
   quiz: 'mascot',
   personality: 'mascot',
   push: 'notice',
+  hatch: 'mascot',
+  dna: 'mascot',
 };
 
 export const ONBOARDING_TOTAL = ONBOARDING_STEPS.length;

@@ -1,13 +1,18 @@
 import { router, Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button } from '@/components/Button';
 import { HabitChart } from '@/components/HabitChart';
 import { Heatmap } from '@/components/Heatmap';
 import { Mascot } from '@/components/Mascot';
+import { PremiumFeatureGuard } from '@/components/PremiumFeatureGuard';
+import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
 import { addDays, checkins, messages as messagesDb, todayLocal } from '@/lib/db';
-import { generateWeeklyNarrative } from '@/lib/narrative';
+import { generateWeeklyReport } from '@/lib/weeklyReportGenerator';
 import { computeInsights, type Insight } from '@/lib/insights';
+import { loadStoredPersonalization, storedToPartial } from '@/lib/personalization-service';
+import { entitlementService } from '@/services/subscription';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -19,7 +24,9 @@ export default function WeeklyReport() {
   const profile = useStore(s => s.profile);
   const mascot = useStore(s => s.mascot);
   const streak = useStore(s => s.streak);
+  const { tier, isPremium } = useSubscriptionTier();
   const [all, setAll] = useState<Checkin[]>([]);
+  const [personalization, setPersonalization] = useState<ReturnType<typeof storedToPartial>>(undefined);
   const [allMessages, setAllMessages] = useState<Message[]>([]);
   const [countsByDate, setCountsByDate] = useState<Record<string, number>>({});
 
@@ -44,6 +51,22 @@ export default function WeeklyReport() {
       grouped[c.occurred_on] = (grouped[c.occurred_on] ?? 0) + 1;
     }
     setCountsByDate(grouped);
+    const stored = await loadStoredPersonalization(profile.id);
+    setPersonalization(storedToPartial(stored));
+  }
+
+  async function shareReport() {
+    if (!mascot || !entitlementService.canExportReport(tier)) {
+      router.push({ pathname: '/paywall', params: { trigger: 'premium_feature' } });
+      return;
+    }
+    const body = [
+      narrative.greeting,
+      narrative.evolutionNote,
+      narrative.highlight,
+      narrative.closing,
+    ].join('\n\n');
+    await Share.share({ message: `Relatório da semana — ${mascot.name}\n\n${body}` });
   }
 
   if (!profile || !mascot) return <Redirect href="/splash" />;
@@ -66,14 +89,16 @@ export default function WeeklyReport() {
   const sortedHabits = Object.entries(habitCounts).sort((a, b) => b[1] - a[1]);
 
   // Nova narrativa (carta do mascote)
-  const narrative = generateWeeklyNarrative({
+  const narrative = generateWeeklyReport({
     mascot,
     checkins: weekCheckins,
     prevWeekCheckins,
-    currentStreak: streak?.current_streak ?? 0,
-    longestStreak: streak?.longest_streak ?? 0,
-    xpThisWeek,
+    allCheckins: all,
+    streak,
+    personalization,
   });
+
+  const fullReport = entitlementService.canViewFullWeeklyReport(tier);
 
   // Insights longitudinais (correlações hábito × humor) — usa últimos 30 dias
   const start30 = addDays(today, -29);
@@ -90,7 +115,13 @@ export default function WeeklyReport() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.headerRow}>
-        <Pressable onPress={() => router.back()} hitSlop={10} style={styles.close}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={10}
+          style={styles.close}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar relatório semanal"
+        >
           <Text style={styles.closeText}>✕</Text>
         </Pressable>
         <Text style={styles.headerTitle}>Você essa semana</Text>
@@ -114,12 +145,29 @@ export default function WeeklyReport() {
             </View>
           </View>
           <Text style={styles.letterGreeting}>{narrative.greeting}</Text>
+          <Text style={styles.letterBody}>{narrative.evolutionNote}</Text>
           <Text style={styles.letterBody}>{narrative.highlight}</Text>
-          <Text style={styles.letterBody}>{narrative.observation}</Text>
-          <Text style={styles.letterBody}>{narrative.nudge}</Text>
+          {fullReport ? (
+            <>
+              <Text style={styles.letterBody}>{narrative.observation}</Text>
+              <Text style={styles.letterBody}>{narrative.nudge}</Text>
+            </>
+          ) : (
+            <Text style={styles.letterBody}>
+              Plus desbloqueia observações profundas, heatmap e exportação — sem pressa.
+            </Text>
+          )}
           <Text style={styles.letterClosing}>{narrative.closing}</Text>
         </View>
 
+        {!fullReport && (
+          <View style={styles.previewBanner}>
+            <Text style={styles.previewText}>Prévia gratuita · relatório completo no Plus</Text>
+            <Button variant="secondary" label="Ver Plus" onPress={() => router.push('/paywall')} />
+          </View>
+        )}
+
+        <PremiumFeatureGuard tier={tier} feature="report">
         {/* Insights longitudinais — só aparece se houver descobertas */}
         {insights.length > 0 && (
           <View style={styles.card}>
@@ -159,6 +207,12 @@ export default function WeeklyReport() {
               return <HabitChart key={k} kind={k} checkins={habCheckins} days={7} />;
             })}
           </View>
+        )}
+
+        </PremiumFeatureGuard>
+
+        {isPremium && (
+          <Button label="Compartilhar relatório" variant="secondary" onPress={() => void shareReport()} />
         )}
 
         <Text style={styles.footer}>
@@ -329,5 +383,14 @@ function makeStyles(theme: Theme) {
     paddingHorizontal: theme.spacing.lg,
     marginTop: theme.spacing.md,
   },
+  previewBanner: {
+    backgroundColor: theme.colors.primaryTint,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.md,
+    gap: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '44',
+  },
+  previewText: { ...theme.text.sm, color: theme.colors.text, lineHeight: 20 },
 });
 }

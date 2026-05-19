@@ -96,7 +96,7 @@ export default function Goal() {
           disabled={!canContinue}
           onPress={() =>
             router.push({
-              pathname: '/onboarding/mascot',
+              pathname: '/onboarding/style',
               params: { ...params, goal: selectedGoal ?? '', mood: selectedMood ?? '' },
             })
           }

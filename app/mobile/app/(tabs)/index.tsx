@@ -67,6 +67,11 @@ import { useStore } from '@/store';
 import { useBehaviorTick, type BehaviorContext } from '@/lib/behavior';
 import { sanitizeGenome } from '@/lib/dna';
 import { playVoiceLine, voiceProfileFromGenome } from '@/lib/voice';
+import { useEvolutionState } from '@/hooks/useEvolutionState';
+import { createAnimationAction } from '@/lib/animation-triggers';
+import { buildMascotContextLine, hoursAway, returnLoopKind } from '@/lib/mascot-context-line';
+import { FIRST_MISSION } from '@/lib/onboarding-evolution';
+import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
 import type { AccessoryId } from '@/components/Mascot';
 import type { Checkin, HabitKind, MascotCustomization, Mascot as MascotType, MascotMood, MascotPhase, Message, Mission } from '@/types';
 
@@ -128,6 +133,12 @@ export default function Home() {
   // temos dados suficientes. Recalculado em loadToday/refreshs.
   const [reflectiveMood, setReflectiveMood] = useState<MascotMood | null>(null);
   const [evolutionStory, setEvolutionStory] = useState<EvolutionStory | null>(null);
+  const { visuals: evolutionVisuals, refresh: refreshEvolution } = useEvolutionState();
+  const { isPremium } = useSubscriptionTier();
+  const apiKey = useStore(s => s.openAiKey);
+  const [mascotLine, setMascotLine] = useState<string | null>(null);
+  const [firstMissionPending, setFirstMissionPending] = useState(false);
+  const returnToastFiredRef = useRef(false);
   // Janela de 15s pra "desfazer último check-in". Guardamos o outcome
   // inteiro (não só checkin) porque undoLastCheckin precisa de xpGained
   // pra reverter — usar mascot.xp atual seria errado se o user fez 2 checkins
@@ -262,9 +273,44 @@ export default function Home() {
       // CRÍTICO: sem isso, mascote no Hero da Home ignora tudo que o user
       // ajustou em /customize e tudo que desbloqueou via check-ins.
       void loadIdentity();
+      void loadFirstMissionFlag();
+      void loadMascotContextLine();
+      void maybeReturnLoop();
       setShowNightWarning(isLateNight());
     }, [profile?.id])
   );
+
+  async function loadMascotContextLine() {
+    if (!profile || !mascot) return;
+    const away = returnLoopKind(hoursAway(mascot.last_seen_at));
+    const ctx =
+      away === 'retorno' ? 'return'
+      : away === 'saudade' ? 'saudade'
+      : 'home';
+    const line = await buildMascotContextLine(profile.id, mascot, ctx, apiKey);
+    setMascotLine(line);
+  }
+
+  async function maybeReturnLoop() {
+    if (!mascot || returnToastFiredRef.current) return;
+    const kind = returnLoopKind(hoursAway(mascot.last_seen_at));
+    if (kind === 'none') return;
+    returnToastFiredRef.current = true;
+    setBehaviorAction(createAnimationAction(kind === 'retorno' ? 'retorno' : 'saudade'));
+    const line = await buildMascotContextLine(profile!.id, mascot, kind === 'retorno' ? 'return' : 'saudade', apiKey);
+    enqueueToast({
+      kind: 'info',
+      emoji: kind === 'retorno' ? '🌿' : '💛',
+      title: mascot.name,
+      subtitle: line,
+    });
+  }
+
+  async function loadFirstMissionFlag() {
+    if (!profile) return;
+    const s = await settingsDb.get(profile.id);
+    setFirstMissionPending(!!(s as { first_mission_pending?: boolean }).first_mission_pending);
+  }
 
   async function loadIdentity() {
     if (!profile) return;
@@ -415,6 +461,7 @@ export default function Home() {
     await refreshMascot();
     await loadToday();
     void recomputeReflectiveMood();
+    void refreshEvolution();
     setReactBeat(v => v + 1);
 
     if (out.streakMilestone) {
@@ -461,6 +508,28 @@ export default function Home() {
       setUndoData(out);
       if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
       undoTimerRef.current = setTimeout(() => setUndoData(null), 15_000);
+    }
+
+    if (out.newMicroEvolutions.length > 0) {
+      setBehaviorAction(createAnimationAction('micro_evolution'));
+      enqueueToast({
+        kind: 'info',
+        emoji: '✨',
+        title: 'Microevolução!',
+        subtitle: out.newMicroEvolutions[0]?.label ?? 'Seu mascote mudou sutilmente',
+      });
+    }
+
+    if (firstMissionPending && kind === 'water') {
+      await settingsDb.update(profile.id, { first_mission_pending: false } as Record<string, unknown>);
+      setFirstMissionPending(false);
+      setBehaviorAction(createAnimationAction('micro_evolution', 'water'));
+      enqueueToast({
+        kind: 'info',
+        emoji: '💧',
+        title: 'Primeira evolução!',
+        subtitle: `${out.mascot.name} brilhou um pouco mais — você cuidou de si.`,
+      });
     }
 
     for (const a of out.unlocks.achievements) enqueueToast({ kind: 'achievement', emoji: a.emoji, title: a.title, subtitle: a.description });
@@ -526,7 +595,7 @@ export default function Home() {
       streak: currentStreak,
       totalCheckins: allCheckins.length,
       boxOpenedCount,
-      hasSubscription: false, // app local, sempre free
+      hasSubscription: isPremium,
     });
     if (!trigger) return;
     await markShown(trigger);
@@ -537,7 +606,7 @@ export default function Home() {
       title: copy.title,
       subtitle: copy.body,
     });
-    // Em produção, abriria modal `/paywall` aqui. No demo local, só toast.
+    router.push('/paywall');
   }
 
   async function claimDailyReward() {
@@ -672,8 +741,46 @@ export default function Home() {
           </View>
         ) : null}
 
+        {/* Status emocional + próxima ação */}
+        <StaggeredView index={2} initialDelay={20}>
+          <View style={{ paddingHorizontal: theme.spacing.lg, gap: theme.spacing.sm }}>
+            <Card variant="elevated" padding="md">
+              <Text style={styles.emotionalKicker}>COMO {mascot.name.toUpperCase()} SE SENTE</Text>
+              <Text style={styles.emotionalText}>
+                {mascotLine
+                  ?? (reflectiveMood === 'empolgado' ? 'Radiante — sentiu sua energia hoje!'
+                  : reflectiveMood === 'triste' ? 'Um pouco quieto... mas aqui por você.'
+                  : reflectiveMood === 'exausto' ? 'Precisando de descanso — sem pressa.'
+                  : evolutionVisuals?.activeEnergy ? 'Com energia — seus hábitos ativos brilham nele.'
+                  : evolutionVisuals?.calmAura ? 'Calmo e presente — respira com você.'
+                  : 'Aqui, no seu ritmo.')}
+              </Text>
+              <PressableScale onPress={() => router.push('/weekly-report')} style={{ marginTop: 6 }}>
+                <Text style={{ color: theme.colors.primary, fontWeight: '600', fontSize: 13 }}>
+                  Relatório da semana →
+                </Text>
+              </PressableScale>
+              {evolutionVisuals && evolutionVisuals.glowMultiplier > 1.05 && (
+                <Text style={styles.evolutionHint}>✨ Evolução visual ativa pelos seus hábitos</Text>
+              )}
+            </Card>
+            {firstMissionPending && (
+              <Card variant="elevated" padding="md" style={{ borderColor: theme.colors.primary, borderWidth: 1 }}>
+                <Text style={styles.emotionalKicker}>PRIMEIRA MISSÃO · 30s</Text>
+                <Text style={styles.emotionalText}>{FIRST_MISSION.description}</Text>
+                <PressableScale
+                  onPress={() => void handleCheckin('water')}
+                  style={{ marginTop: theme.spacing.sm, alignSelf: 'flex-start' }}
+                >
+                  <Text style={{ color: theme.colors.primary, fontWeight: '700' }}>Beber água agora →</Text>
+                </PressableScale>
+              </Card>
+            )}
+          </View>
+        </StaggeredView>
+
         {/* Hero scenario */}
-        <StaggeredView index={2} initialDelay={40}>
+        <StaggeredView index={3} initialDelay={40}>
           <View style={styles.sceneWrap}>
           <HeroSwipeable
             onPrev={() => void cycleScene(-1)}
@@ -707,6 +814,7 @@ export default function Home() {
                   action={behaviorAction}
                   customization={customState}
                   mutationIds={mutationIds}
+                  evolutionVisuals={evolutionVisuals}
                 />
               </MascotAmbient>
             </Pressable>
@@ -761,7 +869,7 @@ export default function Home() {
         )}
 
         {/* Energy + XP bars (grid 1fr 1fr conforme handoff) */}
-        <StaggeredView index={3}>
+        <StaggeredView index={4}>
           <View style={styles.barsRow}>
           <Card variant="elevated" padding="md" style={styles.barCard}>
             <View style={styles.barHeader}>
@@ -814,7 +922,7 @@ export default function Home() {
         <StaggeredView index={6}>
           <View style={[styles.section, styles.missionRow]}>
             <View style={{ flex: 1 }}>
-              {mission && (
+              {mission ? (
                 <MissionCard
                   title={mission.title}
                   description={mission.description}
@@ -822,6 +930,13 @@ export default function Home() {
                   completed={mission.status === 'completed'}
                   onPress={() => router.push('/mission')}
                 />
+              ) : (
+                <View style={styles.missionEmpty} accessibilityRole="text">
+                  <Text style={styles.missionEmptyTitle}>Missão do dia em breve</Text>
+                  <Text style={styles.missionEmptyBody}>
+                    Faça um check-in ou volte amanhã — uma nova missão aparece aqui.
+                  </Text>
+                </View>
               )}
             </View>
             <MysteryBoxCard available={boxAvailable} onOpen={openMysteryBox} />
@@ -1154,6 +1269,19 @@ function makeStyles(theme: Theme) {
   },
   section: { gap: theme.spacing.md, paddingHorizontal: theme.spacing.lg },
   missionRow: { flexDirection: 'row', gap: theme.spacing.md, alignItems: 'stretch' },
+  missionEmpty: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.md,
+    justifyContent: 'center',
+    gap: 4,
+    minHeight: 88,
+  },
+  missionEmptyTitle: { ...theme.text.bodyBold, color: theme.colors.text },
+  missionEmptyBody: { ...theme.text.xs, color: theme.colors.textSecondary, lineHeight: 16 },
   // Linha de links (substitui quick actions). Dois ações textuais, sem cards.
   linkRow: {
     flexDirection: 'row',
@@ -1234,6 +1362,27 @@ function makeStyles(theme: Theme) {
     fontFamily: 'PlusJakartaSans_700Bold',
     fontSize: 12,
     letterSpacing: 0.2,
+  },
+  emotionalKicker: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    color: theme.colors.textSecondary,
+    fontFamily: 'JetBrainsMono_500Medium',
+    marginBottom: 4,
+  },
+  emotionalText: {
+    ...theme.text.body,
+    color: theme.colors.text,
+    lineHeight: 22,
+    fontFamily: 'InstrumentSerif_400Regular',
+    fontSize: 17,
+  },
+  evolutionHint: {
+    ...theme.text.xs,
+    color: theme.colors.primary,
+    marginTop: 6,
+    fontWeight: '600',
   },
 });
 }

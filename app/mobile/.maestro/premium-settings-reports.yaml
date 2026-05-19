@@ -1,0 +1,49 @@
+# Premium: configurações → personalização → relatórios
+appId: host.exp.exponent
+
+---
+- launchApp
+
+- runFlow:
+    when:
+      visible: "Configurações"
+    commands:
+      - tapOn: "Configurações"
+    optional: true
+
+- runFlow:
+    when:
+      visible: "Você"
+    commands:
+      - tapOn: "Você"
+      - tapOn:
+          text: "Configurações"
+          optional: true
+
+- tapOn:
+    text: "Personalização do mascote"
+    optional: true
+- assertVisible:
+    text: "Personalização"
+    optional: true
+- takeScreenshot: premium-personalization
+
+- back
+
+- tapOn:
+    text: "Relatório semanal"
+    optional: true
+- assertVisible:
+    text: "Você essa semana"
+    optional: true
+- takeScreenshot: premium-weekly-report
+
+- back
+
+- tapOn:
+    text: "Retrospectiva do mês"
+    optional: true
+- assertVisible:
+    text: "Retrospectiva do mês"
+    optional: true
+- takeScreenshot: premium-monthly-report

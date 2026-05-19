@@ -90,10 +90,17 @@ Tabelas (chaves em AsyncStorage `mascote:profiles`, `mascote:checkins`, etc.):
 
 Pra resetar tudo: tela **Você** → **Apagar tudo e recomeçar**.
 
+## Premium (Mascote Plus)
+
+- Paywall + entitlements + personalização Sims + relatórios semanal/mensal
+- Billing local **mock** por padrão; RevenueCat adapter pronto (`EXPO_PUBLIC_BILLING_PROVIDER`)
+- Ver `../../docs/PREMIUM_STRATEGY.md` e `../../docs/RELEASE_CHECKLIST.md`
+- Variáveis: `.env.example` nesta pasta
+
 ## O que NÃO está aqui (intencionalmente)
 
 ✗ Landing page / propaganda
-✗ Cobrança real (paywall é só visual)
+✗ Cobrança real nas lojas (requer RevenueCat SDK + SKUs — ver RELEASE_CHECKLIST)
 ✗ Push notifications
 ✗ Backend cloud (Supabase ficou pra depois)
 ✗ Login social

@@ -1,0 +1,40 @@
+# Fluxo premium: onboarding → hatch → primeira missão (água) → microevolução
+appId: host.exp.exponent
+
+---
+- assertVisible:
+    text: "Começar"
+    optional: true
+- tapOn:
+    text: "Começar"
+    optional: true
+
+- repeat:
+    times: 12
+    commands:
+      - runFlow:
+          when:
+            visible: "Continuar"
+          commands:
+            - tapOn: "Continuar"
+      - runFlow:
+          when:
+            visible: "Próximo"
+          commands:
+            - tapOn: "Próximo"
+      - runFlow:
+          when:
+            visible: "Revelar DNA"
+          commands:
+            - tapOn: "Revelar DNA"
+      - runFlow:
+          when:
+            visible: "Beber água agora"
+          commands:
+            - tapOn: "Beber água agora"
+            - takeScreenshot: premium-first-mission
+
+- assertVisible:
+    text: "Home"
+    optional: true
+- takeScreenshot: premium-home-after-micro

@@ -11,16 +11,18 @@ describe('onboarding-flow', () => {
     expect(ONBOARDING_TOTAL).toBe(ONBOARDING_STEPS.length);
   });
 
-  it('total é 5 após redução 11→6 telas (incluindo welcome)', () => {
-    expect(ONBOARDING_TOTAL).toBe(5);
+  it('total é 7 após fluxo premium (goal→style→quick→mascot)', () => {
+    expect(ONBOARDING_TOTAL).toBe(7);
   });
 
   it('stepIndex retorna posições 1-based para steps canônicos', () => {
     expect(stepIndex('age')).toBe(1);
     expect(stepIndex('goal')).toBe(2);
-    expect(stepIndex('mascot')).toBe(3);
-    expect(stepIndex('name')).toBe(4);
-    expect(stepIndex('notice')).toBe(5);
+    expect(stepIndex('style')).toBe(3);
+    expect(stepIndex('quick')).toBe(4);
+    expect(stepIndex('mascot')).toBe(5);
+    expect(stepIndex('name')).toBe(6);
+    expect(stepIndex('notice')).toBe(7);
   });
 
   it('mood compartilha posição com goal (telas fundidas)', () => {
@@ -42,8 +44,8 @@ describe('onboarding-flow', () => {
 
   it('stepLabel formata como "Passo X de Y"', () => {
     expect(stepLabel('age')).toBe(`Passo 1 de ${ONBOARDING_TOTAL}`);
-    expect(stepLabel('name')).toBe(`Passo 4 de ${ONBOARDING_TOTAL}`);
-    expect(stepLabel('notice')).toBe(`Passo 5 de ${ONBOARDING_TOTAL}`);
+    expect(stepLabel('name')).toBe(`Passo 6 de ${ONBOARDING_TOTAL}`);
+    expect(stepLabel('notice')).toBe(`Passo 7 de ${ONBOARDING_TOTAL}`);
   });
 
   it('stepIndex retorna 0 para entrada desconhecida', () => {

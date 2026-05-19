@@ -6,6 +6,12 @@ import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
 import { getPersonality } from '@/content/personalities';
 import { mascots, profiles, settings as settingsDb, streaks, wallet as walletDb } from '@/lib/db';
+import { seedFromOnboardingAnswers, mapMoodToMascot, type OnboardingAnswers, type StylePreset } from '@/lib/onboarding-evolution';
+import { buildPersonalizationInput } from '@/lib/onboarding-evolution';
+import { persistOnboardingPersonalization } from '@/lib/personalization-service';
+import { generateGenotype } from '@/game/evolution/GenotypeGenerator';
+import { sanitizeGenome } from '@/lib/dna';
+import type { BondType, CommunicationTone, UserGoal } from '@/game/evolution/EvolutionTypes';
 import { stepLabel } from '@/lib/onboarding-flow';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
@@ -29,10 +35,22 @@ function parseAgeBand(raw: unknown): AgeBand | null {
 export default function NameStep() {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
-  const params = useLocalSearchParams<{ personality: Personality; age_band?: string; mood?: string; display_name?: string }>();
+  const params = useLocalSearchParams<{
+    personality: Personality;
+    age_band?: string;
+    mood?: string;
+    display_name?: string;
+    dna_seed?: string;
+    bond?: string;
+    tone?: string;
+    style?: string;
+    primaryGoal?: string;
+    pronoun?: string;
+    goal?: string;
+  }>();
   const personality = (params.personality ?? 'calmo') as Personality;
   const ageBand = parseAgeBand(params.age_band);
-  const initialMood = parseMood(params.mood);
+  const initialMood = parseMood(params.mood) ?? mapMoodToMascot(params.mood ?? '4');
   const defaultMascotName = useMemo(() => getPersonality(personality).mascotName, [personality]);
   // Pré-preenche com o nome capturado em /signup (propagado via URL pelas
   // telas intermediárias com `...params`). Sem isso, usuário re-digita.
@@ -56,6 +74,22 @@ export default function NameStep() {
     // (threshold de bebê é 100 XP) que fazia (a) o usuário NUNCA ver a
     // narrativa "Quebrou o casco!" da transição ovo→bebê (pulava direto), e
     // (b) qualquer recálculo de phase no applyXp tentava regredir bebê→ovo.
+    const answers: OnboardingAnswers = {
+      goalId: params.goal ?? 'companhia',
+      moodId: params.mood ?? '4',
+      stylePreset: (params.style as StylePreset) ?? 'soft',
+      bondType: (params.bond as BondType) ?? 'companheiro',
+      communicationTone: (params.tone as CommunicationTone) ?? 'carinhoso',
+      pronoun: (params.pronoun as 'ele' | 'ela' | 'elu') ?? 'ele',
+      primaryGoal: (params.primaryGoal as UserGoal) ?? 'saude_geral',
+    };
+    const seed = params.dna_seed
+      ? parseInt(params.dna_seed, 10)
+      : seedFromOnboardingAnswers(answers);
+    const input = buildPersonalizationInput(answers, mascotName.trim() || defaultMascotName, personality);
+    const genotype = generateGenotype({ ...input, seed });
+    const dna = sanitizeGenome(genotype.genome);
+
     const mascot = await mascots.upsert({
       user_id: profile.id,
       name: mascotName.trim() || defaultMascotName,
@@ -63,7 +97,15 @@ export default function NameStep() {
       phase: 'ovo',
       mood: initialMood ?? 'feliz',
       energy: 90,
+      dna,
+      dna_seed: seed,
     });
+    await persistOnboardingPersonalization(profile.id, answers, mascotName.trim() || defaultMascotName, personality);
+    await settingsDb.update(profile.id, {
+      first_mission_pending: true,
+      onboarding_bond: answers.bondType,
+      onboarding_tone: answers.communicationTone,
+    } as Record<string, unknown>);
     const [streak, settings, wallet] = await Promise.all([
       streaks.get(profile.id),
       settingsDb.get(profile.id),

@@ -13,7 +13,7 @@
 
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/Icon';
 import { Mascot } from '@/components/Mascot';
@@ -50,6 +50,11 @@ import {
 import { xpToNextLevel } from '@/lib/xp';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
+import { useEvolutionState } from '@/hooks/useEvolutionState';
+import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
+import { EmptyState } from '@/components/EmptyState';
+import { PremiumFeatureGuard } from '@/components/PremiumFeatureGuard';
+import { mascotMemoryService } from '@/game/memory';
 import type { Theme } from '@/lib/themes';
 import type { AccessoryId } from '@/components/Mascot';
 import type { HabitKind, MascotCustomization } from '@/types';
@@ -105,6 +110,15 @@ export default function EvolutionTab() {
   // sem isso o user vê descritores+marcos textuais mas o boneco continua
   // padrão. UX-break crítica.
   const [customState, setCustomState] = useState<MascotCustomization | null>(null);
+  const {
+    visuals: evolutionVisuals,
+    state: evolutionState,
+    loading: evolutionLoading,
+    error: evolutionError,
+    refresh: refreshEvolution,
+  } = useEvolutionState();
+  const { tier } = useSubscriptionTier();
+  const [memorySnippets, setMemorySnippets] = useState<string[]>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -128,6 +142,8 @@ export default function EvolutionTab() {
           counts[c.habit_kind] = (counts[c.habit_kind] ?? 0) + 1;
         }
         setHabitCounts(counts);
+        const snap = await mascotMemoryService.snapshot(profile.id, '');
+        setMemorySnippets(snap.entries.slice(0, 5).map(e => e.summary));
       })();
     }, [profile?.id])
   );
@@ -229,20 +245,35 @@ export default function EvolutionTab() {
         {/* Mascote grande em cena */}
         <StaggeredView index={1} initialDelay={40}>
           <View style={styles.sceneWrap}>
-            <SceneBackground sceneId={activeSceneId} height={320}>
-              <MascotAmbient size={220} reduceMotion={settings?.reduce_motion}>
-                <Mascot
-                  personality={mascot.personality}
-                  phase={mascot.phase}
-                  mood={mascot.mood}
-                  size={220}
-                  accessory={equippedAccId}
-                  reduceMotion={settings?.reduce_motion}
-                  customization={customState}
-                  mutationIds={unlockedMutations.map(u => u.mutation_id)}
-                />
-              </MascotAmbient>
-            </SceneBackground>
+            {evolutionError ? (
+              <EmptyState
+                emoji="🧬"
+                title="Evolução temporariamente indisponível"
+                body={evolutionError}
+                ctaLabel="Tentar de novo"
+                onCta={() => void refreshEvolution()}
+              />
+            ) : (
+              <SceneBackground sceneId={activeSceneId} height={320}>
+                {evolutionLoading ? (
+                  <ActivityIndicator style={{ marginVertical: 120 }} accessibilityLabel="Carregando evolução" />
+                ) : (
+                  <MascotAmbient size={220} reduceMotion={settings?.reduce_motion}>
+                    <Mascot
+                      personality={mascot.personality}
+                      phase={mascot.phase}
+                      mood={mascot.mood}
+                      size={220}
+                      accessory={equippedAccId}
+                      reduceMotion={settings?.reduce_motion}
+                      customization={customState}
+                      mutationIds={unlockedMutations.map(u => u.mutation_id)}
+                      evolutionVisuals={evolutionVisuals}
+                    />
+                  </MascotAmbient>
+                )}
+              </SceneBackground>
+            )}
           </View>
         </StaggeredView>
 
@@ -353,6 +384,11 @@ export default function EvolutionTab() {
             Não revela a condição exata pra preservar o mistério "biológico". */}
         {nextMutationCandidate && (
           <StaggeredView index={6}>
+            <PremiumFeatureGuard
+              tier={tier}
+              feature={nextMutationCandidate.rarity === 'legendary' ? 'legendary' : 'mutation'}
+              mutationRarity={nextMutationCandidate.rarity}
+            >
             <View style={styles.nextCard}>
               <View style={styles.nextHeader}>
                 <Icon name="sparkle" size={14} color={theme.colors.primary} strokeWidth={2.2} />
@@ -364,6 +400,31 @@ export default function EvolutionTab() {
               </Text>
               <Text style={styles.nextRarity}>
                 · {rarityLabel(nextMutationCandidate.rarity).toLowerCase()} ·
+              </Text>
+            </View>
+            </PremiumFeatureGuard>
+          </StaggeredView>
+        )}
+
+        {/* Memórias narrativas */}
+        {memorySnippets.length > 0 && (
+          <StaggeredView index={6}>
+            <View style={styles.identityCard}>
+              <Text style={styles.sectionTitle}>Memórias que {mascot.name} guarda</Text>
+              {memorySnippets.map((s, i) => (
+                <Text key={i} style={styles.timelineEmptyText}>· {s}</Text>
+              ))}
+            </View>
+          </StaggeredView>
+        )}
+
+        {evolutionState && (
+          <StaggeredView index={7}>
+            <View style={styles.identityCard}>
+              <Text style={styles.sectionTitle}>Personalidade procedural</Text>
+              <Text style={styles.identityLead}>
+                {evolutionState.microEvolutions.length} microevoluções ·{' '}
+                {evolutionState.phenotype.displayModifiers.activeEnergy ? 'energia ativa' : 'calma presente'}
               </Text>
             </View>
           </StaggeredView>

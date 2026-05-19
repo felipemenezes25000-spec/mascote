@@ -31,6 +31,7 @@ import {
   type MutationContext,
 } from '@/lib/dna';
 import type { HabitKind, Mascot, MascotPhase, Mission, Profile, Streak } from '@/types';
+import type { MicroEvolution } from '@/game/evolution/EvolutionTypes';
 
 export const COINS_PER_CHECKIN = 5;
 export const COINS_PER_MISSION = 15;
@@ -72,6 +73,8 @@ export interface CheckinOutcome {
    * Caller deve enfileirar UnlockToast tipo 'mutation' pra cada item.
    */
   newMutations: Mutation[];
+  /** Microevoluções visuais desbloqueadas neste check-in. */
+  newMicroEvolutions: MicroEvolution[];
   /**
    * Row do checkin recém-criado (ou existente, se idempotência batia).
    * Null se a inserção falhou silenciosamente.
@@ -241,6 +244,25 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
   }
 
   const unlocks = await processUnlocks(profile, finalMascot, streakResult.streak);
+  finalMascot = unlocks.mascot;
+
+  // Microevoluções procedurais — camada visual incremental por hábito.
+  let newMicroEvolutions: MicroEvolution[] = [];
+  try {
+    const { buildEvolutionState, processEvolutionAfterCheckin } = await import('@/game/evolution/EvolutionEngine');
+    const allCheckins = await checkinsDb.listAll(profile.id);
+    const baseState = buildEvolutionState({
+      mascot: finalMascot,
+      checkins: allCheckins,
+      streak: streakResult.streak,
+    });
+    const { newMicro } = await processEvolutionAfterCheckin(profile.id, baseState);
+    newMicroEvolutions = newMicro;
+  } catch (err) {
+    logger.warn('[checkin] micro-evolution eval failed (non-fatal)', {
+      reason: err instanceof Error ? err.message : 'unknown',
+    });
+  }
 
   return {
     mascot: finalMascot,
@@ -254,6 +276,7 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
     unlocks,
     streakMilestone,
     newMutations,
+    newMicroEvolutions,
     checkin: persistedCheckin,
   };
 }

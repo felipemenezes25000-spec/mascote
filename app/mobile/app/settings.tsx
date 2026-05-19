@@ -232,6 +232,9 @@ export default function SettingsScreen() {
               </View>
             </View>
           )}
+          <Pressable onPress={() => router.push('/settings/personalization')} style={styles.linkRow}>
+            <Text style={styles.linkText}>Personalização completa (estilo Sims)</Text>
+          </Pressable>
           <Pressable onPress={() => router.push('/closet')} style={styles.linkRow}>
             <Text style={styles.linkText}>Guarda-roupa · acessórios e cenários</Text>
           </Pressable>
@@ -400,6 +403,9 @@ export default function SettingsScreen() {
           </Pressable>
           <Pressable onPress={() => router.push('/weekly-report')} style={styles.linkRow}>
             <Text style={styles.linkText}>Ver relatório da semana</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push('/monthly-report')} style={styles.linkRow}>
+            <Text style={styles.linkText}>Retrospectiva do mês</Text>
           </Pressable>
         </Section>
 

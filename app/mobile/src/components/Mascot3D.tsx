@@ -19,6 +19,7 @@ import { StyleSheet, View, PanResponder, type PanResponderInstance, Platform } f
 import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import type { MascotCustomization, MascotDNA, MascotMood } from '@/types';
+import type { MascotEvolutionVisuals } from '@/game/evolution/PhenotypeRenderer';
 import {
   aggregateVisualImpact,
   applyCustomization,
@@ -64,6 +65,8 @@ interface Props {
    * Mudança no `key` é o trigger — `kind` define qual animação.
    */
   action?: { kind: 'bounce' | 'celebrate' | 'wander' | 'rest' | 'observe'; key: number };
+  /** Modificadores visuais do fenótipo (hábitos + microevoluções). */
+  evolutionVisuals?: MascotEvolutionVisuals | null;
 }
 
 /**
@@ -83,6 +86,7 @@ export function Mascot3D({
   mutationIds = [],
   mood,
   action,
+  evolutionVisuals = null,
 }: Props) {
   const [look, setLook] = useState({ x: 0, y: 0 });
   const [bouncePulse, setBouncePulse] = useState(0);
@@ -138,8 +142,9 @@ export function Mascot3D({
         gl={{ antialias: true, alpha: !background }}
         camera={{ position: [0, 0.5, 5], fov: 45 }}
         onCreated={({ gl, scene }: { gl: THREE.WebGLRenderer; scene: THREE.Scene }) => {
+          const tint = evolutionVisuals?.environmentTint ?? '#0a0e1a';
           gl.setClearColor(background ?? '#000000', background ? 1 : 0);
-          scene.fog = new THREE.FogExp2(0x0a0e1a, 0.022);
+          scene.fog = new THREE.FogExp2(parseInt(tint.replace('#', ''), 16), 0.022);
         }}
       >
         <SceneLights />
@@ -153,6 +158,7 @@ export function Mascot3D({
           mood={mood}
           bouncePulse={bouncePulse}
           action={action}
+          evolutionVisuals={evolutionVisuals}
         />
       </Canvas>
     </View>
@@ -188,6 +194,7 @@ interface CreatureProps {
   bouncePulse?: number;
   /** Action externo (Behavior Engine). Key novo = trigger. */
   action?: { kind: 'bounce' | 'celebrate' | 'wander' | 'rest' | 'observe'; key: number };
+  evolutionVisuals?: MascotEvolutionVisuals | null;
 }
 
 // Mapeia humor → modificadores de postura. Valores são lerp targets, não saltos.
@@ -217,6 +224,7 @@ function Creature({
   mood,
   bouncePulse = 0,
   action,
+  evolutionVisuals = null,
 }: CreatureProps) {
   const groupRef = useRef<THREE.Group>(null);
   // ============================================================================
@@ -243,7 +251,15 @@ function Creature({
   const palette = useMemo(() => paletteFromGenome(dna as Genome), [dna]);
   const moodS = useMemo(() => moodScore(dna as Genome), [dna]);
   const tStart = useRef<number>(performance.now() / 1000);
-  const postureTarget = useMemo(() => moodPostureTarget(mood), [mood]);
+  const postureTarget = useMemo(() => {
+    const base = moodPostureTarget(mood);
+    const bias = evolutionVisuals?.postureBias ?? 0;
+    return {
+      tiltX: base.tiltX + bias * 0.06,
+      scaleY: base.scaleY * (evolutionVisuals?.bodyScaleMultiplier ?? 1),
+      bounceAmp: base.bounceAmp + (evolutionVisuals?.activeEnergy ? 0.008 : 0),
+    };
+  }, [mood, evolutionVisuals]);
 
   // Bounce-on-tap state — tracked via ref pra useFrame (sem re-render).
   const bouncePulseSeen = useRef(0);
@@ -272,9 +288,13 @@ function Creature({
       g.scale.set(1, postureTarget.scaleY, 1);
       return;
     }
-    // Idle wobble figura-8
-    g.position.x = Math.sin(t * 0.6) * morph.idleWobble;
-    g.position.y = Math.cos(t * 0.4) * morph.idleWobble * 0.7 + 0.05;
+    // Idle wobble figura-8 — modulado por idleAnimation do fenótipo
+    const idleBoost = evolutionVisuals?.idleAnimation === 'active' ? 1.4
+      : evolutionVisuals?.idleAnimation === 'zen' ? 0.55
+      : evolutionVisuals?.idleAnimation === 'wander' ? 1.2
+      : 1;
+    g.position.x = Math.sin(t * 0.6 * idleBoost) * morph.idleWobble * idleBoost;
+    g.position.y = Math.cos(t * 0.4 * idleBoost) * morph.idleWobble * 0.7 + 0.05;
     // Rotation: sway adaptativo + look-tracking + mood tilt (lerp)
     const swayY = Math.sin(t * 0.3) * morph.swayAmplitude;
     g.rotation.y = swayY + look.x * 0.25;
@@ -366,8 +386,23 @@ function Creature({
 
   return (
     <group ref={groupRef}>
-      <Body dna={dna} morph={morph} palette={palette} mood={moodS} reduceMotion={reduceMotion} />
-      <Eyes morph={morph} palette={palette} look={look} reduceMotion={reduceMotion} mood={mood} />
+      <Body
+        dna={dna}
+        morph={morph}
+        palette={palette}
+        mood={moodS}
+        reduceMotion={reduceMotion}
+        glowMultiplier={evolutionVisuals?.glowMultiplier ?? 1}
+        bodyFirmness={evolutionVisuals?.bodyFirmness ?? 0}
+      />
+      <Eyes
+        morph={morph}
+        palette={palette}
+        look={look}
+        reduceMotion={reduceMotion}
+        mood={mood}
+        eyeBrightness={evolutionVisuals?.eyeBrightness ?? 0}
+      />
       <Mouth morph={morph} palette={palette} mood={mood} reduceMotion={reduceMotion} />
       {morph.limbCount > 0 && (
         <Limbs seed={seed} morph={morph} palette={palette} reduceMotion={reduceMotion} />
@@ -379,9 +414,17 @@ function Creature({
       {morph.hasTail && (
         <Tail morph={morph} palette={palette} reduceMotion={reduceMotion} />
       )}
-      <Aura morph={morph} palette={palette} reduceMotion={reduceMotion} mood={mood} />
-      {/* Sparkle burst — overlay condicional disparado em mood='empolgado'.
-          Componente isolado pra não afetar Aura permanente. */}
+      <Aura
+        morph={morph}
+        palette={palette}
+        reduceMotion={reduceMotion}
+        mood={mood}
+        particleBoost={evolutionVisuals?.auraParticleBoost ?? 0}
+        calmAura={evolutionVisuals?.calmAura ?? false}
+      />
+      {evolutionVisuals?.zenParticles && !reduceMotion && (
+        <ZenParticles palette={palette} />
+      )}
       {mood === 'empolgado' && !reduceMotion && (
         <SparkleBurst palette={palette} />
       )}
@@ -541,9 +584,11 @@ interface BodyProps {
   palette: ReturnType<typeof paletteFromGenome>;
   mood: number;
   reduceMotion: boolean;
+  glowMultiplier?: number;
+  bodyFirmness?: number;
 }
 
-function Body({ dna, morph, palette, mood, reduceMotion }: BodyProps) {
+function Body({ dna, morph, palette, mood, reduceMotion, glowMultiplier = 1, bodyFirmness = 0 }: BodyProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const tStart = useRef<number>(performance.now() / 1000);
 
@@ -597,7 +642,8 @@ function Body({ dna, morph, palette, mood, reduceMotion }: BodyProps) {
     }
     const t = performance.now() / 1000 - tStart.current;
     const breath = 1 + Math.sin(t * morph.breathFreq * 2) * morph.breathAmp;
-    m.scale.set(breath, breath * (1 + morph.breathAmp * 0.3), breath);
+    const firmScale = 1 + bodyFirmness * 0.04;
+    m.scale.set(breath * firmScale, breath * (1 + morph.breathAmp * 0.3) * firmScale, breath * firmScale);
   });
 
   const color = bodyHex(palette);
@@ -613,7 +659,7 @@ function Body({ dna, morph, palette, mood, reduceMotion }: BodyProps) {
   let mat_roughness = morph.bodyRoughness;
   let mat_metalness = morph.bodyMetalness;
   let mat_flatShading = morph.bodyFlatShading;
-  let mat_emissiveIntensity = morph.bodyEmissiveIntensity + mood * 0.18;
+  let mat_emissiveIntensity = (morph.bodyEmissiveIntensity + mood * 0.18) * glowMultiplier;
   switch (morph.pattern) {
     case 'spots':
       mat_metalness = Math.min(1, mat_metalness + 0.45);
@@ -658,17 +704,19 @@ function Eyes({
   look,
   reduceMotion,
   mood,
+  eyeBrightness = 0,
 }: {
   morph: ReturnType<typeof morphologyFromGenome>;
   palette: ReturnType<typeof paletteFromGenome>;
   look: { x: number; y: number };
   reduceMotion: boolean;
   mood: MascotMood | undefined;
+  eyeBrightness?: number;
 }) {
   return (
     <group>
-      <Eye side={-1} morph={morph} palette={palette} look={look} reduceMotion={reduceMotion} mood={mood} />
-      <Eye side={1} morph={morph} palette={palette} look={look} reduceMotion={reduceMotion} mood={mood} />
+      <Eye side={-1} morph={morph} palette={palette} look={look} reduceMotion={reduceMotion} mood={mood} eyeBrightness={eyeBrightness} />
+      <Eye side={1} morph={morph} palette={palette} look={look} reduceMotion={reduceMotion} mood={mood} eyeBrightness={eyeBrightness} />
     </group>
   );
 }
@@ -692,6 +740,7 @@ function Eye({
   look,
   reduceMotion,
   mood,
+  eyeBrightness = 0,
 }: {
   side: -1 | 1;
   morph: ReturnType<typeof morphologyFromGenome>;
@@ -699,6 +748,7 @@ function Eye({
   look: { x: number; y: number };
   reduceMotion: boolean;
   mood: MascotMood | undefined;
+  eyeBrightness?: number;
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const pupilRef = useRef<THREE.Mesh>(null);
@@ -766,7 +816,7 @@ function Eye({
           roughness={0.3}
           metalness={0.2}
           emissive={pupilEmissive}
-          emissiveIntensity={morph.pupilEmissive}
+          emissiveIntensity={morph.pupilEmissive + eyeBrightness * 0.6}
         />
       </mesh>
       {/* highlight */}
@@ -1001,6 +1051,49 @@ function Tail({
 }
 
 // ============================================================================
+// ZenParticles — partículas lentas quando hábito meditação/respiração domina
+// ============================================================================
+function ZenParticles({ palette }: { palette: ReturnType<typeof paletteFromGenome> }) {
+  const pointsRef = useRef<THREE.Points>(null);
+  const tStart = useRef(performance.now() / 1000);
+  const count = 12;
+  const geometry = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    return g;
+  }, []);
+
+  useFrame(() => {
+    if (!pointsRef.current) return;
+    const t = performance.now() / 1000 - tStart.current;
+    const attr = pointsRef.current.geometry.attributes.position;
+    const pos = attr.array as Float32Array;
+    for (let i = 0; i < count; i++) {
+      const phase = (i / count) * Math.PI * 2;
+      pos[i * 3] = Math.cos(phase + t * 0.3) * (0.6 + i * 0.05);
+      pos[i * 3 + 1] = Math.sin(t * 0.5 + i) * 0.5 + 0.2;
+      pos[i * 3 + 2] = Math.sin(phase + t * 0.3) * (0.6 + i * 0.05);
+    }
+    attr.needsUpdate = true;
+  });
+
+  const color = glowHex(palette);
+  return (
+    <points ref={pointsRef} geometry={geometry}>
+      <pointsMaterial
+        color={color}
+        size={0.05}
+        transparent
+        opacity={0.5}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+      />
+    </points>
+  );
+}
+
+// ============================================================================
 // Aura — partículas orbitando, agora MOOD-REACTIVE
 // ============================================================================
 // Em 'empolgado'/'feliz': aura mais ampla, velocidade maior, opacity boost.
@@ -1027,11 +1120,15 @@ function Aura({
   palette,
   reduceMotion,
   mood,
+  particleBoost = 0,
+  calmAura = false,
 }: {
   morph: ReturnType<typeof morphologyFromGenome>;
   palette: ReturnType<typeof paletteFromGenome>;
   reduceMotion: boolean;
   mood: MascotMood | undefined;
+  particleBoost?: number;
+  calmAura?: boolean;
 }) {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.PointsMaterial>(null);
@@ -1040,7 +1137,7 @@ function Aura({
   const modRef = useRef({ radiusMult: 1.0, speedMult: 1.0, opacityMult: 1.0 });
 
   const { geometry, orbits } = useMemo(() => {
-    const count = morph.auraParticleCount;
+    const count = Math.round(morph.auraParticleCount * (1 + particleBoost * 2));
     const pos = new Float32Array(count * 3);
     const orb = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -1056,7 +1153,7 @@ function Aura({
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     return { geometry: geo, orbits: orb };
-  }, [morph.auraParticleCount]);
+  }, [morph.auraParticleCount, particleBoost]);
 
   useFrame(() => {
     if (reduceMotion || !pointsRef.current) return;
@@ -1068,7 +1165,8 @@ function Aura({
     m.opacityMult += (target.opacityMult - m.opacityMult) * 0.04;
     // Aplica opacity no material (clamp em [0, 1])
     if (materialRef.current) {
-      materialRef.current.opacity = Math.max(0, Math.min(1, morph.auraOpacity * m.opacityMult));
+      const calmMult = calmAura ? 0.85 : 1;
+      materialRef.current.opacity = Math.max(0, Math.min(1, morph.auraOpacity * m.opacityMult * calmMult));
     }
     const t = performance.now() / 1000 - tStart.current;
     const attr = pointsRef.current.geometry.attributes.position;

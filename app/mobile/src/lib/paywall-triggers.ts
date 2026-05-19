@@ -17,7 +17,9 @@ export type PaywallTrigger =
   | 'streak_7'           // 1 semana inteira
   | 'level_5'            // marco emocional
   | 'checkin_30'         // 30 check-ins totais
-  | 'first_box_opened';  // engajamento orgânico
+  | 'first_box_opened'   // engajamento orgânico
+  | 'premium_feature'    // toque em recurso Plus
+  | 'rare_evolution';    // preview de forma rara
 
 interface Context {
   mascot: Mascot;
@@ -37,6 +39,7 @@ export async function shouldTrigger(ctx: Context): Promise<PaywallTrigger | null
     { id: 'level_5', test: () => ctx.mascot.level >= 5 },
     { id: 'checkin_30', test: () => ctx.totalCheckins >= 30 },
     { id: 'first_box_opened', test: () => ctx.boxOpenedCount >= 3 },
+    { id: 'rare_evolution', test: () => ctx.mascot.phase === 'adulto' || ctx.mascot.phase === 'evoluido' },
   ];
 
   // Batch read das marcações shown (evita 5 awaits sequenciais).
@@ -82,5 +85,23 @@ export function copyFor(trigger: PaywallTrigger, mascotName: string): { title: s
         title: 'Curte as recompensas? 🎁',
         body: 'Plus dobra a frequência delas + caixas raras semanais.',
       };
+    case 'premium_feature':
+      return {
+        title: 'Isso é Plus ✨',
+        body: 'Relatórios completos, mutações lendárias e cenários extras — no seu ritmo.',
+      };
+    case 'rare_evolution':
+      return {
+        title: `${mascotName} está quase rara 🌙`,
+        body: 'Plus desbloqueia formas lendárias e o caminho completo de evolução.',
+      };
   }
+}
+
+/** Marca gatilho one-shot ao tocar feature premium (não bloqueia a ação). */
+export async function triggerPremiumFeaturePaywall(): Promise<PaywallTrigger> {
+  const id: PaywallTrigger = 'premium_feature';
+  const seen = await AsyncStorage.getItem(`paywall_shown:${id}`);
+  if (!seen) await markShown(id);
+  return id;
 }

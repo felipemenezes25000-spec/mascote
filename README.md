@@ -136,6 +136,24 @@ DNA-driven behaviors fazem **criaturas diferentes se comportarem diferente** no 
 
 ---
 
+## ✨ Premium (Mascote Plus)
+
+Camada premium **100% implementada em código** — billing real depende só de RevenueCat + lojas.
+
+| Recurso | Free | Plus |
+|---------|------|------|
+| Evolução visual | Até adolescente | Fases completas + mutações lendárias |
+| Chat | 10/dia | Ilimitado |
+| Relatório semanal | Preview | Narrativa completa + export |
+| Cenários | Quarto | Todos |
+| Personalização Sims | Básica | Fluxo completo pós-onboarding |
+
+- **Docs:** [`docs/PREMIUM_STRATEGY.md`](docs/PREMIUM_STRATEGY.md), [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md)
+- **Env:** copie [`app/mobile/.env.example`](app/mobile/.env.example) → `.env` (`mock` local, `revenuecat` em produção)
+- **Testes:** `cd app/mobile && npm test` (1757+)
+
+---
+
 ## 🚀 Quick Start
 
 ### Web (mais rápido)

@@ -26,6 +26,7 @@ import { detectCapabilities } from '@/lib/deviceCapabilities';
 import { useStore } from '@/store';
 import { Mascot2D, type AccessoryId } from '@/components/Mascot2D';
 import { Mascot3D } from '@/components/Mascot3D';
+import type { MascotEvolutionVisuals } from '@/game/evolution/PhenotypeRenderer';
 
 export type { AccessoryId };
 
@@ -60,12 +61,18 @@ interface Props {
   force3D?: boolean;
   /** Estilo extra para o container. */
   style?: StyleProp<ViewStyle>;
+  /** Modificadores visuais do motor de evolução (glow, aura, postura…). */
+  evolutionVisuals?: MascotEvolutionVisuals | null;
+  /** Override de DNA para preview/onboarding (antes de persistir no store). */
+  dnaOverride?: MascotDNA;
+  seedOverride?: number;
 }
 
 function MascotImpl(props: Props) {
-  const { force2D, force3D, size = 220, style } = props;
+  const { force2D, force3D, size = 220, style, dnaOverride, seedOverride } = props;
   const mascot = useStore(s => s.mascot);
-  const dna = mascot?.dna;
+  const dna = dnaOverride ?? mascot?.dna;
+  const seed = seedOverride ?? mascot?.dna_seed ?? 0;
 
   const use3D = useMemo(() => {
     if (force2D) return false;
@@ -83,13 +90,14 @@ function MascotImpl(props: Props) {
       >
         <Mascot3D
           dna={dna as MascotDNA}
-          seed={mascot?.dna_seed ?? 0}
+          seed={seed}
           size={size}
           reduceMotion={props.reduceMotion}
           customization={props.customization}
           mutationIds={props.mutationIds}
           mood={props.mood}
           action={props.action}
+          evolutionVisuals={props.evolutionVisuals}
         />
       </View>
     );

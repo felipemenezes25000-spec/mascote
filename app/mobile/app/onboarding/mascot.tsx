@@ -1,56 +1,114 @@
+/**
+ * onboarding/mascot.tsx — DNA reveal + egg hatch + nascimento do mascote.
+ */
+
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
 import { SceneBackground } from '@/components/SceneBackground';
-import { personalities, getPersonality } from '@/content/personalities';
+import { getPersonality } from '@/content/personalities';
+import { modifiersToVisuals } from '@/game/evolution/PhenotypeRenderer';
+import {
+  buildPersonalizationInput,
+  formatRareTrait,
+  generateOnboardingPreview,
+  hatchDurationMs,
+  mapMoodToMascot,
+  personalityFromBond,
+  type OnboardingAnswers,
+  type StylePreset,
+} from '@/lib/onboarding-evolution';
 import { stepLabel } from '@/lib/onboarding-flow';
+import { sanitizeGenome } from '@/lib/dna';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
-import type { Personality } from '@/types';
+import type { BondType, CommunicationTone, UserGoal } from '@/game/evolution/EvolutionTypes';
 
-/**
- * Tela combinada (mascot + meet) — pick + reveal+greeting na mesma tela.
- *
- * Antes eram 2 telas: mascot.tsx (escolher) → meet.tsx (cumprimentar). Agora
- * é 1 tela com 2 modos: 'pick' (lista das 4 personalidades) e 'reveal'
- * (cena + bubble com greeting). Reveal substitui o navigate pra /meet.
- */
-export default function MascotPick() {
+type Phase = 'reveal' | 'hatch' | 'birth';
+
+export default function MascotBirth() {
   const theme = useTheme();
   const styles = makeStyles(theme);
-  const params = useLocalSearchParams();
-  const [selected, setSelected] = useState<Personality | null>((params.personality as Personality) ?? null);
-  const [mode, setMode] = useState<'pick' | 'reveal'>(
-    params.personality ? 'reveal' : 'pick',
-  );
+  const params = useLocalSearchParams<{
+    goal?: string; mood?: string; style?: string;
+    bond?: string; tone?: string; pronoun?: string; primaryGoal?: string;
+    display_name?: string; age_band?: string;
+  }>();
 
-  if (mode === 'reveal' && selected) {
-    const meta = getPersonality(selected);
+  const answers = useMemo((): OnboardingAnswers => ({
+    goalId: params.goal ?? 'companhia',
+    moodId: params.mood ?? '4',
+    stylePreset: (params.style as StylePreset) ?? 'soft',
+    bondType: (params.bond as BondType) ?? 'companheiro',
+    communicationTone: (params.tone as CommunicationTone) ?? 'carinhoso',
+    pronoun: (params.pronoun as 'ele' | 'ela' | 'elu') ?? 'ele',
+    primaryGoal: (params.primaryGoal as UserGoal) ?? 'saude_geral',
+  }), [params]);
+
+  const personality = personalityFromBond(answers.bondType);
+  const preview = useMemo(
+    () => generateOnboardingPreview(answers, getPersonality(personality).mascotName),
+    [answers, personality],
+  );
+  const visuals = useMemo(
+    () => modifiersToVisuals(
+      preview.phenotype.displayModifiers,
+      preview.phenotype.slots.animationSet,
+      preview.phenotype.slots.environmentId,
+    ),
+    [preview],
+  );
+  const dna = sanitizeGenome(preview.genotype.genome);
+  const mood = mapMoodToMascot(answers.moodId);
+
+  const [phase, setPhase] = useState<Phase>('reveal');
+  const eggScale = useSharedValue(1);
+  const eggOpacity = useSharedValue(1);
+  const mascotOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (phase !== 'hatch') return;
+    const dur = hatchDurationMs(preview.seed);
+    eggScale.value = withSequence(
+      withTiming(1.08, { duration: dur * 0.4, easing: Easing.out(Easing.cubic) }),
+      withTiming(0.2, { duration: dur * 0.35, easing: Easing.in(Easing.cubic) }),
+    );
+    eggOpacity.value = withTiming(0, { duration: dur * 0.5 });
+    mascotOpacity.value = withTiming(1, { duration: dur * 0.6 });
+    const t = setTimeout(() => setPhase('birth'), dur);
+    return () => clearTimeout(t);
+  }, [phase, preview.seed]);
+
+  const eggStyle = useAnimatedStyle(() => ({
+    opacity: eggOpacity.value,
+    transform: [{ scale: eggScale.value }],
+  }));
+  const mascotStyle = useAnimatedStyle(() => ({ opacity: mascotOpacity.value }));
+
+  if (phase === 'reveal') {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.container}>
-          <View>
-            <Text style={[styles.kicker, { color: meta.primaryColor }]}>{stepLabel('mascot')}</Text>
-            <Text style={styles.title}>Olha quem chegou pra te acompanhar.</Text>
+          <Text style={styles.kicker}>{stepLabel('mascot')}</Text>
+          <Text style={styles.title}>O DNA dele está pronto</Text>
+          <View style={styles.dnaCard}>
+            <Text style={styles.dnaLabel}>TRAÇO RARO</Text>
+            <Text style={styles.dnaTrait}>{formatRareTrait(preview)}</Text>
+            <Text style={styles.dnaSeed}>Seed #{preview.seed.toString(16).toUpperCase()}</Text>
+            <Text style={styles.dnaArchetype}>Arquétipo · {preview.genotype.archetype}</Text>
           </View>
-          <View style={styles.sceneWrap}>
-            <SceneBackground sceneId="room" height={240}>
-              <Mascot personality={selected} phase="bebe" mood="empolgado" size={170} />
-            </SceneBackground>
-          </View>
-          <View style={[styles.bubble, { borderColor: meta.primaryColor + '55' }]}>
-            <Text style={styles.bubbleText}>"{meta.greeting}"</Text>
-            <Text style={styles.bubbleAuthor}>— {meta.mascotName}, seu {meta.label.toLowerCase()}</Text>
-          </View>
-          <View style={{ gap: theme.spacing.sm }}>
-            <Button label="Vamos!" onPress={() => router.push({ pathname: '/onboarding/name', params: { ...params, personality: selected } })} />
-            <Pressable onPress={() => setMode('pick')} accessibilityLabel="Trocar personalidade">
-              <Text style={styles.linkText}>Hmm, deixa eu olhar de novo</Text>
-            </Pressable>
-          </View>
+          <Text style={styles.hint}>Cada escolha sua deixou marcas únicas. Ninguém terá esse mascote.</Text>
+          <Button label="Chocar o ovo" onPress={() => setPhase('hatch')} />
         </View>
       </SafeAreaView>
     );
@@ -59,42 +117,59 @@ export default function MascotPick() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <View>
-          <Text style={styles.kicker}>{stepLabel('mascot')}</Text>
-          <Text style={styles.title}>Cada um tem um jeito</Text>
+        <Text style={styles.kicker}>{stepLabel('mascot')}</Text>
+        <Text style={styles.title}>
+          {phase === 'hatch' ? 'Algo está nascendo...' : 'Olha quem chegou!'}
+        </Text>
+        <View style={styles.sceneWrap}>
+          <SceneBackground sceneId="room" height={260}>
+            {phase === 'hatch' && (
+              <Animated.View style={[styles.egg, eggStyle]}>
+                <Text style={styles.eggEmoji}>🥚</Text>
+              </Animated.View>
+            )}
+            <Animated.View style={[styles.mascotWrap, phase === 'birth' ? { opacity: 1 } : mascotStyle]}>
+              <Mascot
+                personality={personality}
+                phase="bebe"
+                mood={mood}
+                size={170}
+                dnaOverride={dna}
+                seedOverride={preview.seed}
+                evolutionVisuals={visuals}
+              />
+            </Animated.View>
+          </SceneBackground>
         </View>
-        <ScrollView contentContainerStyle={{ gap: theme.spacing.md }}>
-          {personalities.map(p => (
-            <Pressable
-              key={p.id}
-              onPress={() => setSelected(p.id)}
-              style={[
-                styles.card,
-                selected === p.id && { borderColor: p.primaryColor, borderWidth: 2 },
-              ]}
-            >
-              <Mascot personality={p.id} phase="bebe" mood="feliz" size={90} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.name}>
-                  {p.mascotName} · <Text style={styles.kind}>{p.label}</Text>
-                </Text>
-                <Text style={styles.desc}>{p.tagline}</Text>
-                <View style={styles.bestFor}>
-                  {p.bestFor.map(b => (
-                    <View key={b} style={[styles.tag, { backgroundColor: p.primaryColor + '22', borderColor: p.primaryColor + '55' }]}>
-                      <Text style={[styles.tagText, { color: p.accentColor }]}>{b}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
+        {phase === 'birth' && (
+          <>
+            <View style={styles.bubble}>
+              <Text style={styles.bubbleText}>"{preview.firstWords}"</Text>
+              <Text style={styles.bubbleSub}>Traço: {formatRareTrait(preview)}</Text>
+            </View>
+            <Button
+              label="Dar um nome"
+              onPress={() =>
+                router.push({
+                  pathname: '/onboarding/name',
+                  params: {
+                    ...params,
+                    personality,
+                    dna_seed: String(preview.seed),
+                    bond: answers.bondType,
+                    tone: answers.communicationTone,
+                    style: answers.stylePreset,
+                    primaryGoal: answers.primaryGoal,
+                    pronoun: answers.pronoun,
+                  },
+                })
+              }
+            />
+            <Pressable onPress={() => setPhase('reveal')}>
+              <Text style={styles.link}>Ver DNA de novo</Text>
             </Pressable>
-          ))}
-        </ScrollView>
-        <Button
-          label="É esse aí"
-          disabled={!selected}
-          onPress={() => setMode('reveal')}
-        />
+          </>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -103,26 +178,32 @@ export default function MascotPick() {
 function makeStyles(theme: Theme) {
   return StyleSheet.create({
     safe: { flex: 1, backgroundColor: theme.colors.bg },
-    container: { flex: 1, paddingHorizontal: theme.spacing.lg, paddingTop: theme.spacing.xl, paddingBottom: theme.spacing.lg, gap: theme.spacing.lg },
-    kicker: { ...theme.text.xs, color: theme.colors.primary, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
-    title: { ...theme.text.h1, color: theme.colors.text, marginTop: theme.spacing.sm },
-    card: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.md,
-      padding: theme.spacing.md,
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.radius.lg,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
+    container: {
+      flex: 1,
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.xl,
+      paddingBottom: theme.spacing.lg,
+      gap: theme.spacing.lg,
     },
-    name: { ...theme.text.h3, color: theme.colors.text },
-    kind: { color: theme.colors.textSecondary, fontWeight: '600' },
-    desc: { ...theme.text.sm, color: theme.colors.textSecondary, marginTop: 4 },
-    bestFor: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 8 },
-    tag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, borderWidth: 1 },
-    tagText: { fontSize: 10, fontWeight: '700' },
-    sceneWrap: { paddingHorizontal: 0 },
+    kicker: { ...theme.text.xs, color: theme.colors.primary, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
+    title: { ...theme.text.h1, color: theme.colors.text },
+    dnaCard: {
+      backgroundColor: theme.colors.primaryTint,
+      borderRadius: theme.radius.lg,
+      padding: theme.spacing.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.primary + '44',
+      gap: 6,
+    },
+    dnaLabel: { ...theme.text.xs, color: theme.colors.primary, fontWeight: '800', letterSpacing: 1 },
+    dnaTrait: { ...theme.text.h2, color: theme.colors.text, fontFamily: 'InstrumentSerif_400Regular' },
+    dnaSeed: { ...theme.text.xs, color: theme.colors.textSecondary, fontFamily: 'JetBrainsMono_500Medium' },
+    dnaArchetype: { ...theme.text.sm, color: theme.colors.textSecondary, fontStyle: 'italic' },
+    hint: { ...theme.text.body, color: theme.colors.textSecondary, textAlign: 'center' },
+    sceneWrap: {},
+    egg: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
+    eggEmoji: { fontSize: 100 },
+    mascotWrap: { alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 10 },
     bubble: {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.radius.lg,
@@ -131,8 +212,8 @@ function makeStyles(theme: Theme) {
       borderColor: theme.colors.border,
       gap: 6,
     },
-    bubbleText: { ...theme.text.body, color: theme.colors.text, fontStyle: 'italic' },
-    bubbleAuthor: { ...theme.text.xs, color: theme.colors.textSecondary, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
-    linkText: { color: theme.colors.primary, textAlign: 'center', fontWeight: '600', paddingVertical: 6 },
+    bubbleText: { ...theme.text.body, color: theme.colors.text, fontStyle: 'italic', lineHeight: 24 },
+    bubbleSub: { ...theme.text.xs, color: theme.colors.primary, fontWeight: '700' },
+    link: { color: theme.colors.primary, textAlign: 'center', fontWeight: '600' },
   });
 }

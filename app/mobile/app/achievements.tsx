@@ -3,6 +3,7 @@ import { Redirect } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card } from '@/components/Card';
+import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { StaggeredView } from '@/components/StaggeredView';
@@ -72,6 +73,14 @@ export default function AchievementsScreen() {
             </View>
           </Card>
         </StaggeredView>
+
+        {totalUnlocked === 0 && (
+          <EmptyState
+            emoji="🏆"
+            title="Primeiras conquistas chegando"
+            body="Faça check-ins, complete missões e mantenha o streak — cada cuidado desbloqueia marcos e recompensas na coleção."
+          />
+        )}
 
         <View style={styles.list}>
           {achievementCatalog.map((a, i) => {

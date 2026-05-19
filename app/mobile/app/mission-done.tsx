@@ -6,6 +6,7 @@ import { Button } from '@/components/Button';
 import { ConfettiBurst } from '@/components/ConfettiBurst';
 import { Mascot } from '@/components/Mascot';
 import { applyMissionCompletion, COINS_PER_MISSION } from '@/lib/checkin';
+import { buildMascotContextLine } from '@/lib/mascot-context-line';
 import { missions as missionsDb, todayLocal } from '@/lib/db';
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import { processUnlocks } from '@/lib/unlock';
@@ -33,6 +34,8 @@ export default function MissionDone() {
 
   const [confetti, setConfetti] = useState(true);
   const [reward, setReward] = useState<Reward | null>(null);
+  const [mascotLine, setMascotLine] = useState<string | null>(null);
+  const apiKey = useStore(s => s.openAiKey);
   // Guard re-entrância: StrictMode dispara useEffect 2× em dev, o que
   // tentaria persistir a missão duas vezes. `alreadyCompleted` no service
   // já cobre, mas o ref evita até a leitura redundante do mascot.
@@ -60,6 +63,13 @@ export default function MissionDone() {
         leveledUp: out.leveledUp,
         phaseChanged: out.phaseChanged,
       });
+      const line = await buildMascotContextLine(
+        profile.id,
+        out.mascot,
+        out.phaseChanged ? 'evolution' : 'mission_done',
+        apiKey,
+      );
+      setMascotLine(line);
       // Disparos de unlock pós-mission (achievements/scenes destravados pelo
       // novo level ou phase) — ficam disponíveis ao voltar pra Home.
       if (!out.alreadyCompleted && streak) {
@@ -101,6 +111,11 @@ export default function MissionDone() {
           <Text style={styles.kicker}>MISSÃO CONCLUÍDA</Text>
           <Text style={styles.title}>{titleText}</Text>
           <Text style={styles.subtitle}>{xpText}</Text>
+          {mascotLine && (
+            <Text style={[styles.subtitle, { fontWeight: '400', fontSize: 15, color: theme.colors.textSecondary }]}>
+              {mascotLine}
+            </Text>
+          )}
         </View>
         <Button label="Voltar pra Home" onPress={() => router.replace('/(tabs)')} />
       </View>

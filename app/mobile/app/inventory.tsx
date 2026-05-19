@@ -3,6 +3,7 @@ import { Redirect } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/Icon';
+import { EmptyState } from '@/components/EmptyState';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { StaggeredView } from '@/components/StaggeredView';
 import { accessoryCatalog } from '@/content/accessories';
@@ -48,6 +49,14 @@ export default function Inventory() {
         <StaggeredView index={0}>
           <Text style={styles.h1}>Tudo que você ganhou</Text>
         </StaggeredView>
+
+        {totalUnlocked === 0 && (
+          <EmptyState
+            emoji="🎁"
+            title="Coleção vazia por enquanto"
+            body="Acessórios, cenários e conquistas aparecem aqui quando você evoluir com hábitos e missões."
+          />
+        )}
 
         <StaggeredView index={1}>
           <Section
