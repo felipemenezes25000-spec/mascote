@@ -5,7 +5,7 @@ import {
   recordMissionOutcome,
   suggestMissionFor,
 } from '@/services/missions';
-import { missionCatalog, pickDailyMission } from '@/content/missions';
+import { fullMissionCatalog, missionCatalog, pickDailyMission } from '@/content/missions';
 
 declare const __asyncStorageReset: () => void;
 
@@ -60,8 +60,8 @@ describe('services/missions', () => {
         dateKey: '2026-05-18',
         hour: 3,
       });
-      // Fallback retorna algo do catálogo (não trava)
-      expect(missionCatalog.find(t => t.id === out.id)).toBeTruthy();
+      // Fallback pode vir do catálogo expandido (pickDailyMission usa fullMissionCatalog)
+      expect(fullMissionCatalog.find(t => t.id === out.id)).toBeTruthy();
     });
   });
 

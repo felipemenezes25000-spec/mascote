@@ -29,8 +29,17 @@ maestro test .maestro/premium-settings-reports.yaml
 | Comando | Status |
 |---------|--------|
 | `npm run typecheck` | ✅ |
-| `npm test` | ✅ (1757+ testes) |
+| `npm test` | ✅ (1765+ testes) |
 | ESLint | ⏭ Não configurado — ver `RELEASE_CHECKLIST.md` |
+
+## Fase 5 — incremento (2026-05-19)
+
+| Área | O que mudou |
+|------|-------------|
+| Missões | Catálogo 300+; metadados (`duration`, `difficulty`, `visual_impact`, `tier`, `tags`, `category`) via `mission-meta.ts` |
+| Conquistas | `applyAchievementReward` persiste aura/trait/animation/memory_card |
+| Memória | `MascotMemoryService.recordMilestone` — birth, first_mission, first_evolution |
+| Testes | `mission-meta.test.ts`, `achievement-rewards.test.ts`, catálogo 300+ |
 
 ## Fase 4 — correções aplicadas
 

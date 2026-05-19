@@ -1,10 +1,11 @@
 /**
- * Missões adicionais — catálogo expandido (150+ total com missions.ts).
+ * Missões adicionais — catálogo expandido (300+ total com missions.ts).
  * Geradas proceduralmente por combinação hábito × variação × personalidade.
  */
 
 import type { HabitKind, Personality } from '@/types';
 import type { MissionTemplate } from './missions';
+import type { MissionCategory } from './mission-meta';
 
 const HABITS: HabitKind[] = [
   'water', 'sleep', 'exercise', 'meditation', 'reading',
@@ -32,6 +33,12 @@ function xpForHabit(h: HabitKind): number {
   return map[h] ?? 10;
 }
 
+const SPECIAL_CATEGORIES: { suffix: string; category: MissionCategory; xpBonus: number }[] = [
+  { suffix: 'return', category: 'return_after_failure', xpBonus: 5 },
+  { suffix: 'weekly', category: 'weekly_challenge', xpBonus: 15 },
+  { suffix: 'surprise', category: 'surprise', xpBonus: 8 },
+];
+
 /** Gera entradas únicas até atingir `count`. */
 export function generateExtendedMissions(count: number): MissionTemplate[] {
   const result: MissionTemplate[] = [];
@@ -40,16 +47,25 @@ export function generateExtendedMissions(count: number): MissionTemplate[] {
     const habit = HABITS[i % HABITS.length]!;
     const vars = VARIATIONS[habit];
     const variation = vars[Math.floor(i / HABITS.length) % vars.length]!;
-    const id = `m-ext-${habit}-${i}`;
+    const special = i % 17 === 0 ? SPECIAL_CATEGORIES[i % SPECIAL_CATEGORIES.length]! : null;
+    const id = special
+      ? `m-ext-${habit}-${special.suffix}-${i}`
+      : `m-ext-${habit}-${i}`;
     if (!result.some(r => r.id === id)) {
+      const xp = xpForHabit(habit) + (i % 10) + (special?.xpBonus ?? 0);
       result.push({
         id,
         title: `${habitMetaLabel(habit)} — ${variation}`,
         description: `Micro-missão de ${habitMetaLabel(habit).toLowerCase()} (${variation}).`,
         habit_kind: habit,
         target_value: i % 3 === 0 ? null : (i % 5) + 1,
-        xp_reward: xpForHabit(habit) + (i % 10),
+        xp_reward: xp,
         preferred_personalities: [ALL_PERSONALITIES[i % 4]!],
+        category: special?.category,
+        tier: xp >= 40 ? 'premium' : 'free',
+        repeatable: special?.category !== 'weekly_challenge',
+        cooldown_hours: special?.category === 'weekly_challenge' ? 168 : 24,
+        tags: [habit, special?.category ?? habit],
       });
     }
     i += 1;
@@ -67,4 +83,4 @@ function habitMetaLabel(h: HabitKind): string {
   return labels[h];
 }
 
-export const extendedMissionCatalog: MissionTemplate[] = generateExtendedMissions(120);
+export const extendedMissionCatalog: MissionTemplate[] = generateExtendedMissions(250);

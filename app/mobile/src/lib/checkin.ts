@@ -258,6 +258,20 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
     });
     const { newMicro } = await processEvolutionAfterCheckin(profile.id, baseState);
     newMicroEvolutions = newMicro;
+    if (allCheckins.length === 1) {
+      try {
+        const { mascotMemoryService } = await import('@/game/memory/MascotMemoryService');
+        await mascotMemoryService.recordMilestone(profile.id, 'first_mission');
+      } catch { /* non-fatal */ }
+    }
+    if (newMicro.length > 0) {
+      try {
+        const { mascotMemoryService } = await import('@/game/memory/MascotMemoryService');
+        await mascotMemoryService.recordMilestone(profile.id, 'first_evolution', {
+          detail: newMicro[0]?.label,
+        });
+      } catch { /* non-fatal */ }
+    }
   } catch (err) {
     logger.warn('[checkin] micro-evolution eval failed (non-fatal)', {
       reason: err instanceof Error ? err.message : 'unknown',

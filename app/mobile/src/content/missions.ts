@@ -1,5 +1,24 @@
 import type { HabitKind, Personality } from '@/types';
 import { extendedMissionCatalog } from './missions-extended';
+import { enrichMissionTemplate } from './mission-meta';
+import type {
+  MissionCategory,
+  MissionDifficulty,
+  MissionEmotionalImpact,
+  MissionEvolutionType,
+  MissionTier,
+  MissionVisualImpact,
+} from './mission-meta';
+
+export type {
+  MissionCategory,
+  MissionDifficulty,
+  MissionEmotionalImpact,
+  MissionEvolutionType,
+  MissionTier,
+  MissionVisualImpact,
+} from './mission-meta';
+export { enrichMissionTemplate, inferMissionMeta } from './mission-meta';
 
 export interface MissionTemplate {
   id: string;
@@ -9,6 +28,18 @@ export interface MissionTemplate {
   target_value: number | null;
   xp_reward: number;
   preferred_personalities: Personality[];
+  /** Metadados gamificação premium — inferidos se omitidos. */
+  duration_minutes?: number;
+  difficulty?: MissionDifficulty;
+  visual_impact?: MissionVisualImpact;
+  emotional_impact?: MissionEmotionalImpact;
+  evolution_type?: MissionEvolutionType;
+  tier?: MissionTier;
+  repeatable?: boolean;
+  cooldown_hours?: number;
+  tags?: string[];
+  prerequisites?: string[];
+  category?: MissionCategory;
 }
 
 export const missionCatalog: MissionTemplate[] = [
@@ -76,11 +107,13 @@ export const missionCatalog: MissionTemplate[] = [
   { id: 'm-sun-4', title: 'Vitamina D natural', description: '15min com braços expostos no sol.', habit_kind: 'sun', target_value: 15, xp_reward: 25, preferred_personalities: ['motivador'] },
 ];
 
-/** Catálogo completo: base + expandido (150+ missões). */
-export const fullMissionCatalog: MissionTemplate[] = [
+/** Catálogo completo: base + expandido (300+ missões com metadados). */
+const _mergedCatalog: MissionTemplate[] = [
   ...missionCatalog,
   ...extendedMissionCatalog.filter(e => !missionCatalog.some(m => m.id === e.id)),
 ];
+
+export const fullMissionCatalog = _mergedCatalog.map(enrichMissionTemplate);
 
 // Hash determinístico para uma string. Usado para gerar seed estável que
 // rotaciona missões sem colisões previsíveis entre meses.

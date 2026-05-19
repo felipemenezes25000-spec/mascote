@@ -101,6 +101,17 @@ export default function NameStep() {
       dna_seed: seed,
     });
     await persistOnboardingPersonalization(profile.id, answers, mascotName.trim() || defaultMascotName, personality);
+    try {
+      const { mascotMemoryService } = await import('@/game/memory/MascotMemoryService');
+      await mascotMemoryService.recordMilestone(profile.id, 'birth', {
+        name: mascotName.trim() || defaultMascotName,
+      });
+      await mascotMemoryService.recordMilestone(profile.id, 'user_goal', {
+        detail: answers.primaryGoal,
+      });
+    } catch {
+      /* memória não bloqueia onboarding */
+    }
     await settingsDb.update(profile.id, {
       first_mission_pending: true,
       onboarding_bond: answers.bondType,
