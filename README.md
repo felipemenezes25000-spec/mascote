@@ -10,7 +10,7 @@
 
 ---
 
-[![Tests](https://img.shields.io/badge/tests-1653%2F1653-brightgreen?style=for-the-badge)](app/mobile/tests/)
+[![Tests](https://img.shields.io/badge/tests-1714%2F1714-brightgreen?style=for-the-badge)](app/mobile/tests/)
 [![Coverage](https://img.shields.io/badge/coverage-98.9%25-brightgreen?style=for-the-badge)](app/mobile/vitest.config.ts)
 [![Typecheck](https://img.shields.io/badge/typecheck-clean-blue?style=for-the-badge)](app/mobile/tsconfig.json)
 [![License](https://img.shields.io/badge/license-private-lightgrey?style=for-the-badge)](LICENSE)
@@ -178,8 +178,9 @@ npx expo start
 | **Animação** | Reanimated 3 + Gesture Handler |
 | **Persistência** | AsyncStorage + SecureStore (BYOK key) |
 | **IA** | OpenAI gpt-4o-mini (BYOK) com 3 camadas de safety, fallback mock determinístico |
-| **ML on-device** | TF-IDF embeddings, BM25, sentiment, vector store, Naive Bayes |
-| **Testes** | Vitest 4 (1.653 testes) + Maestro E2E + fast-check (property tests) |
+| **ML on-device** | TF-IDF embeddings, BM25, sentiment, vector store, Naive Bayes, memory graph (Jaccard + temporal) |
+| **Voz procedural** | Web Audio API real-time (Web), no-op gracioso em nativo. Modulada por DNA. |
+| **Testes** | Vitest 4 (**1.714 testes**) + Maestro E2E + fast-check (property tests) |
 | **Build** | Expo CLI (web + Android via Gradle + iOS via Xcode) |
 
 ### Estrutura
@@ -284,11 +285,13 @@ Tudo sem chamar IA, sem delay, sem cobrança.
 
 ### Core DLI
 - ✅ DNA procedural 11-trait com determinismo absoluto + variação por user_id
-- ✅ Mascot3D — corpo procedural, eyes com pupila + highlight + eye tracking, blink, breath, mood-driven posture, bounce on tap, **boca expressiva 5-mood**, aura **mood-reactive**, sparkle burst em mood='empolgado'
+- ✅ Mascot3D — corpo procedural, eyes com pupila + highlight + eye tracking, blink, breath, mood-driven posture, bounce on tap, **boca expressiva 5-mood**, aura **mood-reactive**, sparkle burst em mood='empolgado', **pattern visual (plain/spots/stripes/fractal/cells)** via material props
 - ✅ Sistema de mutações persistentes (7 marcos, 4 raridades, condições compostas)
 - ✅ Pipeline check-in transacional com `withLock` per-user (anti-double-spend)
-- ✅ Behavior Engine — 6 behaviors (4 contextuais + 2 DNA-driven), seletor utility AI, hook React `useBehaviorTick` integrado ao Home loop
+- ✅ **Behavior Engine — 10 behaviors** (idle, return long/short, milestone, social burst, contemplation, morning, evening, quiet, mood recovery), seletor utility AI, hook React `useBehaviorTick` integrado ao Home loop
 - ✅ Mascot3D imperative actions (bounce/celebrate/wander/rest/observe)
+- ✅ **Voz procedural Web Audio API** — perfil DNA-driven (baseFreq/vibrato/brightness/scale/syllables/decay/spacing), dispara em tap + mutation unlock. Volume cap 0.2 (ambient). No-op gracioso em nativo.
+- ✅ **Memory Graph** — edges typed (`precededBy`, `relatedTo`), Jaccard weights, recall re-ranqueado por conectividade (top-3 hits viram seeds; itens conectados ganham boost). Estende `recall()` existente sem breaking change.
 
 ### Customização Sims/Spore
 - ✅ 6 morph sliders com cap `[0.7, 1.3]` (eye size/spread, body H/W, aura, pattern)
@@ -342,9 +345,10 @@ Tudo sem chamar IA, sem delay, sem cobrança.
 | 🔜 Push notifications nativos | Pendente | ~1 sem |
 | 🔜 Backend Supabase + sync multi-device | Pendente | ~2 sem |
 | 🔜 RevenueCat / StoreKit (billing real) | Pendente | ~2 sem |
-| 🔜 Voz procedural (Tone.js) | Pendente | ~2 sem |
-| 🔜 Shader patterns (fractal/spots/stripes) | Pendente | ~1 sem |
-| 🔜 Memory graph (vs flat list atual) | Pendente | ~3 sem |
+| ✅ Voz procedural (Web Audio API) | **Entregue DLI-v5** | — |
+| ✅ Shader patterns (fractal/spots/stripes/cells) | **Entregue DLI-v4** | — |
+| ✅ Memory graph (Jaccard + temporal) | **Entregue DLI-v5** | — |
+| 🔜 Voz nativa (expo-av wireup) | Pendente | ~3 dias |
 
 Detalhes completos: [docs/ROADMAP_DIGITAL_LIVING_IDENTITY.md](docs/ROADMAP_DIGITAL_LIVING_IDENTITY.md)
 

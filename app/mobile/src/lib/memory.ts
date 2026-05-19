@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { embed, detectMode, type EmbedConfig } from '@/lib/ml/embedding';
 import { addDocument, deserializeStats, emptyStats, serializeStats, type TfIdfStats } from '@/lib/ml/text/tfidf';
 import { VectorStore } from '@/lib/ml/store/vector-store';
+import { buildGraph, rerankByGraph, type RerankItem } from '@/lib/memory/graph';
 
 export type MemoryKind =
   | 'event'      // "tenho prova quarta", "vou viajar"
@@ -266,8 +267,11 @@ export async function recall(
       const queryVec = await embed(context, config);
       const results = await store.search(queryVec, { limit: limit * 3, minScore: 0.1 });
       if (results.length > 0) {
-        // re-score com recência + kind weight
-        const scored = results
+        // Re-score com recência + kind weight + GRAPH BOOST
+        // (memory graph: itens conectados aos top-3 hits recebem boost,
+        // produzindo recall mais rico — "ah, ele falou de prova e LEMBRA
+        // que estava ansioso semana passada" mesmo sem keyword direta.)
+        const baseScored = results
           .map(r => {
             const item = itemById.get(r.record.id);
             /* v8 ignore next — vector store contém IDs que vêm de `items`,
@@ -278,9 +282,21 @@ export async function recall(
             const kindWeight = item.kind === 'event' ? 1.5 : 1;
             return { item, score: r.score * recency * kindWeight };
           })
-          .filter((x): x is { item: MemoryItem; score: number } => x !== null)
+          .filter((x): x is { item: MemoryItem; score: number } => x !== null);
+        // Seeds = top-3 do score base (antes do graph rerank)
+        const seeds = baseScored
+          .slice()
           .sort((a, b) => b.score - a.score)
-          .slice(0, limit);
+          .slice(0, 3)
+          .map(s => s.item.id);
+        const graph = buildGraph(items);
+        const rerankItems: RerankItem<MemoryItem>[] = baseScored.map(s => ({
+          memId: s.item.id,
+          score: s.score,
+          payload: s.item,
+        }));
+        const reranked = rerankByGraph(rerankItems, graph, seeds);
+        const scored = reranked.slice(0, limit).map(r => ({ item: r.payload, score: r.score }));
         if (scored.length > 0) {
           await markRecalled(userId, items, scored.map(s => s.item.id), now);
           return scored.map(s => s.item);

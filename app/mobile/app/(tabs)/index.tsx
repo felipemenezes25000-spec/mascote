@@ -66,6 +66,7 @@ import { getEvolutionStory, type EvolutionStory } from '@/lib/evolution-stories'
 import { useStore } from '@/store';
 import { useBehaviorTick, type BehaviorContext } from '@/lib/behavior';
 import { sanitizeGenome } from '@/lib/dna';
+import { playVoiceLine, voiceProfileFromGenome } from '@/lib/voice';
 import type { AccessoryId } from '@/components/Mascot';
 import type { Checkin, HabitKind, MascotCustomization, Mascot as MascotType, MascotMood, MascotPhase, Message, Mission } from '@/types';
 
@@ -481,6 +482,13 @@ export default function Home() {
     // Hero não reflete imediatamente o marco visual desbloqueado pelo checkin.
     if (out.newMutations.length > 0) {
       await loadIdentity();
+      // Voz procedural — uma micro-celebração por mutation desbloqueada.
+      // Emotion escala com raridade (lendária = mais intensa).
+      if (out.mascot.dna) {
+        const profile = voiceProfileFromGenome(sanitizeGenome(out.mascot.dna));
+        const intensity = out.newMutations[0].rarity === 'legendary' ? 0.95 : 0.75;
+        playVoiceLine(profile, { kind: 'celebrate', emotion: intensity });
+      }
     }
 
     // Paywall contextual ético — só após momento de valor real, nunca em fragilidade
@@ -674,7 +682,16 @@ export default function Home() {
           <SceneBackground sceneId={activeSceneId} height={sceneHeight}>
             <Pressable
               style={styles.mascotInScene}
-              onPress={() => setReactBeat(v => v + 1)}
+              onPress={() => {
+                setReactBeat(v => v + 1);
+                // Voz procedural — tap dispara micro-vocalização "react"
+                // modulada pelo DNA. Volume cap 0.2 (ambient, não invasivo).
+                // No-op silencioso em RN nativo (sem Web Audio).
+                if (mascot.dna) {
+                  const profile = voiceProfileFromGenome(sanitizeGenome(mascot.dna));
+                  playVoiceLine(profile, { kind: 'react', emotion: 0.6 });
+                }
+              }}
               accessibilityRole="button"
               accessibilityLabel={`Carinho no ${mascot.name}`}
             >

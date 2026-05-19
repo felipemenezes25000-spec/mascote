@@ -81,15 +81,15 @@ check-in → narrativa procedural. **Mais perto da visão do que parece**.
 
 ### 🟡 Vínculo emocional avançado
 
-#### DLI-4 — Memória emocional ainda é recall simples
-- **Estado atual**: `recall(userId, msg, 3)` retorna até 3 memórias por relevância semântica (embeddings locais ou OpenAI).
-- **Falta**:
-  - **Memory graph** — relacionar eventos (recaída ↔ insight ↔ vitória) em vez de embeddings flat
-  - **Importance scoring** — uma frase marcante pesa mais que uma trivial
-  - **Decay temporal** — memórias antigas perdem peso, frescas dominam
-  - **Eventos marcantes** auto-detectados (primeiro check-in, streak 7d, primeira menção de algo)
-- **Esforço**: 2-3 semanas.
-- **Dependência**: nenhuma; sistema de memory atual é base.
+#### DLI-4 — Memory Graph ✅ ENTREGUE (DLI-v5)
+- ✅ `src/lib/memory/graph.ts` com edges typed: `precededBy` (temporal, <24h) e `relatedTo` (Jaccard keyword overlap ≥ 2)
+- ✅ `buildGraph(memories)` puro, idempotente — O(n²) aceitable pra cap 200
+- ✅ `getRelated(graph, memId, opts)` com filtros por kind/limit/minWeight
+- ✅ `rerankByGraph(items, graph, seedIds, boostFactor)` integrado em `recall()` — top-3 hits viram seeds; itens conectados ganham boost
+- ✅ `centrality(graph, memId)` + `graphStats(graph)` pra debug/telemetria local
+- ✅ 26 testes em `tests/lib/memory/graph.test.ts` (Jaccard, temporal, simetria, determinismo, idempotência)
+- ⚠️ **Resta**: `similar` (cosine entre embeddings) e `contrasts` (sentiment polar oposto). Importance scoring de "eventos marcantes". ~1 sem.
+- **Onde**: [`src/lib/memory/graph.ts`](../app/mobile/src/lib/memory/graph.ts), integrado em [`src/lib/memory.ts`](../app/mobile/src/lib/memory.ts) recall path
 
 #### DLI-5 — Personalidade da IA ✅ ENTREGUE (DLI-v2)
 - ✅ Descritores semânticos seguros derivados do DNA (`dnaDescriptors`, `dnaPromptSection`)
@@ -111,10 +111,16 @@ check-in → narrativa procedural. **Mais perto da visão do que parece**.
 
 ### 🟢 Polimento e narrativa
 
-#### DLI-7 — Voz procedural do mascote
-- **Estado atual**: zero áudio.
-- **Falta**: micro-vocalizações tipo Sims/Animal Crossing — tom modulado pelo DNA (socialEnergy alto → notas brilhantes; emotionalDepth alto → modulação variada). TTS na chat reply é nice-to-have.
-- **Esforço**: 2 semanas (gerar com Web Audio API + tone.js, ou pre-compor 20 ruídos modulados).
+#### DLI-7 — Voz procedural ✅ ENTREGUE (DLI-v5)
+- ✅ `src/lib/voice/` (4 arquivos: types, profile, player, index)
+- ✅ `voiceProfileFromGenome(g)` — perfil DNA-driven (baseFreq 140-380Hz, vibrato 0-0.9, brightness, decay 0.08-0.45s, scale variando entre maior pentatônica / blues / dissonante, syllables 2-5, noteSpacing)
+- ✅ `playVoiceLine(profile, line)` — Web Audio API direto (OscillatorNode + LFO vibrato + gain envelope ADSR-lite). Volume cap 0.2 (ambient, não invasivo)
+- ✅ Modificadores por `kind`: greet/react/curious/sleepy/celebrate/attention
+- ✅ Native (RN nativo): no-op gracioso — não crasha, dispatcher é silencioso até wire-up via expo-av (próximo)
+- ✅ Disparado em: tap no Mascot da Home (kind='react') + mutation unlock (kind='celebrate', intensity escala com raridade)
+- ✅ 28 testes (`tests/lib/voice/`) — determinismo, ranges, escala correta por DNA, mock backend
+- ⚠️ **Resta**: wire-up nativo via expo-av com tone-bank pré-gerado por personalidade. ~3 dias.
+- **Onde**: [`src/lib/voice/`](../app/mobile/src/lib/voice/)
 
 #### DLI-8 — Customização visual deliberada (sem perder a procedural)
 - **Estado atual**: `app/closet` existe mas é skin de acessórios (boné, óculos).
