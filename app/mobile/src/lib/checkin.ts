@@ -9,6 +9,7 @@ import {
   checkins as checkinsDb,
   combo as comboDb,
   comboXpBonus,
+  dnaMutations,
   mascots as mascotsDb,
   missions as missionsDb,
   notifications,
@@ -21,7 +22,13 @@ import { applyCheckinToStreak } from '@/lib/streak';
 import { processUnlocks } from '@/lib/unlock';
 import { XP_PER_CHECKIN, applyXp, levelFromXp, phaseFromXp } from '@/lib/xp';
 import { phaseLabels } from '@/lib/phaseLabels';
-import { applyHabitDrift, sanitizeGenome } from '@/lib/dna';
+import {
+  applyHabitDrift,
+  findNewlyUnlockedMutations,
+  sanitizeGenome,
+  type Mutation,
+  type MutationContext,
+} from '@/lib/dna';
 import type { HabitKind, Mascot, MascotPhase, Mission, Profile, Streak } from '@/types';
 
 export const COINS_PER_CHECKIN = 5;
@@ -58,6 +65,12 @@ export interface CheckinOutcome {
   unlocks: Awaited<ReturnType<typeof processUnlocks>>;
   /** Streak bate múltiplo de 7? Use para confetti/toast extra. */
   streakMilestone: boolean;
+  /**
+   * Mutações biológicas DESBLOQUEADAS neste check-in. Vazia na maioria dos
+   * casos — só populada quando condições genéticas + hábito + streak alinham.
+   * Caller deve enfileirar UnlockToast tipo 'mutation' pra cada item.
+   */
+  newMutations: Mutation[];
   /**
    * Row do checkin recém-criado (ou existente, se idempotência batia).
    * Null se a inserção falhou silenciosamente.
@@ -162,6 +175,42 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
     finalMascot = { ...finalMascot, dna: driftedDna };
   }
 
+  // AVALIAÇÃO DE MUTAÇÕES: após drift, checa se DNA + histórico + streak
+  // satisfazem condições de alguma mutação ainda-não-desbloqueada.
+  // Desbloqueio é monotônico — vai pra disco e nunca regride.
+  //
+  // Custo: 1 read de checkins.listAll (já feito no unlock pipeline abaixo;
+  // poderia ser compartilhado em refactor futuro) + 1 read de
+  // dnaMutations.idsForUser + N writes (geralmente 0-1 mutation por check-in).
+  const newMutations: Mutation[] = [];
+  if (finalMascot.dna) {
+    try {
+      const allCheckinsForCount = await checkinsDb.listAll(profile.id);
+      const habitCheckinCounts: Partial<Record<HabitKind, number>> = {};
+      for (const c of allCheckinsForCount) {
+        habitCheckinCounts[c.habit_kind] = (habitCheckinCounts[c.habit_kind] ?? 0) + 1;
+      }
+      const daysSinceCreated = Math.floor(
+        (Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24),
+      );
+      const alreadyUnlocked = await dnaMutations.idsForUser(profile.id);
+      const ctx: MutationContext = {
+        genome: finalMascot.dna,
+        habitCheckinCounts,
+        currentStreak: streakResult.streak.current_streak,
+        daysSinceCreated,
+        alreadyUnlocked,
+      };
+      const candidates = findNewlyUnlockedMutations(ctx);
+      for (const m of candidates) {
+        await dnaMutations.unlock(profile.id, m.id);
+        newMutations.push(m);
+      }
+    } catch {
+      // mutations é additive layer — falha aqui NÃO bloqueia check-in
+    }
+  }
+
   await mascotsDb.upsert(finalMascot);
 
   if (finalPhaseChanged) {
@@ -197,6 +246,7 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
     prevPhase: result.prevPhase,
     unlocks,
     streakMilestone,
+    newMutations,
     checkin: persistedCheckin,
   };
 }

@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
+import { MorphSlider } from '@/components/MorphSlider';
 import { SceneBackground } from '@/components/SceneBackground';
 import {
   accessoryCatalog,
@@ -13,14 +14,22 @@ import {
 import { missionCatalog } from '@/content/missions';
 import { getPersonality, personalities } from '@/content/personalities';
 import { checkSceneUnlock, scenesCatalog } from '@/content/scenes';
-import { inventory, mascots as mascotsDb, missions as missionsDb, settings as settingsDb, userScenes } from '@/lib/db';
+import {
+  customization as customizationDb,
+  dnaMutations,
+  inventory,
+  mascots as mascotsDb,
+  missions as missionsDb,
+  settings as settingsDb,
+  userScenes,
+} from '@/lib/db';
 import { PALETTES, type BrandPalette } from '@/lib/themes';
 import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { AccessoryId } from '@/components/Mascot';
-import type { MascotMood, Personality } from '@/types';
+import type { MascotCustomization, MascotMood, Personality } from '@/types';
 
-type Tab = 'mascote' | 'acessorio' | 'cenario' | 'humor' | 'paleta' | 'nome';
+type Tab = 'mascote' | 'aparencia' | 'acessorio' | 'cenario' | 'humor' | 'paleta' | 'nome';
 
 const MOODS: { id: MascotMood; label: string; emoji: string }[] = [
   { id: 'triste', label: 'Triste', emoji: '😢' },
@@ -46,6 +55,10 @@ export default function Customize() {
     sceneId: 'room',
     nameDraft: mascot?.name ?? '',
   });
+  // Customization + mutationIds carregados pro preview do Mascot — live update
+  // quando user mexe num slider.
+  const [customState, setCustomState] = useState<MascotCustomization | null>(null);
+  const [mutationIds, setMutationIds] = useState<readonly string[]>([]);
 
   useEffect(() => {
     if (!profile) return;
@@ -54,11 +67,36 @@ export default function Customize() {
 
   async function load() {
     if (!profile) return;
-    const owned = await inventory.listOwned(profile.id);
+    const [owned, activeScene, custom, mutations] = await Promise.all([
+      inventory.listOwned(profile.id),
+      userScenes.getActive(profile.id),
+      customizationDb.get(profile.id),
+      dnaMutations.listForUser(profile.id),
+    ]);
     const eq = owned.find(o => o.equipped);
     const accId = (eq?.accessory_id as AccessoryId) ?? 'none';
-    const activeScene = await userScenes.getActive(profile.id);
     setPreview(p => ({ ...p, accessoryId: accId, sceneId: activeScene }));
+    setCustomState(custom);
+    setMutationIds(mutations.map(m => m.mutation_id));
+  }
+
+  // Patch single field — optimistic local update + persist async.
+  async function patchCustomization(patch: Partial<Omit<MascotCustomization, 'user_id' | 'updated_at'>>) {
+    if (!profile || !customState) return;
+    // Otimista: atualiza local primeiro pro slider responder imediatamente
+    setCustomState({ ...customState, ...patch });
+    try {
+      const next = await customizationDb.update(profile.id, patch);
+      setCustomState(next);
+    } catch {
+      // rollback silencioso seria mais robusto; pra MVP, deixa o otimista de pé
+    }
+  }
+
+  async function resetCustomization() {
+    if (!profile) return;
+    const next = await customizationDb.reset(profile.id);
+    setCustomState(next);
   }
 
   if (!profile || !mascot || !settings) return <Redirect href="/splash" />;
@@ -139,7 +177,8 @@ export default function Customize() {
         <View style={{ width: 36 }} />
       </View>
 
-      {/* Preview */}
+      {/* Preview — agora consome customization + mutationIds pra live update
+          quando user mexe nos sliders da aba Aparência. */}
       <View style={styles.previewWrap}>
         <SceneBackground sceneId={preview.sceneId} height={200}>
           <Mascot
@@ -148,26 +187,101 @@ export default function Customize() {
             mood={preview.mood}
             size={150}
             accessory={preview.accessoryId}
+            customization={customState}
+            mutationIds={mutationIds}
           />
         </SceneBackground>
       </View>
 
       {/* Tabs */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
-        {(['mascote', 'acessorio', 'cenario', 'humor', 'paleta', 'nome'] as Tab[]).map(t => (
+        {(['mascote', 'aparencia', 'acessorio', 'cenario', 'humor', 'paleta', 'nome'] as Tab[]).map(t => (
           <Pressable
             key={t}
             onPress={() => setTab(t)}
             style={[styles.tab, tab === t && styles.tabActive]}
           >
             <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
-              {t === 'mascote' ? 'Mascote' : t === 'acessorio' ? 'Acessório' : t === 'cenario' ? 'Cenário' : t === 'humor' ? 'Humor' : t === 'paleta' ? 'Paleta' : 'Nome'}
+              {
+                t === 'mascote' ? 'Mascote'
+                : t === 'aparencia' ? 'Aparência'
+                : t === 'acessorio' ? 'Acessório'
+                : t === 'cenario' ? 'Cenário'
+                : t === 'humor' ? 'Humor'
+                : t === 'paleta' ? 'Paleta'
+                : 'Nome'
+              }
             </Text>
           </Pressable>
         ))}
       </ScrollView>
 
       <ScrollView contentContainerStyle={styles.body}>
+        {tab === 'aparencia' && customState && (
+          <View style={{ gap: theme.spacing.sm }}>
+            <View style={{ marginBottom: theme.spacing.sm }}>
+              <Text style={styles.sectionTitle}>Ajustes físicos</Text>
+              <Text style={{ color: theme.colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: 4 }}>
+                Você influencia o corpo, mas ele preserva a identidade dela. Cada slider varia em ±30%.
+              </Text>
+            </View>
+            <MorphSlider
+              label="Tamanho dos olhos"
+              hint="afeta proporção e expressividade"
+              value={customState.eye_size}
+              onChange={v => patchCustomization({ eye_size: v })}
+            />
+            <MorphSlider
+              label="Distância dos olhos"
+              hint="estreita ou afasta os olhos"
+              value={customState.eye_spread}
+              onChange={v => patchCustomization({ eye_spread: v })}
+            />
+            <MorphSlider
+              label="Altura"
+              hint="alonga ou encolhe o corpo"
+              value={customState.body_height}
+              onChange={v => patchCustomization({ body_height: v })}
+            />
+            <MorphSlider
+              label="Largura"
+              hint="espalha ou estreita o corpo"
+              value={customState.body_width}
+              onChange={v => patchCustomization({ body_width: v })}
+            />
+            <MorphSlider
+              label="Intensidade da aura"
+              hint="quantas partículas pairam ao redor"
+              value={customState.aura_intensity}
+              onChange={v => patchCustomization({ aura_intensity: v })}
+            />
+            <MorphSlider
+              label="Densidade de padrões"
+              hint="bumps, sulcos e detalhes no corpo"
+              value={customState.pattern_density}
+              onChange={v => patchCustomization({ pattern_density: v })}
+            />
+            <View style={{ marginTop: theme.spacing.md, alignItems: 'flex-end' }}>
+              <Pressable
+                onPress={resetCustomization}
+                accessibilityRole="button"
+                accessibilityLabel="Resetar todos os ajustes"
+                style={{
+                  paddingHorizontal: theme.spacing.md,
+                  paddingVertical: theme.spacing.sm,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: theme.colors.border,
+                }}
+              >
+                <Text style={{ color: theme.colors.textSecondary, fontSize: 12, fontWeight: '700' }}>
+                  resetar tudo
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
         {tab === 'mascote' && (
           <View style={{ gap: theme.spacing.sm }}>
             <Text style={styles.sectionTitle}>Personalidade</Text>

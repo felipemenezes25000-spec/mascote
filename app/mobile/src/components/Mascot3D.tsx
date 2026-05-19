@@ -18,8 +18,11 @@ import React, { useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, PanResponder, type PanResponderInstance, Platform } from 'react-native';
 import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
-import type { MascotDNA } from '@/types';
+import type { MascotCustomization, MascotDNA, MascotMood } from '@/types';
 import {
+  aggregateVisualImpact,
+  applyCustomization,
+  applyMutationVisualImpact,
   paletteFromGenome,
   morphologyFromGenome,
   bodyHex,
@@ -27,6 +30,7 @@ import {
   glowHex,
   moodScore,
   type Genome,
+  type Morphology,
 } from '@/lib/dna';
 
 interface Props {
@@ -39,22 +43,54 @@ interface Props {
   reduceMotion?: boolean;
   /** Cor de fundo opcional (default transparente). */
   background?: string;
+  /**
+   * Overrides Sims/Spore-like — sliders do usuário sobre morfologia.
+   * Multiplicadores fora de [0.7, 1.3] são clampados. Null = sem override.
+   */
+  customization?: MascotCustomization | null;
+  /**
+   * IDs de mutations desbloqueadas — afeta morfologia e brilho via
+   * `aggregateVisualImpact`. Lista vazia = sem efeito.
+   */
+  mutationIds?: readonly string[];
+  /**
+   * Humor atual — modula postura do corpo (tilt + scale) em runtime,
+   * sem mexer no DNA. 'triste' inclina pra frente, 'empolgado' faz bounce.
+   */
+  mood?: MascotMood;
 }
 
 /**
  * Componente público — wrappa Canvas R3F com PanResponder pra capturar
  * toques e converter em offset de "olhar" da criatura.
+ *
+ * Bounce-on-tap: tap rápido (release com pouco delta) dispara `bouncePulse`
+ * que é lido pelo `Creature` via useFrame pra escalar suavemente.
  */
-export function Mascot3D({ dna, seed = 0, size, reduceMotion, background }: Props) {
+export function Mascot3D({
+  dna,
+  seed = 0,
+  size,
+  reduceMotion,
+  background,
+  customization = null,
+  mutationIds = [],
+  mood,
+}: Props) {
   const [look, setLook] = useState({ x: 0, y: 0 });
+  const [bouncePulse, setBouncePulse] = useState(0);
   const widthRef = useRef(1);
   const heightRef = useRef(1);
+  const startPosRef = useRef<{ x: number; y: number; t: number } | null>(null);
 
   const pan: PanResponderInstance = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: (_e, gesture) => {
+          startPosRef.current = { x: gesture.x0, y: gesture.y0, t: Date.now() };
+        },
         onPanResponderMove: (_e, gesture) => {
           const cx = widthRef.current / 2;
           const cy = heightRef.current / 2;
@@ -63,8 +99,19 @@ export function Mascot3D({ dna, seed = 0, size, reduceMotion, background }: Prop
           const ny = Math.max(-1, Math.min(1, -(gesture.moveY - cy) / cy));
           setLook({ x: nx, y: ny });
         },
-        onPanResponderRelease: () => {
-          // Suavemente volta ao centro
+        onPanResponderRelease: (_e, gesture) => {
+          // Detecta tap rápido vs pan — se movimento foi pequeno, é tap → bounce
+          const start = startPosRef.current;
+          if (start) {
+            const dx = gesture.moveX - start.x;
+            const dy = gesture.moveY - start.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const elapsed = Date.now() - start.t;
+            if (dist < 8 && elapsed < 250) {
+              setBouncePulse(p => p + 1);
+            }
+          }
+          startPosRef.current = null;
           setLook({ x: 0, y: 0 });
         },
       }),
@@ -94,6 +141,10 @@ export function Mascot3D({ dna, seed = 0, size, reduceMotion, background }: Prop
           seed={seed}
           look={look}
           reduceMotion={reduceMotion ?? false}
+          customization={customization}
+          mutationIds={mutationIds}
+          mood={mood}
+          bouncePulse={bouncePulse}
         />
       </Canvas>
     </View>
@@ -115,44 +166,117 @@ function SceneLights() {
 }
 
 // ============================================================================
-// Creature — composição completa
+// Creature — composição completa (mood-driven posture + bounce on tap)
 // ============================================================================
 interface CreatureProps {
   dna: MascotDNA;
   seed: number;
   look: { x: number; y: number };
   reduceMotion: boolean;
+  customization?: MascotCustomization | null;
+  mutationIds?: readonly string[];
+  mood?: MascotMood;
+  /** Contador que incrementa em tap — useFrame consome pra disparar bounce. */
+  bouncePulse?: number;
 }
 
-function Creature({ dna, seed, look, reduceMotion }: CreatureProps) {
-  const groupRef = useRef<THREE.Group>(null);
-  const morph = useMemo(() => morphologyFromGenome(dna as Genome), [dna]);
-  const palette = useMemo(() => paletteFromGenome(dna as Genome), [dna]);
-  const mood = useMemo(() => moodScore(dna as Genome), [dna]);
-  const tStart = useRef<number>(performance.now() / 1000);
+// Mapeia humor → modificadores de postura. Valores são lerp targets, não saltos.
+// `feliz`/`empolgado` faz bounce; `triste`/`exausto` curva pra frente.
+function moodPostureTarget(mood: MascotMood | undefined): {
+  tiltX: number;
+  scaleY: number;
+  bounceAmp: number;
+} {
+  switch (mood) {
+    case 'triste':    return { tiltX: -0.08, scaleY: 0.97, bounceAmp: 0 };
+    case 'exausto':   return { tiltX: -0.14, scaleY: 0.94, bounceAmp: 0 };
+    case 'feliz':     return { tiltX: 0.03, scaleY: 1.00, bounceAmp: 0.012 };
+    case 'empolgado': return { tiltX: 0.06, scaleY: 1.02, bounceAmp: 0.025 };
+    case 'ok':
+    default:          return { tiltX: 0, scaleY: 1, bounceAmp: 0 };
+  }
+}
 
-  // Animação procedural
+function Creature({
+  dna,
+  seed,
+  look,
+  reduceMotion,
+  customization,
+  mutationIds = [],
+  mood,
+  bouncePulse = 0,
+}: CreatureProps) {
+  const groupRef = useRef<THREE.Group>(null);
+  // Composição da morphology final: base DNA → custom overrides → mutation impact
+  const morph: Morphology = useMemo(() => {
+    const base = morphologyFromGenome(dna as Genome);
+    const withCustom = applyCustomization(base, customization ?? null);
+    const impact = aggregateVisualImpact(mutationIds);
+    return applyMutationVisualImpact(withCustom, impact);
+  }, [dna, customization, mutationIds]);
+  const palette = useMemo(() => paletteFromGenome(dna as Genome), [dna]);
+  const moodS = useMemo(() => moodScore(dna as Genome), [dna]);
+  const tStart = useRef<number>(performance.now() / 1000);
+  const postureTarget = useMemo(() => moodPostureTarget(mood), [mood]);
+
+  // Bounce-on-tap state — tracked via ref pra useFrame (sem re-render).
+  const bouncePulseSeen = useRef(0);
+  const bouncePhase = useRef<{ active: boolean; t0: number }>({ active: false, t0: 0 });
+
+  // Animação procedural — agora com:
+  //  • idle figura-8 (já existente)
+  //  • mood posture: tilt X + scale Y (lerp suave)
+  //  • mood bounce: oscilação adicional pra empolgado/feliz
+  //  • bounce-on-tap: pulse de 350ms quando bouncePulse incrementa
   useFrame(() => {
     const g = groupRef.current;
     if (!g) return;
-    const t = performance.now() / 1000 - tStart.current;
+    const now = performance.now() / 1000;
+    const t = now - tStart.current;
     if (reduceMotion) {
       g.position.set(0, 0.05, 0);
-      g.rotation.set(0, look.x * 0.25, 0);
+      g.rotation.set(postureTarget.tiltX, look.x * 0.25, 0);
+      g.scale.set(1, postureTarget.scaleY, 1);
       return;
     }
     // Idle wobble figura-8
     g.position.x = Math.sin(t * 0.6) * morph.idleWobble;
     g.position.y = Math.cos(t * 0.4) * morph.idleWobble * 0.7 + 0.05;
-    // Rotation: sway adaptativo + look-tracking
-    g.rotation.y = Math.sin(t * 0.3) * morph.swayAmplitude + look.x * 0.25;
-    g.rotation.x = look.y * 0.1;
+    // Rotation: sway adaptativo + look-tracking + mood tilt (lerp)
+    const swayY = Math.sin(t * 0.3) * morph.swayAmplitude;
+    g.rotation.y = swayY + look.x * 0.25;
+    // tilt X lerp: aproxima do target
+    g.rotation.x += (postureTarget.tiltX + look.y * 0.1 - g.rotation.x) * 0.05;
     g.rotation.z = Math.sin(t * 0.5) * 0.04;
+
+    // Bounce-on-tap: detecta incremento e dispara fase de 350ms
+    if (bouncePulse !== bouncePulseSeen.current) {
+      bouncePulseSeen.current = bouncePulse;
+      bouncePhase.current = { active: true, t0: now };
+    }
+    let bounceScale = 1;
+    if (bouncePhase.current.active) {
+      const elapsed = now - bouncePhase.current.t0;
+      const dur = 0.35;
+      if (elapsed < dur) {
+        // Sine-wave pulse 1.0 → 1.08 → 1.0
+        bounceScale = 1 + Math.sin((elapsed / dur) * Math.PI) * 0.08;
+      } else {
+        bouncePhase.current.active = false;
+      }
+    }
+    // Mood bounce contínuo (subtle, sustained)
+    const moodBounce = postureTarget.bounceAmp > 0
+      ? Math.sin(t * 2.4) * postureTarget.bounceAmp
+      : 0;
+    // Scale composto: bounce x mood scaleY x mood bounce
+    g.scale.set(bounceScale, postureTarget.scaleY * bounceScale + moodBounce, bounceScale);
   });
 
   return (
     <group ref={groupRef}>
-      <Body dna={dna} morph={morph} palette={palette} mood={mood} reduceMotion={reduceMotion} />
+      <Body dna={dna} morph={morph} palette={palette} mood={moodS} reduceMotion={reduceMotion} />
       <Eyes morph={morph} palette={palette} look={look} reduceMotion={reduceMotion} />
       {morph.limbCount > 0 && (
         <Limbs seed={seed} morph={morph} palette={palette} reduceMotion={reduceMotion} />

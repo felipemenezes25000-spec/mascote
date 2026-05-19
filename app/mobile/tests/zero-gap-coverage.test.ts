@@ -72,8 +72,8 @@ describe('db.ts missing migration error', () => {
     // Marcamos esse path como defensivo unreachable abaixo.
     await AsyncStorage.setItem('mascote:_meta', JSON.stringify({ schema: 0 }));
     const meta = await runMigrations();
-    // CURRENT_SCHEMA_VERSION = 2; a partir de schema=0 ambas as migrations rodam.
-    expect(meta.schema).toBe(2);
+    // CURRENT_SCHEMA_VERSION = 3; a partir de schema=0, todas migrations rodam.
+    expect(meta.schema).toBe(3);
   });
 });
 

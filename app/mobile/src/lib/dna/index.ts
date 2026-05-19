@@ -72,3 +72,37 @@ export {
   tellDnaStory,
   emergentMaturity,
 } from './stories';
+
+export {
+  type Mutation,
+  type MutationCondition,
+  type MutationContext,
+  type MutationRarity,
+  type UnlockedMutation,
+  type VisualImpact,
+  type AggregatedVisualImpact,
+  type BodyPattern,
+  MUTATION_CATALOG,
+  NEUTRAL_VISUAL_IMPACT,
+  evaluateCondition,
+  findNewlyUnlockedMutations,
+  getMutationById,
+  listAllMutations,
+  aggregateVisualImpact,
+  applyMutationVisualImpact,
+} from './mutations';
+
+export {
+  type DnaDescriptor,
+  MAX_DESCRIPTORS,
+  dnaDescriptors,
+  dnaPromptSection,
+} from './descriptors';
+
+export {
+  MIN_MULT,
+  MAX_MULT,
+  clampMultiplier,
+  applyCustomization,
+  sanitizeCustomization,
+} from './customization';

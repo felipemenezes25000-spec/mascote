@@ -387,6 +387,17 @@ export default function Home() {
     for (const a of out.unlocks.achievements) enqueueToast({ kind: 'achievement', emoji: a.emoji, title: a.title, subtitle: a.description });
     for (const acc of out.unlocks.accessories) enqueueToast({ kind: 'accessory', emoji: acc.emoji, title: acc.name, subtitle: 'Equipe no Closet' });
     for (const sc of out.unlocks.scenes) enqueueToast({ kind: 'scene', emoji: sc.emoji, title: sc.name, subtitle: 'Cenário desbloqueado' });
+    // Marcos biológicos desbloqueados — toast distinto por raridade.
+    // Catalog em src/lib/dna/mutations.ts. UI mostra raridade colorida.
+    for (const mut of out.newMutations) {
+      enqueueToast({
+        kind: 'mutation',
+        emoji: '✨',
+        title: mut.name,
+        subtitle: mut.description,
+        rarity: mut.rarity === 'common' ? 'common' : mut.rarity,
+      });
+    }
     await loadCloset();
 
     // Paywall contextual ético — só após momento de valor real, nunca em fragilidade

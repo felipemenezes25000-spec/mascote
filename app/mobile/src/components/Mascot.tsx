@@ -15,7 +15,13 @@
 
 import { memo, useMemo } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import type { MascotMood, MascotPhase, Personality, MascotDNA } from '@/types';
+import type {
+  MascotCustomization,
+  MascotMood,
+  MascotPhase,
+  Personality,
+  MascotDNA,
+} from '@/types';
 import { detectCapabilities } from '@/lib/deviceCapabilities';
 import { useStore } from '@/store';
 import { Mascot2D, type AccessoryId } from '@/components/Mascot2D';
@@ -28,6 +34,16 @@ interface Props {
   phase: MascotPhase;
   mood: MascotMood;
   size?: number;
+  /**
+   * Overrides Sims/Spore-like — sliders do usuário. Quando passado,
+   * Mascot3D usa em runtime sem mexer no DNA. Null = sem override.
+   */
+  customization?: MascotCustomization | null;
+  /**
+   * IDs de mutations desbloqueadas — afeta morfologia visual e brilho.
+   * Lista vazia = sem efeitos de mutação.
+   */
+  mutationIds?: readonly string[];
   reactTrigger?: number;
   accessory?:
     | AccessoryId
@@ -65,6 +81,9 @@ function MascotImpl(props: Props) {
           seed={mascot?.dna_seed ?? 0}
           size={size}
           reduceMotion={props.reduceMotion}
+          customization={props.customization}
+          mutationIds={props.mutationIds}
+          mood={props.mood}
         />
       </View>
     );

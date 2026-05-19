@@ -1,4 +1,4 @@
-import type { Personality, SafetyFlag } from '@/types';
+import type { MascotDNA, Personality, SafetyFlag } from '@/types';
 import {
   ATTACHMENT_REPLY,
   CRISIS_REPLY,
@@ -9,6 +9,8 @@ import {
   detectAttachment,
 } from '@/content/safety';
 import { classifyIntent, mockReply } from '@/content/replies';
+import { dnaPromptSection } from '@/lib/dna/descriptors';
+import type { Genome } from '@/lib/dna/genome';
 import { formatMemoriesForPrompt, recall, type MemoryItem } from '@/lib/memory';
 import { logger } from '@/lib/logger';
 import { classifySafetyEnsemble } from '@/lib/ml/safety/classifier';
@@ -30,6 +32,12 @@ export interface GenerateReplyOptions {
   mascotName?: string;
   /** ID do user pra puxar memórias de longo prazo. Sem ele, sem recall. */
   userId?: string;
+  /**
+   * Genoma atual da criatura. **NUNCA é enviado bruto pra OpenAI** — passa por
+   * `dnaPromptSection()` que devolve apenas descritores PT-BR semânticos
+   * (ex: "criatura com presença expansiva"). Garantia em tests/security/dna-privacy.
+   */
+  dna?: MascotDNA;
 }
 
 export async function generateReply(
@@ -42,6 +50,7 @@ export async function generateReply(
   let apiKey: string | undefined;
   let mascotName: string | undefined;
   let userId: string | undefined;
+  let dna: MascotDNA | undefined;
   if (typeof apiKeyOrOptions === 'string' || apiKeyOrOptions === undefined) {
     apiKey = apiKeyOrOptions;
   } else {
@@ -49,8 +58,9 @@ export async function generateReply(
     mascotName = apiKeyOrOptions.mascotName;
     userId = apiKeyOrOptions.userId;
     history = apiKeyOrOptions.history ?? history;
+    dna = apiKeyOrOptions.dna;
   }
-  return generateReplyInternal(personality, userMessage, apiKey, history, mascotName, userId);
+  return generateReplyInternal(personality, userMessage, apiKey, history, mascotName, userId, dna);
 }
 
 async function generateReplyInternal(
@@ -59,7 +69,8 @@ async function generateReplyInternal(
   apiKey: string | undefined,
   history: HistoryMsg[],
   mascotName: string | undefined,
-  userId: string | undefined
+  userId: string | undefined,
+  dna: MascotDNA | undefined = undefined
 ): Promise<AiResponse> {
   // === ENSEMBLE SAFETY: regex + sentiment + (futuro) Bayes ===
   // Substitui classifyInput direto pelo ensemble — pega variações que
@@ -113,7 +124,7 @@ async function generateReplyInternal(
 
   if (apiKey) {
     try {
-      const reply = await callOpenAI(personality, userMessage, apiKey, history, memories, mascotName);
+      const reply = await callOpenAI(personality, userMessage, apiKey, history, memories, mascotName, dna);
       const outputFlag = classifyOutput(reply);
       if (outputFlag !== 'safe') {
         return { reply: SAFE_FALLBACK, safety_flag: outputFlag, source: 'fallback' };
@@ -140,9 +151,10 @@ async function callOpenAI(
   apiKey: string,
   history: HistoryMsg[],
   memories: MemoryItem[] = [],
-  mascotName: string | undefined = undefined
+  mascotName: string | undefined = undefined,
+  dna: MascotDNA | undefined = undefined
 ): Promise<string> {
-  const system = systemPrompt(personality, memories, mascotName);
+  const system = systemPrompt(personality, memories, mascotName, dna);
   const conv = history.slice(-6).map(m => ({
     role: m.role === 'user' ? 'user' : 'assistant',
     content: m.content,
@@ -184,7 +196,8 @@ async function callOpenAI(
 function systemPrompt(
   personality: Personality,
   memories: MemoryItem[] = [],
-  mascotName: string | undefined = undefined
+  mascotName: string | undefined = undefined,
+  dna: MascotDNA | undefined = undefined
 ): string {
   const base = `Você é um companheiro digital de autocuidado em PT-BR${mascotName ? `, chamado ${mascotName}` : ''}.
 REGRAS INVIOLÁVEIS:
@@ -203,5 +216,10 @@ REGRAS INVIOLÁVEIS:
   const memorySection = memories.length > 0
     ? `\n\nCOISAS QUE VOCÊ JÁ SABE DELE/DELA (use SE FOR RELEVANTE, sem forçar):\n${formatMemoriesForPrompt(memories)}`
     : '';
-  return `${base}\n\nPERSONALIDADE: ${flavor[personality]}${memorySection}`;
+  // dnaSection: descritores seguros derivados do DNA. NUNCA expõe gene cru.
+  // Pipeline: Genome → dnaDescriptors() → frases PT-BR → injeção.
+  // Garantia em tests/security/dna-privacy.test.ts: nem nome de gene nem
+  // valor numérico atravessa essa fronteira.
+  const dnaSection = dna ? dnaPromptSection(dna as Genome) : '';
+  return `${base}\n\nPERSONALIDADE: ${flavor[personality]}${dnaSection}${memorySection}`;
 }

@@ -1,7 +1,14 @@
 /**
  * Aba "Evolução" — terceira tab do handoff.
- * Mostra mascote grande + barra de progresso até próxima fase + histórico
- * de fases desbloqueadas.
+ *
+ * Pós-DLI-v2: a tela parou de ser uma esteira "ovo→bebê→criança" e passou
+ * a ser uma vitrine procedural — primeiro mostra IDENTIDADE atual (DNA
+ * descritores + traços corporais visíveis + mutações desbloqueadas);
+ * depois, abaixo, lista marcos de XP como referência secundária.
+ *
+ * Os PHASE_THRESHOLDS ainda existem internamente pra alimentar o motor de
+ * XP/level (não dá pra arrancar sem refatorar grande parte do gameplay),
+ * mas o usuário não vê isso como "objetivo". O objetivo é o DNA.
  */
 
 import { router, useFocusEffect } from 'expo-router';
@@ -17,19 +24,64 @@ import { StaggeredView } from '@/components/StaggeredView';
 import { XPBar } from '@/components/XPBar';
 import { getAccessory } from '@/content/accessories';
 import { getPersonality } from '@/content/personalities';
-import { inventory, userScenes } from '@/lib/db';
-import { PHASE_THRESHOLDS, phaseFromXp, xpForLevel, xpToNextLevel } from '@/lib/xp';
-import { phaseLabels } from '@/lib/phaseLabels';
+import { checkins as checkinsDb, dnaMutations, inventory, userScenes } from '@/lib/db';
+import {
+  GENE_KEYS,
+  GENE_META,
+  MUTATION_CATALOG,
+  dnaDescriptors,
+  evaluateCondition,
+  findNewlyUnlockedMutations,
+  getMutationById,
+  morphologySummary,
+  sanitizeGenome,
+  type Genome,
+  type Mutation,
+  type MutationContext,
+  type MutationRarity,
+  type UnlockedMutation,
+} from '@/lib/dna';
+import { xpToNextLevel } from '@/lib/xp';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 import type { AccessoryId } from '@/components/Mascot';
+import type { HabitKind } from '@/types';
 
-const PHASES = PHASE_THRESHOLDS.map(p => ({
-  id: p.phase,
-  xp: p.xp,
-  label: phaseLabels[p.phase],
-}));
+// Labels PT-BR amigáveis pros 11 genes — vocabulário wellness, não científico.
+// Usa nuance ("afeição visível" em vez de "empatia"; "movimento livre" em vez
+// de "caos") pra manter o tom de produto e não soar como ficha técnica.
+const GENE_FRIENDLY: Record<string, string> = {
+  empathy: 'afeição visível',
+  curiosity: 'inquietação curiosa',
+  creativity: 'forma criativa',
+  discipline: 'postura constante',
+  chaos: 'movimento livre',
+  aggression: 'contorno firme',
+  resilience: 'base sólida',
+  emotionalDepth: 'expressividade',
+  socialEnergy: 'aura aberta',
+  adaptability: 'fluidez',
+  intelligence: 'olhar atento',
+};
+
+function rarityColor(r: MutationRarity, theme: Theme): string {
+  switch (r) {
+    case 'legendary': return theme.colors.gold;
+    case 'epic':      return theme.colors.lilac;
+    case 'rare':      return theme.colors.primary;
+    case 'common':    return theme.colors.sky;
+  }
+}
+
+function rarityLabel(r: MutationRarity): string {
+  switch (r) {
+    case 'legendary': return 'LENDÁRIA';
+    case 'epic':      return 'ÉPICA';
+    case 'rare':      return 'RARA';
+    case 'common':    return 'COMUM';
+  }
+}
 
 export default function EvolutionTab() {
   const theme = useTheme();
@@ -37,17 +89,33 @@ export default function EvolutionTab() {
   const profile = useStore(s => s.profile);
   const mascot = useStore(s => s.mascot);
   const settings = useStore(s => s.settings);
+  const streak = useStore(s => s.streak);
   const [activeSceneId, setActiveSceneId] = useState('room');
   const [equippedAccId, setEquippedAccId] = useState<AccessoryId>('none');
+  const [unlockedMutations, setUnlockedMutations] = useState<UnlockedMutation[]>([]);
+  const [habitCounts, setHabitCounts] = useState<Partial<Record<HabitKind, number>>>({});
+  const [genomeExpanded, setGenomeExpanded] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       if (!profile) return;
       void (async () => {
-        const owned = await inventory.listOwned(profile.id);
+        const [owned, mutations, allCheckins] = await Promise.all([
+          inventory.listOwned(profile.id),
+          dnaMutations.listForUser(profile.id),
+          checkinsDb.listAll(profile.id),
+        ]);
         const eq = owned.find(o => o.equipped);
         setEquippedAccId((eq?.accessory_id as AccessoryId) ?? 'none');
         setActiveSceneId(await userScenes.getActive(profile.id));
+        setUnlockedMutations(mutations);
+        // Conta checkins por hábito pra alimentar findNewlyUnlockedMutations
+        // (preview do próximo marco)
+        const counts: Partial<Record<HabitKind, number>> = {};
+        for (const c of allCheckins) {
+          counts[c.habit_kind] = (counts[c.habit_kind] ?? 0) + 1;
+        }
+        setHabitCounts(counts);
       })();
     }, [profile?.id])
   );
@@ -59,7 +127,75 @@ export default function EvolutionTab() {
 
   if (!profile || !mascot) return null;
   const meta = getPersonality(mascot.personality);
-  const currentPhaseIdx = PHASES.findIndex(p => p.id === mascot.phase);
+
+  // Identidade procedural: descritores semânticos + traços morfológicos visíveis.
+  // Roda só se DNA existe (mascots pré-migration v2 caem no fallback "—").
+  const safeDna = mascot.dna ? sanitizeGenome(mascot.dna) : null;
+  const descriptors = safeDna ? dnaDescriptors(safeDna) : [];
+  const traits = safeDna ? morphologySummary(safeDna) : [];
+  const totalMutations = MUTATION_CATALOG.length;
+  const unlockedIds = new Set(unlockedMutations.map(u => u.mutation_id));
+  const unlockedMutationDetails: Array<{ mutation: Mutation; unlocked_at: string }> =
+    unlockedMutations
+      .map(u => {
+        const m = getMutationById(u.mutation_id);
+        return m ? { mutation: m, unlocked_at: u.unlocked_at } : null;
+      })
+      .filter((x): x is { mutation: Mutation; unlocked_at: string } => x !== null)
+      .sort((a, b) => b.unlocked_at.localeCompare(a.unlocked_at));
+
+  // Próximo marco previsto — usa findNewlyUnlockedMutations com contexto atual
+  // PROJETADO um pouco pra frente (simula 1 checkin a mais por hábito frequente
+  // pra detectar marco "quase lá"). Estratégia simples: o próximo marco é o
+  // que tem mais condições SATISFEITAS, e o menor número de condições faltando.
+  const daysSinceCreated = Math.floor(
+    (Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24),
+  );
+  let nextMutationCandidate: Mutation | null = null;
+  if (safeDna) {
+    const baseCtx: MutationContext = {
+      genome: safeDna,
+      habitCheckinCounts: habitCounts,
+      currentStreak: streak?.current_streak ?? 0,
+      daysSinceCreated,
+      alreadyUnlocked: unlockedIds,
+    };
+    // Mutações ainda não desbloqueadas, ordenadas por "proximidade":
+    // contagem de condições JÁ satisfeitas dividida pelo total.
+    let bestScore = -1;
+    for (const m of MUTATION_CATALOG) {
+      if (unlockedIds.has(m.id)) continue;
+      if (evaluateCondition(m.condition, baseCtx)) continue; // já desbloqueia AGORA
+      // Conta sub-condições satisfeitas
+      let satisfied = 0;
+      let total = 0;
+      if (m.condition.geneAbove) {
+        for (const [k, v] of Object.entries(m.condition.geneAbove)) {
+          total++;
+          if (safeDna[k as keyof Genome] >= (v ?? 0)) satisfied++;
+        }
+      }
+      if (m.condition.habitCheckinsAtLeast) {
+        for (const [habit, count] of Object.entries(m.condition.habitCheckinsAtLeast)) {
+          total++;
+          if ((habitCounts[habit as HabitKind] ?? 0) >= (count ?? 0)) satisfied++;
+        }
+      }
+      if (m.condition.streakAtLeast !== undefined) {
+        total++;
+        if ((streak?.current_streak ?? 0) >= m.condition.streakAtLeast) satisfied++;
+      }
+      if (m.condition.daysSinceCreatedAtLeast !== undefined) {
+        total++;
+        if (daysSinceCreated >= m.condition.daysSinceCreatedAtLeast) satisfied++;
+      }
+      const score = total > 0 ? satisfied / total : 0;
+      if (score > bestScore) {
+        bestScore = score;
+        nextMutationCandidate = m;
+      }
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -111,46 +247,160 @@ export default function EvolutionTab() {
           </View>
         </StaggeredView>
 
-        {/* Phase track */}
-        <StaggeredView index={4}>
-          <View style={{ paddingHorizontal: theme.spacing.lg }}>
-            <Text style={styles.sectionTitle}>Jornada de evolução</Text>
-          </View>
-          <View style={styles.phaseList}>
-            {PHASES.map((p, i) => {
-              const reached = i <= currentPhaseIdx;
-              const isCurrent = i === currentPhaseIdx;
-              return (
-                <View
-                  key={p.id}
-                  style={[
-                    styles.phaseRow,
-                    reached && styles.phaseRowReached,
-                    isCurrent && styles.phaseRowCurrent,
-                  ]}
-                >
-                  <View style={[styles.phaseDot, reached && styles.phaseDotReached]}>
-                    {reached ? (
-                      <Icon name="check" size={16} color="#fff" strokeWidth={3} />
-                    ) : (
-                      <Text style={styles.phaseDotText}>{i + 1}</Text>
-                    )}
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.phaseLabel, isCurrent && styles.phaseLabelCurrent]}>{p.label}</Text>
-                    <Text style={styles.phaseXp}>{p.xp} XP</Text>
-                  </View>
-                  {isCurrent && (
-                    <Text style={styles.phaseBadge}>VOCÊ ESTÁ AQUI</Text>
-                  )}
+        {/* IDENTIDADE PROCEDURAL — seção principal, primeira coisa que o
+            usuário vê depois do mascote. Mostra DNA descritores + traços
+            visíveis + count de mutações. É o ANTI-Tamagotchi: a criatura
+            é definida por O QUE ELA É, não por uma fase fixa. */}
+        {safeDna && (descriptors.length > 0 || traits.length > 0) && (
+          <StaggeredView index={4}>
+            <View style={styles.identityCard}>
+              <View style={styles.identityHeader}>
+                <Icon name="sparkle" size={14} color={theme.colors.primary} strokeWidth={2.4} />
+                <Text style={styles.identityKicker}>Identidade procedural</Text>
+              </View>
+              {descriptors.length > 0 && (
+                <Text style={styles.identityLead}>
+                  {descriptors.join(' · ')}
+                </Text>
+              )}
+              {traits.length > 0 && (
+                <View style={styles.traitsRow}>
+                  {traits.slice(0, 4).map((t, i) => (
+                    <View key={i} style={styles.traitChip}>
+                      <Text style={styles.traitChipText}>{t}</Text>
+                    </View>
+                  ))}
                 </View>
-              );
-            })}
+              )}
+              <View style={styles.identityFooter}>
+                <Icon name="lock" size={11} color={theme.colors.textSecondary} strokeWidth={2.2} />
+                <Text style={styles.identityFooterText}>
+                  {totalMutations} marcos biológicos possíveis — cada um único, desbloqueado pelo seu caminho
+                </Text>
+              </View>
+            </View>
+          </StaggeredView>
+        )}
+
+        {/* TIMELINE BIOLÓGICA — substitui a esteira linear de fases.
+            Lista cronologicamente reversa as mutações desbloqueadas (até 5
+            mais recentes). Empty state acolhedor pra quem nunca teve marco. */}
+        <StaggeredView index={5}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Transformações</Text>
+            <PressableScale
+              onPress={() => router.push('/mutations')}
+              accessibilityRole="button"
+              accessibilityLabel="Ver todas as mutações"
+            >
+              <Text style={styles.sectionLink}>ver tudo →</Text>
+            </PressableScale>
           </View>
+          {unlockedMutationDetails.length === 0 ? (
+            <View style={styles.timelineEmpty}>
+              <Icon name="sparkle" size={20} color={theme.colors.primary} strokeWidth={1.8} />
+              <Text style={styles.timelineEmptyText}>
+                Nenhuma transformação ainda. Continue cuidando de você — as mudanças
+                aparecem no próprio ritmo dela.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.timeline}>
+              {unlockedMutationDetails.slice(0, 5).map((u, i) => {
+                const color = rarityColor(u.mutation.rarity, theme);
+                return (
+                  <View key={u.mutation.id} style={styles.timelineRow}>
+                    <View style={styles.timelineLeft}>
+                      <View style={[styles.timelineDot, { backgroundColor: color }]} />
+                      {i < Math.min(unlockedMutationDetails.length, 5) - 1 && (
+                        <View style={styles.timelineLine} />
+                      )}
+                    </View>
+                    <View style={[styles.timelineCard, { borderColor: color + '55' }]}>
+                      <View style={styles.timelineHeader}>
+                        <Text style={[styles.timelineRarity, { color }]}>
+                          {rarityLabel(u.mutation.rarity)}
+                        </Text>
+                        <Text style={styles.timelineDate}>
+                          {new Date(u.unlocked_at).toLocaleDateString('pt-BR')}
+                        </Text>
+                      </View>
+                      <Text style={styles.timelineName}>{u.mutation.name}</Text>
+                      <Text style={styles.timelineDesc}>{u.mutation.description}</Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </StaggeredView>
 
+        {/* PRÓXIMO MARCO — preview da mutation mais próxima de unlock.
+            Não revela a condição exata pra preservar o mistério "biológico". */}
+        {nextMutationCandidate && (
+          <StaggeredView index={6}>
+            <View style={styles.nextCard}>
+              <View style={styles.nextHeader}>
+                <Icon name="sparkle" size={14} color={theme.colors.primary} strokeWidth={2.2} />
+                <Text style={styles.nextKicker}>Algo está chegando</Text>
+              </View>
+              <Text style={styles.nextHint}>
+                Sinto na forma dela uma mudança vindo. Cuide de você no seu ritmo
+                — ela acompanha.
+              </Text>
+              <Text style={styles.nextRarity}>
+                · {rarityLabel(nextMutationCandidate.rarity).toLowerCase()} ·
+              </Text>
+            </View>
+          </StaggeredView>
+        )}
+
+        {/* GENOME VIEWER — 11 traits em barras, com labels PT-BR amigáveis.
+            Colapsível: por default mostra 4 dominantes; expande pra todos. */}
+        {safeDna && (
+          <StaggeredView index={7}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Traços do corpo dela</Text>
+              <PressableScale
+                onPress={() => setGenomeExpanded(v => !v)}
+                accessibilityRole="button"
+                accessibilityLabel={genomeExpanded ? 'Ver menos traços' : 'Ver todos os traços'}
+              >
+                <Text style={styles.sectionLink}>
+                  {genomeExpanded ? 'ver menos' : 'ver todos'}
+                </Text>
+              </PressableScale>
+            </View>
+            <View style={styles.genomeList}>
+              {(() => {
+                // Ordena por valor decrescente (dominantes primeiro)
+                const entries = GENE_KEYS.map(k => ({ key: k, value: safeDna[k] }))
+                  .sort((a, b) => b.value - a.value);
+                const visible = genomeExpanded ? entries : entries.slice(0, 4);
+                return visible.map(({ key, value }) => (
+                  <View key={key} style={styles.genomeRow}>
+                    <Text style={styles.genomeLabel}>{GENE_FRIENDLY[key] ?? key}</Text>
+                    <View style={styles.genomeBarTrack}>
+                      <View
+                        style={[
+                          styles.genomeBarFill,
+                          {
+                            width: `${value * 100}%`,
+                            backgroundColor: theme.colors.primary,
+                            opacity: 0.4 + value * 0.5,
+                          },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                ));
+              })()}
+            </View>
+          </StaggeredView>
+        )}
+
         {/* Links pra mais */}
-        <StaggeredView index={5}>
+        <StaggeredView index={8}>
           <View style={styles.linksRow}>
             <LinkCard icon="flame" label="Streak" onPress={() => router.push('/streak')} />
             <LinkCard icon="trophy" label="Coleção" onPress={() => router.push('/inventory')} />
@@ -218,6 +468,70 @@ function makeStyles(theme: Theme) {
       paddingHorizontal: theme.spacing.lg,
       marginTop: theme.spacing.sm,
     },
+    // Card de identidade procedural — anti-Tamagotchi, valoriza o que a
+    // criatura É em vez de qual "fase" ela alcançou.
+    identityCard: {
+      marginHorizontal: theme.spacing.lg,
+      padding: theme.spacing.md,
+      borderRadius: theme.radius.lg,
+      backgroundColor: theme.colors.primaryTint,
+      borderWidth: 1,
+      borderColor: theme.colors.primary + '33',
+      gap: theme.spacing.sm,
+    },
+    identityHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    identityKicker: {
+      ...theme.text.xs,
+      color: theme.colors.primary,
+      fontWeight: '800',
+      letterSpacing: 0.7,
+      textTransform: 'uppercase',
+      fontFamily: 'JetBrainsMono_500Medium',
+      fontSize: 10.5,
+    },
+    identityLead: {
+      ...theme.text.body,
+      color: theme.colors.text,
+      fontFamily: 'InstrumentSerif_400Regular',
+      fontSize: 18,
+      lineHeight: 24,
+      letterSpacing: -0.2,
+    },
+    traitsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    traitChip: {
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 999,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    traitChipText: {
+      ...theme.text.xs,
+      color: theme.colors.textSecondary,
+      fontWeight: '600',
+      fontSize: 11,
+    },
+    identityFooter: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 6,
+      marginTop: 2,
+    },
+    identityFooterText: {
+      ...theme.text.xs,
+      color: theme.colors.textSecondary,
+      flex: 1,
+      lineHeight: 14,
+    },
     phaseList: {
       paddingHorizontal: theme.spacing.lg,
       gap: theme.spacing.sm,
@@ -275,6 +589,172 @@ function makeStyles(theme: Theme) {
       fontFamily: 'JetBrainsMono_500Medium',
       borderWidth: 1,
       borderColor: theme.colors.primary + '40',
+    },
+    // ---- novos styles SPEC-1 (timeline procedural, viewer de genoma) ----
+    sectionHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      justifyContent: 'space-between',
+      paddingHorizontal: theme.spacing.lg,
+      marginTop: theme.spacing.md,
+      marginBottom: theme.spacing.xs,
+    },
+    sectionLink: {
+      ...theme.text.xs,
+      color: theme.colors.primary,
+      fontWeight: '700',
+      fontFamily: 'JetBrainsMono_500Medium',
+      fontSize: 10.5,
+      letterSpacing: 0.5,
+    },
+    timeline: {
+      paddingHorizontal: theme.spacing.lg,
+      gap: theme.spacing.sm,
+    },
+    timelineRow: {
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+    },
+    timelineLeft: {
+      width: 16,
+      alignItems: 'center',
+    },
+    timelineDot: {
+      width: 12, height: 12, borderRadius: 6,
+      marginTop: 8,
+    },
+    timelineLine: {
+      width: 2,
+      flex: 1,
+      backgroundColor: theme.colors.border,
+      marginTop: 4,
+    },
+    timelineCard: {
+      flex: 1,
+      padding: theme.spacing.md,
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.radius.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      gap: 4,
+    },
+    timelineHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    timelineRarity: {
+      ...theme.text.xs,
+      fontWeight: '800',
+      letterSpacing: 0.6,
+      fontFamily: 'JetBrainsMono_500Medium',
+      fontSize: 10,
+    },
+    timelineDate: {
+      ...theme.text.xs,
+      color: theme.colors.textSecondary,
+      fontFamily: 'JetBrainsMono_500Medium',
+      fontSize: 10,
+    },
+    timelineName: {
+      ...theme.text.bodyBold,
+      color: theme.colors.text,
+      fontFamily: 'InstrumentSerif_400Regular',
+      fontSize: 17,
+      letterSpacing: -0.2,
+      marginTop: 2,
+    },
+    timelineDesc: {
+      ...theme.text.sm,
+      color: theme.colors.textSecondary,
+      lineHeight: 18,
+    },
+    timelineEmpty: {
+      marginHorizontal: theme.spacing.lg,
+      padding: theme.spacing.md,
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.radius.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    timelineEmptyText: {
+      ...theme.text.sm,
+      color: theme.colors.textSecondary,
+      flex: 1,
+      lineHeight: 19,
+    },
+    nextCard: {
+      marginHorizontal: theme.spacing.lg,
+      padding: theme.spacing.md,
+      backgroundColor: theme.colors.primaryTint,
+      borderRadius: theme.radius.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.primary + '33',
+      borderStyle: 'dashed',
+      gap: 6,
+    },
+    nextHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    nextKicker: {
+      ...theme.text.xs,
+      color: theme.colors.primary,
+      fontWeight: '800',
+      letterSpacing: 0.7,
+      textTransform: 'uppercase',
+      fontFamily: 'JetBrainsMono_500Medium',
+      fontSize: 10.5,
+    },
+    nextHint: {
+      ...theme.text.body,
+      color: theme.colors.text,
+      fontFamily: 'InstrumentSerif_400Regular',
+      fontSize: 16,
+      lineHeight: 22,
+      letterSpacing: -0.1,
+    },
+    nextRarity: {
+      ...theme.text.xs,
+      color: theme.colors.textSecondary,
+      fontFamily: 'JetBrainsMono_500Medium',
+      fontSize: 10,
+      letterSpacing: 0.5,
+      alignSelf: 'flex-end',
+    },
+    genomeList: {
+      paddingHorizontal: theme.spacing.lg,
+      gap: theme.spacing.xs,
+    },
+    genomeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      paddingVertical: 4,
+    },
+    genomeLabel: {
+      ...theme.text.sm,
+      color: theme.colors.text,
+      width: 140,
+      fontFamily: 'InstrumentSerif_400Regular_Italic',
+      fontStyle: 'italic',
+    },
+    genomeBarTrack: {
+      flex: 1,
+      height: 8,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      overflow: 'hidden',
+    },
+    genomeBarFill: {
+      height: '100%',
+      borderRadius: 4,
     },
     linksRow: {
       flexDirection: 'row',

@@ -22,10 +22,12 @@ import type { Theme } from '@/lib/themes';
  */
 
 export interface UnlockToastData {
-  kind: 'achievement' | 'accessory' | 'scene' | 'level' | 'info';
+  kind: 'achievement' | 'accessory' | 'scene' | 'level' | 'info' | 'mutation';
   emoji: string;
   title: string;
   subtitle?: string;
+  /** Raridade — só usado quando kind='mutation'. Afeta cor + ícone. */
+  rarity?: 'common' | 'rare' | 'epic' | 'legendary';
 }
 
 interface Props {
@@ -43,12 +45,14 @@ function kindIcon(k: UnlockToastData['kind']): IconName {
       return 'sparkles';
     case 'level':
       return 'star';
+    case 'mutation':
+      return 'sparkle';
     default:
       return 'sparkle';
   }
 }
 
-function kindLabel(k: UnlockToastData['kind']): string {
+function kindLabel(k: UnlockToastData['kind'], rarity?: UnlockToastData['rarity']): string {
   switch (k) {
     case 'achievement':
       return 'CONQUISTA';
@@ -58,12 +62,20 @@ function kindLabel(k: UnlockToastData['kind']): string {
       return 'NOVO CENÁRIO';
     case 'level':
       return 'NÍVEL';
+    case 'mutation':
+      // Mutações exibem raridade em vez de label genérico
+      switch (rarity) {
+        case 'legendary': return 'MUTAÇÃO LENDÁRIA';
+        case 'epic':       return 'MUTAÇÃO ÉPICA';
+        case 'rare':       return 'MUTAÇÃO RARA';
+        default:           return 'NOVA MUTAÇÃO';
+      }
     default:
       return 'AVISO';
   }
 }
 
-function kindColor(k: UnlockToastData['kind'], theme: Theme): string {
+function kindColor(k: UnlockToastData['kind'], theme: Theme, rarity?: UnlockToastData['rarity']): string {
   switch (k) {
     case 'achievement':
       return theme.colors.gold;
@@ -73,6 +85,14 @@ function kindColor(k: UnlockToastData['kind'], theme: Theme): string {
       return theme.colors.lilac;
     case 'level':
       return theme.colors.gold;
+    case 'mutation':
+      // Raridade visualmente codificada — lendária em gold, épica em lilac
+      switch (rarity) {
+        case 'legendary': return theme.colors.gold;
+        case 'epic':       return theme.colors.lilac;
+        case 'rare':       return theme.colors.primary;
+        default:           return theme.colors.sky;
+      }
     default:
       return theme.colors.primary;
   }
@@ -120,7 +140,7 @@ export function UnlockToast({ data, onDone }: Props) {
 
   if (!data) return null;
 
-  const accent = kindColor(data.kind, theme);
+  const accent = kindColor(data.kind, theme, data.rarity);
 
   return (
     <Animated.View
@@ -131,7 +151,7 @@ export function UnlockToast({ data, onDone }: Props) {
           <Icon name={kindIcon(data.kind)} size={20} color={accent} strokeWidth={2.2} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.kicker, { color: accent }]}>{kindLabel(data.kind)}</Text>
+          <Text style={[styles.kicker, { color: accent }]}>{kindLabel(data.kind, data.rarity)}</Text>
           <Text style={styles.title} numberOfLines={1}>
             {data.title}
           </Text>

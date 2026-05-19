@@ -202,3 +202,33 @@ export interface Combo {
   last_action_at: string | null;
   updated_at: string;
 }
+
+/** Padrão corporal aplicado via shader pelo renderer. */
+export type BodyPattern = 'plain' | 'stripes' | 'spots' | 'fractal' | 'cells';
+
+/**
+ * Overrides morfológicos aplicados PELO USUÁRIO sobre a morfologia
+ * derivada do DNA (Sims/Spore-like customization).
+ *
+ * **Princípio inviolável**: cada multiplicador é clampado em [0.7, 1.3] —
+ * usuário INFLUENCIA mas não DESTRÓI a identidade genética. DNA bruto
+ * permanece intocável; overrides aplicam em runtime via `applyCustomization`.
+ */
+export interface MascotCustomization {
+  user_id: string;
+  /** Multiplicador no tamanho dos olhos. Cap [0.7, 1.3]. */
+  eye_size: number;
+  /** Multiplicador na distância entre os olhos. Cap [0.7, 1.3]. */
+  eye_spread: number;
+  /** Multiplicador na altura do corpo. Cap [0.7, 1.3]. */
+  body_height: number;
+  /** Multiplicador na largura do corpo. Cap [0.7, 1.3]. */
+  body_width: number;
+  /** Multiplicador na intensidade da aura (opacity + tamanho). Cap [0.7, 1.3]. */
+  aura_intensity: number;
+  /** Multiplicador na densidade de padrões corporais. Cap [0.7, 1.3]. */
+  pattern_density: number;
+  /** Padrão preferido — sobrescreve o desbloqueado por mutação. */
+  preferred_pattern: BodyPattern;
+  updated_at: string;
+}

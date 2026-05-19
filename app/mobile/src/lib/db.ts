@@ -32,8 +32,12 @@ const META_KEY = 'mascote:_meta';
  *  v2 — adiciona `dna` e `dna_seed` em mascots. Cada usuário recebe DNA
  *       derivado da personalidade que já escolheu, com variação procedural
  *       por seed do user_id. Idempotente.
+ *  v3 — adiciona tabela `dna_mutations` (vazia inicialmente) + tabela
+ *       `customization` (vazia). Mutations são desbloqueadas pelo pipeline
+ *       de check-in conforme condições genéticas + de hábito são satisfeitas.
+ *       Customization armazena overrides morfológicos do usuário (Sims-like).
  */
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 export interface DbMeta {
   schema: number;
@@ -103,6 +107,16 @@ const SCHEMA_MIGRATIONS: readonly Migration[] = [
     // perdia a versão limpa em disco. Migração roda uma vez por device por
     // bump de schema; o custo de escrever idempotentemente é trivial.
     await writeT('mascots', next);
+  },
+  // 2 → 3: cria tabelas `dna_mutations` e `customization` vazias.
+  // Não tem dado a migrar — ambas começam vazias e são populadas em runtime
+  // pelos pipelines de check-in (mutations) e settings (customization).
+  // Idempotente: se tabelas já existem (rerun), não sobrescreve.
+  async (readT, writeT) => {
+    const muts = await readT('dna_mutations');
+    if (muts.length === 0) await writeT('dna_mutations', []);
+    const cust = await readT('customization');
+    if (cust.length === 0) await writeT('customization', []);
   },
 ];
 
@@ -744,6 +758,107 @@ export const achievements = {
   },
 };
 
+// ============= DNA Mutations =============
+// Mutações biológicas desbloqueadas. Marco persistido — uma vez gravado,
+// nunca expira. Não muta o DNA bruto; é uma camada visual aditiva consumida
+// pelo renderer (`aggregateVisualImpact`).
+//
+// Identidade: (user_id, mutation_id) é único — `unlock()` é idempotente.
+
+import type { UnlockedMutation } from './dna/mutations';
+
+export const dnaMutations = {
+  async listForUser(user_id: string): Promise<UnlockedMutation[]> {
+    const rows = await read<UnlockedMutation>('dna_mutations');
+    return rows.filter(m => m.user_id === user_id);
+  },
+  async idsForUser(user_id: string): Promise<Set<string>> {
+    const list = await dnaMutations.listForUser(user_id);
+    return new Set(list.map(m => m.mutation_id));
+  },
+  /** Idempotente: retorna a row existente se já desbloqueada, ou nova. */
+  async unlock(user_id: string, mutation_id: string): Promise<UnlockedMutation> {
+    return withLock('dna_mutations', async () => {
+      const rows = await read<UnlockedMutation>('dna_mutations');
+      const existing = rows.find(
+        m => m.user_id === user_id && m.mutation_id === mutation_id,
+      );
+      if (existing) return existing;
+      const next: UnlockedMutation = {
+        user_id,
+        mutation_id,
+        unlocked_at: new Date().toISOString(),
+      };
+      await write<UnlockedMutation>('dna_mutations', [...rows, next]);
+      return next;
+    });
+  },
+};
+
+// ============= Mascot Customization (Sims/Spore overlay) =============
+// Overrides morfológicos aplicados PELO USUÁRIO sobre `morphologyFromGenome`.
+// Cada multiplicador em [0.7, 1.3] — cap inegociável pra preservar identidade
+// genética. DNA bruto NUNCA é mutado por essas opções; o renderer interpola
+// em runtime via `applyCustomization()` (em src/lib/dna/customization.ts).
+
+import type { MascotCustomization } from '@/types';
+
+function freshCustomization(user_id: string): MascotCustomization {
+  return {
+    user_id,
+    eye_size: 1,
+    eye_spread: 1,
+    body_height: 1,
+    body_width: 1,
+    aura_intensity: 1,
+    pattern_density: 1,
+    preferred_pattern: 'plain',
+    updated_at: new Date().toISOString(),
+  };
+}
+
+export const customization = {
+  /** Pure getter — retorna defaults se nunca customizado. */
+  async get(user_id: string): Promise<MascotCustomization> {
+    const rows = await read<MascotCustomization>('customization');
+    return rows.find(c => c.user_id === user_id) ?? freshCustomization(user_id);
+  },
+  /** Patch parcial — só campos enviados são modificados. Outros preservam. */
+  async update(
+    user_id: string,
+    patch: Partial<Omit<MascotCustomization, 'user_id' | 'updated_at'>>,
+  ): Promise<MascotCustomization> {
+    return withLock('customization', async () => {
+      const rows = await read<MascotCustomization>('customization');
+      const existing = rows.find(c => c.user_id === user_id) ?? freshCustomization(user_id);
+      const next: MascotCustomization = {
+        ...existing,
+        ...patch,
+        user_id,
+        updated_at: new Date().toISOString(),
+      };
+      const exists = rows.some(c => c.user_id === user_id);
+      const newRows = exists
+        ? rows.map(c => (c.user_id === user_id ? next : c))
+        : [...rows, next];
+      await write<MascotCustomization>('customization', newRows);
+      return next;
+    });
+  },
+  /** Reset volta tudo pros defaults (multiplicadores = 1, pattern = plain). */
+  async reset(user_id: string): Promise<MascotCustomization> {
+    return customization.update(user_id, {
+      eye_size: 1,
+      eye_spread: 1,
+      body_height: 1,
+      body_width: 1,
+      aura_intensity: 1,
+      pattern_density: 1,
+      preferred_pattern: 'plain',
+    });
+  },
+};
+
 // ============= Wallet (moedas + gemas) =============
 function freshWallet(user_id: string): Wallet {
   return { user_id, coins: 0, gems: 0, updated_at: new Date().toISOString() };
@@ -1041,6 +1156,8 @@ export async function resetAll(): Promise<void> {
     'daily_reward',
     'mystery_box',
     'combo',
+    'dna_mutations',
+    'customization',
   ];
   // Limpa também as chaves que não estão no namespace `mascote:` mas que são
   // estado do usuário (ex.: marcadores de paywall e aniversários do mascote).
@@ -1072,6 +1189,8 @@ const ALL_TABLES = [
   'daily_reward',
   'mystery_box',
   'combo',
+  'dna_mutations',
+  'customization',
 ];
 
 export async function exportAll(user_id: string): Promise<Record<string, any[]>> {
