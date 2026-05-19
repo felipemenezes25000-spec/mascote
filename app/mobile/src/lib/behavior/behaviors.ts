@@ -104,13 +104,65 @@ export const quietObservation: Behavior = {
   }),
 };
 
+// ============================================================================
+// DNA-DRIVEN BEHAVIORS — score escala com traits do genoma da criatura
+// ============================================================================
+// Provam que o engine SUPORTA comportamentos diferenciados por personalidade
+// genética. Criatura com socialEnergy alto comporta-se diferente de uma com
+// intelligence dominante — score por gene faz behaviors competirem de formas
+// distintas no mesmo contexto temporal/streak.
+
+/**
+ * social_burst — criaturas com alta socialEnergy expressam mais espalhamento.
+ * Cooldown médio pra que apareça periodicamente em criaturas sociáveis sem
+ * sobrepor a tudo.
+ */
+export const expressSocialBurst: Behavior = {
+  id: 'dna.social_burst',
+  kind: 'reactive',
+  cooldownSeconds: 8 * 60,
+  score: (ctx: BehaviorContext) => {
+    // Score linear no socialEnergy: gene 0.8 → score 0.4; gene 0.95 → score 0.475.
+    // Cap em 0.5 pra não vencer milestones (1.0) nem react_to_return (>=0.7).
+    return Math.min(0.5, ctx.genome.socialEnergy * 0.5);
+  },
+  execute: (): BehaviorEffect => ({
+    animation: 'wander',
+    message: 'Algo dentro dela queria sair pro mundo.',
+  }),
+};
+
+/**
+ * quiet_contemplation — criaturas com alta intelligence + discipline
+ * preferem observar a reagir. Score combinado dos 2 traits.
+ */
+export const quietContemplation: Behavior = {
+  id: 'dna.quiet_contemplation',
+  kind: 'reactive',
+  cooldownSeconds: 10 * 60,
+  score: (ctx: BehaviorContext) => {
+    // Só dispara se AMBOS os traits são salientes (>= 0.6).
+    // Sem essa condição estrita, criatura com inteligência alta mas
+    // disciplina baixa engatilharia "contemplação" sem fazer sentido.
+    if (ctx.genome.intelligence < 0.6) return 0;
+    if (ctx.genome.discipline < 0.6) return 0;
+    const combined = (ctx.genome.intelligence + ctx.genome.discipline) / 2;
+    return Math.min(0.45, combined * 0.5);
+  },
+  execute: (): BehaviorEffect => ({
+    animation: 'observe',
+  }),
+};
+
 /**
  * Conjunto default de behaviors. Engine consome esta lista.
- * Ordem importa em caso de tie (first wins).
+ * Ordem importa em caso de tie (first wins): milestones > reactive > temporal > idle.
  */
 export const DEFAULT_BEHAVIORS: readonly Behavior[] = [
-  streakMilestone,
-  reactToReturn,
-  quietObservation,
-  idleBreath,
+  streakMilestone,        // 1.0 must-fire
+  reactToReturn,          // 0.7-1.0 ausência
+  expressSocialBurst,     // 0-0.5 DNA-driven
+  quietContemplation,     // 0-0.45 DNA-driven
+  quietObservation,       // 0.5 noite
+  idleBreath,             // 0.1 baseline
 ];

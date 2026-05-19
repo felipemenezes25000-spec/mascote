@@ -102,7 +102,10 @@ export {
 export {
   MIN_MULT,
   MAX_MULT,
+  MIN_POSTURE,
+  MAX_POSTURE,
   clampMultiplier,
+  clampPosture,
   applyCustomization,
   sanitizeCustomization,
 } from './customization';

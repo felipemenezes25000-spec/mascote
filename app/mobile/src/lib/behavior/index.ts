@@ -24,5 +24,9 @@ export {
   reactToReturn,
   streakMilestone,
   quietObservation,
+  expressSocialBurst,
+  quietContemplation,
   DEFAULT_BEHAVIORS,
 } from './behaviors';
+
+export { useBehaviorTick, type UseBehaviorTickOptions } from './useBehaviorTick';

@@ -2,6 +2,10 @@
 
 > Visão: criatura digital procedural, viva, única por usuário, em evolução
 > contínua e adaptada a hábitos + emoção. Multi-trimestre.
+>
+> **Atualização 2026-05-19 (DLI-v3)**: 5/5 SPECs entregues. Todos os bloqueadores
+> da identidade DLI estão satisfeitos. Próximas fases viram trabalho de infra
+> (backend, push, billing) e refinamento (voz, shaders, memory graph).
 
 Documento honesto: separa o que **já está construído** do que **falta**, com
 estimativas de esforço e dependências. Atualizar à medida que se executa.
@@ -40,35 +44,38 @@ check-in → narrativa procedural. **Mais perto da visão do que parece**.
 
 ## Gaps vs. visão (priorizados)
 
-### 🔴 Bloqueador da identidade "Digital Living Identity"
+### ✅ Bloqueadores da identidade "Digital Living Identity" — TODOS RESOLVIDOS
 
-#### DLI-1 — Evolution screen ainda é linear (Ovo→Bebê→Criança→Adolescente→Adulto)
-- **Estado atual**: tela `/evolution` mostra XP thresholds fixos (0, 100, 500, 2000, 8000, 25000).
-- **Brief contradiz explicitamente**: *"A evolução NÃO deve ser: bebê > criança > adulto. Isso é ultrapassado."*
-- **Substituir por**: viewer procedural — visualizar os 11 genes ativos, deltas
-  recentes, mutações desbloqueadas, traits emergentes. Linha-de-tempo das
-  mudanças biológicas em vez de barras de XP.
-- **Esforço**: 3-5 dias (UI + novos componentes + integração com `stories.ts`).
-- **Dependência**: `dominantChange` já existe, narrativa já existe.
+#### DLI-1 — Evolution screen procedural ✅ ENTREGUE (DLI-v2)
+- ✅ `phaseList` linear removido da UI principal
+- ✅ Timeline biológica das transformações
+- ✅ Viewer de genoma colapsível (11 traits)
+- ✅ Próximo marco preview
+- ✅ Card de identidade procedural (descritores + traits)
+- **Onde**: [`app/(tabs)/evolution.tsx`](../app/mobile/app/(tabs)/evolution.tsx)
 
-#### DLI-2 — Mascot3D é estático (não responde a mood/contexto)
-- **Estado atual**: corpo procedural renderiza, mas é parado. Não pisca, não respira, não acompanha o toque.
-- **Falta**:
-  - **Idle animations** (respiração: scale 1.0↔1.02 ciclando, eye blink 3-6s aleatório)
-  - **Eye tracking** ao toque (PanResponder já capturado em Mascot3D.tsx:48 — falta aplicar no shader/material dos olhos)
-  - **Mood-driven posture** (sleep mood → cabeça caída; empolgado → bounce sutil)
-  - **Microexpressões** (sobrancelhas/boca contextualizadas)
-- **Esforço**: 7-10 dias.
-- **Dependência**: nenhuma — base R3F está montada.
+#### DLI-2 — Mascot3D animations ✅ ENTREGUE (DLI-v2/v3)
+- ✅ Breath cycle (DNA-driven freq via morph.breathFreq)
+- ✅ Blink aleatório a cada 3-6s
+- ✅ Eye tracking via PanResponder + lerp na pupila
+- ✅ Mood-driven posture (5 moods, lerp suave)
+- ✅ **Boca expressiva** (TorusGeometry parcial, 5 mood states)
+- ✅ **Aura mood-reactive** (radius/speed/opacity escalam)
+- ✅ **Sparkle burst** condicional (mood='empolgado')
+- ✅ Bounce-on-tap
+- ✅ Mascot3D imperative actions (bounce/celebrate/wander/rest/observe)
+- **Onde**: [`src/components/Mascot3D.tsx`](../app/mobile/src/components/Mascot3D.tsx)
 
-#### DLI-3 — Sem evolução morfológica contínua (Spore-like)
-- **Estado atual**: morfologia é determinística do genoma (mesmo input → mesma forma). Não cresce membros novos, não muta organicamente.
-- **Falta**:
-  - **Sistema de mutations** — desbloqueios condicionais (30 dias de exercise → membros mais musculosos; 60 dias de creativity habits → padrões abstratos no corpo)
-  - **Morph targets** com interpolação suave (não trocar de modelo, e sim *blend shapes*)
-  - **Procedural appendages** (antenas, espinhos, cauda já estruturados em morphology.ts mas ainda não renderizados pelo Mascot3D)
-- **Esforço**: 3-4 semanas (system + UI + invariantes de testes).
-- **Dependência**: DLI-2 (animation pipeline) é pré-requisito.
+#### DLI-3 — Evolução morfológica contínua ✅ ENTREGUE (DLI-v2)
+- ✅ Sistema de **7 mutations** com 4 raridades (incl. lendária)
+- ✅ Mutations persistentes em AsyncStorage (migration v3, table `dna_mutations`)
+- ✅ Condições compostas: gene>X + habit count + streak + days since created
+- ✅ Visual impact (morphology multipliers + glow boost + particles + patterns)
+- ✅ Avaliação no pipeline de check-in (`applyCheckinFully`)
+- ✅ Tela `/mutations` com catálogo agrupado por raridade + lock state
+- ✅ Toast distinto por raridade no desbloqueio
+- ⚠️ **Falta**: shader real de patterns (fractal/spots/stripes) — placeholder. ~1 sem.
+- **Onde**: [`src/lib/dna/mutations.ts`](../app/mobile/src/lib/dna/mutations.ts), `/mutations.tsx`
 
 ---
 
@@ -84,14 +91,12 @@ check-in → narrativa procedural. **Mais perto da visão do que parece**.
 - **Esforço**: 2-3 semanas.
 - **Dependência**: nenhuma; sistema de memory atual é base.
 
-#### DLI-5 — Personalidade da IA é fixa, não evolui
-- **Estado atual**: tom é determinado pelo preset (calmo, motivador, fofo, sábio). Mock replies são pools estáticos.
-- **Falta**:
-  - **Tom adaptado pelo DNA** (não pelo preset) — usuário que carregou socialEnergy alto → mascote fala mais expansivo, mesmo sendo "Calmo"
-  - **Hour/weather awareness** — "boa noite, Felipe" às 22h vs "bom dia" às 7h
-  - **Frequência de uso awareness** — "fazia 2 dias que você não aparecia"
-- **Esforço**: 1 semana (refatorar `replies.ts` + `ai.ts` system prompt).
-- **Dependência**: nenhuma.
+#### DLI-5 — Personalidade da IA ✅ ENTREGUE (DLI-v2)
+- ✅ Descritores semânticos seguros derivados do DNA (`dnaDescriptors`, `dnaPromptSection`)
+- ✅ Injeção em system prompt — IA "vê" a criatura sem expor gene cru
+- ✅ Garantido por 7 testes em `tests/security/dna-privacy-ai.test.ts` — fetch interceptado, payload validado
+- ⚠️ **Resta**: hour-of-day awareness, freq awareness, mood trend awareness em copy. ~3 dias.
+- **Onde**: [`src/lib/dna/descriptors.ts`](../app/mobile/src/lib/dna/descriptors.ts), [`src/lib/ai.ts`](../app/mobile/src/lib/ai.ts)
 
 #### DLI-6 — Ambient ainda não reage ao estado
 - **Estado atual**: `SceneBackground` tem variantes por scene_id, mas não muda dinâmicamente.
@@ -130,10 +135,17 @@ check-in → narrativa procedural. **Mais perto da visão do que parece**.
 - **Falta**: Supabase opt-in com encryption-at-rest. DNA NUNCA sai do device sem opt-in explícito.
 - **Esforço**: 2 semanas.
 
-#### DLI-11 — Behavior trees / utility AI proper
-- **Estado atual**: heurística simples (mood label, drift, decay). Sem behavior tree.
-- **Falta**: graph de comportamentos contextuais (toque → reação; ausência prolongada → estado de espera; vitória → celebração).
-- **Esforço**: 3-4 semanas (precisa pré-requisitos DLI-2/3).
+#### DLI-11 — Behavior Engine ✅ ENTREGUE (DLI-v2/v3)
+- ✅ Scaffold em `src/lib/behavior/` (types, engine, behaviors, hook)
+- ✅ 6 behaviors: idle.breath, reactive.return, milestone.streak_7,
+  temporal.quiet_observation, **dna.social_burst** (DNA-driven),
+  **dna.quiet_contemplation** (DNA-driven)
+- ✅ Utility AI selector (`selectBehavior`) — score, cooldown, tie-break
+- ✅ `useBehaviorTick` hook integrado no Home (tick 30s)
+- ✅ Mascot3D imperative actions (bounce/celebrate/wander/rest/observe)
+- ⚠️ **Resta**: 3-5 behaviors adicionais (reaction to touch, reaction to habit-streak,
+  contextual greeting). ~1 sem.
+- **Onde**: [`src/lib/behavior/`](../app/mobile/src/lib/behavior/)
 
 ---
 

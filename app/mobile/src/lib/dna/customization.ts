@@ -16,6 +16,9 @@ import type { Morphology } from './morphology';
 
 export const MIN_MULT = 0.7;
 export const MAX_MULT = 1.3;
+/** Range absoluto da inclinação postural em radianos. ±0.2 ≈ ±11.5°. */
+export const MIN_POSTURE = -0.2;
+export const MAX_POSTURE = 0.2;
 
 /**
  * Força um multiplicador em [MIN_MULT, MAX_MULT]. NaN/Infinity vira 1.
@@ -24,6 +27,16 @@ export function clampMultiplier(v: number): number {
   if (!Number.isFinite(v)) return 1;
   if (v < MIN_MULT) return MIN_MULT;
   if (v > MAX_MULT) return MAX_MULT;
+  return v;
+}
+
+/**
+ * Clampa inclinação postural em [MIN_POSTURE, MAX_POSTURE]. NaN/Infinity → 0.
+ */
+export function clampPosture(v: number): number {
+  if (!Number.isFinite(v)) return 0;
+  if (v < MIN_POSTURE) return MIN_POSTURE;
+  if (v > MAX_POSTURE) return MAX_POSTURE;
   return v;
 }
 
@@ -47,6 +60,11 @@ export function applyCustomization(
   const width = clampMultiplier(custom.body_width);
   const aura = clampMultiplier(custom.aura_intensity);
   const pattern = clampMultiplier(custom.pattern_density);
+  // Force-hide overrides: usuário pode esconder parts que DNA habilita
+  // (não pode mostrar parts que DNA desabilita — preserva identidade)
+  const hasTail = custom.force_hide_tail ? false : morph.hasTail;
+  const hasAntennae = custom.force_hide_antennae ? false : morph.hasAntennae;
+  const hasSpikes = custom.force_hide_spikes ? false : morph.hasSpikes;
   return {
     ...morph,
     eyeSize: morph.eyeSize * eye,
@@ -58,6 +76,9 @@ export function applyCustomization(
     auraParticleCount: Math.floor(morph.auraParticleCount * aura),
     bodyChaosBumps: morph.bodyChaosBumps * pattern,
     bodyCreativityBumps: morph.bodyCreativityBumps * pattern,
+    hasTail,
+    hasAntennae,
+    hasSpikes,
   };
 }
 
@@ -78,6 +99,10 @@ export function sanitizeCustomization(
     aura_intensity: clampMultiplier(input.aura_intensity ?? 1),
     pattern_density: clampMultiplier(input.pattern_density ?? 1),
     preferred_pattern: input.preferred_pattern ?? 'plain',
+    posture_lean: clampPosture(input.posture_lean ?? 0),
+    force_hide_tail: Boolean(input.force_hide_tail ?? false),
+    force_hide_antennae: Boolean(input.force_hide_antennae ?? false),
+    force_hide_spikes: Boolean(input.force_hide_spikes ?? false),
     updated_at: input.updated_at ?? new Date().toISOString(),
   };
 }

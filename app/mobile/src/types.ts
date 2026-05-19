@@ -230,5 +230,16 @@ export interface MascotCustomization {
   pattern_density: number;
   /** Padrão preferido — sobrescreve o desbloqueado por mutação. */
   preferred_pattern: BodyPattern;
+  /**
+   * Inclinação postural (radianos). Cap [-0.2, 0.2]. Negativo = pra frente
+   * (pensativo/triste), positivo = pra trás (orgulhoso/empolgado).
+   */
+  posture_lean: number;
+  /** Esconde cauda mesmo se DNA habilita. Default false (segue DNA). */
+  force_hide_tail: boolean;
+  /** Esconde antenas mesmo se DNA habilita. Default false. */
+  force_hide_antennae: boolean;
+  /** Esconde espinhos mesmo se DNA habilita. Default false. */
+  force_hide_spikes: boolean;
   updated_at: string;
 }

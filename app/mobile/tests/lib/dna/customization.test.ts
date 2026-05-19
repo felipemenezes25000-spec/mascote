@@ -30,6 +30,10 @@ function defaults(user_id = 'u_1'): MascotCustomization {
     aura_intensity: 1,
     pattern_density: 1,
     preferred_pattern: 'plain',
+    posture_lean: 0,
+    force_hide_tail: false,
+    force_hide_antennae: false,
+    force_hide_spikes: false,
     updated_at: new Date().toISOString(),
   };
 }

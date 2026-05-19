@@ -44,6 +44,11 @@ interface Props {
    * Lista vazia = sem efeitos de mutação.
    */
   mutationIds?: readonly string[];
+  /**
+   * Action externo (Behavior Engine ou outros drivers). Key novo dispara
+   * a animação correspondente em Mascot3D. No fallback 2D, sem efeito.
+   */
+  action?: { kind: 'bounce' | 'celebrate' | 'wander' | 'rest' | 'observe'; key: number };
   reactTrigger?: number;
   accessory?:
     | AccessoryId
@@ -84,6 +89,7 @@ function MascotImpl(props: Props) {
           customization={props.customization}
           mutationIds={props.mutationIds}
           mood={props.mood}
+          action={props.action}
         />
       </View>
     );

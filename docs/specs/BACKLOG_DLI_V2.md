@@ -1,11 +1,24 @@
 # Backlog DLI-v2 — Specs Executáveis
 
+> **STATUS (2026-05-19 — DLI-v3)**: ✅ **TODAS 5 SPECS ENTREGUES.**
+> Ver detalhes individuais em cada seção. Backlog mantido pra histórico —
+> próximas fases foram movidas pra `ROADMAP_DIGITAL_LIVING_IDENTITY.md` como
+> trabalho de infra (backend, push, billing) + refinamento (shaders, voz,
+> memory graph).
+
 > 5 tickets multi-dia, prontos pra dev pegar e executar.
 > Cada spec é **self-contained**: contexto, entregáveis, design notes, testes obrigatórios, definição de pronto.
 > Ordem sugerida abaixo respeita dependências.
 
-**Sequência recomendada**: SPEC-1 → SPEC-3 → SPEC-5 → SPEC-2 → SPEC-4
-(Mutations + animation antes de Sims-like customize, porque a UI de customize depende de blend shapes em SPEC-3.)
+**Sequência executada**: SPEC-5 → SPEC-1 → SPEC-3 → SPEC-2 → SPEC-4
+
+| Spec | Status | Validação |
+|---|---|---|
+| **SPEC-1** Evolution screen procedural | ✅ Done | timeline + viewer genoma + próximo marco |
+| **SPEC-2** Customização Sims/Spore | ✅ Done | 6 sliders + postura + 3 toggles + reset |
+| **SPEC-3** Animations Mascot3D | ✅ Done | breath, blink, eye-track, posture, bounce, mouth, aura mood-reactive, sparkle burst, imperative actions |
+| **SPEC-4** Behavior Engine | ✅ Done | 6 behaviors (2 DNA-driven), engine selector, useBehaviorTick hook integrado |
+| **SPEC-5** Mutations integration | ✅ Done | 7 mutações persistentes, 4 raridades, integração check-in pipeline + UI catálogo |
 
 ---
 

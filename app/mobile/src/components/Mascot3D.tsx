@@ -58,6 +58,12 @@ interface Props {
    * sem mexer no DNA. 'triste' inclina pra frente, 'empolgado' faz bounce.
    */
   mood?: MascotMood;
+  /**
+   * Action externo disparado por Behavior Engine ou outro driver (toast,
+   * achievement). Ao mudar de valor, dispara a animação correspondente.
+   * Mudança no `key` é o trigger — `kind` define qual animação.
+   */
+  action?: { kind: 'bounce' | 'celebrate' | 'wander' | 'rest' | 'observe'; key: number };
 }
 
 /**
@@ -76,6 +82,7 @@ export function Mascot3D({
   customization = null,
   mutationIds = [],
   mood,
+  action,
 }: Props) {
   const [look, setLook] = useState({ x: 0, y: 0 });
   const [bouncePulse, setBouncePulse] = useState(0);
@@ -145,6 +152,7 @@ export function Mascot3D({
           mutationIds={mutationIds}
           mood={mood}
           bouncePulse={bouncePulse}
+          action={action}
         />
       </Canvas>
     </View>
@@ -178,6 +186,8 @@ interface CreatureProps {
   mood?: MascotMood;
   /** Contador que incrementa em tap — useFrame consome pra disparar bounce. */
   bouncePulse?: number;
+  /** Action externo (Behavior Engine). Key novo = trigger. */
+  action?: { kind: 'bounce' | 'celebrate' | 'wander' | 'rest' | 'observe'; key: number };
 }
 
 // Mapeia humor → modificadores de postura. Valores são lerp targets, não saltos.
@@ -206,9 +216,24 @@ function Creature({
   mutationIds = [],
   mood,
   bouncePulse = 0,
+  action,
 }: CreatureProps) {
   const groupRef = useRef<THREE.Group>(null);
-  // Composição da morphology final: base DNA → custom overrides → mutation impact
+  // ============================================================================
+  // Morphology pipeline — composta de:
+  //   1. base = morphologyFromGenome(dna)
+  //   2. + customization overrides (Sims-like)
+  //   3. + mutation visual impact (marcos biológicos persistentes)
+  //
+  // **Transição gradual**: drift de hábito muda cada gene em incrementos
+  // pequenos (~0.008-0.014 por checkin). Como morphology é função PURA
+  // de DNA + custom + mutations, mudanças no DNA propagam organicamente
+  // session-over-session — usuário vê o corpo evoluir aos poucos sem
+  // precisar de tween artificial entre frames. Mood transitions (postura,
+  // boca, olhos) sim usam lerp interno nos sub-componentes pra suavidade
+  // imediata. Customization sliders aplicam-se instantaneamente (intent
+  // direto do usuário; suavização atrapalha sensação de controle).
+  // ============================================================================
   const morph: Morphology = useMemo(() => {
     const base = morphologyFromGenome(dna as Genome);
     const withCustom = applyCustomization(base, customization ?? null);
@@ -223,6 +248,13 @@ function Creature({
   // Bounce-on-tap state — tracked via ref pra useFrame (sem re-render).
   const bouncePulseSeen = useRef(0);
   const bouncePhase = useRef<{ active: boolean; t0: number }>({ active: false, t0: 0 });
+  // Action externo (Behavior Engine) — detect key change e dispara fase.
+  // Cada kind tem duração + curva próprias.
+  const actionKeySeen = useRef<number | undefined>(undefined);
+  const actionPhase = useRef<{
+    kind: 'bounce' | 'celebrate' | 'wander' | 'rest' | 'observe' | null;
+    t0: number;
+  }>({ kind: null, t0: 0 });
 
   // Animação procedural — agora com:
   //  • idle figura-8 (já existente)
@@ -246,8 +278,10 @@ function Creature({
     // Rotation: sway adaptativo + look-tracking + mood tilt (lerp)
     const swayY = Math.sin(t * 0.3) * morph.swayAmplitude;
     g.rotation.y = swayY + look.x * 0.25;
-    // tilt X lerp: aproxima do target
-    g.rotation.x += (postureTarget.tiltX + look.y * 0.1 - g.rotation.x) * 0.05;
+    // tilt X lerp: target = mood posture + look.y + user-customized posture_lean.
+    // posture_lean é override do usuário em ±0.2 rad — soma no target final.
+    const userPosture = customization?.posture_lean ?? 0;
+    g.rotation.x += (postureTarget.tiltX + look.y * 0.1 + userPosture - g.rotation.x) * 0.05;
     g.rotation.z = Math.sin(t * 0.5) * 0.04;
 
     // Bounce-on-tap: detecta incremento e dispara fase de 350ms
@@ -266,18 +300,75 @@ function Creature({
         bouncePhase.current.active = false;
       }
     }
+
+    // Action externo (Behavior Engine) — detect key change
+    if (action && action.key !== actionKeySeen.current) {
+      actionKeySeen.current = action.key;
+      actionPhase.current = { kind: action.kind, t0: now };
+    }
+    // Aplicar action effects sobre o transform — composição com mood/bounce
+    let actionScaleBoost = 1;
+    let actionTiltZ = 0;
+    let actionWobbleBoost = 0;
+    if (actionPhase.current.kind) {
+      const elapsed = now - actionPhase.current.t0;
+      const ap = actionPhase.current;
+      switch (ap.kind) {
+        case 'bounce': {
+          const dur = 0.35;
+          if (elapsed < dur) {
+            actionScaleBoost = 1 + Math.sin((elapsed / dur) * Math.PI) * 0.08;
+          } else ap.kind = null;
+          break;
+        }
+        case 'celebrate': {
+          // 1.2s de bounce + leve giro
+          const dur = 1.2;
+          if (elapsed < dur) {
+            actionScaleBoost = 1 + Math.sin((elapsed / dur) * Math.PI * 3) * 0.06;
+            actionTiltZ = Math.sin((elapsed / dur) * Math.PI * 2) * 0.05;
+          } else ap.kind = null;
+          break;
+        }
+        case 'wander': {
+          // 2s de wobble amplificado
+          const dur = 2.0;
+          if (elapsed < dur) {
+            const fade = Math.sin((elapsed / dur) * Math.PI); // ease in/out
+            actionWobbleBoost = fade * 0.4;
+          } else ap.kind = null;
+          break;
+        }
+        case 'rest':
+        case 'observe': {
+          // Mantém posture quieta por 3s — sem efeito ativo, é mais "freeze"
+          const dur = 3.0;
+          if (elapsed >= dur) ap.kind = null;
+          break;
+        }
+      }
+    }
+
     // Mood bounce contínuo (subtle, sustained)
     const moodBounce = postureTarget.bounceAmp > 0
       ? Math.sin(t * 2.4) * postureTarget.bounceAmp
       : 0;
-    // Scale composto: bounce x mood scaleY x mood bounce
-    g.scale.set(bounceScale, postureTarget.scaleY * bounceScale + moodBounce, bounceScale);
+    // Re-aplica wobble boost (amplifica idle figura-8)
+    if (actionWobbleBoost > 0) {
+      g.position.x += Math.sin(t * 2) * actionWobbleBoost * 0.1;
+    }
+    // tilt Z do celebrate compõe com o sway
+    g.rotation.z += actionTiltZ;
+    // Scale composto: bounce x action x mood scaleY x mood bounce
+    const finalScale = bounceScale * actionScaleBoost;
+    g.scale.set(finalScale, postureTarget.scaleY * finalScale + moodBounce, finalScale);
   });
 
   return (
     <group ref={groupRef}>
       <Body dna={dna} morph={morph} palette={palette} mood={moodS} reduceMotion={reduceMotion} />
-      <Eyes morph={morph} palette={palette} look={look} reduceMotion={reduceMotion} />
+      <Eyes morph={morph} palette={palette} look={look} reduceMotion={reduceMotion} mood={mood} />
+      <Mouth morph={morph} palette={palette} mood={mood} reduceMotion={reduceMotion} />
       {morph.limbCount > 0 && (
         <Limbs seed={seed} morph={morph} palette={palette} reduceMotion={reduceMotion} />
       )}
@@ -288,8 +379,156 @@ function Creature({
       {morph.hasTail && (
         <Tail morph={morph} palette={palette} reduceMotion={reduceMotion} />
       )}
-      <Aura morph={morph} palette={palette} reduceMotion={reduceMotion} />
+      <Aura morph={morph} palette={palette} reduceMotion={reduceMotion} mood={mood} />
+      {/* Sparkle burst — overlay condicional disparado em mood='empolgado'.
+          Componente isolado pra não afetar Aura permanente. */}
+      {mood === 'empolgado' && !reduceMotion && (
+        <SparkleBurst palette={palette} />
+      )}
     </group>
+  );
+}
+
+// ============================================================================
+// Mouth — boca expressiva, mood-driven
+// ============================================================================
+// Strategy: TorusGeometry parcial (arc) rotacionado:
+//  - mood feliz/empolgado → arc voltado pra cima (sorriso); maior abertura
+//    quando empolgado
+//  - mood ok → arc quase imperceptível (linha sutil)
+//  - mood triste → arc voltado pra baixo (frown)
+//  - mood exausto → linha reta apertada com leve droop
+// Tudo via lerp suave nas transições — sem snap de estado.
+
+function moodMouthTarget(mood: MascotMood | undefined): {
+  /** Rotation Z em radianos: positivo = sorriso, negativo = frown */
+  arcSign: number;
+  /** Escala — tamanho da boca */
+  scale: number;
+  /** Espessura visual via thickness do torus */
+  thickness: number;
+} {
+  switch (mood) {
+    case 'empolgado': return { arcSign:  1.0, scale: 1.30, thickness: 0.022 };
+    case 'feliz':     return { arcSign:  0.7, scale: 1.10, thickness: 0.018 };
+    case 'ok':        return { arcSign:  0.1, scale: 0.85, thickness: 0.016 };
+    case 'triste':    return { arcSign: -0.6, scale: 0.90, thickness: 0.018 };
+    case 'exausto':   return { arcSign: -0.3, scale: 0.70, thickness: 0.014 };
+    default:          return { arcSign:  0.1, scale: 0.85, thickness: 0.016 };
+  }
+}
+
+function Mouth({
+  morph,
+  palette,
+  mood,
+  reduceMotion,
+}: {
+  morph: Morphology;
+  palette: ReturnType<typeof paletteFromGenome>;
+  mood: MascotMood | undefined;
+  reduceMotion: boolean;
+}) {
+  const groupRef = useRef<THREE.Group>(null);
+  // Lerped state pra transição entre moods (não snap)
+  const stateRef = useRef({ arcSign: 0.1, scale: 0.85, thickness: 0.016 });
+  const target = useMemo(() => moodMouthTarget(mood), [mood]);
+
+  useFrame(() => {
+    const g = groupRef.current;
+    if (!g) return;
+    if (reduceMotion) {
+      // Snap direto sem lerp
+      g.rotation.z = target.arcSign * 0.35;
+      g.scale.set(target.scale, target.scale, target.scale);
+      return;
+    }
+    // Lerp factor 0.06 — suave (~16 frames pra chegar a 95% do target)
+    const s = stateRef.current;
+    s.arcSign += (target.arcSign - s.arcSign) * 0.06;
+    s.scale += (target.scale - s.scale) * 0.06;
+    s.thickness += (target.thickness - s.thickness) * 0.06;
+    g.rotation.z = s.arcSign * 0.35;
+    g.scale.set(s.scale, s.scale, s.scale);
+  });
+
+  // Cor da boca: derivada da paleta accent — combina com o corpo
+  const mouthColor = accentHex(palette);
+  // Posição: abaixo dos olhos, levemente à frente (z = eyeZ - 0.05)
+  const y = morph.eyeY - morph.eyeSize * 1.5;
+  const z = morph.eyeZ - 0.05;
+  // Arc do torus: 60% do círculo (Math.PI * 1.2)
+  return (
+    <group ref={groupRef} position={[0, y, z]}>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.09, 0.016, 6, 18, Math.PI * 1.2]} />
+        <meshStandardMaterial
+          color={mouthColor}
+          roughness={0.5}
+          emissive={mouthColor}
+          emissiveIntensity={0.25}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+// ============================================================================
+// SparkleBurst — partículas condicionais (mood='empolgado')
+// ============================================================================
+// 8 sparkles orbitando rapidamente em raio menor que a aura. Aparecem só
+// quando criatura está em mood empolgado; somem suavemente quando mood muda.
+
+function SparkleBurst({ palette }: { palette: ReturnType<typeof paletteFromGenome> }) {
+  const pointsRef = useRef<THREE.Points>(null);
+  const tStart = useRef(performance.now() / 1000);
+  const count = 8;
+  const orbits = useMemo(() => {
+    const arr = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      arr[i * 3] = 0.85 + Math.random() * 0.3;       // radius
+      arr[i * 3 + 1] = 0.5 + Math.random() * 1.4;     // speed
+      arr[i * 3 + 2] = (i / count) * Math.PI * 2;     // phase
+    }
+    return arr;
+  }, [count]);
+
+  const geometry = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    return g;
+  }, [count]);
+
+  useFrame(() => {
+    if (!pointsRef.current) return;
+    const t = performance.now() / 1000 - tStart.current;
+    const attr = pointsRef.current.geometry.attributes.position;
+    const pos = attr.array as Float32Array;
+    for (let i = 0; i < count; i++) {
+      const r = orbits[i * 3];
+      const speed = orbits[i * 3 + 1];
+      const phase = orbits[i * 3 + 2] + t * speed;
+      pos[i * 3] = Math.cos(phase) * r;
+      pos[i * 3 + 1] = Math.sin(t * 1.8 + i) * 0.4 + 0.3;
+      pos[i * 3 + 2] = Math.sin(phase) * r;
+    }
+    attr.needsUpdate = true;
+  });
+
+  const color = glowHex(palette);
+  return (
+    <points ref={pointsRef} geometry={geometry}>
+      <pointsMaterial
+        color={color}
+        size={0.08}
+        sizeAttenuation
+        transparent
+        opacity={0.9}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+      />
+    </points>
   );
 }
 
@@ -379,25 +618,40 @@ function Body({ dna, morph, palette, mood, reduceMotion }: BodyProps) {
 }
 
 // ============================================================================
-// Eyes
+// Eyes — agora também leva mood pra modular squint (olhos meio-fechados em
+// 'triste'/'exausto'; arregalados em 'empolgado'). Lerp suave entre estados.
 // ============================================================================
 function Eyes({
   morph,
   palette,
   look,
   reduceMotion,
+  mood,
 }: {
   morph: ReturnType<typeof morphologyFromGenome>;
   palette: ReturnType<typeof paletteFromGenome>;
   look: { x: number; y: number };
   reduceMotion: boolean;
+  mood: MascotMood | undefined;
 }) {
   return (
     <group>
-      <Eye side={-1} morph={morph} palette={palette} look={look} reduceMotion={reduceMotion} />
-      <Eye side={1} morph={morph} palette={palette} look={look} reduceMotion={reduceMotion} />
+      <Eye side={-1} morph={morph} palette={palette} look={look} reduceMotion={reduceMotion} mood={mood} />
+      <Eye side={1} morph={morph} palette={palette} look={look} reduceMotion={reduceMotion} mood={mood} />
     </group>
   );
+}
+
+/** Modulador de scale Y dos olhos baseado em mood — produz squint/wide. */
+function moodEyeScaleY(mood: MascotMood | undefined): number {
+  switch (mood) {
+    case 'empolgado': return 1.10; // arregalados, alertas
+    case 'feliz':     return 1.00;
+    case 'ok':        return 1.00;
+    case 'triste':    return 0.78; // levemente caídos
+    case 'exausto':   return 0.55; // semicerrados
+    default:          return 1.00;
+  }
 }
 
 function Eye({
@@ -406,12 +660,14 @@ function Eye({
   palette,
   look,
   reduceMotion,
+  mood,
 }: {
   side: -1 | 1;
   morph: ReturnType<typeof morphologyFromGenome>;
   palette: ReturnType<typeof paletteFromGenome>;
   look: { x: number; y: number };
   reduceMotion: boolean;
+  mood: MascotMood | undefined;
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const pupilRef = useRef<THREE.Mesh>(null);
@@ -420,6 +676,8 @@ function Eye({
     next: 2 + Math.random() * 4,
     remaining: 0,
   });
+  // Lerped scale Y baseado em mood — squint/wide com transição suave
+  const scaleYRef = useRef(1);
 
   useFrame(() => {
     const g = groupRef.current;
@@ -435,24 +693,29 @@ function Eye({
     } else {
       p.position.set(0, 0, morph.eyeSize * 0.6);
     }
+    // Mood-driven scale Y target (squint/wide) — lerp em direção
+    const moodTarget = moodEyeScaleY(mood);
+    scaleYRef.current += (moodTarget - scaleYRef.current) * 0.05;
     // blink
     if (reduceMotion) {
-      g.scale.y = 1;
+      g.scale.y = moodTarget;
       return;
     }
     const st = blinkStateRef.current;
+    let blinkFactor = 1;
     if (st.remaining > 0) {
       st.remaining = Math.max(0, st.remaining - 0.016);
       const k = Math.sin((1 - st.remaining / 0.18) * Math.PI);
-      g.scale.y = 1 - k * 0.9;
+      blinkFactor = 1 - k * 0.9;
     } else {
-      g.scale.y = 1;
       st.next -= 0.016;
       if (st.next <= 0) {
         st.remaining = 0.18;
         st.next = 2 + Math.random() * 4;
       }
     }
+    // Composto: blink × mood (multiplicativo — blink supera mood quando ativo)
+    g.scale.y = scaleYRef.current * blinkFactor;
   });
 
   const sclera = 0xffffff;
@@ -707,19 +970,43 @@ function Tail({
 }
 
 // ============================================================================
-// Aura — partículas orbitando
+// Aura — partículas orbitando, agora MOOD-REACTIVE
 // ============================================================================
+// Em 'empolgado'/'feliz': aura mais ampla, velocidade maior, opacity boost.
+// Em 'exausto'/'triste': aura contraída, mais lenta, opacity reduzida.
+// Lerp suave nas transições (fator 0.04).
+
+function moodAuraModifiers(mood: MascotMood | undefined): {
+  radiusMult: number;
+  speedMult: number;
+  opacityMult: number;
+} {
+  switch (mood) {
+    case 'empolgado': return { radiusMult: 1.15, speedMult: 1.6, opacityMult: 1.3 };
+    case 'feliz':     return { radiusMult: 1.05, speedMult: 1.2, opacityMult: 1.1 };
+    case 'ok':        return { radiusMult: 1.00, speedMult: 1.0, opacityMult: 1.0 };
+    case 'triste':    return { radiusMult: 0.85, speedMult: 0.7, opacityMult: 0.75 };
+    case 'exausto':   return { radiusMult: 0.75, speedMult: 0.5, opacityMult: 0.55 };
+    default:          return { radiusMult: 1.00, speedMult: 1.0, opacityMult: 1.0 };
+  }
+}
+
 function Aura({
   morph,
   palette,
   reduceMotion,
+  mood,
 }: {
   morph: ReturnType<typeof morphologyFromGenome>;
   palette: ReturnType<typeof paletteFromGenome>;
   reduceMotion: boolean;
+  mood: MascotMood | undefined;
 }) {
   const pointsRef = useRef<THREE.Points>(null);
+  const materialRef = useRef<THREE.PointsMaterial>(null);
   const tStart = useRef(performance.now() / 1000);
+  // Lerped modifiers — transição suave entre moods
+  const modRef = useRef({ radiusMult: 1.0, speedMult: 1.0, opacityMult: 1.0 });
 
   const { geometry, orbits } = useMemo(() => {
     const count = morph.auraParticleCount;
@@ -742,16 +1029,26 @@ function Aura({
 
   useFrame(() => {
     if (reduceMotion || !pointsRef.current) return;
+    // Lerp dos modifiers em direção ao target do mood (transição visível mas natural)
+    const target = moodAuraModifiers(mood);
+    const m = modRef.current;
+    m.radiusMult += (target.radiusMult - m.radiusMult) * 0.04;
+    m.speedMult += (target.speedMult - m.speedMult) * 0.04;
+    m.opacityMult += (target.opacityMult - m.opacityMult) * 0.04;
+    // Aplica opacity no material (clamp em [0, 1])
+    if (materialRef.current) {
+      materialRef.current.opacity = Math.max(0, Math.min(1, morph.auraOpacity * m.opacityMult));
+    }
     const t = performance.now() / 1000 - tStart.current;
     const attr = pointsRef.current.geometry.attributes.position;
     const pos = attr.array as Float32Array;
     for (let i = 0; i < pos.length / 3; i++) {
-      const r = orbits[i * 3];
-      const speed = orbits[i * 3 + 1];
+      const r = orbits[i * 3] * m.radiusMult;
+      const speed = orbits[i * 3 + 1] * m.speedMult;
       const phase = orbits[i * 3 + 2] + t * speed;
       pos[i * 3] = Math.cos(phase) * r;
       pos[i * 3 + 2] = Math.sin(phase) * r;
-      pos[i * 3 + 1] += Math.sin(t * 2 + i) * 0.001;
+      pos[i * 3 + 1] += Math.sin(t * 2 + i) * 0.001 * m.speedMult;
       if (pos[i * 3 + 1] > 1.2) pos[i * 3 + 1] = -1.2;
     }
     attr.needsUpdate = true;
@@ -761,6 +1058,7 @@ function Aura({
   return (
     <points ref={pointsRef} geometry={geometry}>
       <pointsMaterial
+        ref={materialRef}
         color={color}
         size={morph.auraSize}
         transparent

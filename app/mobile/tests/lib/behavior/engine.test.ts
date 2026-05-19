@@ -241,7 +241,9 @@ describe('Behaviors — princípios invioláveis', () => {
 
   it('IDs estáveis com prefixo namespaced', () => {
     for (const b of DEFAULT_BEHAVIORS) {
-      expect(b.id).toMatch(/^(idle|reactive|milestone|temporal)\./);
+      // Prefixes válidos: kind (idle/reactive/milestone/temporal) ou
+      // 'dna' (behaviors DNA-driven que escalam score com genoma)
+      expect(b.id).toMatch(/^(idle|reactive|milestone|temporal|dna)\./);
     }
   });
 });

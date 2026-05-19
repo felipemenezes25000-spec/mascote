@@ -9,6 +9,39 @@
 > **Honestidade brutal antes de qualquer coisa**: este documento separa o que **está
 > construído**, o que **está pela metade**, o que **não existe**, e o que **é só visão**.
 > Não confunda ambição com entrega.
+
+---
+
+## 🔄 Atualização DLI-v3 (2026-05-19 fim do dia)
+
+Após a auditoria inicial, **5 SPECs foram executadas** com qualidade. O score
+"World's most advanced mascot" subiu de **~25/100** (auditoria inicial) para
+**~58/100** (após DLI-v3). Detalhes:
+
+| Categoria | Score antes | Score depois | Mudança |
+|---|---|---|---|
+| Variabilidade visual | 7/10 | 8/10 | + boca/aura mood-reactive/sparkle burst |
+| Expressividade animation | 3/10 | 7/10 | + mouth, eyes squint, mood posture, bounce-on-tap |
+| Conversational depth | 5/10 | 6/10 | + descritores DNA, system prompt enriquecido |
+| Vínculo emocional | 4/10 | 6/10 | + behavior engine + 2 DNA-driven behaviors |
+| Categoria share-of-voice | 0/10 | 1/10 | + README "fodástico" + audit pública |
+
+**Tests**: 1.566 → **1.653** (+87 novos, principalmente nos 5 invariantes DLI).
+**Specs entregues**: 0/5 → **5/5** completas. Detalhes em
+[BACKLOG_DLI_V2.md](specs/BACKLOG_DLI_V2.md).
+
+**Bloqueadores resolvidos**:
+- ✅ Evolution screen procedural (não mais ovo/bebê/criança como paradigma)
+- ✅ Sistema de mutações persistentes (migration v3, 7 mutações catalogadas)
+- ✅ Mascot3D com boca, blink, breath, eye-track, mood posture, bounce, aura mood-reactive, sparkles condicionais
+- ✅ Behavior Engine com 6 behaviors + utility AI + integração loop real
+- ✅ Customização Sims/Spore com 6 morph sliders + postura + toggles
+- ✅ IA contextualizada por DNA (descritores semânticos seguros)
+
+**Próximas fases (não-bloqueadoras)**: push notifications, Supabase sync,
+RevenueCat billing, shader patterns reais, voz procedural, memory graph.
+
+---
 >
 > **Companion docs**:
 > - [docs/ROADMAP_DIGITAL_LIVING_IDENTITY.md](ROADMAP_DIGITAL_LIVING_IDENTITY.md) — roadmap 6 meses

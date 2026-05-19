@@ -62,6 +62,8 @@ import { deriveReflectiveMood } from '@/lib/mood';
 import { buildProactiveContext, runProactiveScan } from '@/lib/proactive';
 import { getEvolutionStory, type EvolutionStory } from '@/lib/evolution-stories';
 import { useStore } from '@/store';
+import { useBehaviorTick, type BehaviorContext } from '@/lib/behavior';
+import { sanitizeGenome } from '@/lib/dna';
 import type { AccessoryId } from '@/components/Mascot';
 import type { Checkin, HabitKind, Mascot as MascotType, MascotMood, MascotPhase, Message, Mission } from '@/types';
 
@@ -127,6 +129,61 @@ export default function Home() {
 
   const today = todayLocal();
   const seasonalEvent = useMemo(() => activeSeasonalEvent(), []);
+
+  // ============================================================================
+  // Behavior Engine — tick a cada 30s na Home. Despacha effects via toast queue
+  // (message) ou notification (notify). NÃO muta state do mascote — só sinaliza.
+  //
+  // Pausado se mascot não carregou ainda (ctxBuilder retorna null) ou se
+  // estamos no welcome flow (tour ativo). Cooldown impede repetição.
+  // ============================================================================
+  useBehaviorTick({
+    intervalMs: 30_000,
+    paused: showTour || !mascot || !profile,
+    ctxBuilder: (): BehaviorContext | null => {
+      if (!mascot || !profile) return null;
+      // Sanitize DNA (defensive — pré-migration v2 cai aqui)
+      const genome = mascot.dna ? sanitizeGenome(mascot.dna) : null;
+      if (!genome) return null;
+      // hoursSinceLastInteraction baseado em last_seen_at
+      const lastSeen = new Date(mascot.last_seen_at).getTime();
+      const hoursSince = (Date.now() - lastSeen) / (1000 * 60 * 60);
+      return {
+        mascot,
+        genome,
+        mood: mascot.mood,
+        hoursSinceLastInteraction: Math.max(0, hoursSince),
+        streakCurrent: streak?.current_streak ?? 0,
+        hour: new Date().getHours(),
+        cooldownActive: new Set(), // engine preenche
+        lastRanAt: new Map(),       // engine preenche
+      };
+    },
+    onEffect: (effect, _behavior) => {
+      // Effects relevantes pra Home:
+      //  • message → toast info
+      //  • animation → action prop pro Mascot 3D (já fluindo via state)
+      if (effect.message) {
+        enqueueToast({
+          kind: 'info',
+          emoji: '✨',
+          title: effect.message,
+          subtitle: mascot?.name,
+        });
+      }
+      if (effect.animation && effect.animation !== 'breath_deep') {
+        // 'breath_deep' é idle baseline — já é a anim padrão do Mascot3D,
+        // não precisa de trigger. Outros despacham um pulse incremental
+        // que Mascot3D consome via key change.
+        setBehaviorAction({ kind: effect.animation as 'bounce' | 'celebrate' | 'wander' | 'rest' | 'observe', key: Date.now() });
+      }
+    },
+  });
+  // State pro action do Behavior Engine — só usado se mascot.dna existe
+  const [behaviorAction, setBehaviorAction] = useState<
+    | { kind: 'bounce' | 'celebrate' | 'wander' | 'rest' | 'observe'; key: number }
+    | undefined
+  >(undefined);
 
   // Refs para timers efêmeros de UI (flash text e confetti). Centralizar aqui:
   // (a) cancela o anterior antes de criar novo — evita flicker em ações rápidas;
@@ -604,6 +661,7 @@ export default function Home() {
                   reactTrigger={reactBeat}
                   accessory={equippedAccId}
                   reduceMotion={settings?.reduce_motion}
+                  action={behaviorAction}
                 />
               </MascotAmbient>
             </Pressable>

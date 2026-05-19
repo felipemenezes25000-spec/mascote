@@ -3,8 +3,10 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
+import { Icon } from '@/components/Icon';
 import { Mascot } from '@/components/Mascot';
 import { MorphSlider } from '@/components/MorphSlider';
+import { PressableScale } from '@/components/PressableScale';
 import { SceneBackground } from '@/components/SceneBackground';
 import {
   accessoryCatalog,
@@ -261,6 +263,111 @@ export default function Customize() {
               value={customState.pattern_density}
               onChange={v => patchCustomization({ pattern_density: v })}
             />
+
+            {/* POSTURA — slider próprio com range em radianos [-0.2, 0.2].
+                Negativo = inclinada pra frente (pensativa); positivo = pra
+                trás (orgulhosa/empolgada). Não usa MorphSlider porque o
+                range é diferente; UI simplificada com 3 botões discretos. */}
+            <View style={{ paddingVertical: theme.spacing.sm }}>
+              <Text style={{ ...theme.text.bodyBold, color: theme.colors.text, fontFamily: 'InstrumentSerif_400Regular', fontSize: 17, letterSpacing: -0.2 }}>
+                Postura
+              </Text>
+              <Text style={{ ...theme.text.xs, color: theme.colors.textSecondary, marginTop: 2, marginBottom: 8 }}>
+                como ela se posiciona
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {([
+                  { value: -0.15, label: 'pra frente', icon: 'arrow-left' as const },
+                  { value: 0,     label: 'neutra',    icon: 'minus' as const },
+                  { value: 0.15,  label: 'pra trás',  icon: 'arrow-right' as const },
+                ] as const).map(opt => {
+                  const isActive = Math.abs(customState.posture_lean - opt.value) < 0.05;
+                  return (
+                    <PressableScale
+                      key={opt.label}
+                      onPress={() => patchCustomization({ posture_lean: opt.value })}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Postura ${opt.label}`}
+                      style={{
+                        flex: 1,
+                        paddingVertical: theme.spacing.sm,
+                        borderRadius: theme.radius.md,
+                        backgroundColor: isActive ? theme.colors.primaryTint : theme.colors.surface,
+                        borderWidth: isActive ? 2 : 1,
+                        borderColor: isActive ? theme.colors.primary : theme.colors.border,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text style={{ ...theme.text.xs, color: isActive ? theme.colors.primary : theme.colors.textSecondary, fontWeight: '700', fontFamily: 'JetBrainsMono_500Medium' }}>
+                        {opt.label}
+                      </Text>
+                    </PressableScale>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* PARTES DO CORPO — toggles pra esconder parts que DNA habilita.
+                Não permite MOSTRAR parts que DNA desabilita (preserva
+                identidade genética). */}
+            <View style={{ paddingVertical: theme.spacing.sm }}>
+              <Text style={{ ...theme.text.bodyBold, color: theme.colors.text, fontFamily: 'InstrumentSerif_400Regular', fontSize: 17, letterSpacing: -0.2 }}>
+                Partes do corpo
+              </Text>
+              <Text style={{ ...theme.text.xs, color: theme.colors.textSecondary, marginTop: 2, marginBottom: 8 }}>
+                esconder partes que o DNA dela habilita
+              </Text>
+              {([
+                { key: 'force_hide_tail' as const,     label: 'esconder cauda' },
+                { key: 'force_hide_antennae' as const, label: 'esconder antenas' },
+                { key: 'force_hide_spikes' as const,   label: 'esconder espinhos' },
+              ]).map(({ key, label }) => {
+                const isHidden = customState[key];
+                return (
+                  <PressableScale
+                    key={key}
+                    onPress={() => patchCustomization({ [key]: !isHidden } as Partial<MascotCustomization>)}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: isHidden }}
+                    accessibilityLabel={label}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      paddingVertical: theme.spacing.sm,
+                      paddingHorizontal: theme.spacing.md,
+                      borderRadius: theme.radius.md,
+                      backgroundColor: theme.colors.surface,
+                      borderWidth: 1,
+                      borderColor: theme.colors.border,
+                      marginBottom: 6,
+                    }}
+                  >
+                    <Text style={{ color: theme.colors.text, fontSize: 14 }}>{label}</Text>
+                    <View
+                      style={{
+                        width: 36,
+                        height: 22,
+                        borderRadius: 11,
+                        backgroundColor: isHidden ? theme.colors.primary : theme.colors.border,
+                        padding: 2,
+                        alignItems: isHidden ? 'flex-end' : 'flex-start',
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: 9,
+                          backgroundColor: '#fff',
+                        }}
+                      />
+                    </View>
+                  </PressableScale>
+                );
+              })}
+            </View>
+
             <View style={{ marginTop: theme.spacing.md, alignItems: 'flex-end' }}>
               <Pressable
                 onPress={resetCustomization}
