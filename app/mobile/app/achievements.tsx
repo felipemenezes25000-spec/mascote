@@ -25,7 +25,7 @@ export default function AchievementsScreen() {
   useEffect(() => {
     if (!profile || !mascot) return;
     void load();
-  }, [profile?.id]);
+  }, [profile?.id, mascot?.id]);
 
   async function load() {
     if (!profile || !mascot) return;

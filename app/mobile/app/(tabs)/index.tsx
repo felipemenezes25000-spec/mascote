@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams, Redirect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -72,6 +72,7 @@ import { createAnimationAction } from '@/lib/animation-triggers';
 import { buildMascotContextLine, hoursAway, returnLoopKind } from '@/lib/mascot-context-line';
 import { FIRST_MISSION } from '@/lib/onboarding-evolution';
 import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
+import { entitlementService } from '@/services/subscription/EntitlementService';
 import type { AccessoryId } from '@/components/Mascot';
 import type { Checkin, HabitKind, MascotCustomization, Mascot as MascotType, MascotMood, MascotPhase, Message, Mission } from '@/types';
 
@@ -134,7 +135,7 @@ export default function Home() {
   const [reflectiveMood, setReflectiveMood] = useState<MascotMood | null>(null);
   const [evolutionStory, setEvolutionStory] = useState<EvolutionStory | null>(null);
   const { visuals: evolutionVisuals, refresh: refreshEvolution } = useEvolutionState();
-  const { isPremium } = useSubscriptionTier();
+  const { isPremium, tier } = useSubscriptionTier();
   const apiKey = useStore(s => s.openAiKey);
   const [mascotLine, setMascotLine] = useState<string | null>(null);
   const [firstMissionPending, setFirstMissionPending] = useState(false);
@@ -350,7 +351,7 @@ export default function Home() {
     setActiveSceneId(await userScenes.getActive(profile.id));
     // Lista de scenes que o user já desbloqueou — pro swipe ciclar entre elas
     const scenes = await userScenes.listUnlocked(profile.id);
-    const ids = scenes.map(s => s.scene_id);
+    const ids = scenes.map(s => s.scene_id).filter(id => entitlementService.canAccessScene(tier, id));
     setUnlockedSceneIds(ids.length > 0 ? ids : ['room']);
   }
 
@@ -359,6 +360,10 @@ export default function Home() {
     const currentIdx = unlockedSceneIds.indexOf(activeSceneId);
     const nextIdx = (currentIdx + direction + unlockedSceneIds.length) % unlockedSceneIds.length;
     const nextId = unlockedSceneIds[nextIdx];
+    if (!entitlementService.canAccessScene(tier, nextId)) {
+      router.push({ pathname: '/paywall', params: { trigger: 'premium_feature' } });
+      return;
+    }
     setActiveSceneId(nextId);
     haptic('light');
     await userScenes.setActive(profile.id, nextId);
@@ -659,7 +664,7 @@ export default function Home() {
     [mascot]
   );
 
-  if (!profile || !mascot) return null;
+  if (!profile || !mascot) return <Redirect href="/splash" />;
   const scene = getScene(activeSceneId);
   const greet = greetingFor(new Date().getHours());
 

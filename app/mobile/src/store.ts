@@ -33,6 +33,8 @@ interface AppState {
   driftDnaFromHabit: (habit: HabitKind, intensity?: number) => Promise<void>;
   /** Sobrescreve DNA arbitrariamente (debug/preset). Sanitiza na borda. */
   setDna: (dna: MascotDNA) => Promise<void>;
+  /** Limpa estado em memória após reset/exclusão de conta. */
+  reset: () => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -185,5 +187,19 @@ export const useStore = create<AppState>((set, get) => ({
     const safe = sanitizeGenome(dna);
     const persisted = await mascots.updateDna(m.user_id, safe);
     if (persisted) set({ mascot: persisted });
+  },
+
+  reset() {
+    set({
+      hydrated: false,
+      profile: null,
+      mascot: null,
+      streak: null,
+      settings: null,
+      wallet: null,
+      openAiKey: null,
+      toastQueue: [],
+      currentToast: null,
+    });
   },
 }));

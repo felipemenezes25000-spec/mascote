@@ -92,7 +92,7 @@ export default function Quiz() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.container}>
           <View style={styles.mascotWrap}>
-            <Mascot personality={winner} phase="bebe" mood="feliz" size={180} />
+            <Mascot personality={winner} phase="ovo" mood="feliz" size={180} />
           </View>
           <View>
             <Text style={styles.kicker}>Combinou contigo</Text>

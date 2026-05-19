@@ -1,8 +1,9 @@
 import { router, Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
+import { EmptyState } from '@/components/EmptyState';
 import { habitMeta } from '@/content/missions';
 import { missions as missionsDb, todayLocal } from '@/lib/db';
 import { useTheme } from '@/lib/useTheme';
@@ -15,6 +16,7 @@ export default function MissionDetail() {
   const styles = makeStyles(theme);
   const profile = useStore(s => s.profile);
   const [mission, setMission] = useState<Mission | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (!profile) return;
@@ -25,9 +27,37 @@ export default function MissionDetail() {
     if (!profile) return;
     const list = await missionsDb.forDate(profile.id, todayLocal());
     setMission(list[0] ?? null);
+    setLoaded(true);
   }
 
-  if (!profile || !mission) return <Redirect href="/splash" />;
+  if (!profile) return <Redirect href="/splash" />;
+
+  if (!loaded) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!mission) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <EmptyState
+            emoji="🎯"
+            title="Sem missão hoje"
+            body="Faça um check-in na Home ou volte amanhã — uma nova missão aparece todo dia."
+            ctaLabel="Ir pra Home"
+            onCta={() => router.replace('/(tabs)')}
+          />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   const meta = habitMeta[mission.habit_kind];
 
   return (

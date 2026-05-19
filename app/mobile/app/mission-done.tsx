@@ -34,6 +34,7 @@ export default function MissionDone() {
 
   const [confetti, setConfetti] = useState(true);
   const [reward, setReward] = useState<Reward | null>(null);
+  const [resultMascot, setResultMascot] = useState(mascot);
   const [mascotLine, setMascotLine] = useState<string | null>(null);
   const apiKey = useStore(s => s.openAiKey);
   // Guard re-entrância: StrictMode dispara useEffect 2× em dev, o que
@@ -57,6 +58,7 @@ export default function MissionDone() {
       const out = await applyMissionCompletion({ profile, mascot, mission });
       await refreshMascot();
       await refreshWallet();
+      setResultMascot(out.mascot);
       setReward({
         xp: out.xpGained,
         coins: out.coinsGained,
@@ -91,6 +93,8 @@ export default function MissionDone() {
 
   if (!mascot) return <Redirect href='/splash' />;
 
+  const displayMascot = resultMascot ?? mascot;
+
   const xpText = reward
     ? reward.xp > 0
       ? `+${reward.xp} XP · +${reward.coins} 🪙`
@@ -98,16 +102,16 @@ export default function MissionDone() {
     : 'Salvando...';
 
   const titleText = reward?.phaseChanged
-    ? `${mascot.name} entrou em ${emergentPhaseLabels[mascot.phase]}`
+    ? `${displayMascot.name} entrou em ${emergentPhaseLabels[displayMascot.phase]}`
     : reward?.leveledUp
-      ? `${mascot.name} subiu pro nv ${mascot.level}!`
-      : `${mascot.name} tá orgulhoso.`;
+      ? `${displayMascot.name} subiu pro nv ${displayMascot.level}!`
+      : `${displayMascot.name} tá orgulhoso.`;
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <View style={{ alignItems: 'center', gap: theme.spacing.md }}>
-          <Mascot personality={mascot.personality} phase={mascot.phase} mood="empolgado" size={180} />
+          <Mascot personality={displayMascot.personality} phase={displayMascot.phase} mood="empolgado" size={180} />
           <Text style={styles.kicker}>MISSÃO CONCLUÍDA</Text>
           <Text style={styles.title}>{titleText}</Text>
           <Text style={styles.subtitle}>{xpText}</Text>

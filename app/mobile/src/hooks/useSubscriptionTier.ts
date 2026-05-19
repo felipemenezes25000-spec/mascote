@@ -18,6 +18,8 @@ export function useSubscriptionTier() {
     setLoading(true);
     try {
       setTier(await subscriptionService.getCurrentTier(profile.id));
+    } catch {
+      setTier('free');
     } finally {
       setLoading(false);
     }

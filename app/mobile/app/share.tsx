@@ -1,3 +1,4 @@
+import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -85,7 +86,7 @@ export default function ShareScreen() {
     }
   }
 
-  if (!profile || !mascot) return null;
+  if (!profile || !mascot) return <Redirect href="/splash" />;
   const meta = getPersonality(mascot.personality);
 
   return (

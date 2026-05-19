@@ -32,6 +32,8 @@ export function PremiumFeatureGuard({ tier, feature, sceneId, mutationRarity, ch
     allowed = entitlementService.canAccessPremiumMutation(tier, mutationRarity);
   } else if (feature === 'legendary') {
     allowed = entitlementService.canAccessLegendaryForm(tier);
+  } else if (feature === 'chat') {
+    allowed = entitlementService.dailyChatLimit(tier) === null;
   }
 
   if (allowed) return <>{children}</>;

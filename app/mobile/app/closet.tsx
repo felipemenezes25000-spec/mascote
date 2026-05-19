@@ -13,6 +13,8 @@ import { accessoryCatalog, checkUnlock as checkAccUnlock, getAccessory } from '@
 import { checkSceneUnlock, scenesCatalog } from '@/content/scenes';
 import { Alert } from 'react-native';
 import { inventory, userScenes, wallet as walletDb } from '@/lib/db';
+import { entitlementService } from '@/services/subscription/EntitlementService';
+import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -54,6 +56,7 @@ export default function Closet() {
   const streak = useStore(s => s.streak);
   const wallet = useStore(s => s.wallet);
   const refreshWallet = useStore(s => s.refreshWallet);
+  const { tier } = useSubscriptionTier();
   const [ownedAccIds, setOwnedAccIds] = useState<Set<string>>(new Set());
   const [equippedId, setEquippedId] = useState<string | null>(null);
   const [ownedSceneIds, setOwnedSceneIds] = useState<Set<string>>(new Set());
@@ -125,6 +128,10 @@ export default function Closet() {
 
   async function buyScene(id: string, price: number) {
     if (!profile) return;
+    if (!entitlementService.canAccessScene(tier, id)) {
+      router.push({ pathname: '/paywall', params: { trigger: 'premium_feature' } });
+      return;
+    }
     const scene = scenesCatalog.find(s => s.id === id);
     if (!scene) return;
     const canUnlock = checkSceneUnlock(scene, {
@@ -153,6 +160,10 @@ export default function Closet() {
 
   async function activateScene(id: string) {
     if (!profile) return;
+    if (!entitlementService.canAccessScene(tier, id)) {
+      router.push({ pathname: '/paywall', params: { trigger: 'premium_feature' } });
+      return;
+    }
     await userScenes.setActive(profile.id, id);
     setActiveSceneId(id);
   }

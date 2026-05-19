@@ -21,8 +21,9 @@ import {
 import { applyCheckinToStreak } from '@/lib/streak';
 import { processUnlocks } from '@/lib/unlock';
 import { logger } from '@/lib/logger';
-import { XP_PER_CHECKIN, applyXp, levelFromXp, phaseFromXp } from '@/lib/xp';
+import { XP_PER_CHECKIN, applyXp, clampMascotPhaseForTier, levelFromXp, phaseFromXp, phaseRank } from '@/lib/xp';
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
+import { subscriptionService } from '@/services/subscription';
 import {
   applyHabitDrift,
   findNewlyUnlockedMutations,
@@ -118,6 +119,9 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
   const baseXp = baseXpInput + (wasFirstToday ? 5 : 0);
   const xpToGive = Math.round(baseXp * (1 + bonusPct / 100));
   const result = applyXp(mascot, xpToGive, dailyXpSoFar);
+  const tier = await subscriptionService.getCurrentTier(profile.id);
+  const tierCapped = clampMascotPhaseForTier(result.mascot, tier);
+  const tierPhaseChanged = phaseRank(tierCapped.phase) > phaseRank(result.prevPhase);
 
   const persistedCheckin = await checkinsDb.add({
     user_id: profile.id,
@@ -140,9 +144,9 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
   }
   await walletDb.add(profile.id, coinsInput, 0);
 
-  let finalMascot = result.mascot;
+  let finalMascot = tierCapped;
   let finalLeveled = result.leveledUp;
-  let finalPhaseChanged = result.phaseChanged;
+  let finalPhaseChanged = tierPhaseChanged;
   let totalXpGained = result.delta; // inclui o XP do checkin + bônus de streak
   let gems = 0;
 
@@ -150,7 +154,7 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
     streakResult.streak.current_streak > 0 && streakResult.streak.current_streak % 7 === 0;
 
   if (streakMilestone) {
-    const bonus = applyXp(result.mascot, 50, dailyXpSoFar + result.delta);
+    const bonus = applyXp(tierCapped, 50, dailyXpSoFar + result.delta);
     /* v8 ignore next — bonus.delta=0 só ocorre se streakMilestone disparou
        num dia onde já bateu cap (raro: precisa ser streak%7=0 + 150 XP gasto). */
     if (bonus.delta > 0) {
@@ -161,9 +165,9 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
         reference: { streak: streakResult.streak.current_streak },
       });
     }
-    finalMascot = bonus.mascot;
+    finalMascot = clampMascotPhaseForTier(bonus.mascot, tier);
     finalLeveled = finalLeveled || bonus.leveledUp;
-    finalPhaseChanged = finalPhaseChanged || bonus.phaseChanged;
+    finalPhaseChanged = finalPhaseChanged || phaseRank(finalMascot.phase) > phaseRank(result.prevPhase);
     totalXpGained += bonus.delta;
     await walletDb.add(profile.id, 0, 1);
     gems = 1;
@@ -354,6 +358,9 @@ async function applyMissionCompletionCore(input: {
   const today = todayLocal();
   const dailyXpSoFar = await checkinsDb.xpSumToday(profile.id, today);
   const result = applyXp(mascot, mission.xp_reward, dailyXpSoFar);
+  const tier = await subscriptionService.getCurrentTier(profile.id);
+  const tierCapped = clampMascotPhaseForTier(result.mascot, tier);
+  const tierPhaseChanged = phaseRank(tierCapped.phase) > phaseRank(result.prevPhase);
   const completedAt = new Date().toISOString();
   // missions.update retorna void — construímos o row atualizado localmente
   // pra outcome.mission refletir o estado pós-update sem nova leitura.
@@ -370,15 +377,15 @@ async function applyMissionCompletionCore(input: {
       reference: { mission: mission.id },
     });
   }
-  await mascotsDb.upsert(result.mascot);
+  await mascotsDb.upsert(tierCapped);
   await walletDb.add(profile.id, COINS_PER_MISSION, 0);
   return {
-    mascot: result.mascot,
+    mascot: tierCapped,
     mission: updatedMission,
     xpGained: result.delta,
     coinsGained: COINS_PER_MISSION,
     leveledUp: result.leveledUp,
-    phaseChanged: result.phaseChanged,
+    phaseChanged: tierPhaseChanged,
     prevPhase: result.prevPhase,
     alreadyCompleted: false,
   };

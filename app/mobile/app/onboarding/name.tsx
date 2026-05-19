@@ -139,7 +139,7 @@ export default function NameStep() {
       >
         <View style={styles.container}>
           <View style={styles.mascotWrap}>
-            <Mascot personality={personality} phase="bebe" mood="feliz" size={180} />
+            <Mascot personality={personality} phase="ovo" mood="feliz" size={180} />
           </View>
           <View style={styles.form}>
             <Text style={styles.kicker}>{stepLabel('name')}</Text>

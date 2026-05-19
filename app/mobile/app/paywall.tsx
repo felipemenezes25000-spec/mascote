@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
@@ -8,6 +8,7 @@ import { getTier } from '@/content/billing';
 import { modifiersToVisuals } from '@/game/evolution/PhenotypeRenderer';
 import { buildEvolutionState } from '@/game/evolution/EvolutionEngine';
 import { checkins as checkinsDb } from '@/lib/db';
+import { copyFor, type PaywallTrigger } from '@/lib/paywall-triggers';
 import { subscriptionService } from '@/services/subscription';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
@@ -17,6 +18,7 @@ import type { BillingTierId } from '@/content/billing';
 export default function Paywall() {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
+  const { trigger: triggerParam } = useLocalSearchParams<{ trigger?: string }>();
   const profile = useStore(s => s.profile);
   const mascot = useStore(s => s.mascot);
   const streak = useStore(s => s.streak);
@@ -70,6 +72,17 @@ export default function Paywall() {
 
   const isPremium = subscriptionService.isPremium(tier);
 
+  const triggerCopy = useMemo(() => {
+    const valid: PaywallTrigger[] = [
+      'first_evolution', 'streak_7', 'level_5', 'checkin_30',
+      'first_box_opened', 'premium_feature', 'rare_evolution',
+    ];
+    const id = valid.includes(triggerParam as PaywallTrigger)
+      ? (triggerParam as PaywallTrigger)
+      : 'premium_feature';
+    return copyFor(id, mascot?.name ?? 'Seu mascote');
+  }, [triggerParam, mascot?.name]);
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
@@ -104,10 +117,8 @@ export default function Paywall() {
         </View>
 
         <Text style={styles.kicker}>BIPO PLUS</Text>
-        <Text style={styles.title}>{mascot?.name ?? 'Seu mascote'} ainda tá crescendo.{'\n'}Quer evoluir junto?</Text>
-        <Text style={styles.sub}>
-          Evolução completa, relatórios narrados, chat ilimitado e cenários extras — sem ranking, sem culpa.
-        </Text>
+        <Text style={styles.title}>{triggerCopy.title}</Text>
+        <Text style={styles.sub}>{triggerCopy.body}</Text>
 
         <View style={styles.featureList}>
           {monthly.benefits.map(f => (

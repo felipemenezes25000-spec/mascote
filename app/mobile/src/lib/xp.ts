@@ -1,3 +1,4 @@
+import type { BillingTierId } from '@/content/billing';
 import type { Mascot, MascotPhase } from '@/types';
 
 export const XP_PER_CHECKIN = 10;
@@ -108,11 +109,24 @@ export function applyXp(mascot: Mascot, deltaRaw: number, dailyXpAlready: number
   };
 }
 
-function phaseRank(p: MascotPhase): number {
+export function phaseRank(p: MascotPhase): number {
   // Match PHASE_THRESHOLDS order. Indexar via findIndex evita repetir o array.
   const i = PHASE_THRESHOLDS.findIndex(t => t.phase === p);
   /* v8 ignore next — fallback defensivo: phase do union type sempre bate. */
   return i < 0 ? 0 : i;
+}
+
+const TIER_MAX_PHASE: Record<BillingTierId, MascotPhase> = {
+  free: 'adolescente',
+  plus_monthly: 'evoluido',
+  plus_annual: 'evoluido',
+};
+
+/** Limita fase ao teto do tier (free = adolescente). XP continua acumulando. */
+export function clampMascotPhaseForTier(mascot: Mascot, tier: BillingTierId): Mascot {
+  const maxPhase = TIER_MAX_PHASE[tier] ?? 'evoluido';
+  if (phaseRank(mascot.phase) <= phaseRank(maxPhase)) return mascot;
+  return { ...mascot, phase: maxPhase };
 }
 
 function deriveMoodFromEnergy(energy: number): Mascot['mood'] {

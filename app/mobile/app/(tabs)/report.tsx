@@ -3,7 +3,7 @@
  * Mostra heatmap + stats da semana + link pra relatório completo.
  */
 
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, Redirect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +16,10 @@ import { StaggeredView } from '@/components/StaggeredView';
 import { habitMeta } from '@/content/missions';
 import { addDays, checkins, todayLocal, xpEvents } from '@/lib/db';
 import { isStreakMilestone, nextMilestone } from '@/lib/share';
+import { Button } from '@/components/Button';
+import { PremiumFeatureGuard } from '@/components/PremiumFeatureGuard';
+import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
+import { entitlementService } from '@/services/subscription/EntitlementService';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
@@ -27,6 +31,8 @@ export default function ReportTab() {
   const profile = useStore(s => s.profile);
   const mascot = useStore(s => s.mascot);
   const streak = useStore(s => s.streak);
+  const { tier } = useSubscriptionTier();
+  const fullReport = entitlementService.canViewFullWeeklyReport(tier);
   const [all, setAll] = useState<Checkin[]>([]);
   const [countsByDate, setCountsByDate] = useState<Record<string, number>>({});
   const [totalXp, setTotalXp] = useState(0);
@@ -50,7 +56,7 @@ export default function ReportTab() {
     }, [profile?.id])
   );
 
-  if (!profile || !mascot) return null;
+  if (!profile || !mascot) return <Redirect href="/splash" />;
 
   const today = todayLocal();
   const weekStart = addDays(today, -6);
@@ -85,6 +91,13 @@ export default function ReportTab() {
         </StaggeredView>
 
         <StaggeredView index={2}>
+          {!fullReport && (
+            <View style={styles.previewBanner}>
+              <Text style={styles.previewText}>Prévia gratuita · heatmap completo no Plus</Text>
+              <Button variant="secondary" label="Ver Plus" onPress={() => router.push('/paywall')} />
+            </View>
+          )}
+          <PremiumFeatureGuard tier={tier} feature="report">
           <Card variant="elevated" padding="md" style={styles.card}>
             <View style={styles.cardHeader}>
               <Icon name="calendar" size={12} color={theme.colors.textSecondary} strokeWidth={2.2} />
@@ -92,6 +105,7 @@ export default function ReportTab() {
             </View>
             <Heatmap countsByDate={countsByDate} weeks={12} />
           </Card>
+          </PremiumFeatureGuard>
         </StaggeredView>
 
         {topHabits.length > 0 && (
@@ -309,6 +323,21 @@ function makeStyles(theme: Theme) {
       fontStyle: 'italic',
       fontFamily: 'InstrumentSerif_400Regular_Italic',
       marginTop: 4,
+    },
+    previewBanner: {
+      marginHorizontal: theme.spacing.lg,
+      padding: theme.spacing.md,
+      backgroundColor: theme.colors.primaryTint,
+      borderRadius: theme.radius.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.primary + '33',
+      gap: theme.spacing.sm,
+      alignItems: 'center',
+    },
+    previewText: {
+      ...theme.text.sm,
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
     },
   });
 }

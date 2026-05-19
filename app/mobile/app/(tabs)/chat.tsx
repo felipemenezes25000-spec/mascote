@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, Redirect } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
@@ -20,6 +20,8 @@ import { getPersonality } from '@/content/personalities';
 import { dateLocal, messages as messagesDb, todayLocal } from '@/lib/db';
 import { generateReply } from '@/lib/ai';
 import { rememberFromMessage } from '@/lib/memory';
+import { entitlementService } from '@/services/subscription/EntitlementService';
+import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -38,6 +40,7 @@ export default function ChatTab() {
   const profile = useStore(s => s.profile);
   const mascot = useStore(s => s.mascot);
   const apiKey = useStore(s => s.openAiKey);
+  const { tier, isPremium } = useSubscriptionTier();
   const [input, setInput] = useState('');
   const [list, setList] = useState<Message[]>([]);
   const [sending, setSending] = useState(false);
@@ -85,6 +88,16 @@ export default function ChatTab() {
     if (!profile || !mascot || sending) return;
     const text = (messageOverride ?? input).trim();
     if (!text) return;
+
+    const dailyLimit = entitlementService.dailyChatLimit(tier);
+    if (dailyLimit !== null) {
+      const sentToday = await messagesDb.countUserToday(profile.id, todayLocal());
+      if (sentToday >= dailyLimit) {
+        router.push({ pathname: '/paywall', params: { trigger: 'premium_feature' } });
+        return;
+      }
+    }
+
     setSending(true);
     setShowSuggestions(false);
     // try/finally garante setSending(false) MESMO se messagesDb.add falhar
@@ -140,23 +153,16 @@ export default function ChatTab() {
 
   async function clearHistory() {
     if (!profile || !mascot) return;
-    // não apaga do banco; só recomeça a tela com greeting
+    await messagesDb.clearConversation(profile.id);
     const meta = getPersonality(mascot.personality);
     const greeting = await messagesDb.add({
-      conversation_id: profile.id,
-      role: 'system',
-      content: '— nova conversa —',
-      safety_flag: 'safe',
-      cached: false,
-    });
-    const hello = await messagesDb.add({
       conversation_id: profile.id,
       role: 'mascot',
       content: meta.greeting,
       safety_flag: 'safe',
       cached: false,
     });
-    setList(prev => [...prev, greeting, hello]);
+    setList([greeting]);
     setShowSuggestions(true);
   }
 
@@ -179,8 +185,9 @@ export default function ChatTab() {
     return out;
   }, [list]);
 
-  if (!profile || !mascot) return null;
+  if (!profile || !mascot) return <Redirect href="/splash" />;
   const meta = getPersonality(mascot.personality);
+  const dailyLimit = entitlementService.dailyChatLimit(tier);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -198,6 +205,7 @@ export default function ChatTab() {
             <View style={[styles.statusDot, { backgroundColor: apiKey ? theme.colors.success : theme.colors.textDim }]} />
             <Text style={styles.headerSub}>
               {meta.label} · {apiKey ? 'IA conectada' : 'modo offline'}
+              {!isPremium && dailyLimit !== null ? ` · ${dailyLimit} msgs/dia` : ''}
             </Text>
           </View>
         </View>
@@ -214,13 +222,15 @@ export default function ChatTab() {
       </View>
 
       {showCvvBanner && (
-        <Pressable style={styles.cvvBanner} onPress={() => router.push('/safe-night')}>
-          <Icon name="shield" size={14} color="#8C4F1F" strokeWidth={2} />
-          <Text style={styles.cvvText}>Tô em momento ruim · só presença</Text>
+        <View style={styles.cvvBanner}>
+          <Pressable style={styles.cvvMain} onPress={() => router.push('/safe-night')}>
+            <Icon name="shield" size={14} color="#8C4F1F" strokeWidth={2} />
+            <Text style={styles.cvvText}>Tô em momento ruim · só presença</Text>
+          </Pressable>
           <Pressable onPress={() => setShowCvvBanner(false)} hitSlop={8} accessibilityLabel="Fechar">
             <Icon name="x" size={14} color="#8C4F1F" strokeWidth={2.2} />
           </Pressable>
-        </Pressable>
+        </View>
       )}
 
       <KeyboardAvoidingView
@@ -387,6 +397,12 @@ function makeStyles(theme: Theme) {
       borderBottomColor: theme.colors.warning + '55',
       paddingHorizontal: theme.spacing.md,
       paddingVertical: 10,
+      gap: theme.spacing.sm,
+    },
+    cvvMain: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
       gap: theme.spacing.sm,
     },
     cvvText: { flex: 1, ...theme.text.xs, color: '#8C4F1F', fontWeight: '600' },

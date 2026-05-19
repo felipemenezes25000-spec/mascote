@@ -11,7 +11,7 @@
  * mas o usuário não vê isso como "objetivo". O objetivo é o DNA.
  */
 
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, Redirect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -153,7 +153,7 @@ export default function EvolutionTab() {
     [mascot]
   );
 
-  if (!profile || !mascot) return null;
+  if (!profile || !mascot) return <Redirect href="/splash" />;
   const meta = getPersonality(mascot.personality);
 
   // Identidade procedural: descritores semânticos + traços morfológicos visíveis.
@@ -408,7 +408,7 @@ export default function EvolutionTab() {
 
         {/* Memórias narrativas */}
         {memorySnippets.length > 0 && (
-          <StaggeredView index={6}>
+          <StaggeredView index={7}>
             <View style={styles.identityCard}>
               <Text style={styles.sectionTitle}>Memórias que {mascot.name} guarda</Text>
               {memorySnippets.map((s, i) => (
@@ -419,7 +419,7 @@ export default function EvolutionTab() {
         )}
 
         {evolutionState && (
-          <StaggeredView index={7}>
+          <StaggeredView index={8}>
             <View style={styles.identityCard}>
               <Text style={styles.sectionTitle}>Personalidade procedural</Text>
               <Text style={styles.identityLead}>
@@ -433,7 +433,7 @@ export default function EvolutionTab() {
         {/* GENOME VIEWER — 11 traits em barras, com labels PT-BR amigáveis.
             Colapsível: por default mostra 4 dominantes; expande pra todos. */}
         {safeDna && (
-          <StaggeredView index={7}>
+          <StaggeredView index={9}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>Traços do corpo dela</Text>
               <PressableScale
@@ -475,7 +475,7 @@ export default function EvolutionTab() {
         )}
 
         {/* Links pra mais */}
-        <StaggeredView index={8}>
+        <StaggeredView index={10}>
           <View style={styles.linksRow}>
             <LinkCard icon="flame" label="Streak" onPress={() => router.push('/streak')} />
             <LinkCard icon="trophy" label="Coleção" onPress={() => router.push('/inventory')} />

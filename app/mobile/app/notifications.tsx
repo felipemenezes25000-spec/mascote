@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -66,7 +66,7 @@ export default function NotificationsScreen() {
     else router.back();
   }
 
-  if (!profile) return null;
+  if (!profile) return <Redirect href="/splash" />;
 
   const colorFor = (k: InAppNotification['kind']) => {
     const tone = kindColor[k];

@@ -23,6 +23,8 @@ export default function SettingsScreen() {
   const setSettings = useStore(s => s.setSettings);
   const setOpenAiKey = useStore(s => s.setOpenAiKey);
   const refreshSettings = useStore(s => s.refreshSettings);
+  const resetStore = useStore(s => s.reset);
+  const hydrate = useStore(s => s.hydrate);
 
   const [editingName, setEditingName] = useState(false);
   const [userNameDraft, setUserNameDraft] = useState(profile?.display_name ?? '');
@@ -113,10 +115,11 @@ export default function SettingsScreen() {
             style: 'destructive',
             onPress: async () => {
               await importAll(parsed);
+              await hydrate();
               setShowImport(false);
               setImportDraft('');
-              Alert.alert('Restaurado', 'Feche e abra o app pra ver os dados.', [
-                { text: 'OK', onPress: () => router.replace('/splash') },
+              Alert.alert('Restaurado', 'Dados importados com sucesso.', [
+                { text: 'OK', onPress: () => router.replace('/(tabs)') },
               ]);
             },
           },
@@ -147,6 +150,8 @@ export default function SettingsScreen() {
                   style: 'destructive',
                   onPress: async () => {
                     await resetAll();
+                    resetStore();
+                    await hydrate();
                     router.replace('/onboarding/welcome');
                   },
                 },

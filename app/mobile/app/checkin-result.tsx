@@ -1,6 +1,6 @@
 import { router, Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
@@ -25,19 +25,27 @@ export default function CheckInResult() {
   const refreshWallet = useStore(s => s.refreshWallet);
   const enqueueToast = useStore(s => s.enqueueToast);
 
-  // expo-router já decodifica os params — JSON.parse direto. Mantém tolerância
-  // a `data` ausente ou JSON corrompido sem travar a tela.
-  let answers: Record<string, number> = {};
-  try {
-    answers = JSON.parse(params.data ?? '{}');
-  } catch {}
-
-  const [persistedXp, setPersistedXp] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, number> | null>(null);
+  const [persistedXp, setPersistedXp] = useState<number | null>(null);
   const [coinsGained, setCoinsGained] = useState(0);
   const persistedRef = useRef(false);
 
   useEffect(() => {
-    if (persistedRef.current) return;
+    try {
+      const parsed = JSON.parse(params.data ?? '{}');
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        throw new Error('JSON inválido');
+      }
+      setAnswers(parsed as Record<string, number>);
+    } catch {
+      Alert.alert('Dados inválidos', 'Não consegui ler o check-in. Tente de novo.', [
+        { text: 'OK', onPress: () => router.back() },
+      ]);
+    }
+  }, [params.data]);
+
+  useEffect(() => {
+    if (persistedRef.current || answers === null) return;
     if (!profile || !mascot) return;
     persistedRef.current = true;
     void (async () => {
@@ -67,9 +75,20 @@ export default function CheckInResult() {
       await refreshStreak();
       await refreshWallet();
     })();
-  }, [profile?.id, mascot?.id]);
+  }, [profile?.id, mascot?.id, answers]);
 
   if (!mascot) return <Redirect href='/splash' />;
+  if (answers === null || persistedXp === null) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" accessibilityLabel="Salvando check-in" />
+          <Text style={styles.subtitle}>Salvando seu check-in...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const meta = getPersonality(mascot.personality);
 
   const goodCount = Object.entries(answers).filter(([k, v]) => {

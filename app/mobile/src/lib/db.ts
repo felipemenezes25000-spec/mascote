@@ -530,6 +530,20 @@ export const messages = {
       return next;
     });
   },
+  async countUserToday(user_id: string, date: string): Promise<number> {
+    const rows = await read<Message>('messages');
+    return rows.filter(
+      m => m.conversation_id === user_id
+        && m.role === 'user'
+        && m.created_at.slice(0, 10) === date,
+    ).length;
+  },
+  async clearConversation(user_id: string): Promise<void> {
+    return withLock('messages', async () => {
+      const rows = await read<Message>('messages');
+      await write<Message>('messages', rows.filter(m => m.conversation_id !== user_id));
+    });
+  },
 };
 
 // ============= XP events =============
