@@ -535,7 +535,7 @@ export const messages = {
     return rows.filter(
       m => m.conversation_id === user_id
         && m.role === 'user'
-        && m.created_at.slice(0, 10) === date,
+        && dateLocal(new Date(m.created_at)) === date,
     ).length;
   },
   async clearConversation(user_id: string): Promise<void> {

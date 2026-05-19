@@ -263,6 +263,44 @@ async function rememberFromMessageCore(
   return dedup;
 }
 
+/** Grava memória explícita (marcos, recompensas) sem depender de regex. */
+export async function rememberExplicit(
+  userId: string,
+  summary: string,
+  kind: MemoryKind = 'event',
+  now: Date = new Date(),
+): Promise<MemoryItem> {
+  return withLock(`memory:${userId}`, async () => {
+    const item: MemoryItem = {
+      id: mkId(),
+      user_id: userId,
+      kind,
+      summary,
+      source_snippet: summary.slice(0, 140),
+      keywords: tokenize(summary),
+      created_at: now.toISOString(),
+      last_recalled_at: null,
+    };
+    const existing = await read(userId);
+    await write(userId, [...existing, item]);
+    const stats = await getStats(userId);
+    addDocument(stats, summary);
+    await persistStats(userId, stats);
+    return item;
+  });
+}
+
+/** Limpa caches em memória após import/reset — evita TF-IDF stale. */
+export function clearMemoryCaches(userId?: string): void {
+  if (userId) {
+    statsCache.delete(userId);
+    vectorStoreCache.delete(userId);
+  } else {
+    statsCache.clear();
+    vectorStoreCache.clear();
+  }
+}
+
 /**
  * Recupera até `limit` memórias relevantes pra uma mensagem corrente.
  *

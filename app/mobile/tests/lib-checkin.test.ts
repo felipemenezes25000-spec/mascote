@@ -383,10 +383,19 @@ describe('applyCheckinFully — race condition (regressão)', () => {
       applyCheckinFully({ profile, mascot, kind: 'water' }),
       applyCheckinFully({ profile, mascot, kind: 'water' }),
     ]);
-    const total = await xpEvents.total(profile.id);
-    // total == a.xpGained + b.xpGained (sem duplicar evento por causa de
-    // checkin "deduplicado"). Antes do fix, total chegava perto de 2× isso.
-    expect(total).toBe(a.xpGained + b.xpGained);
+    const raw = await AsyncStorage.getItem('mascote:xp_events');
+    const rows: Array<{ user_id: string; amount: number; reason: string }> = raw
+      ? JSON.parse(raw)
+      : [];
+    const checkinXp = rows
+      .filter(
+        e =>
+          e.user_id === profile.id &&
+          (e.reason === 'checkin' || e.reason === 'streak_bonus'),
+      )
+      .reduce((sum, e) => sum + e.amount, 0);
+    // Soma só eventos do pipeline de check-in (conquistas têm reason próprio).
+    expect(checkinXp).toBe(a.xpGained + b.xpGained);
   });
 });
 

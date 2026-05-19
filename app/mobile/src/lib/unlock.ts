@@ -12,6 +12,8 @@ import { achievementCatalog } from '@/content/achievements';
 import { applyAchievementReward } from '@/lib/achievement-rewards';
 import { checkSceneUnlock, scenesCatalog } from '@/content/scenes';
 import { activeSeasonalEvent } from '@/content/seasonal';
+import { entitlementService } from '@/services/subscription/EntitlementService';
+import { subscriptionService } from '@/services/subscription';
 import type { Mascot, Profile, Streak } from '@/types';
 
 export interface UnlockResult {
@@ -43,9 +45,9 @@ export async function processUnlocks(
     (Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24)
   );
   const habitVariety = new Set(allCheckins.map(c => c.habit_kind)).size;
-  const ctx = {
-    level: mascot.level,
-    totalXp: mascot.xp,
+  const buildCtx = (m: Mascot) => ({
+    level: m.level,
+    totalXp: m.xp,
     totalCheckins: allCheckins.length,
     currentStreak: streak.current_streak,
     longestStreak: streak.longest_streak,
@@ -53,7 +55,8 @@ export async function processUnlocks(
     messagesSent: messagesCount,
     missionsCompleted: allMissions.filter(m => m.status === 'completed').length,
     habitVariety,
-  };
+  });
+  let ctx = buildCtx(currentMascot);
   const ownedAchIds = new Set(ownedAchievements.map(a => a.achievement_id));
   for (const ach of achievementCatalog) {
     if (ownedAchIds.has(ach.id)) continue;
@@ -65,6 +68,7 @@ export async function processUnlocks(
       if (unlocked) {
         const applied = await applyAchievementReward(profile, currentMascot, ach);
         currentMascot = applied.mascot;
+        ctx = buildCtx(currentMascot);
         result.achievements.push({
           id: ach.id,
           title: ach.title,
@@ -74,6 +78,10 @@ export async function processUnlocks(
       }
     }
   }
+  const tier = await subscriptionService.getCurrentTier(profile.id);
+  // Progresso de desbloqueio visual: não regride se recompensa de conquista
+  // recalculou level a partir do XP (ex.: level 6 salvo com xp=0 no teste).
+  const unlockLevel = Math.max(currentMascot.level, mascot.level);
 
   // === Accessories
   const ownedAccIds = new Set(ownedAcc.map(a => a.accessory_id));
@@ -85,7 +93,7 @@ export async function processUnlocks(
     if (ownedAccIds.has(acc.id)) continue;
     if (
       checkAccessoryUnlock(acc, {
-        level: mascot.level,
+        level: unlockLevel,
         currentStreak: streak.current_streak,
         longestStreak: streak.longest_streak,
         totalCheckins: allCheckins.length,
@@ -107,9 +115,10 @@ export async function processUnlocks(
   }
   for (const sc of scenesCatalog) {
     if (ownedSceneIds.has(sc.id)) continue;
+    if (sc.premium && !entitlementService.canAccessScene(tier, sc.id)) continue;
     if (
       checkSceneUnlock(sc, {
-        level: mascot.level,
+        level: unlockLevel,
         currentStreak: streak.current_streak,
         longestStreak: streak.longest_streak,
       })

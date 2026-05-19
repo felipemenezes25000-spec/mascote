@@ -40,7 +40,7 @@ export const achievementCatalog: AchievementMeta[] = [
   { id: 'rotina-tronco', emoji: '🌲', title: 'Tronco firme', description: '200 check-ins.', reward: { type: 'accessory', value: 'hat-star', label: 'Chapéu estrela' }, check: c => c.totalCheckins >= 200 },
   { id: 'streak-7', emoji: '🔥', title: 'Semana inteira', description: 'Streak de 7 dias.', reward: { type: 'coins', value: 30, label: '+30 moedas' }, check: c => c.longestStreak >= 7 },
   { id: 'streak-14', emoji: '⚡', title: 'Duas semanas', description: 'Streak de 14 dias.', reward: { type: 'xp', value: 75, label: '+75 XP' }, check: c => c.longestStreak >= 14 },
-  { id: 'streak-30', emoji: '🏆', title: 'Mês inteiro', description: 'Streak de 30 dias.', reward: { type: 'scene', value: 'moon', label: 'Cenário Lua' }, check: c => c.longestStreak >= 30 },
+  { id: 'streak-30', emoji: '🏆', title: 'Mês inteiro', description: 'Streak de 30 dias.', reward: { type: 'scene', value: 'lunar', label: 'Cenário Lua' }, check: c => c.longestStreak >= 30 },
   { id: 'streak-100', emoji: '💎', title: 'Cem dias', description: 'Streak de 100 dias.', reward: { type: 'mutation_hint', value: 'legendary', label: 'Pista de mutação lendária' }, check: c => c.longestStreak >= 100 },
   { id: 'nivel-5', emoji: '⭐', title: 'Nível 5', description: 'Você foi longe.', reward: { type: 'coins', value: 40, label: '+40 moedas' }, check: c => c.level >= 5 },
   { id: 'nivel-10', emoji: '🌟', title: 'Nível 10', description: 'Tá ficando sério.', reward: { type: 'xp', value: 150, label: '+150 XP' }, check: c => c.level >= 10 },

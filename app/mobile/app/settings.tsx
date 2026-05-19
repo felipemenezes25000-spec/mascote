@@ -115,6 +115,10 @@ export default function SettingsScreen() {
             style: 'destructive',
             onPress: async () => {
               await importAll(parsed);
+              if (profile) {
+                const { clearMemoryCaches } = await import('@/lib/memory');
+                clearMemoryCaches(profile.id);
+              }
               await hydrate();
               setShowImport(false);
               setImportDraft('');

@@ -151,7 +151,9 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
   let gems = 0;
 
   const streakMilestone =
-    streakResult.streak.current_streak > 0 && streakResult.streak.current_streak % 7 === 0;
+    !streakResult.sameDay &&
+    streakResult.streak.current_streak > 0 &&
+    streakResult.streak.current_streak % 7 === 0;
 
   if (streakMilestone) {
     const bonus = applyXp(tierCapped, 50, dailyXpSoFar + result.delta);
@@ -254,15 +256,19 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
   let newMicroEvolutions: MicroEvolution[] = [];
   try {
     const { buildEvolutionState, processEvolutionAfterCheckin } = await import('@/game/evolution/EvolutionEngine');
+    const { loadEvolutionState } = await import('@/game/evolution/EvolutionPersistence');
     const allCheckins = await checkinsDb.listAll(profile.id);
+    const persistedEvolution = await loadEvolutionState(profile.id);
     const baseState = buildEvolutionState({
       mascot: finalMascot,
       checkins: allCheckins,
       streak: streakResult.streak,
+      unlockedMicroIds: persistedEvolution?.microEvolutions.map(m => m.id) ?? [],
     });
     const { newMicro } = await processEvolutionAfterCheckin(profile.id, baseState);
     newMicroEvolutions = newMicro;
-    if (allCheckins.length === 1) {
+    const missionsCompleted = (await missionsDb.list(profile.id)).filter(m => m.status === 'completed').length;
+    if (missionsCompleted === 1) {
       try {
         const { mascotMemoryService } = await import('@/game/memory/MascotMemoryService');
         await mascotMemoryService.recordMilestone(profile.id, 'first_mission');
@@ -424,20 +430,23 @@ export async function undoLastCheckin(input: UndoCheckinInput): Promise<UndoOutc
   // Recomputa o estado do mascote a partir do que sobrou: xp - xpAwarded,
   // level/phase derivados do novo xp. Não devolve energy (UX neutra).
   const newXp = Math.max(0, input.mascot.xp - input.xpAwarded);
+  const derivedPhase = phaseFromXp(newXp);
   const rolled: Mascot = {
     ...input.mascot,
     xp: newXp,
     level: levelFromXp(newXp),
-    phase: phaseFromXp(newXp),
+    phase: phaseRank(derivedPhase) <= phaseRank(input.mascot.phase) ? derivedPhase : input.mascot.phase,
     last_seen_at: new Date().toISOString(),
   };
-  await mascotsDb.upsert(rolled);
+  const tier = await subscriptionService.getCurrentTier(input.profile.id);
+  const tierCapped = clampMascotPhaseForTier(rolled, tier);
+  await mascotsDb.upsert(tierCapped);
   // Devolve moedas (spend permite negativo via add com valor negativo? Não.
   // Usa walletDb.add com valor negativo se suportar, senão soma manual).
   if (input.coinsRefund > 0) {
     await walletDb.add(input.profile.id, -input.coinsRefund, 0);
   }
-  return { removed: true, mascot: rolled };
+  return { removed: true, mascot: tierCapped };
 }
 
 export function defaultUnit(kind: HabitKind): string {

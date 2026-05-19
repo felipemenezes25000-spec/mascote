@@ -3,9 +3,19 @@
  */
 
 import type { AchievementMeta } from '@/content/achievements';
-import { customization, inventory, mascots as mascotsDb, userScenes, wallet as walletDb } from '@/lib/db';
+import {
+  checkins as checkinsDb,
+  customization,
+  inventory,
+  mascots as mascotsDb,
+  todayLocal,
+  userScenes,
+  wallet as walletDb,
+  xpEvents,
+} from '@/lib/db';
 import { rememberFromMessage } from '@/lib/memory';
-import { applyXp } from '@/lib/xp';
+import { applyXp, clampMascotPhaseForTier } from '@/lib/xp';
+import { subscriptionService } from '@/services/subscription';
 import type { Mascot, Profile } from '@/types';
 
 export async function applyAchievementReward(
@@ -18,12 +28,24 @@ export async function applyAchievementReward(
 
   switch (reward.type) {
     case 'xp': {
-      const result = applyXp(mascot, reward.value as number, 0);
+      const today = todayLocal();
+      const dailyXpSoFar = await checkinsDb.xpSumToday(profile.id, today);
+      const result = applyXp(mascot, reward.value as number, dailyXpSoFar);
+      const tier = await subscriptionService.getCurrentTier(profile.id);
+      const capped = clampMascotPhaseForTier(result.mascot, tier);
+      if (result.delta > 0) {
+        await xpEvents.add({
+          user_id: profile.id,
+          amount: result.delta,
+          reason: 'achievement',
+          reference: { achievement: achievement.id },
+        });
+      }
       const saved = await mascotsDb.upsert({
         user_id: mascot.user_id,
-        xp: result.mascot.xp,
-        level: result.mascot.level,
-        phase: result.mascot.phase,
+        xp: capped.xp,
+        level: capped.level,
+        phase: capped.phase,
       });
       return { mascot: saved, label: reward.label };
     }

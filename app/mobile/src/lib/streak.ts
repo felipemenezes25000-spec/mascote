@@ -8,6 +8,8 @@ export interface StreakResult {
   streak: Streak;
   graceUsed: boolean;
   brokenAndRestarted: boolean;
+  /** True se o check-in é no mesmo dia calendário que o último ativo (streak não avançou). */
+  sameDay: boolean;
 }
 
 /**
@@ -86,6 +88,7 @@ export async function applyCheckinToStreak(userId: string): Promise<StreakResult
         streak: computed.next,
         graceUsed: computed.graceUsed,
         brokenAndRestarted: computed.brokenAndRestarted,
+        sameDay: true,
       };
     }
     // Persiste sem re-entrar no lock: usa o helper de baixo nível upsertNoLock.
@@ -94,6 +97,7 @@ export async function applyCheckinToStreak(userId: string): Promise<StreakResult
       streak: computed.next,
       graceUsed: computed.graceUsed,
       brokenAndRestarted: computed.brokenAndRestarted,
+      sameDay: false,
     };
   });
 }

@@ -22,6 +22,7 @@ import { generateGenotype } from './GenotypeGenerator';
 import { generatePhenotype } from './PhenotypeGenerator';
 import { buildBehaviorHistory, emptyBehaviorHistory } from './BehaviorEngine';
 import { eligibleMicroEvolutions } from './EvolutionMilestones';
+import { MICRO_EVOLUTION_CATALOG } from './MicroEvolutionCatalog';
 import { enrichPhenotypeVisuals } from './VisualEvolutionEngine';
 import { firstWordsForPreview, rareTraitLabel } from './PersonalityEngine';
 import { loadEvolutionState, saveEvolutionState } from './EvolutionPersistence';
@@ -111,6 +112,8 @@ export interface BuildEvolutionInput {
   checkins: readonly Checkin[];
   streak: Streak | null;
   unlockedMutations?: UnlockedMutation[];
+  /** IDs de microevoluções já desbloqueadas (persistidas). */
+  unlockedMicroIds?: readonly string[];
   mood?: MascotMood;
   personalization?: Partial<PersonalizationInput>;
 }
@@ -133,8 +136,17 @@ export function buildEvolutionState(input: BuildEvolutionInput): EvolutionState 
 
   const genotype = generateGenotype(personalization);
   const behaviorHistory = buildBehaviorHistory({ checkins, streak, mood });
-  const alreadyUnlocked = checkins.length > 0 ? [] as string[] : [];
-  const microEvolutions = eligibleMicroEvolutions(behaviorHistory.habitCounts, alreadyUnlocked);
+  const unlockedSet = new Set(input.unlockedMicroIds ?? []);
+  const stamp = new Date().toISOString();
+  const microEvolutions: MicroEvolution[] = MICRO_EVOLUTION_CATALOG.filter(e =>
+    unlockedSet.has(e.id),
+  ).map(e => ({
+    id: e.id,
+    label: e.label,
+    magnitude: e.magnitude,
+    habitAffinity: e.habitAffinity,
+    unlockedAt: stamp,
+  }));
   const microLevel = microEvolutions.length;
 
   let phenotype = generatePhenotype(
@@ -163,11 +175,10 @@ export async function processEvolutionAfterCheckin(
   state: EvolutionState,
 ): Promise<{ state: EvolutionState; newMicro: MicroEvolution[] }> {
   const persisted = await loadEvolutionState(userId);
-  const already = persisted?.microEvolutions.map(m => m.id) ?? state.microEvolutions.map(m => m.id);
-  const newMicro = eligibleMicroEvolutions(state.behaviorHistory.habitCounts, already)
-    .filter(m => !already.includes(m.id));
+  const already = persisted?.microEvolutions.map(m => m.id) ?? [];
+  const newMicro = eligibleMicroEvolutions(state.behaviorHistory.habitCounts, already);
 
-  const allMicro = [...(persisted?.microEvolutions ?? state.microEvolutions), ...newMicro];
+  const allMicro = [...(persisted?.microEvolutions ?? []), ...newMicro];
   const microLevel = allMicro.length;
 
   let phenotype = generatePhenotype(

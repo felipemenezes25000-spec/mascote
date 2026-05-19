@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { buildEvolutionState } from '@/game/evolution/EvolutionEngine';
+import { loadEvolutionState } from '@/game/evolution/EvolutionPersistence';
 import { phenotypeToMascotVisuals, type MascotEvolutionVisuals } from '@/game/evolution/PhenotypeRenderer';
 import type { EvolutionState, PersonalizationInput } from '@/game/evolution/EvolutionTypes';
 import { checkins as checkinsDb } from '@/lib/db';
@@ -51,10 +52,12 @@ export function useEvolutionState(
       const stored = await loadStoredPersonalization(profile.id);
       const merged = { ...storedToPartial(stored), ...stablePersonalization };
       const allCheckins = await checkinsDb.listAll(profile.id);
+      const persistedEvolution = await loadEvolutionState(profile.id);
       const built = buildEvolutionState({
         mascot,
         checkins: allCheckins,
         streak,
+        unlockedMicroIds: persistedEvolution?.microEvolutions.map(m => m.id) ?? [],
         mood: mascot.mood,
         personalization: Object.keys(merged).length > 0 ? merged : undefined,
       });

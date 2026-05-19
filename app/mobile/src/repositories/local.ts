@@ -3,6 +3,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { BillingTierId } from '@/content/billing';
 import { profiles, mascots, missions as missionsDb, achievements as achievementsDb } from '@/lib/db';
 import { loadEvolutionState, saveEvolutionState } from '@/game/evolution/EvolutionPersistence';
 import type {
@@ -78,7 +79,8 @@ export const localSubscriptionRepo: SubscriptionRepository = {
     } catch { /* ignore */ }
     return 'free';
   },
-  async setTier(uid, tier) {
+  async setTier(uid, tier: BillingTierId) {
+    if (tier !== 'free' && tier !== 'plus_monthly' && tier !== 'plus_annual') return;
     await AsyncStorage.setItem(SUB_KEY(uid), JSON.stringify({ tier, updatedAt: new Date().toISOString() }));
   },
 };

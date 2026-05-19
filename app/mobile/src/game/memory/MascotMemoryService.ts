@@ -2,7 +2,7 @@
  * Serviço de memória do mascote — ponte entre lib/memory e game layer.
  */
 
-import { recall, rememberFromMessage, type MemoryItem } from '@/lib/memory';
+import { recall, rememberExplicit, rememberFromMessage, type MemoryItem } from '@/lib/memory';
 import type { MascotMemoryEntry, MemorySnapshot } from './MemoryTypes';
 import { buildMemoryTimeline } from './MemoryTimeline';
 
@@ -47,9 +47,8 @@ export class MascotMemoryService {
     ctx: { name?: string; detail?: string } = {},
   ): Promise<MascotMemoryEntry | null> {
     const summary = MILESTONE_COPY[milestone](ctx);
-    const items = await rememberFromMessage(userId, summary, new Date());
-    const item = items[0];
-    return item ? toEntry(item) : null;
+    const item = await rememberExplicit(userId, summary, 'event', new Date());
+    return toEntry(item);
   }
 
   async remember(userId: string, message: string, apiKey?: string): Promise<MascotMemoryEntry | null> {
