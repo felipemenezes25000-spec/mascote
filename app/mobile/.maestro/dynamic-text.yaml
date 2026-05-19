@@ -1,0 +1,34 @@
+# Fluxo: toggle dynamic_text em settings; verifica que mudança propaga.
+# Cobre regressão: antes era toggle fantasma (não fazia nada).
+appId: app.meumascote.dev
+tags: [accessibility, settings]
+---
+- launchApp:
+    stopApp: true
+
+- runFlow:
+    when:
+      visible: "Começar"
+    file: onboarding.yaml
+
+- tapOn:
+    text: "Você|Perfil|Configurações"
+
+- scroll
+
+# Encontra toggle "Texto dinâmico" / "Dynamic text"
+- assertVisible:
+    text: ".*[Tt]exto.*[Dd]inâmico.*|.*[Aa]cessibilidade.*"
+
+# Tappa pra ligar
+- tapOn:
+    text: ".*[Tt]exto.*[Dd]inâmico.*"
+
+# Volta pra home e verifica que UI ainda renderiza (sem crash)
+- tapOn:
+    text: "Casa|Home"
+
+- assertVisible:
+    text: ".*hábito.*|.*streak.*|.*nível.*"
+
+- takeScreenshot: dynamic-text-on

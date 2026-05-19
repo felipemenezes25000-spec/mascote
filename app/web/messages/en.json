@@ -1,0 +1,358 @@
+{
+  "meta": {
+    "title": "Mascote — Take care of you. They grow with you.",
+    "description": "Brazilian-born companion that grows when you sleep, drink water, breathe. 4 AI personalities, forgiving streaks, local-first. No leaderboards, no guilt.",
+    "ogAlt": "Mascote — wellness with a Brazilian soul"
+  },
+  "nav": {
+    "personalities": "Personalities",
+    "evolution": "Evolution",
+    "features": "Features",
+    "pricing": "Pricing",
+    "faq": "Questions",
+    "cta": "Join the list"
+  },
+  "hero": {
+    "kicker": "Wellness, no leaderboard · no guilt",
+    "h1Part1": "Take care of",
+    "h1Part2": "you.",
+    "h1Part3": "They grow",
+    "h1Part4": "with you.",
+    "sub": "Mascote is a Brazilian-born digital companion that grows when you sleep, drink water, breathe. Four AI personalities, a streak that forgives, and everything kept on your device.",
+    "ctaPrimary": "Join the beta list",
+    "ctaSecondary": "See how it works",
+    "ctaSecondaryNote": "No card. No charge during beta.",
+    "tags": ["Local-first", "4 personalities", "Real-voice writing", "Anti-grind", "Ad-free"],
+    "ticker": "Take care of you · They grow with you · No streak shaming · No guilt · Just presence ·"
+  },
+  "trust": {
+    "kicker": "WHY WE EXIST",
+    "headline": "We believe taking care of yourself shouldn't feel like a checklist.",
+    "body": "It should be small. Daily. Light. And there should be something on the other side, waiting. So we built a companion that listens, evolves, and doesn't shame you when the day was hard."
+  },
+  "personalities": {
+    "kicker": "FOUR SOULS, ONE COMPANION",
+    "headline": "Which one will walk with you?",
+    "sub": "Each personality speaks differently. Real AI tuned to care — not to flatter, not to play therapist.",
+    "items": [
+      {
+        "name": "Bipo",
+        "role": "The Calm",
+        "tagline": "Presence that never rushes.",
+        "quote": "I'm here with you. No hurry.",
+        "color": "sage",
+        "habits": "Sleep · Breath · Pause"
+      },
+      {
+        "name": "Zip",
+        "role": "The Motivator",
+        "tagline": "Energy that won't bully.",
+        "quote": "Let's go. One step.",
+        "color": "brand",
+        "habits": "Movement · Focus · Water"
+      },
+      {
+        "name": "Lulu",
+        "role": "The Companion",
+        "tagline": "Warmth that listens.",
+        "quote": "Good to see you. Tell me.",
+        "color": "coral",
+        "habits": "Journal · Gratitude · Connection"
+      },
+      {
+        "name": "Aro",
+        "role": "The Sage",
+        "tagline": "The question that lights up.",
+        "quote": "What's alive in you today?",
+        "color": "lilac",
+        "habits": "Reflection · Reading · Intention"
+      }
+    ]
+  },
+  "evolution": {
+    "kicker": "CARE HAS A SHAPE",
+    "headline": "Six stages. A bond that grows with you.",
+    "sub": "Egg, baby, child, teen, adult, ascended. Each check-in hatches a little more of them. No death. No emotional blackmail.",
+    "phases": [
+      { "name": "Egg", "xp": "0 XP", "note": "Where it begins." },
+      { "name": "Baby", "xp": "50 XP", "note": "First hatch." },
+      { "name": "Child", "xp": "200 XP", "note": "Screen on. Life pulses." },
+      { "name": "Teen", "xp": "600 XP", "note": "Grown. Curious." },
+      { "name": "Adult", "xp": "2,500 XP", "note": "Arms wide." },
+      { "name": "Ascended", "xp": "8,000 XP", "note": "Halo. Calm. Home." }
+    ]
+  },
+  "features": {
+    "kicker": "WHAT'S INSIDE",
+    "headline": "Built so you come back lighter.",
+    "items": [
+      {
+        "title": "AI chat with four voices",
+        "body": "GPT-4o-mini with prompts hand-tuned in real Brazilian Portuguese. No 'self-care journey'. No translated clichés.",
+        "tag": "AI"
+      },
+      {
+        "title": "A streak that forgives",
+        "body": "Missed a day? No guilt. Use a freeze or come back tomorrow. We don't hold a flame over your head.",
+        "tag": "Anti-grind"
+      },
+      {
+        "title": "Daily wheel of luck",
+        "body": "Eight slices, one spin a day. A surprise that fits — not a casino loop.",
+        "tag": "Reward"
+      },
+      {
+        "title": "17 accessories, 6 scenes",
+        "body": "Cap, glasses, scarf, library, moon, café. Dress your mascot your way.",
+        "tag": "Customization"
+      },
+      {
+        "title": "Theme × palette, your way",
+        "body": "Light, sepia or dark — five orange palettes. Match how today feels.",
+        "tag": "Design"
+      },
+      {
+        "title": "Crisis response, taken seriously",
+        "body": "Across all four personalities: local hotlines, emergency lines, no improvising. We don't play with this.",
+        "tag": "Safety"
+      },
+      {
+        "title": "Local-first with BYOK",
+        "body": "Your data stays on your device. Bring your OpenAI key if you want more — or use Plus.",
+        "tag": "Privacy"
+      },
+      {
+        "title": "No leaderboard, no compare",
+        "body": "No 'you're better than 78% of users'. You take care of you. That's it.",
+        "tag": "Ethics"
+      }
+    ]
+  },
+  "showcase": {
+    "kicker": "INSIDE THE APP",
+    "headline": "Small every day. Sticky every month.",
+    "items": [
+      {
+        "title": "Check-in in 4 taps",
+        "body": "Mood, water, sleep, kindness. Thirty seconds. Done."
+      },
+      {
+        "title": "Daily surprise box",
+        "body": "One a day. Five random drops. Confetti when it lands well."
+      },
+      {
+        "title": "Human weekly report",
+        "body": "No toxic charts. A short sentence, a picture of your mascot, and what shifted in you."
+      }
+    ]
+  },
+  "pricing": {
+    "kicker": "HONEST MONETIZATION",
+    "headline": "Seven days free. Then you decide.",
+    "sub": "No sneaky auto-renewal. Cancel in one tap, in your store settings. Seriously.",
+    "annualLabel": "Annual: $59/year (~$4.90/mo, 38% off)",
+    "plans": [
+      {
+        "name": "Free",
+        "price": "$0",
+        "period": "forever",
+        "tagline": "For testing without a card.",
+        "features": [
+          "Mascot lives (sleepy, but alive)",
+          "Full daily check-in",
+          "AI chat capped: 5 msgs/day",
+          "Starter scene and mascot",
+          "No leaderboard, no ads"
+        ],
+        "cta": "Join the list (free)"
+      },
+      {
+        "name": "Bipo Plus",
+        "price": "$5.99",
+        "period": "/month",
+        "tagline": "For going all the way with your mascot.",
+        "highlight": true,
+        "badge": "MOST CHOSEN",
+        "features": [
+          "Mascot evolves to Ascended (8,000 XP)",
+          "Unlimited AI chat across all 4 personalities",
+          "Every scene and seasonal accessory",
+          "Unlimited Streak Freeze",
+          "Plus weekly report + insights",
+          "No ads, no dark patterns"
+        ],
+        "cta": "Join the list (priority)"
+      }
+    ],
+    "legal": "The 7-day trial asks for a card to reduce fraud. Cancel anytime in one tap. We never sell data. Ever."
+  },
+  "faq": {
+    "kicker": "WHAT YOU ASK",
+    "headline": "Honest questions, honest answers.",
+    "items": [
+      {
+        "q": "Is this therapy?",
+        "a": "No. Mascote is wellness and self-care, not clinical. When you need a professional, we point you there — local hotlines and emergency numbers are visible across every personality, always."
+      },
+      {
+        "q": "What if I miss a day?",
+        "a": "Your mascot doesn't die. It waits. You can buy a streak freeze with coins, or just come back tomorrow. We don't use fire emojis to guilt you."
+      },
+      {
+        "q": "Where does my data live?",
+        "a": "On your device. Local-first storage. For AI chat, bring your own OpenAI key (BYOK) or use Plus. We never sell, rent, or share. Period."
+      },
+      {
+        "q": "iOS and Android?",
+        "a": "Closed beta on both. The native Android APK is already running (144 MB). iOS lands together for soft launch. Join the list for early access."
+      },
+      {
+        "q": "How do I cancel?",
+        "a": "One tap, straight in your App Store or Google Play settings. No five screens, no 'wait a little more', no retention pressure. Promise."
+      },
+      {
+        "q": "Minimum age?",
+        "a": "16 and up. We confirm at entry and block if you're younger. Responsibility choice, not market choice."
+      },
+      {
+        "q": "Is this like Replika?",
+        "a": "No. The mascot doesn't say 'I love you' or 'you're my only one'. It says 'I'm here'. When users show excessive attachment, the AI encourages human connection. Healthy bond, never replacement."
+      },
+      {
+        "q": "Does it work offline?",
+        "a": "The whole app works offline: check-ins, habits, customization, rewards. Only the AI chat needs the internet (and your key or plan)."
+      }
+    ]
+  },
+  "press": {
+    "kicker": "PRINCIPLES",
+    "items": [
+      "No leaderboard",
+      "No guilt",
+      "No fake 'I love you'",
+      "No data sold",
+      "No dark pattern",
+      "No translated cliché"
+    ]
+  },
+  "socialProof": {
+    "kicker": "WHO'S ALREADY IN",
+    "headline": "Real people on the list.",
+    "counterLabel": "on the beta list",
+    "featuredLabel": "FEATURED IN",
+    "featured": [
+      "product hunt",
+      "tech in brazil",
+      "the slow journal",
+      "wellness weekly",
+      "indie hackers"
+    ],
+    "quotes": [
+      {
+        "text": "Finally a wellness app that sounds Brazilian. No more translated 'self-care journey' clichés.",
+        "author": "Carolina, 28",
+        "role": "UX designer · SP"
+      },
+      {
+        "text": "I missed 3 days in a row and the mascot just said 'I'm here'. Didn't make me feel guilty. First time.",
+        "author": "Rafael, 34",
+        "role": "Beta · Belo Horizonte"
+      },
+      {
+        "text": "Bipo, Zip, Lulu and Aro feel like characters, not bots. You feel the difference in two messages.",
+        "author": "Mariana, 25",
+        "role": "Beta · Porto Alegre"
+      }
+    ]
+  },
+  "newsletter": {
+    "kicker": "OR FIRST OF ALL",
+    "headline": "Read first, decide later.",
+    "sub": "One letter a month with behind-the-scenes, lines from your mascot, and a self-care prompt. No upsell.",
+    "placeholder": "your email",
+    "submit": "I want the letter",
+    "success": "I'm here. Next letter comes soon.",
+    "legal": "No spam. Unsubscribe in one click from any email footer."
+  },
+  "sticky": {
+    "text": "Free beta · no card",
+    "cta": "Join the list"
+  },
+  "social": {
+    "label": "Social",
+    "items": [
+      { "name": "Instagram", "key": "instagram" },
+      { "name": "TikTok", "key": "tiktok" },
+      { "name": "Twitter", "key": "twitter" },
+      { "name": "YouTube", "key": "youtube" }
+    ]
+  },
+  "themeToggle": {
+    "labelLight": "Dark theme",
+    "labelDark": "Light theme",
+    "auto": "Auto"
+  },
+  "controls": {
+    "pauseMarquee": "Pause animation",
+    "playMarquee": "Resume animation"
+  },
+  "cta": {
+    "kicker": "IT'S TIME",
+    "headline": "Let's take care of you, together?",
+    "sub": "Join the waitlist and be one of the first to meet Bipo, Zip, Lulu, and Aro. No spam, promised.",
+    "namePlaceholder": "Your name",
+    "emailPlaceholder": "Your best email",
+    "personalityLabel": "Which personality fits you?",
+    "submit": "Keep me posted",
+    "success": "I'm here. We'll talk soon.",
+    "errorRequired": "Email's missing — we can't reach you without it.",
+    "errorEmail": "That email looks off. Mind checking?"
+  },
+  "manifesto": {
+    "kicker": "MANIFESTO",
+    "lines": [
+      "We believe taking care of yourself shouldn't be a checklist.",
+      "It should be small. Daily. Light.",
+      "There should be something on the other side, waiting for you.",
+      "You sleep well. They gain energy.",
+      "You drink water. They get happy.",
+      "You stay silent for a minute. Their world slows down.",
+      "But if you fail, they don't die. They wait.",
+      "Because real life works like that — and so does care."
+    ],
+    "signoff": "Mascote. Take care of you. They grow with you."
+  },
+  "footer": {
+    "tagline": "Wellness with a Brazilian soul. Built slowly in São Paulo.",
+    "made": "Built with calm in SP",
+    "rights": "All rights reserved.",
+    "columns": [
+      {
+        "title": "Product",
+        "links": [
+          { "label": "Personalities", "href": "#personalities" },
+          { "label": "Evolution", "href": "#evolution" },
+          { "label": "Features", "href": "#features" },
+          { "label": "Pricing", "href": "#pricing" }
+        ]
+      },
+      {
+        "title": "Company",
+        "links": [
+          { "label": "Manifesto", "href": "#manifesto" },
+          { "label": "Press kit", "href": "/en/imprensa" },
+          { "label": "Contact", "href": "mailto:hi@meumascote.app" }
+        ]
+      },
+      {
+        "title": "Trust",
+        "links": [
+          { "label": "Privacy", "href": "/en/privacidade" },
+          { "label": "Terms", "href": "/en/termos" },
+          { "label": "Safety & crisis", "href": "/en/seguranca" }
+        ]
+      }
+    ],
+    "safetyNote": "If you're in crisis, please reach out to a local hotline. In the US: 988. In the UK: 116 123. In Brazil: 188."
+  }
+}

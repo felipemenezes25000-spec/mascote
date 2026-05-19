@@ -1,0 +1,20 @@
+# Maestro config compartilhado.
+# https://maestro.mobile.dev/getting-started/maestro-config
+#
+# `appId` é o bundleIdentifier (iOS) / package (Android) do app.meumascote.dev
+# (vê app.json). Maestro escolhe a plataforma alvo via --device flag.
+appId: app.meumascote.dev
+
+# tags: agrupa flows pra rodar subconjuntos (ex: maestro test --include-tags=critical)
+tags:
+  - mascote
+  - mobile
+
+# Workspace launch config — abrir o app limpo a cada flow pra evitar
+# bleed de estado entre testes.
+flows:
+  - "*.yaml"
+  - "!config.yaml"
+
+executionOrder:
+  continueOnFailure: false

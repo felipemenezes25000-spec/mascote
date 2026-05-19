@@ -1,0 +1,203 @@
+import { useEffect, useState } from 'react';
+import { Redirect } from 'expo-router';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Card } from '@/components/Card';
+import { Icon } from '@/components/Icon';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { StaggeredView } from '@/components/StaggeredView';
+import { achievementCatalog } from '@/content/achievements';
+import { achievements, checkins, messages, missions, streaks } from '@/lib/db';
+import { useStore } from '@/store';
+import { useStyles, useTheme } from '@/lib/useTheme';
+import type { Theme } from '@/lib/themes';
+import type { AchievementContext } from '@/content/achievements';
+
+export default function AchievementsScreen() {
+  const theme = useTheme();
+  const styles = useStyles(makeStyles);
+  const profile = useStore(s => s.profile);
+  const mascot = useStore(s => s.mascot);
+  const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set());
+  const [ctx, setCtx] = useState<AchievementContext | null>(null);
+
+  useEffect(() => {
+    if (!profile || !mascot) return;
+    void load();
+  }, [profile?.id]);
+
+  async function load() {
+    if (!profile || !mascot) return;
+    const owned = await achievements.listUnlocked(profile.id);
+    setUnlockedIds(new Set(owned.map(o => o.achievement_id)));
+    const allCheckins = await checkins.listAll(profile.id);
+    const allMissions = await missions.list(profile.id);
+    const msgCount = await messages.count(profile.id, 'user');
+    const streak = await streaks.get(profile.id);
+    const daysSince = Math.floor(
+      (Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24)
+    );
+    setCtx({
+      level: mascot.level,
+      totalXp: mascot.xp,
+      totalCheckins: allCheckins.length,
+      currentStreak: streak.current_streak,
+      longestStreak: streak.longest_streak,
+      daysSinceCreated: daysSince,
+      messagesSent: msgCount,
+      missionsCompleted: allMissions.filter(m => m.status === 'completed').length,
+      habitVariety: new Set(allCheckins.map(c => c.habit_kind)).size,
+    });
+  }
+
+  if (!profile || !mascot) return <Redirect href="/splash" />;
+
+  const totalUnlocked = unlockedIds.size;
+  const total = achievementCatalog.length;
+  const progress = totalUnlocked / total;
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <ScreenHeader variant="modal" title="Conquistas" subtitle={`${totalUnlocked} de ${total}`} />
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <StaggeredView index={0}>
+          <Card variant="elevated" padding="lg" style={styles.summary}>
+            <View style={styles.summaryIconWrap}>
+              <Icon name="trophy" size={28} color={theme.colors.gold} strokeWidth={1.8} fill={theme.colors.gold + '30'} />
+            </View>
+            <Text style={styles.summaryValue}>{totalUnlocked} / {total}</Text>
+            <Text style={styles.summaryLabel}>conquistas desbloqueadas</Text>
+            <View style={styles.bar}>
+              <View style={[styles.barFill, { width: `${progress * 100}%` }]} />
+            </View>
+          </Card>
+        </StaggeredView>
+
+        <View style={styles.list}>
+          {achievementCatalog.map((a, i) => {
+            const unlocked = unlockedIds.has(a.id);
+            return (
+              <StaggeredView key={a.id} index={Math.min(i, 12)} step={30}>
+                <View style={[styles.item, !unlocked && styles.itemLocked]}>
+                  <View style={[styles.iconCircle, unlocked && styles.iconCircleUnlocked]}>
+                    {unlocked ? (
+                      <Text style={styles.emoji}>{a.emoji}</Text>
+                    ) : (
+                      <Icon name="lock" size={18} color={theme.colors.textDim} strokeWidth={2} />
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.title, !unlocked && styles.titleLocked]}>{a.title}</Text>
+                    <Text style={styles.desc}>{a.description}</Text>
+                  </View>
+                  {unlocked && (
+                    <View style={styles.checkBadge}>
+                      <Icon name="check" size={14} color={theme.colors.success} strokeWidth={3} />
+                    </View>
+                  )}
+                </View>
+              </StaggeredView>
+            );
+          })}
+        </View>
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function makeStyles(theme: Theme) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: theme.colors.bg },
+    scroll: { padding: theme.spacing.lg, gap: theme.spacing.lg },
+    summary: {
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    summaryIconWrap: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: theme.colors.gold + '18',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.gold + '40',
+      marginBottom: 4,
+    },
+    summaryValue: {
+      fontSize: 36,
+      color: theme.colors.text,
+      fontFamily: 'InstrumentSerif_400Regular',
+      letterSpacing: -0.8,
+      lineHeight: 40,
+    },
+    summaryLabel: {
+      ...theme.text.sm,
+      color: theme.colors.textSecondary,
+      fontStyle: 'italic',
+      fontFamily: 'InstrumentSerif_400Regular_Italic',
+    },
+    bar: {
+      width: '100%',
+      height: 8,
+      backgroundColor: theme.colors.border,
+      borderRadius: theme.radius.pill,
+      overflow: 'hidden',
+      marginTop: theme.spacing.sm,
+    },
+    barFill: { height: '100%', backgroundColor: theme.colors.gold },
+    list: { gap: theme.spacing.sm },
+    item: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.md,
+      backgroundColor: theme.colors.surface,
+      padding: theme.spacing.md,
+      borderRadius: theme.radius.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      ...theme.shadow.sm,
+    },
+    itemLocked: { opacity: 0.6 },
+    iconCircle: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: theme.colors.bg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    iconCircleUnlocked: {
+      backgroundColor: theme.colors.primaryTint,
+      borderColor: theme.colors.primarySoft,
+    },
+    emoji: { fontSize: 22 },
+    title: {
+      color: theme.colors.text,
+      fontFamily: 'InstrumentSerif_400Regular',
+      fontSize: 17,
+      lineHeight: 20,
+      letterSpacing: -0.2,
+    },
+    titleLocked: { color: theme.colors.textSecondary },
+    desc: {
+      ...theme.text.xs,
+      color: theme.colors.textSecondary,
+      marginTop: 2,
+      lineHeight: 14,
+    },
+    checkBadge: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: theme.colors.success + '18',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.success + '40',
+    },
+  });
+}

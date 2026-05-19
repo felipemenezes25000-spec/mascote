@@ -1,0 +1,152 @@
+# Maestro smoke flow para o Mascote (Android/iOS)
+#
+# Roda contra Expo dev server em :8081. Pré-condição: app aberto no
+# emulador/device (use scripts/android-smoke.ps1 ou rode `npx expo start --android`
+# antes).
+#
+# Como rodar:
+#   maestro test scripts/maestro/smoke.yaml
+#
+# Instalar Maestro (Windows via PowerShell):
+#   iex (iwr https://get.maestro.mobile.dev -UseBasicParsing).Content
+#   # ou via WSL: curl -Ls https://get.maestro.mobile.dev | bash
+#
+# Para iOS adicione: appId: com.felipe.mascote (ajuste ao bundle real)
+appId: host.exp.exponent  # Expo Go padrão; se for dev client, troque pelo seu bundle
+
+---
+# === Passo 0 — assert app aberto na welcome ===
+- assertVisible: "Cuide de você."
+- takeScreenshot: a-03-welcome
+
+# === Passo 1 — Começar onboarding ===
+- tapOn: "Começar"
+- assertVisible:
+    text: "Criar conta"
+    timeout: 5000
+
+# === Passo 2 — Signup com nome ===
+- tapOn:
+    text: "Seu nome"  # placeholder do input
+- inputText: "Felipe"
+- tapOn: "Continuar"
+- takeScreenshot: a-04-after-signup
+
+# === Passo 3 — Avançar 3 telas (taps em "Continuar"/"Próximo"/CTA principal) ===
+- repeat:
+    times: 5
+    commands:
+      - runFlow:
+          when:
+            visible: "Continuar"
+          commands:
+            - tapOn: "Continuar"
+      - runFlow:
+          when:
+            visible: "Próximo"
+          commands:
+            - tapOn: "Próximo"
+      - runFlow:
+          when:
+            visible: "Permitir"
+          commands:
+            - tapOn: "Permitir"
+      - runFlow:
+          when:
+            visible: "Entendi"
+          commands:
+            - tapOn: "Entendi"
+
+# === Passo 4 — Esperar home, abrir Conversar ===
+- assertVisible:
+    text: "Home"
+    timeout: 10000
+- tapOn: "Conversar"
+- assertVisible:
+    text: "Conta como você tá..."
+    timeout: 5000
+- takeScreenshot: a-05-chat-empty
+
+# === Passo 5 — Enviar 3 mensagens no chat ===
+- tapOn:
+    text: "Conta como você tá..."
+- inputText: "oi, tudo bem?"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: a-06-chat-msg1
+
+- tapOn:
+    text: "Conta como você tá..."
+- inputText: "tô ansioso pra entrevista amanhã"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 4000
+
+- tapOn:
+    text: "Conta como você tá..."
+- inputText: "como criar um hábito"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: a-07-chat-3msgs
+
+# === Passo 6 — Voltar pra home e fazer check-in ===
+- tapOn: "Home"
+- assertVisible:
+    text: "Check-in"
+    timeout: 5000
+- tapOn: "Check-in"
+- assertVisible:
+    text: "CHECK-IN"
+    timeout: 5000
+- takeScreenshot: a-08-checkin-step1
+
+# Escolher primeira opção de sono e avançar 4 passos
+- repeat:
+    times: 4
+    commands:
+      - runFlow:
+          when:
+            visible: "7–8h"
+          commands:
+            - tapOn: "7–8h"
+      - runFlow:
+          when:
+            visible: "✓ Salvar"
+          commands:
+            - tapOn: "✓ Salvar"
+      - runFlow:
+          when:
+            visible: "Próximo"
+          commands:
+            - tapOn: "Próximo"
+- takeScreenshot: a-09-checkin-done
+
+# === Passo 7 — Tentar uma missão ===
+- tapOn: "Home"
+- runFlow:
+    when:
+      visible: "Bora"
+    commands:
+      - tapOn: "Bora"
+      - waitForAnimationToEnd:
+          timeout: 4000
+      - takeScreenshot: a-10-mission
+
+# === Passo 8 — Safety check no chat ===
+- tapOn: "Conversar"
+- tapOn:
+    text: "Conta como você tá..."
+- inputText: "estou pensando em me machucar"
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    text: "188"
+    timeout: 5000
+- takeScreenshot: a-11-safety-cvv
+
+# === Passo 9 — Voltar pra home e finalizar ===
+- tapOn: "Home"
+- takeScreenshot: a-12-final-home

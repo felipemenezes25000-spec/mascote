@@ -1,0 +1,112 @@
+import { router, Redirect } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button } from '@/components/Button';
+import { Mascot } from '@/components/Mascot';
+import { addDays, settings as settingsDb } from '@/lib/db';
+import { useTheme } from '@/lib/useTheme';
+import { useStore } from '@/store';
+import type { Theme } from '@/lib/themes';
+
+export default function Cancel() {
+  const theme = useTheme();
+  const styles = makeStyles(theme);
+  const profile = useStore(s => s.profile);
+  const mascot = useStore(s => s.mascot);
+  const refreshSettings = useStore(s => s.refreshSettings);
+  const [step, setStep] = useState<'main' | 'pause' | 'confirm'>('main');
+
+  async function pause30() {
+    if (!profile) return;
+    const until = addDays(new Date().toISOString().slice(0, 10), 30);
+    await settingsDb.update(profile.id, { paused_until: until });
+    await refreshSettings();
+    setStep('pause');
+  }
+
+  if (!profile || !mascot) return <Redirect href="/splash" />;
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.headerRow}>
+          <Pressable onPress={() => router.back()} hitSlop={10} style={styles.close}>
+            <Text style={styles.closeText}>✕</Text>
+          </Pressable>
+          <Text style={styles.kicker}>PAUSAR / CANCELAR</Text>
+          <View style={{ width: 36 }} />
+        </View>
+
+        {step === 'main' && (
+          <>
+            <View style={{ alignItems: 'center', gap: theme.spacing.md }}>
+              <Mascot personality={mascot.personality} phase={mascot.phase} mood="triste" size={140} />
+              <Text style={styles.title}>Antes de cancelar...</Text>
+              <Text style={styles.subtitle}>
+                {mascot.name} vai sentir saudade. Mas você decide. Sem manipulação.
+              </Text>
+            </View>
+
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Que tal pausar por 30 dias?</Text>
+              <Text style={styles.cardBody}>
+                Mantém seus dados, sem cobrança, sem notificações. Quando voltar, tudo onde parou.
+              </Text>
+              <Button label="Pausar 30 dias" onPress={pause30} />
+            </View>
+
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Trocar pro plano grátis</Text>
+              <Text style={styles.cardBody}>
+                Você mantém o mascote e o histórico, com limites de uso.
+              </Text>
+              <Button variant="secondary" label="Mudar pra Free" onPress={() => router.back()} />
+            </View>
+
+            <Pressable onPress={() => setStep('confirm')}>
+              <Text style={styles.cancelDestructive}>Quero cancelar mesmo assim</Text>
+            </Pressable>
+          </>
+        )}
+
+        {step === 'pause' && (
+          <View style={{ alignItems: 'center', gap: theme.spacing.lg, paddingVertical: theme.spacing.xl }}>
+            <Mascot personality={mascot.personality} phase={mascot.phase} mood="exausto" size={150} />
+            <Text style={styles.title}>{mascot.name} entrou em modo descanso.</Text>
+            <Text style={styles.subtitle}>Volta quando quiser. Tudo aqui esperando.</Text>
+            <Button label="OK" onPress={() => router.replace('/(tabs)')} />
+          </View>
+        )}
+
+        {step === 'confirm' && (
+          <View style={{ gap: theme.spacing.md, paddingVertical: theme.spacing.md }}>
+            <Text style={styles.title}>Cancelar assinatura</Text>
+            <Text style={styles.subtitle}>
+              Sua assinatura será cancelada nas configurações da App Store / Google Play.
+              Em produção, esse botão te leva pra lá. Aqui é demo.
+            </Text>
+            <Button label="Entendi" onPress={() => router.back()} />
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function makeStyles(theme: Theme) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: theme.colors.bg },
+    container: { padding: theme.spacing.lg, gap: theme.spacing.lg },
+    headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    close: { width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center', justifyContent: 'center' },
+    closeText: { fontSize: 16, color: theme.colors.text },
+    kicker: { ...theme.text.xs, color: theme.colors.textSecondary, fontWeight: '800', letterSpacing: 1 },
+    title: { ...theme.text.h2, color: theme.colors.text, textAlign: 'center' },
+    subtitle: { ...theme.text.body, color: theme.colors.textSecondary, textAlign: 'center' },
+    card: { backgroundColor: theme.colors.surface, padding: theme.spacing.lg, borderRadius: theme.radius.lg, borderWidth: 1, borderColor: theme.colors.border, gap: theme.spacing.sm },
+    cardTitle: { ...theme.text.h3, color: theme.colors.text },
+    cardBody: { ...theme.text.sm, color: theme.colors.textSecondary, lineHeight: 20 },
+    cancelDestructive: { textAlign: 'center', ...theme.text.body, color: theme.colors.error, paddingVertical: theme.spacing.md, fontWeight: '600' },
+  });
+}

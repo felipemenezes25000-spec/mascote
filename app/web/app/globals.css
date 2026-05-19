@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --grain-opacity: 0.06;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    background: #FBF6F1;
+    color: #1F1A14;
+    font-family: var(--font-jakarta), system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+  ::selection {
+    background: #FF8030;
+    color: #FBF6F1;
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  *:focus-visible {
+    outline: 2px solid #FF8030;
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  animation-name: marquee;
+  animation-duration: var(--marquee-duration, 40s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-play-state: running;
+}
+.marquee-track.is-paused {
+  animation-play-state: paused;
+}
+
+@layer utilities {
+  .grain {
+    position: relative;
+    isolation: isolate;
+  }
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: var(--grain-opacity);
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.12  0 0 0 0 0.1  0 0 0 0 0.08  0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  .ink-shadow {
+    box-shadow: 0 2px 0 0 #1F1A14, 0 8px 24px -8px rgba(31, 26, 20, 0.18);
+  }
+  .ink-shadow-lg {
+    box-shadow: 0 4px 0 0 #1F1A14, 0 18px 40px -12px rgba(31, 26, 20, 0.25);
+  }
+  .editorial-rule {
+    background: linear-gradient(90deg, transparent, #1F1A14 12%, #1F1A14 88%, transparent);
+    height: 1px;
+  }
+  .text-balance { text-wrap: balance; }
+  .glow-orange {
+    box-shadow: 0 0 60px -10px rgba(255, 128, 48, 0.55), 0 0 120px -20px rgba(242, 193, 78, 0.35);
+  }
+  .ring-ink { box-shadow: inset 0 0 0 1.5px #1F1A14; }
+  .reveal-init { opacity: 0; transform: translateY(28px); }
+}
+
+.stagger > * { animation: reveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.15s; }
+.stagger > *:nth-child(3) { animation-delay: 0.25s; }
+.stagger > *:nth-child(4) { animation-delay: 0.35s; }
+.stagger > *:nth-child(5) { animation-delay: 0.45s; }
+.stagger > *:nth-child(6) { animation-delay: 0.55s; }
+.stagger > *:nth-child(7) { animation-delay: 0.65s; }
+.stagger > *:nth-child(8) { animation-delay: 0.75s; }
+
+@keyframes reveal {
+  0% { opacity: 0; transform: translateY(28px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* DARK MODE — invert via data-theme on <html> */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --grain-opacity: 0.10;
+}
+html[data-theme="dark"] body { background: #131017; color: #FBF6F1; }
+html[data-theme="dark"] .bg-cream { background-color: #1B161F !important; }
+html[data-theme="dark"] .bg-cream\/70 { background-color: rgba(27, 22, 31, 0.75) !important; }
+html[data-theme="dark"] .bg-cream\/60 { background-color: rgba(27, 22, 31, 0.6) !important; }
+html[data-theme="dark"] .text-ink { color: #FBF6F1 !important; }
+html[data-theme="dark"] .text-ink-soft { color: rgba(251, 246, 241, 0.78) !important; }
+html[data-theme="dark"] .text-ink\/55, html[data-theme="dark"] .text-ink\/65, html[data-theme="dark"] .text-ink\/45, html[data-theme="dark"] .text-ink\/40, html[data-theme="dark"] .text-ink\/70 { color: rgba(251, 246, 241, 0.6) !important; }
+html[data-theme="dark"] .bg-ink { background-color: #FBF6F1 !important; color: #131017 !important; }
+html[data-theme="dark"] .bg-ink .text-cream { color: #131017 !important; }
+html[data-theme="dark"] .bg-ink .text-cream\/55, html[data-theme="dark"] .bg-ink .text-cream\/65, html[data-theme="dark"] .bg-ink .text-cream\/70, html[data-theme="dark"] .bg-ink .text-cream\/75, html[data-theme="dark"] .bg-ink .text-cream\/80, html[data-theme="dark"] .bg-ink .text-cream\/90 { color: rgba(19, 16, 23, 0.7) !important; }
+html[data-theme="dark"] .border-ink\/8 { border-color: rgba(251, 246, 241, 0.08) !important; }
+html[data-theme="dark"] .border-ink\/10 { border-color: rgba(251, 246, 241, 0.1) !important; }
+html[data-theme="dark"] .border-ink\/15 { border-color: rgba(251, 246, 241, 0.15) !important; }
+html[data-theme="dark"] .border-ink\/20 { border-color: rgba(251, 246, 241, 0.2) !important; }
+html[data-theme="dark"] .border-ink\/25 { border-color: rgba(251, 246, 241, 0.25) !important; }
+html[data-theme="dark"] .border-ink\/30 { border-color: rgba(251, 246, 241, 0.3) !important; }
+html[data-theme="dark"] .border-ink { border-color: #FBF6F1 !important; }
+html[data-theme="dark"] .ring-ink { box-shadow: inset 0 0 0 1.5px #FBF6F1 !important; }
+html[data-theme="dark"] .ink-shadow { box-shadow: 0 2px 0 0 #FBF6F1, 0 8px 24px -8px rgba(251, 246, 241, 0.18); }
+html[data-theme="dark"] .ink-shadow-lg { box-shadow: 0 4px 0 0 #FBF6F1, 0 18px 40px -12px rgba(251, 246, 241, 0.18); }
+html[data-theme="dark"] .editorial-rule { background: linear-gradient(90deg, transparent, #FBF6F1 12%, #FBF6F1 88%, transparent); }
+html[data-theme="dark"] .divide-ink\/15 > * + * { border-color: rgba(251, 246, 241, 0.15) !important; }
+html[data-theme="dark"] .border-y.border-ink\/15 { border-color: rgba(251, 246, 241, 0.15) !important; }
+html[data-theme="dark"] ::selection { background: #F2C14E; color: #131017; }
+
+/* prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .grain::before { display: none; }
+}
+
+/* lighter motion on small / low-end devices */
+@media (max-width: 640px) {
+  .grain::before { opacity: 0.04; }
+  [data-decor-mobile-hide] { display: none !important; }
+}

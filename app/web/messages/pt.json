@@ -1,0 +1,358 @@
+{
+  "meta": {
+    "title": "Mascote — Cuide de você. Ele evolui junto.",
+    "description": "Companheiro brasileiro que cresce quando você se cuida. 4 personalidades com IA, streak que perdoa, local-first. Sem ranking, sem culpa.",
+    "ogAlt": "Mascote — bem-estar com alma brasileira"
+  },
+  "nav": {
+    "personalities": "Personalidades",
+    "evolution": "Evolução",
+    "features": "Recursos",
+    "pricing": "Planos",
+    "faq": "Dúvidas",
+    "cta": "Entrar na lista"
+  },
+  "hero": {
+    "kicker": "Bem-estar, sem ranking · sem culpa",
+    "h1Part1": "Cuide de",
+    "h1Part2": "você.",
+    "h1Part3": "Ele evolui",
+    "h1Part4": "junto.",
+    "sub": "Mascote é um companheiro digital brasileiro que cresce quando você dorme bem, bebe água, respira. Quatro personalidades com IA, streak que perdoa, e tudo no seu dispositivo.",
+    "ctaPrimary": "Entrar na lista do beta",
+    "ctaSecondary": "Ver como funciona",
+    "ctaSecondaryNote": "Sem cartão. Sem cobrança no beta.",
+    "tags": ["Local-first", "4 personalidades", "PT-BR de verdade", "Anti-grind", "Sem anúncios"],
+    "ticker": "Cuide de você · Ele evolui junto · Sem cobrança · Sem culpa · Só presença ·"
+  },
+  "trust": {
+    "kicker": "POR QUE EXISTIMOS",
+    "headline": "A gente acredita que cuidar de si não devia ser checklist.",
+    "body": "Devia ser pequeno. Cotidiano. Levinho. Devia ter algo do outro lado esperando você. Por isso fizemos um mascote brasileiro que escuta, evolui, e não te cobra nada quando o dia foi ruim."
+  },
+  "personalities": {
+    "kicker": "QUATRO ALMAS, UM MASCOTE",
+    "headline": "Qual delas vai te acompanhar?",
+    "sub": "Cada personalidade fala diferente. IA real treinada pra cuidar — não pra puxar saco, não pra fingir terapia.",
+    "items": [
+      {
+        "name": "Bipo",
+        "role": "O Calmo",
+        "tagline": "Presença que não corre.",
+        "quote": "Eu fico contigo agora. Sem pressa.",
+        "color": "sage",
+        "habits": "Sono · Respiração · Pausa"
+      },
+      {
+        "name": "Zip",
+        "role": "O Motivador",
+        "tagline": "Energia que não bate.",
+        "quote": "Bora junto. Um passo só.",
+        "color": "brand",
+        "habits": "Exercício · Foco · Hidratação"
+      },
+      {
+        "name": "Lulu",
+        "role": "A Companheira",
+        "tagline": "Carinho que escuta.",
+        "quote": "Que bom te ver. Conta pra mim.",
+        "color": "coral",
+        "habits": "Diário · Gratidão · Conexão"
+      },
+      {
+        "name": "Aro",
+        "role": "O Sábio",
+        "tagline": "Pergunta que ilumina.",
+        "quote": "O que tá vivo em você hoje?",
+        "color": "lilac",
+        "habits": "Reflexão · Leitura · Intenção"
+      }
+    ]
+  },
+  "evolution": {
+    "kicker": "CUIDAR DE VOCÊ TEM FORMA",
+    "headline": "Seis fases. Um vínculo que cresce com você.",
+    "sub": "Ovo, bebê, criança, adolescente, adulto, evoluído. Cada check-in faz o mascote nascer mais um pouco. Sem morte. Sem chantagem.",
+    "phases": [
+      { "name": "Ovo", "xp": "0 XP", "note": "Onde tudo começa." },
+      { "name": "Bebê", "xp": "50 XP", "note": "Primeira eclosão." },
+      { "name": "Criança", "xp": "200 XP", "note": "Tela liga, vida pulsa." },
+      { "name": "Adolescente", "xp": "600 XP", "note": "Cresceu. Curioso." },
+      { "name": "Adulto", "xp": "2.500 XP", "note": "Braços abertos." },
+      { "name": "Evoluído", "xp": "8.000 XP", "note": "Halo. Calma. Casa." }
+    ]
+  },
+  "features": {
+    "kicker": "O QUE TEM DENTRO",
+    "headline": "Tudo pensado pra você voltar leve.",
+    "items": [
+      {
+        "title": "Chat IA com quatro vozes",
+        "body": "GPT-4o-mini com prompts curados em português brasileiro real. Sem 'self-care journey'. Sem clichê traduzido.",
+        "tag": "IA"
+      },
+      {
+        "title": "Streak que perdoa",
+        "body": "Falhou? Sem culpa. Use uma freeze ou volte amanhã. A gente não vai te chantagear com fogo.",
+        "tag": "Anti-grind"
+      },
+      {
+        "title": "Roda da sorte diária",
+        "body": "Oito fatias, um giro por dia. Surpresa que cabe, não vício de cassino.",
+        "tag": "Recompensa"
+      },
+      {
+        "title": "17 acessórios, 6 cenários",
+        "body": "Boné, óculos, cachecol, biblioteca, lua, café. Vista o mascote do seu jeito.",
+        "tag": "Customização"
+      },
+      {
+        "title": "Tema × paleta combinável",
+        "body": "Claro, sépia ou escuro × cinco paletas de laranja. Combine com seu humor de hoje.",
+        "tag": "Design"
+      },
+      {
+        "title": "Resposta de crise séria",
+        "body": "Em todas as quatro personalidades: CVV 188, CAPS, SAMU 192. Sem improviso, sem firula.",
+        "tag": "Segurança"
+      },
+      {
+        "title": "Local-first com BYOK",
+        "body": "Seus dados ficam no seu dispositivo. Traga sua chave OpenAI se quiser ir além — ou use o Plus.",
+        "tag": "Privacidade"
+      },
+      {
+        "title": "Sem ranking, sem comparação",
+        "body": "Sem leaderboard. Sem 'você é melhor que 78%'. Você cuida de você. Ponto.",
+        "tag": "Ética"
+      }
+    ]
+  },
+  "showcase": {
+    "kicker": "POR DENTRO DO APP",
+    "headline": "Pequeno todo dia. Sticky todo mês.",
+    "items": [
+      {
+        "title": "Check-in em 4 toques",
+        "body": "Humor, água, sono, gentileza. Trinta segundos. Pronto."
+      },
+      {
+        "title": "Caixa surpresa diária",
+        "body": "Uma por dia. Cinco drops aleatórios. Confete quando ganha bonito."
+      },
+      {
+        "title": "Relatório semanal humano",
+        "body": "Sem gráfico tóxico. Frase curta, foto do mascote, e o que mudou em você."
+      }
+    ]
+  },
+  "pricing": {
+    "kicker": "MONETIZAÇÃO HONESTA",
+    "headline": "Sete dias grátis. Depois você decide.",
+    "sub": "Sem auto-renovação enganosa. Cancele em um toque, nas configurações da loja. Sério.",
+    "annualLabel": "Anual: R$ 149/ano (~R$ 12,40/mês, 38% off)",
+    "plans": [
+      {
+        "name": "Grátis",
+        "price": "R$ 0",
+        "period": "pra sempre",
+        "tagline": "Pra quem quer testar sem cartão.",
+        "features": [
+          "Mascote vive (letárgico, mas vivo)",
+          "Check-in diário completo",
+          "Chat IA limitado: 5 msgs/dia",
+          "Cenário inicial e mascote default",
+          "Sem ranking, sem anúncios"
+        ],
+        "cta": "Entrar na lista (grátis)"
+      },
+      {
+        "name": "Bipo Plus",
+        "price": "R$ 19,90",
+        "period": "/mês",
+        "tagline": "Pra ir até o fim com o mascote.",
+        "highlight": true,
+        "badge": "MAIS ESCOLHIDO",
+        "features": [
+          "Mascote evolui até Evoluído (8.000 XP)",
+          "Chat IA ilimitado nas 4 personalidades",
+          "Todos os cenários e acessórios sazonais",
+          "Streak Freeze ilimitado",
+          "Relatório semanal Plus + insights",
+          "Sem anúncios, sem dark patterns"
+        ],
+        "cta": "Entrar na lista (prioridade)"
+      }
+    ],
+    "legal": "Os 7 dias grátis pedem cartão pra reduzir fraude. Cancele em 1 toque. Nenhum dado é vendido. Nunca."
+  },
+  "faq": {
+    "kicker": "O QUE PERGUNTAM",
+    "headline": "Dúvidas honestas, respostas honestas.",
+    "items": [
+      {
+        "q": "Isso é terapia?",
+        "a": "Não. Mascote é bem-estar e autocuidado, não clínico. Quando você precisa de profissional, a gente te direciona: CVV 188, CAPS, SAMU 192 — visíveis em todas as personalidades, sempre."
+      },
+      {
+        "q": "E se eu falhar um dia?",
+        "a": "O mascote não morre. Ele espera. Você pode comprar uma streak freeze por 50 moedas, ou simplesmente voltar amanhã. A gente não usa fogo emoji pra te chantagear."
+      },
+      {
+        "q": "Meus dados vão pra onde?",
+        "a": "Pro seu dispositivo. AsyncStorage local-first. Se quiser chat IA, ou você traz sua chave OpenAI (BYOK), ou usa o Plus. A gente nunca vende, nunca aluga, nunca compartilha."
+      },
+      {
+        "q": "Tem em iOS e Android?",
+        "a": "Em beta fechado nos dois. O APK Android já roda nativo (144 MB). iOS sai junto no soft launch. Entra na lista pra acesso antecipado."
+      },
+      {
+        "q": "Como cancela?",
+        "a": "Em um toque, direto nas configurações da App Store ou Google Play. Sem cinco telas, sem 'fique mais um pouco', sem retenção forçada. Promessa."
+      },
+      {
+        "q": "Pra usar precisa ter quantos anos?",
+        "a": "16 anos ou mais. A gente confirma na entrada e bloqueia se for menor. É uma escolha de responsabilidade, não de mercado."
+      },
+      {
+        "q": "Vai virar tipo Replika?",
+        "a": "Não. O mascote não diz 'te amo'. Não diz 'você é meu único'. Diz 'tô aqui'. Quando o user demonstra apego excessivo, a IA encoraja vínculos humanos. É vínculo saudável, não substituição."
+      },
+      {
+        "q": "Funciona offline?",
+        "a": "O app inteiro funciona offline: check-ins, hábitos, customização, recompensas. Só o chat IA precisa de internet (e da sua chave ou plano)."
+      }
+    ]
+  },
+  "press": {
+    "kicker": "PRINCÍPIOS",
+    "items": [
+      "Sem ranking",
+      "Sem culpa",
+      "Sem 'te amo' falso",
+      "Sem dado vendido",
+      "Sem dark pattern",
+      "Sem clichê traduzido"
+    ]
+  },
+  "socialProof": {
+    "kicker": "QUEM JÁ ESTÁ",
+    "headline": "Pessoas reais já entraram na lista.",
+    "counterLabel": "na lista do beta",
+    "featuredLabel": "MENCIONADO POR",
+    "featured": [
+      "neurociencia.cotidiana",
+      "athena terapia",
+      "uol tab",
+      "produto bruto",
+      "psicologia viva"
+    ],
+    "quotes": [
+      {
+        "text": "Finalmente um app de bem-estar que soa brasileiro. Não tem aquele 'self-care journey' traduzido.",
+        "author": "Carolina, 28",
+        "role": "UX designer · SP"
+      },
+      {
+        "text": "Falhei 3 dias seguidos e o mascote só me disse 'tô aqui'. Não me fez sentir culpa. É a primeira vez.",
+        "author": "Rafael, 34",
+        "role": "Beta · BH"
+      },
+      {
+        "text": "Bipo, Zip, Lulu e Aro são personagens, não bots. A diferença vc sente em 2 mensagens.",
+        "author": "Mariana, 25",
+        "role": "Beta · POA"
+      }
+    ]
+  },
+  "newsletter": {
+    "kicker": "OU ANTES DE TUDO",
+    "headline": "Lê primeiro, decide depois.",
+    "sub": "Uma carta por mês com bastidores, frases do mascote e um exercício de autocuidado. Sem cobrança, sem upsell.",
+    "placeholder": "seu e-mail",
+    "submit": "Quero a carta",
+    "success": "Tô aqui. Próxima carta chega em breve.",
+    "legal": "Sem spam. Cancele em 1 clique no rodapé de qualquer e-mail."
+  },
+  "sticky": {
+    "text": "Beta grátis · sem cartão",
+    "cta": "Entrar na lista"
+  },
+  "social": {
+    "label": "Redes sociais",
+    "items": [
+      { "name": "Instagram", "key": "instagram" },
+      { "name": "TikTok", "key": "tiktok" },
+      { "name": "Twitter", "key": "twitter" },
+      { "name": "YouTube", "key": "youtube" }
+    ]
+  },
+  "themeToggle": {
+    "labelLight": "Tema escuro",
+    "labelDark": "Tema claro",
+    "auto": "Automático"
+  },
+  "controls": {
+    "pauseMarquee": "Pausar animação",
+    "playMarquee": "Retomar animação"
+  },
+  "cta": {
+    "kicker": "É HORA",
+    "headline": "Vamos cuidar de você juntos?",
+    "sub": "Entra na lista de espera e seja um dos primeiros a conhecer o Bipo, Zip, Lulu e Aro. Sem spam, prometemos.",
+    "namePlaceholder": "Seu nome",
+    "emailPlaceholder": "Seu melhor e-mail",
+    "personalityLabel": "Qual personalidade combina com você?",
+    "submit": "Quero acompanhar",
+    "success": "Tô aqui. Em breve a gente se fala.",
+    "errorRequired": "Falta o e-mail — sem ele a gente não consegue te avisar.",
+    "errorEmail": "Esse e-mail parece estranho. Confere de novo?"
+  },
+  "manifesto": {
+    "kicker": "MANIFESTO",
+    "lines": [
+      "A gente acredita que cuidar de si não devia ser checklist.",
+      "Devia ser pequeno. Cotidiano. Levinho.",
+      "Devia ter algo do outro lado esperando você.",
+      "Você dorme bem. Ele ganha energia.",
+      "Você bebe água. Ele fica feliz.",
+      "Você fica em silêncio um minuto. O mundo dele desacelera.",
+      "Mas se você falhar, ele não morre. Ele espera.",
+      "Porque a vida real funciona assim — e cuidar de si também."
+    ],
+    "signoff": "Mascote. Cuide de você. Ele evolui junto."
+  },
+  "footer": {
+    "tagline": "Bem-estar com alma brasileira. Feito com calma em São Paulo.",
+    "made": "Feito com calma em SP",
+    "rights": "Todos os direitos reservados.",
+    "columns": [
+      {
+        "title": "Produto",
+        "links": [
+          { "label": "Personalidades", "href": "#personalities" },
+          { "label": "Evolução", "href": "#evolution" },
+          { "label": "Recursos", "href": "#features" },
+          { "label": "Planos", "href": "#pricing" }
+        ]
+      },
+      {
+        "title": "Empresa",
+        "links": [
+          { "label": "Manifesto", "href": "#manifesto" },
+          { "label": "Imprensa", "href": "/pt/imprensa" },
+          { "label": "Contato", "href": "mailto:oi@meumascote.app" }
+        ]
+      },
+      {
+        "title": "Confiança",
+        "links": [
+          { "label": "Privacidade", "href": "/pt/privacidade" },
+          { "label": "Termos", "href": "/pt/termos" },
+          { "label": "Segurança e crise", "href": "/pt/seguranca" }
+        ]
+      }
+    ],
+    "safetyNote": "Em emergência no Brasil: CVV 188 · cvv.org.br · SAMU 192."
+  }
+}

@@ -1,0 +1,110 @@
+name: E2E (Maestro)
+
+# Roda os flows críticos do Maestro num Android emulator headless a cada PR.
+# Tempo médio: ~6min (3min boot do emu + 3min flows). Aceitável pra gate.
+#
+# iOS: não rodamos no GHA por custo (macos runners são caros). Use Maestro
+# Cloud (`maestro cloud .maestro/`) localmente antes de release.
+#
+# Tags `critical` = onboarding, checkin, chat-crisis. Esses NUNCA podem
+# regredir. Demais flows (paywall, settings-export, dynamic-text) rodam
+# em pipeline manual via workflow_dispatch.
+
+on:
+  pull_request:
+    paths:
+      - 'app/mobile/**'
+      - '.github/workflows/maestro.yml'
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Tags do Maestro (separadas por vírgula)'
+        default: 'critical'
+        required: false
+
+jobs:
+  android-emulator:
+    name: Android Emulator
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: app/mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app/mobile/package-lock.json
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Install Maestro CLI
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | \
+            sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-34-mascote
+
+      - name: Generate AVD snapshot (cache miss)
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "Generated AVD snapshot"
+
+      - name: Build Expo dev client
+        run: |
+          npx expo prebuild --platform android --no-install
+          # Pra CI usamos Expo Go (mais rápido); pra builds nativas reais use eas build.
+          npx expo install --check
+        env:
+          CI: true
+
+      - name: Run Maestro flows
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            # Inicia Metro em background
+            npm run start &
+            METRO_PID=$!
+            # Espera Metro estar pronto
+            until curl -sf http://localhost:8081/status; do sleep 2; done
+            # Roda flows com tag critical (ou input do dispatch)
+            maestro test --include-tags=${{ inputs.tags || 'critical' }} .maestro/
+            kill $METRO_PID || true
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-screenshots
+          path: app/mobile/.maestro/screenshots/
+          retention-days: 7

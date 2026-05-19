@@ -1,0 +1,34 @@
+# Fluxo: registrar 1 check-in de hábito a partir da home.
+# Pré-requisito: onboarding completo (rodar onboarding.yaml antes ou ter estado salvo).
+appId: app.meumascote.dev
+tags: [critical, daily-loop]
+---
+- launchApp:
+    clearKeychain: false  # preserva chave OpenAI se setada
+    stopApp: true
+
+# Se ainda no onboarding, pula
+- runFlow:
+    when:
+      visible: "Começar"
+    file: onboarding.yaml
+
+# Home — busca chip de hábito "água"
+- assertVisible:
+    text: ".*[Áá]gua.*|💧"
+
+- tapOn:
+    text: ".*[Áá]gua.*"
+
+# Modal de valor (se houver) — tappear "Confirmar" / "OK"
+- runFlow:
+    when:
+      visible: "Confirmar"
+    commands:
+      - tapOn: "Confirmar"
+
+# Verifica que XP subiu (qualquer número > 0 visível)
+- assertVisible:
+    text: ".*[1-9]\\d*.*XP|nível.*"
+
+- takeScreenshot: checkin-applied

@@ -1,0 +1,117 @@
+import {
+  achievements as achievementsDb,
+  checkins as checkinsDb,
+  inventory,
+  messages as messagesDb,
+  missions as missionsDb,
+  userScenes,
+} from '@/lib/db';
+import { accessoryCatalog, checkUnlock as checkAccessoryUnlock } from '@/content/accessories';
+import { achievementCatalog } from '@/content/achievements';
+import { checkSceneUnlock, scenesCatalog } from '@/content/scenes';
+import { activeSeasonalEvent } from '@/content/seasonal';
+import type { Mascot, Profile, Streak } from '@/types';
+
+export interface UnlockResult {
+  accessories: { id: string; name: string; emoji: string }[];
+  scenes: { id: string; name: string; emoji: string }[];
+  achievements: { id: string; title: string; emoji: string; description: string }[];
+}
+
+export async function processUnlocks(
+  profile: Profile,
+  mascot: Mascot,
+  streak: Streak
+): Promise<UnlockResult> {
+  const result: UnlockResult = { accessories: [], scenes: [], achievements: [] };
+
+  // Paraleliza reads (eram 6 sequenciais ~150ms+ no AsyncStorage).
+  const [allCheckins, allMissions, messagesCount, ownedAchievements, ownedAcc, ownedScenes] =
+    await Promise.all([
+      checkinsDb.listAll(profile.id),
+      missionsDb.list(profile.id),
+      messagesDb.count(profile.id, 'user'),
+      achievementsDb.listUnlocked(profile.id),
+      inventory.listOwned(profile.id),
+      userScenes.listUnlocked(profile.id),
+    ]);
+  const daysSinceCreated = Math.floor(
+    (Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const habitVariety = new Set(allCheckins.map(c => c.habit_kind)).size;
+  const ctx = {
+    level: mascot.level,
+    totalXp: mascot.xp,
+    totalCheckins: allCheckins.length,
+    currentStreak: streak.current_streak,
+    longestStreak: streak.longest_streak,
+    daysSinceCreated,
+    messagesSent: messagesCount,
+    missionsCompleted: allMissions.filter(m => m.status === 'completed').length,
+    habitVariety,
+  };
+  const ownedAchIds = new Set(ownedAchievements.map(a => a.achievement_id));
+  for (const ach of achievementCatalog) {
+    if (ownedAchIds.has(ach.id)) continue;
+    if (ach.check(ctx)) {
+      const unlocked = await achievementsDb.unlock(profile.id, ach.id);
+      /* v8 ignore next — `if (unlocked)` é guard porque achievementsDb.unlock
+         retorna null se já desbloqueado, mas o `ownedAchIds.has(ach.id)` acima
+         já filtra esse caso. Race condition entre 2 scans simultâneos. */
+      if (unlocked) {
+        result.achievements.push({
+          id: ach.id,
+          title: ach.title,
+          emoji: ach.emoji,
+          description: ach.description,
+        });
+      }
+    }
+  }
+
+  // === Accessories
+  const ownedAccIds = new Set(ownedAcc.map(a => a.accessory_id));
+  // Acessórios sazonais (kind: 'seasonal', value: mês 1..12) só são checados
+  // quando há um seasonalEvent ativo cujo startMonth bata.
+  const seasonal = activeSeasonalEvent();
+  const activeSeasonalMonth = seasonal?.startMonth;
+  for (const acc of accessoryCatalog) {
+    if (ownedAccIds.has(acc.id)) continue;
+    if (
+      checkAccessoryUnlock(acc, {
+        level: mascot.level,
+        currentStreak: streak.current_streak,
+        longestStreak: streak.longest_streak,
+        totalCheckins: allCheckins.length,
+        activeSeasonalMonth,
+      })
+    ) {
+      await inventory.unlock(profile.id, acc.id);
+      result.accessories.push({ id: acc.id, name: acc.name, emoji: acc.emoji });
+    }
+  }
+
+  // === Scenes
+  const ownedSceneIds = new Set(ownedScenes.map(s => s.scene_id));
+  // garantir default
+  if (!ownedSceneIds.has('room')) {
+    await userScenes.unlock(profile.id, 'room');
+    await userScenes.setActive(profile.id, 'room');
+    ownedSceneIds.add('room');
+  }
+  for (const sc of scenesCatalog) {
+    if (ownedSceneIds.has(sc.id)) continue;
+    if (
+      checkSceneUnlock(sc, {
+        level: mascot.level,
+        currentStreak: streak.current_streak,
+        longestStreak: streak.longest_streak,
+      })
+    ) {
+      await userScenes.unlock(profile.id, sc.id);
+      result.scenes.push({ id: sc.id, name: sc.name, emoji: sc.emoji });
+    }
+  }
+
+  return result;
+}

@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="orangeCircleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E85D04" />
+      <stop offset="40%" stop-color="#D04E02" />
+      <stop offset="100%" stop-color="#801000" />
+    </linearGradient>
+    <linearGradient id="orangeFaceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D95407" />
+      <stop offset="100%" stop-color="#941C02" />
+    </linearGradient>
+    <linearGradient id="whiteRobotGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="80%" stop-color="#F6F6F6" />
+      <stop offset="100%" stop-color="#E0E0E0" />
+    </linearGradient>
+    <linearGradient id="eyeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#333333" />
+      <stop offset="100%" stop-color="#0A0A0A" />
+    </linearGradient>
+    <filter id="logoShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+    <filter id="robotShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="1" dy="5" stdDeviation="4" flood-color="#500F00" flood-opacity="0.45"/>
+    </filter>
+    <clipPath id="circleClip">
+      <circle cx="250" cy="250" r="210" />
+    </clipPath>
+  </defs>
+
+  <circle cx="250" cy="250" r="210" fill="url(#orangeCircleGrad)" filter="url(#logoShadow)" />
+  <circle cx="250" cy="250" r="208" fill="none" stroke="#FFA366" stroke-width="1.5" opacity="0.3" />
+
+  <g clip-path="url(#circleClip)">
+    <g filter="url(#robotShadow)">
+      <path d="M 115 490 C 115 375, 385 375, 385 490 Z" fill="url(#whiteRobotGrad)" />
+      <path d="M 225 320 Q 250 315, 275 320 L 270 390 L 230 390 Z" fill="url(#whiteRobotGrad)" />
+      <rect x="93" y="212" width="30" height="60" rx="15" fill="url(#whiteRobotGrad)" />
+      <rect x="377" y="212" width="30" height="60" rx="15" fill="url(#whiteRobotGrad)" />
+      <rect x="243" y="100" width="14" height="60" rx="7" fill="url(#whiteRobotGrad)" />
+      <circle cx="250" cy="92" r="18" fill="url(#whiteRobotGrad)" />
+      <rect x="110" y="145" width="280" height="195" rx="97" fill="url(#whiteRobotGrad)" />
+    </g>
+
+    <rect x="146" y="177" width="208" height="130" rx="65" fill="url(#orangeFaceGrad)" />
+    <rect x="146" y="177" width="208" height="130" rx="65" fill="none" stroke="#400A00" stroke-width="2.5" opacity="0.35" />
+
+    <circle cx="202" cy="235" r="17" fill="url(#eyeGrad)" />
+    <circle cx="197" cy="229" r="3.5" fill="#FFFFFF" opacity="0.9" />
+    <circle cx="298" cy="235" r="17" fill="url(#eyeGrad)" />
+    <circle cx="293" cy="229" r="3.5" fill="#FFFFFF" opacity="0.9" />
+
+    <path d="M 218 260 Q 250 292, 282 260" fill="none" stroke="#FFFFFF" stroke-width="9.5" stroke-linecap="round" />
+  </g>
+</svg>

@@ -1,0 +1,84 @@
+# Dependências
+node_modules/
+*/node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+web-build/
+build/
+coverage/
+**/coverage/
+*.tsbuildinfo
+
+# Expo
+.expo/
+**/.expo/
+.expo-shared/
+
+# Native build (Android/iOS)
+**/android/build/
+**/android/.gradle/
+**/android/app/build/
+**/ios/build/
+**/ios/Pods/
+**/ios/*.xcworkspace/xcuserdata/
+
+# Metro / RN cache
+.metro-health-check*
+.haste_cache/
+
+# Logs
+*.log
+**/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude / MCP / IA tooling (per-user, não vai pro repo)
+.claude/
+.playwright-mcp/
+.cursor/
+
+# Artefatos de teste / QA descartáveis
+test-screenshots/
+qa-*.json
+qa-runner.mjs
+snap-home.yml
+test-plan.md
+test-report-*.md
+*.tmp
+yes.txt
+
+# Screenshots ad-hoc (capturas do processo, não documentação)
+audit-*.png
+bugscan-*.png
+final-*.png
+phase[0-9]*.png
+phase-*.png
+polish-*.png
+resp-*.png
+resp-fix-*.png
+ux-*.png
+
+# Expo logs específicos
+expo-build*.log
+expo-log.txt
+expo-go-install.log
+emu-boot.log
+rebuild.log
+sdk-install.log

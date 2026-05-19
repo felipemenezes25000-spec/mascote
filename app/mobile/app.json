@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "Mascote",
+    "slug": "mascote",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "mascote",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/logo-mascote.png",
+      "backgroundColor": "#FAF7F2",
+      "resizeMode": "contain"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "enabled": false
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.meumascote.dev",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "app.meumascote.dev",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FAF7F2"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/logo-mascote.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "mascote-video-gen",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "puppeteer": "^19.0.0",
+    "puppeteer-screen-recorder": "^3.0.6"
+  }
+}

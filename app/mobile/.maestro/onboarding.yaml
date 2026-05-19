@@ -1,0 +1,67 @@
+# Fluxo: onboarding completo, do welcome até a home.
+# Cobre: navegação multi-tela, persistência (profile + mascot), inputs.
+appId: app.meumascote.dev
+tags: [critical, onboarding]
+---
+# Limpa estado: garante que o app começa do zero.
+- clearState
+
+- launchApp
+
+# Welcome screen
+- assertVisible: "Mascote"
+- assertVisible:
+    text: ".*30 segundos.*"
+    enabled: true
+- tapOn: "Começar"
+
+# Idade
+- assertVisible: "Passo 1 de"
+- tapOn: "25–34"
+- tapOn: "Continuar"
+
+# Goal
+- assertVisible: "Passo 2 de"
+- tapOn:
+    index: 0  # primeiro objetivo
+- tapOn: "Continuar"
+
+# Mood
+- assertVisible: "Passo 3 de"
+- tapOn:
+    text: ".*ok.*|.*feliz.*"
+- tapOn: "Continuar"
+
+# Mascote (escolha visual)
+- assertVisible: "Passo 4 de"
+- tapOn:
+    index: 0
+- tapOn: "Continuar"
+
+# Personality
+- assertVisible: "Passo 5 de"
+- tapOn: "Calmo"
+- tapOn: "Continuar"
+
+# Name
+- assertVisible: "Passo 6 de"
+- tapOn:
+    id: "user_name_input"
+- inputText: "Felipe"
+- hideKeyboard
+- tapOn: "Pronto"
+
+# Push consent
+- assertVisible: "Passo 7 de"
+- tapOn:
+    text: "Agora não|Sim, pode me avisar"
+
+# Notice (disclaimer wellness)
+- assertVisible:
+    text: ".*16.*"
+- tapOn: "Entendi"
+
+# Home — verifica que mascote tá lá
+- assertVisible:
+    text: "Felipe|streak|hábito"
+- takeScreenshot: onboarding-complete
