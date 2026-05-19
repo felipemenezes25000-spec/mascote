@@ -8,7 +8,7 @@ O Mascote combina **wellness gentil** com gamificação procedural:
 - **Streaks com grace days** — constância sem culpa por falhas
 - **Missões diárias** — 300+ templates (base + catálogo expandido com metadados)
 - **Achievements** — 20+ conquistas com recompensas reais (XP, moedas, acessórios, cenários)
-- **Mutações DNA** — marcos biológicos visuais desbloqueáveis
+- **Mutações DNA** — 50+ marcos biológicos (`mutations.ts` + `mutations-extended.ts`)
 - **Microevoluções** — mudanças incrementais por hábito (água, sono, exercício, etc.)
 - **Wallet** — moedas e gemas por ações
 
@@ -26,7 +26,7 @@ O Mascote combina **wellness gentil** com gamificação procedural:
 | XP / fases | `src/lib/xp.ts` |
 | Missões | `src/content/missions.ts`, `missions-extended.ts`, `mission-meta.ts` |
 | Achievements | `src/content/achievements.ts` |
-| Mutações | `src/lib/dna/mutations.ts` |
+| Mutações | `src/lib/dna/mutations.ts`, `mutations-extended.ts` |
 | Evolução procedural | `src/game/evolution/` |
 | Unlocks | `src/lib/unlock.ts` |
 

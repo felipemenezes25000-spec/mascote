@@ -8,8 +8,9 @@ User message
 SafetyRules (classifyInput + ensemble)
     ↓
 MascotAI.mascotReply
-    ├── OpenAI (se apiKey) via lib/ai.ts
-    └── LocalFallbackAI (mockReply + classifyIntent)
+    ├── Proxy backend (EXPO_PUBLIC_AI_PROXY_URL) via ProxyMascotAI.ts
+    ├── OpenAI (se apiKey local) via lib/ai.ts
+    └── LocalFallbackAI (templates + memória curta)
     ↓
 PromptBuilder (DNA descritores + memórias — nunca genome bruto)
     ↓
@@ -23,7 +24,8 @@ EmotionalMemory (tom supportive/celebratory/gentle)
 | `MascotAI.ts` | Fachada unificada com fallback |
 | `PromptBuilder.ts` | Monta prompt PT-BR seguro |
 | `SafetyRules.ts` | Bloqueio crise + redirecionamento clínico |
-| `LocalFallbackAI.ts` | Respostas offline |
+| `ProxyMascotAI.ts` | POST `/v1/mascot/reply` — chave só no servidor |
+| `LocalFallbackAI.ts` | Respostas offline variadas + recall de memória |
 | `MissionGeneratorAI.ts` | Missões sugeridas por seed + hábitos recentes |
 | `EmotionalMemory.ts` | Tom emocional a partir de memórias |
 
@@ -46,7 +48,9 @@ O genoma **nunca** vai bruto para APIs externas. Apenas descritores semânticos 
 | Relatório semanal | `weeklyReportGenerator.ts` + narrativa |
 | Evolução | memórias na aba Evolução via `MascotMemoryService` |
 
-Fallback local sempre disponível; OpenAI opcional via apiKey.
+**Produção:** deploy de proxy (`EXPO_PUBLIC_AI_PROXY_URL`) é obrigatório para qualidade sem expor `sk-` no app. Fallback local permanece offline-first.
+
+OpenAI via apiKey do usuário continua opcional em dev.
 
 ## Missões IA
 

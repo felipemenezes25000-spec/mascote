@@ -9,6 +9,7 @@ import { modifiersToVisuals } from '@/game/evolution/PhenotypeRenderer';
 import { buildEvolutionState } from '@/game/evolution/EvolutionEngine';
 import { checkins as checkinsDb } from '@/lib/db';
 import { copyFor, type PaywallTrigger } from '@/lib/paywall-triggers';
+import { validateBillingEnv } from '@/lib/billing-config';
 import { subscriptionService } from '@/services/subscription';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
@@ -29,6 +30,9 @@ export default function Paywall() {
 
   const annual = getTier('plus_annual');
   const monthly = getTier('plus_monthly');
+  const billingEnv = useMemo(() => validateBillingEnv(), []);
+  const isPremium = subscriptionService.isPremium(tier);
+  const purchaseBlocked = !billingEnv.canPurchase && !isPremium;
 
   useEffect(() => {
     if (!profile) return;
@@ -51,7 +55,7 @@ export default function Paywall() {
   }, [profile?.id, mascot, streak]);
 
   async function handleSubscribe(selected: BillingTierId) {
-    if (!profile) return;
+    if (!profile || purchaseBlocked) return;
     setLoading(true);
     try {
       const result = await subscriptionService.subscribe(profile.id, selected);
@@ -69,8 +73,6 @@ export default function Paywall() {
       setLoading(false);
     }
   }
-
-  const isPremium = subscriptionService.isPremium(tier);
 
   const triggerCopy = useMemo(() => {
     const valid: PaywallTrigger[] = [
@@ -116,6 +118,11 @@ export default function Paywall() {
           </View>
         </View>
 
+        <View style={styles.modeBanner} accessibilityRole="text">
+          <Text style={styles.modeLabel}>{billingEnv.label}</Text>
+          <Text style={styles.modeDetail}>{billingEnv.detail}</Text>
+        </View>
+
         <Text style={styles.kicker}>BIPO PLUS</Text>
         <Text style={styles.title}>{triggerCopy.title}</Text>
         <Text style={styles.sub}>{triggerCopy.body}</Text>
@@ -130,7 +137,7 @@ export default function Paywall() {
           <Pressable
             style={[styles.plan, styles.planHighlight]}
             onPress={() => void handleSubscribe('plus_annual')}
-            disabled={loading || isPremium}
+            disabled={loading || isPremium || purchaseBlocked}
           >
             {annual.badge && (
               <View style={styles.badge}>
@@ -146,7 +153,7 @@ export default function Paywall() {
           <Pressable
             style={styles.plan}
             onPress={() => void handleSubscribe('plus_monthly')}
-            disabled={loading || isPremium}
+            disabled={loading || isPremium || purchaseBlocked}
           >
             <Text style={styles.planTitle}>Mensal</Text>
             <Text style={styles.planPrice}>R$ {(monthly.totalCents / 100).toFixed(2).replace('.', ',')}/mês</Text>
@@ -160,7 +167,7 @@ export default function Paywall() {
           <Button
             label={loading ? 'Processando...' : `Começar ${annual.trialDays} dias grátis`}
             onPress={() => void handleSubscribe('plus_annual')}
-            disabled={loading}
+            disabled={loading || purchaseBlocked}
           />
         )}
         <Pressable
@@ -173,7 +180,11 @@ export default function Paywall() {
         </Pressable>
 
         <Text style={styles.legal}>
-          Demo local — pagamento simulado. Cancele quando quiser.
+          {billingEnv.mode === 'demo'
+            ? 'Modo demo — pagamento simulado localmente. Cancele quando quiser.'
+            : billingEnv.mode === 'production_misconfigured'
+              ? 'Produção: configure RevenueCat e o SDK nativo antes de cobrar.'
+              : 'Produção: variáveis OK; aguardando SDK nativo para cobrança real.'}
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -234,5 +245,15 @@ function makeStyles(theme: Theme) {
   ghost: { textAlign: 'center', ...theme.text.body, color: theme.colors.textSecondary, paddingVertical: theme.spacing.md },
   legal: { ...theme.text.xs, color: theme.colors.textDim, textAlign: 'center', lineHeight: 16 },
   kicker: { ...theme.text.xs, color: theme.colors.primary, fontWeight: '800', letterSpacing: 1.5, textTransform: 'uppercase', textAlign: 'center' },
+  modeBanner: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.md,
+    gap: 4,
+  },
+  modeLabel: { ...theme.text.bodyBold, color: theme.colors.text, textAlign: 'center' },
+  modeDetail: { ...theme.text.xs, color: theme.colors.textSecondary, textAlign: 'center', lineHeight: 16 },
 });
 }

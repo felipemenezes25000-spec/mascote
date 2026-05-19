@@ -201,7 +201,7 @@ export default function Home() {
   });
   // State pro action do Behavior Engine — só usado se mascot.dna existe
   const [behaviorAction, setBehaviorAction] = useState<
-    | { kind: 'bounce' | 'celebrate' | 'wander' | 'rest' | 'observe'; key: number }
+    | { kind: import('@/lib/animation-triggers').MascotAnimationKind; key: number }
     | undefined
   >(undefined);
 

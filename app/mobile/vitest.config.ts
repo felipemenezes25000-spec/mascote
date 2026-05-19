@@ -1,13 +1,23 @@
+import os from 'node:os';
 import path from 'node:path';
 import { defineConfig } from 'vitest/config';
+
+const cpuCount = os.cpus().length;
+const maxWorkers = process.env.VITEST_MAX_WORKERS
+  ? Number(process.env.VITEST_MAX_WORKERS)
+  : Math.max(2, Math.min(cpuCount - 1, 8));
 
 export default defineConfig({
   test: {
     globals: true,
-    // jsdom permite renderHook/render do @testing-library/react-native nos
-    // testes de hook (.test.tsx). Testes de lógica pura continuam funcionando —
-    // só pagam um pouco de overhead de DOM stub.
-    environment: 'jsdom',
+    // Só .test.tsx paga jsdom; lógica pura em node reduz ~300s de setup acumulado.
+    environment: 'node',
+    pool: 'threads',
+    maxWorkers,
+    fileParallelism: true,
+    testTimeout: 15_000,
+    hookTimeout: 15_000,
+    teardownTimeout: 5_000,
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     setupFiles: ['./tests/setup.ts'],
     // @testing-library/react-native ships com tipos Flow internos do RN —

@@ -23,6 +23,7 @@
 
 import type { Genome, GeneKey } from './genome';
 import type { HabitKind } from '@/types';
+import { buildExtendedMutationCatalog } from './mutations-extended';
 
 /**
  * Raridade — define peso visual no toast de desbloqueio, ordem de exibição
@@ -100,13 +101,10 @@ export interface UnlockedMutation {
 }
 
 // ============================================================================
-// CATÁLOGO — 7 mutações iniciais (1 por arquétipo dominante)
+// CATÁLOGO — núcleo MVP + expansão (50+ mutações)
 // ============================================================================
-// Estes são os marcos biológicos do MVP. Adicionar mais conforme o roadmap
-// avança. Cada mutation deve ser visualmente DISTINTA — não criar mutations
-// que produzem efeito muito parecido (confunde o usuário).
 
-export const MUTATION_CATALOG: readonly Mutation[] = [
+const MUTATION_CATALOG_CORE: readonly Mutation[] = [
   // — DISCIPLINE / RESILIENCE — "Estrutura Firme"
   {
     id: 'mut.structural_firmness',
@@ -223,6 +221,11 @@ export const MUTATION_CATALOG: readonly Mutation[] = [
     },
     rarity: 'legendary',
   },
+];
+
+export const MUTATION_CATALOG: readonly Mutation[] = [
+  ...MUTATION_CATALOG_CORE,
+  ...buildExtendedMutationCatalog(),
 ];
 
 // ============================================================================

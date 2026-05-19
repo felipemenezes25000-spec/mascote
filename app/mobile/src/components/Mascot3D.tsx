@@ -20,6 +20,7 @@ import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import type { MascotCustomization, MascotDNA, MascotMood } from '@/types';
 import type { MascotEvolutionVisuals } from '@/game/evolution/PhenotypeRenderer';
+import type { MascotAnimationKind } from '@/lib/animation-triggers';
 import {
   aggregateVisualImpact,
   applyCustomization,
@@ -64,7 +65,7 @@ interface Props {
    * achievement). Ao mudar de valor, dispara a animação correspondente.
    * Mudança no `key` é o trigger — `kind` define qual animação.
    */
-  action?: { kind: 'bounce' | 'celebrate' | 'wander' | 'rest' | 'observe'; key: number };
+  action?: { kind: MascotAnimationKind; key: number };
   /** Modificadores visuais do fenótipo (hábitos + microevoluções). */
   evolutionVisuals?: MascotEvolutionVisuals | null;
 }
@@ -193,7 +194,7 @@ interface CreatureProps {
   /** Contador que incrementa em tap — useFrame consome pra disparar bounce. */
   bouncePulse?: number;
   /** Action externo (Behavior Engine). Key novo = trigger. */
-  action?: { kind: 'bounce' | 'celebrate' | 'wander' | 'rest' | 'observe'; key: number };
+  action?: { kind: MascotAnimationKind; key: number };
   evolutionVisuals?: MascotEvolutionVisuals | null;
 }
 
@@ -268,7 +269,7 @@ function Creature({
   // Cada kind tem duração + curva próprias.
   const actionKeySeen = useRef<number | undefined>(undefined);
   const actionPhase = useRef<{
-    kind: 'bounce' | 'celebrate' | 'wander' | 'rest' | 'observe' | null;
+    kind: MascotAnimationKind | null;
     t0: number;
   }>({ kind: null, t0: 0 });
 
@@ -364,6 +365,21 @@ function Creature({
           // Mantém posture quieta por 3s — sem efeito ativo, é mais "freeze"
           const dur = 3.0;
           if (elapsed >= dur) ap.kind = null;
+          break;
+        }
+        case 'stretch': {
+          const dur = 1.0;
+          if (elapsed < dur) {
+            actionScaleBoost = 1 + Math.sin((elapsed / dur) * Math.PI) * 0.05;
+            actionTiltZ = Math.sin((elapsed / dur) * Math.PI) * 0.08;
+          } else ap.kind = null;
+          break;
+        }
+        case 'pulse': {
+          const dur = 0.8;
+          if (elapsed < dur) {
+            actionScaleBoost = 1 + Math.sin((elapsed / dur) * Math.PI * 2) * 0.04;
+          } else ap.kind = null;
           break;
         }
       }

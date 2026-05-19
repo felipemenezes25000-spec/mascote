@@ -23,7 +23,7 @@ EvolutionEngine    → orquestra preview, path, persistência
 | `EvolutionRules.ts` | Bias visual por hábito (água→brilho, meditação→zen) |
 | `EvolutionMilestones.ts` | Fases macro + elegibilidade de microevoluções |
 | `MicroEvolutionCatalog.ts` | 30+ microevoluções por hábito/streak |
-| `MutationEngine.ts` | Ponte com `lib/dna/mutations` |
+| `MutationEngine.ts` | Ponte com `lib/dna/mutations` (50+ entradas) |
 | `RaritySystem.ts` | Tier procedural (comum → lendário) |
 | `PersonalityEngine.ts` | Flavor textual + first words |
 | `EvolutionPersistence.ts` | AsyncStorage por userId |
@@ -70,6 +70,13 @@ import {
 | adulto | adulto | 8000 |
 | lendaria | evoluido | 25000 |
 
+## Sync / backup
+
+- Persistência: `EvolutionPersistence` → `mascote:evolution:{userId}`
+- Export: incluído em `exportAll` (`evolution_snapshots`) e `localSyncRepo`
+- Migração futura: `SupabaseSyncRepositoryStub` em `src/repositories/supabase-stub.ts` — ver `docs/CURRENT_STATE.md`
+
 ## Testes
 
 `tests/game/evolution-engine.test.ts` — seed consistency, hábitos, >1000 combinações, inatividade não punitiva.
+`tests/content/mutations-catalog.test.ts` — catálogo ≥ 50 mutações.

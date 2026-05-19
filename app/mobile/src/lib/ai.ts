@@ -14,6 +14,7 @@ import type { Genome } from '@/lib/dna/genome';
 import { formatMemoriesForPrompt, recall, type MemoryItem } from '@/lib/memory';
 import { logger } from '@/lib/logger';
 import { classifySafetyEnsemble } from '@/lib/ml/safety/classifier';
+import { isAiProxyConfigured, proxyMascotReply } from '@/ai/ProxyMascotAI';
 
 export interface AiResponse {
   reply: string;
@@ -120,6 +121,15 @@ async function generateReplyInternal(
     } catch {
       // memória é melhoria, nunca bloqueia resposta
     }
+  }
+
+  if (isAiProxyConfigured()) {
+    const proxied = await proxyMascotReply(personality, userMessage, {
+      history,
+      mascotName,
+      userId,
+    });
+    if (proxied) return proxied;
   }
 
   if (apiKey) {

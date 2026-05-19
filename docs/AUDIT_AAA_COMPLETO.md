@@ -1,5 +1,7 @@
 # Mascote — Auditoria AAA Completa
 
+> **Arquivo histórico.** Para o estado real do produto hoje, use [`CURRENT_STATE.md`](./CURRENT_STATE.md).
+
 > **Documento técnico-executivo · 2026-05-19**
 > Multi-role audit: CTO · Game Director · Product Designer · UX Director · AI Engineer ·
 > Systems Designer · Behavioral Psychologist · Technical Architect · Mobile Specialist ·

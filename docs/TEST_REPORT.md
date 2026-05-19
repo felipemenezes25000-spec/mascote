@@ -1,7 +1,7 @@
 # Test Report — Evolution & Premium Foundation
 
-**Data:** 2026-05-19 (Fase 4 — audit & ship-ready)  
-**Escopo:** Premium completo + hardening produção (sem keys de loja)
+**Data:** 2026-05-19 (roadmap 10/10 — sessão atual)  
+**Escopo:** Suite rápida, billing honesto, sync export, 50+ mutações, IA proxy prep
 
 ## Comandos
 
@@ -29,7 +29,7 @@ maestro test .maestro/premium-settings-reports.yaml
 | Comando | Status |
 |---------|--------|
 | `npm run typecheck` | ✅ |
-| `npm test` | ✅ (1765+ testes) |
+| `npm test` | ✅ (1767+ testes, ~25–35s com pool threads + env node) |
 | ESLint | ⏭ Não configurado — ver `RELEASE_CHECKLIST.md` |
 
 ## Fase 5 — incremento (2026-05-19)

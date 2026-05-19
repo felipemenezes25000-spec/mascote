@@ -32,6 +32,16 @@ export async function mascotReply(
   try {
     return await baseGenerateReply(personality, userMessage, options);
   } catch {
-    return localFallbackReply(personality, userMessage);
+    let memories: import('@/lib/memory').MemoryItem[] = [];
+    if (options?.userId) {
+      try {
+        const { recall } = await import('@/lib/memory');
+        memories = await recall(options.userId, userMessage, 2);
+      } catch { /* memória opcional */ }
+    }
+    return localFallbackReply(personality, userMessage, {
+      mascotName: options?.mascotName,
+      memories,
+    });
   }
 }

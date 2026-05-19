@@ -35,14 +35,32 @@ entitlementService.canExportReport(tier)
 entitlementService.unlimitedStreakFreeze(tier)
 ```
 
-## Próximos passos (somente loja / externo)
+## Modos de runtime (`lib/billing-config.ts`)
 
-Ver também `docs/RELEASE_CHECKLIST.md`.
+| Modo | `EXPO_PUBLIC_BILLING_PROVIDER` | Compra na UI |
+|------|------------------------------|--------------|
+| Demo | `mock` (padrão) | Simulada localmente |
+| Produção incompleta | `revenuecat` sem keys / `RC_ENABLED` | Bloqueada + banner |
+| Produção preparada | `revenuecat` + keys + `RC_ENABLED=true` | Bloqueada até SDK nativo |
 
-1. Ativar RevenueCat SDK + `EXPO_PUBLIC_RC_ENABLED=true` + SKUs reais (App Store / Play)
-2. Paywall A/B com trial de 7 dias (config RevenueCat)
-3. Receipt validation em produção
-4. Analytics de conversão por trigger (`paywall-triggers.ts`)
+O paywall (`app/paywall.tsx`) exibe label e detalhe honestos — **nunca** promove tier em compra falha.
+
+## Passos exatos para produção (loja)
+
+1. Instalar `react-native-purchases` e configurar projetos iOS/Android no RevenueCat
+2. Criar produtos `mascote_plus_monthly` e `mascote_plus_annual` nas lojas + dashboard RC
+3. `.env` de release:
+   ```env
+   EXPO_PUBLIC_BILLING_PROVIDER=revenuecat
+   EXPO_PUBLIC_REVENUECAT_API_KEY_IOS=appl_...
+   EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID=goog_...
+   EXPO_PUBLIC_RC_ENABLED=true
+   ```
+4. Implementar `Purchases.purchasePackage` em `RevenueCatBillingProvider.purchase` (ponto marcado no código)
+5. Testar restore + cancel + receipt validation em sandbox Apple/Google
+6. Só então habilitar `canPurchase` no adapter quando SDK retornar sucesso real
+
+Ver também `docs/BETA_RELEASE_CHECKLIST.md` e `docs/CURRENT_STATE.md`.
 
 ## Triggers de paywall
 

@@ -34,8 +34,8 @@ function emptyCtx(genome: Genome = neutralGenome()): MutationContext {
 }
 
 describe('MUTATION_CATALOG — integridade', () => {
-  it('tem pelo menos 6 mutações (MVP)', () => {
-    expect(MUTATION_CATALOG.length).toBeGreaterThanOrEqual(6);
+  it('tem pelo menos 50 mutações no catálogo', () => {
+    expect(MUTATION_CATALOG.length).toBeGreaterThanOrEqual(50);
   });
 
   it('IDs únicos', () => {

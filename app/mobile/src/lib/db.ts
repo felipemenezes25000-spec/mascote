@@ -1229,6 +1229,20 @@ const ALL_TABLES = [
   'customization',
 ];
 
+const EXPORT_EXTENDED_TABLES = [
+  'evolution_snapshots',
+  'memory_items',
+  'memory_tfidf',
+  'subscription_state',
+  'personalization_prefs',
+] as const;
+
+const EVOLUTION_EXPORT_KEY = (uid: string) => `mascote:evolution:${uid}`;
+const MEMORY_EXPORT_KEY = (uid: string) => `mascote:memory:${uid}`;
+const MEMORY_TFIDF_EXPORT_KEY = (uid: string) => `mascote:memory_tfidf:${uid}`;
+const SUB_EXPORT_KEY = (uid: string) => `mascote:subscription:${uid}`;
+const PERSONALIZATION_EXPORT_KEY = (uid: string) => `mascote:personalization:${uid}`;
+
 export async function exportAll(user_id: string): Promise<Record<string, any[]>> {
   const out: Record<string, any[]> = {};
   for (const t of ALL_TABLES) {
@@ -1237,6 +1251,61 @@ export async function exportAll(user_id: string): Promise<Record<string, any[]>>
       t === 'profiles' ? r.id === user_id : r.user_id === user_id
     );
   }
+
+  const evolutionRaw = await AsyncStorage.getItem(EVOLUTION_EXPORT_KEY(user_id));
+  if (evolutionRaw) {
+    try {
+      out.evolution_snapshots = [JSON.parse(evolutionRaw)];
+    } catch { /* skip corrupt */ }
+  } else {
+    out.evolution_snapshots = [];
+  }
+
+  const memoryRaw = await AsyncStorage.getItem(MEMORY_EXPORT_KEY(user_id));
+  if (memoryRaw) {
+    try {
+      const parsed = JSON.parse(memoryRaw);
+      out.memory_items = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      out.memory_items = [];
+    }
+  } else {
+    out.memory_items = [];
+  }
+
+  const tfidfRaw = await AsyncStorage.getItem(MEMORY_TFIDF_EXPORT_KEY(user_id));
+  if (tfidfRaw) {
+    try {
+      out.memory_tfidf = [JSON.parse(tfidfRaw)];
+    } catch {
+      out.memory_tfidf = [];
+    }
+  } else {
+    out.memory_tfidf = [];
+  }
+
+  const subRaw = await AsyncStorage.getItem(SUB_EXPORT_KEY(user_id));
+  if (subRaw) {
+    try {
+      out.subscription_state = [JSON.parse(subRaw)];
+    } catch {
+      out.subscription_state = [];
+    }
+  } else {
+    out.subscription_state = [];
+  }
+
+  const persRaw = await AsyncStorage.getItem(PERSONALIZATION_EXPORT_KEY(user_id));
+  if (persRaw) {
+    try {
+      out.personalization_prefs = [JSON.parse(persRaw)];
+    } catch {
+      out.personalization_prefs = [];
+    }
+  } else {
+    out.personalization_prefs = [];
+  }
+
   return out;
 }
 
@@ -1254,7 +1323,9 @@ export interface ImportResult {
 export async function importAll(data: Record<string, any[]>): Promise<ImportResult> {
   const imported: string[] = [];
   const skipped: string[] = [];
-  for (const t of ALL_TABLES) {
+  const allKeys = [...ALL_TABLES, ...EXPORT_EXTENDED_TABLES];
+
+  for (const t of allKeys) {
     const value = data[t];
     if (!Array.isArray(value)) {
       if (value !== undefined) skipped.push(t);
@@ -1265,6 +1336,35 @@ export async function importAll(data: Record<string, any[]>): Promise<ImportResu
       skipped.push(t);
       continue;
     }
+
+    if ((EXPORT_EXTENDED_TABLES as readonly string[]).includes(t)) {
+      const row = value[0];
+      if (!row) continue;
+      const uid =
+        typeof (row as { user_id?: string }).user_id === 'string'
+          ? (row as { user_id: string }).user_id
+          : typeof (data.profiles as { id?: string }[] | undefined)?.[0]?.id === 'string'
+            ? data.profiles[0].id
+            : null;
+      if (!uid) {
+        skipped.push(t);
+        continue;
+      }
+      if (t === 'evolution_snapshots') {
+        await AsyncStorage.setItem(EVOLUTION_EXPORT_KEY(uid), JSON.stringify(row));
+      } else if (t === 'memory_items') {
+        await AsyncStorage.setItem(MEMORY_EXPORT_KEY(uid), JSON.stringify(value));
+      } else if (t === 'memory_tfidf') {
+        await AsyncStorage.setItem(MEMORY_TFIDF_EXPORT_KEY(uid), JSON.stringify(row));
+      } else if (t === 'subscription_state') {
+        await AsyncStorage.setItem(SUB_EXPORT_KEY(uid), JSON.stringify(row));
+      } else if (t === 'personalization_prefs') {
+        await AsyncStorage.setItem(PERSONALIZATION_EXPORT_KEY(uid), JSON.stringify(row));
+      }
+      imported.push(t);
+      continue;
+    }
+
     await withLock(t, () => write(t, value));
     imported.push(t);
   }

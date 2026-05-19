@@ -27,6 +27,7 @@ import { useStore } from '@/store';
 import { Mascot2D, type AccessoryId } from '@/components/Mascot2D';
 import { Mascot3D } from '@/components/Mascot3D';
 import type { MascotEvolutionVisuals } from '@/game/evolution/PhenotypeRenderer';
+import type { MascotAnimationKind } from '@/lib/animation-triggers';
 
 export type { AccessoryId };
 
@@ -49,7 +50,7 @@ interface Props {
    * Action externo (Behavior Engine ou outros drivers). Key novo dispara
    * a animação correspondente em Mascot3D. No fallback 2D, sem efeito.
    */
-  action?: { kind: 'bounce' | 'celebrate' | 'wander' | 'rest' | 'observe'; key: number };
+  action?: { kind: MascotAnimationKind; key: number };
   reactTrigger?: number;
   accessory?:
     | AccessoryId

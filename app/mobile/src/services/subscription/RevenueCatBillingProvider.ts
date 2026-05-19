@@ -7,11 +7,19 @@ import type { BillingTierId } from '@/content/billing';
 import { localSubscriptionRepo } from '@/repositories/local';
 import type { PurchaseResult } from './MockBillingProvider';
 
+export type RevenueCatReadiness =
+  | 'not_selected'
+  | 'missing_api_key'
+  | 'sdk_disabled'
+  | 'sdk_not_linked'
+  | 'ready';
+
 export interface RevenueCatConfig {
   providerKind: string | undefined;
   hasApiKey: boolean;
   sdkEnabled: boolean;
   ready: boolean;
+  readiness: RevenueCatReadiness;
 }
 
 export function getRevenueCatConfig(): RevenueCatConfig {
@@ -21,21 +29,42 @@ export function getRevenueCatConfig(): RevenueCatConfig {
   const genericKey = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY?.trim();
   const hasApiKey = Boolean(iosKey || androidKey || genericKey);
   const sdkEnabled = process.env.EXPO_PUBLIC_RC_ENABLED === 'true';
-  const ready = providerKind === 'revenuecat' && hasApiKey && sdkEnabled;
-  return { providerKind, hasApiKey, sdkEnabled, ready };
+  let readiness: RevenueCatReadiness = 'not_selected';
+  if (providerKind === 'revenuecat') {
+    if (!hasApiKey) readiness = 'missing_api_key';
+    else if (!sdkEnabled) readiness = 'sdk_disabled';
+    else readiness = 'sdk_not_linked';
+  }
+  const ready = readiness === 'sdk_not_linked' && hasApiKey && sdkEnabled;
+  return { providerKind, hasApiKey, sdkEnabled, ready, readiness };
 }
 
 export function revenueCatUnavailableMessage(config = getRevenueCatConfig()): string {
-  if (config.providerKind !== 'revenuecat') {
-    return 'Provedor RevenueCat não selecionado.';
+  switch (config.readiness) {
+    case 'not_selected':
+      return 'Provedor RevenueCat não selecionado.';
+    case 'missing_api_key':
+      return 'RevenueCat sem API key — configure EXPO_PUBLIC_REVENUECAT_API_KEY no .env.';
+    case 'sdk_disabled':
+      return 'RevenueCat desativado — defina EXPO_PUBLIC_RC_ENABLED=true após integrar o SDK.';
+    case 'sdk_not_linked':
+      return 'RevenueCat ainda não integrado ao SDK nativo neste build.';
+    case 'ready':
+      return 'RevenueCat pronto para compras nativas.';
+    default:
+      return 'Billing indisponível.';
   }
-  if (!config.hasApiKey) {
-    return 'RevenueCat sem API key — configure EXPO_PUBLIC_REVENUECAT_API_KEY no .env.';
-  }
-  if (!config.sdkEnabled) {
-    return 'RevenueCat desativado — defina EXPO_PUBLIC_RC_ENABLED=true após integrar o SDK.';
-  }
-  return 'RevenueCat ainda não integrado ao SDK nativo neste build.';
+}
+
+/** Estado honesto para UI — nunca simula compra bem-sucedida em produção. */
+export function getRevenueCatUiState(config = getRevenueCatConfig()) {
+  return {
+    isDemo: config.providerKind !== 'revenuecat',
+    isProductionTarget: config.providerKind === 'revenuecat',
+    canAttemptPurchase: config.ready,
+    readiness: config.readiness,
+    message: revenueCatUnavailableMessage(config),
+  };
 }
 
 export class RevenueCatBillingProvider {

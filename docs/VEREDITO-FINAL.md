@@ -1,5 +1,7 @@
 # Mascote — Veredito Final & Análise de Viralidade
 
+> **Arquivo histórico.** Estado operacional atual: [`CURRENT_STATE.md`](./CURRENT_STATE.md).
+
 > **TL;DR:** Tecnicamente sólido (0 erros de console, 0 bloqueadores, segurança best-in-class, performance enxuta). Conceitualmente diferenciado (tom brasileiro autêntico, anti-grind, local-first). **Potencial viral: 7/10** — tem matéria-prima boa, mas precisa de tração via criadores BR de saúde mental e de 3 fixes específicos antes do lançamento amplo. Sem distribuição, vai parar em 5-10k orgânicos. Com distribuição certa, plausível 50-200k MAU em 6 meses.
 
 ---
