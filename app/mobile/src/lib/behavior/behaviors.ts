@@ -154,15 +154,104 @@ export const quietContemplation: Behavior = {
   }),
 };
 
+// ============================================================================
+// CONTEXTUAL BEHAVIORS — reagem a estado emocional / temporal específico
+// ============================================================================
+// Adicionados em DLI-v4 pra dar mais "vida" — mascote responde a manhã, noite,
+// volta curta, e humor recente. Cooldowns calibrados pra não inflar UI.
+
+/**
+ * morning_greeting — saudação suave entre 6h e 10h. Cooldown 12h pra
+ * disparar uma vez por dia. Score moderado (0.4) — perde pra milestones.
+ */
+export const morningGreeting: Behavior = {
+  id: 'temporal.morning_greeting',
+  kind: 'temporal',
+  cooldownSeconds: 12 * 60 * 60,
+  score: (ctx: BehaviorContext) => {
+    if (ctx.hour < 6 || ctx.hour > 10) return 0;
+    return 0.4;
+  },
+  execute: (): BehaviorEffect => ({
+    animation: 'wander',
+    message: 'Bom dia. Cheguei junto.',
+  }),
+};
+
+/**
+ * evening_calm — wind down pós 19h até 22h (antes do quiet_observation
+ * noturno em 22h-5h tomar o lugar). Tom mais introspectivo. Cooldown 18h.
+ */
+export const eveningCalm: Behavior = {
+  id: 'temporal.evening_calm',
+  kind: 'temporal',
+  cooldownSeconds: 18 * 60 * 60,
+  score: (ctx: BehaviorContext) => {
+    if (ctx.hour < 19 || ctx.hour >= 22) return 0;
+    return 0.35;
+  },
+  execute: (): BehaviorEffect => ({
+    animation: 'rest',
+    message: 'Tá quase descansando o dia.',
+  }),
+};
+
+/**
+ * gentle_return — usuário voltou após ausência CURTA (4-24h). Diferente
+ * do reactToReturn (>24h, tom mais saudoso); este é leve e quase
+ * imperceptível. Cooldown 4h pra não disparar a cada tab switch.
+ */
+export const gentleReturn: Behavior = {
+  id: 'reactive.gentle_return',
+  kind: 'reactive',
+  cooldownSeconds: 4 * 60 * 60,
+  score: (ctx: BehaviorContext) => {
+    if (ctx.hoursSinceLastInteraction < 4) return 0;
+    if (ctx.hoursSinceLastInteraction >= 24) return 0; // longo é o reactToReturn
+    return 0.55;
+  },
+  execute: (): BehaviorEffect => ({
+    animation: 'wander',
+    message: 'Olha quem voltou.',
+  }),
+};
+
+/**
+ * mood_recovery_cheer — se mood atual é alegre, mas há histórico recente
+ * de sad streaks, celebra a recuperação sem ser invasivo. Cooldown 24h.
+ * (Caller pode preencher cooldownActive baseado em métricas reais; aqui o
+ * score já filtra por mood + sem assumir histórico explícito.)
+ */
+export const moodRecoveryCheer: Behavior = {
+  id: 'reactive.mood_recovery',
+  kind: 'reactive',
+  cooldownSeconds: 24 * 60 * 60,
+  score: (ctx: BehaviorContext) => {
+    // Só dispara se mood é positivo NOW e DNA tem alguma emotionalDepth
+    // pra ela "perceber" o contraste
+    if (ctx.mood !== 'feliz' && ctx.mood !== 'empolgado') return 0;
+    if (ctx.genome.emotionalDepth < 0.5) return 0;
+    return 0.6;
+  },
+  execute: (): BehaviorEffect => ({
+    animation: 'celebrate',
+    message: 'A energia hoje tá diferente. Eu sinto.',
+  }),
+};
+
 /**
  * Conjunto default de behaviors. Engine consome esta lista.
  * Ordem importa em caso de tie (first wins): milestones > reactive > temporal > idle.
  */
 export const DEFAULT_BEHAVIORS: readonly Behavior[] = [
   streakMilestone,        // 1.0 must-fire
-  reactToReturn,          // 0.7-1.0 ausência
+  reactToReturn,          // 0.7-1.0 ausência longa (>24h)
+  moodRecoveryCheer,      // 0.6 humor positivo + depth
+  gentleReturn,           // 0.55 ausência curta (4-24h)
   expressSocialBurst,     // 0-0.5 DNA-driven
   quietContemplation,     // 0-0.45 DNA-driven
-  quietObservation,       // 0.5 noite
+  morningGreeting,        // 0.4 manhã (6-10h)
+  eveningCalm,            // 0.35 noite cedo (19-22h)
+  quietObservation,       // 0.5 madrugada (22-5h)
   idleBreath,             // 0.1 baseline
 ];

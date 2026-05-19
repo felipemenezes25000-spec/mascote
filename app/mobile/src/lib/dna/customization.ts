@@ -65,6 +65,11 @@ export function applyCustomization(
   const hasTail = custom.force_hide_tail ? false : morph.hasTail;
   const hasAntennae = custom.force_hide_antennae ? false : morph.hasAntennae;
   const hasSpikes = custom.force_hide_spikes ? false : morph.hasSpikes;
+  // preferred_pattern: usuário sobrescreve o pattern emergente do DNA se
+  // não-'plain'. 'plain' default = respeita o que DNA gerou.
+  const finalPattern = custom.preferred_pattern && custom.preferred_pattern !== 'plain'
+    ? custom.preferred_pattern
+    : morph.pattern;
   return {
     ...morph,
     eyeSize: morph.eyeSize * eye,
@@ -79,6 +84,7 @@ export function applyCustomization(
     hasTail,
     hasAntennae,
     hasSpikes,
+    pattern: finalPattern,
   };
 }
 

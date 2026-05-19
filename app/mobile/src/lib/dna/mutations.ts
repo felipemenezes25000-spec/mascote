@@ -417,5 +417,11 @@ export function applyMutationVisualImpact(
       Math.floor(out.auraParticleCount * impact.auraParticleMultiplier),
     );
   }
+  // Pattern: mutation override > DNA default. Só substitui se mutation
+  // definiu não-'plain' (preserva pattern emergente do DNA caso contrário).
+  // 'mut.emergent_patterns' usa 'fractal'; outras mutations não tocam.
+  if (impact.pattern && impact.pattern !== 'plain') {
+    out.pattern = impact.pattern;
+  }
   return out;
 }

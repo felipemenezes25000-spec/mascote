@@ -15,7 +15,7 @@ import { Mascot } from '@/components/Mascot';
 import { PressableScale } from '@/components/PressableScale';
 import type { Mascot as MascotType, MascotPhase } from '@/types';
 
-import { phaseLabels } from '@/lib/phaseLabels';
+import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
@@ -133,13 +133,13 @@ export function EvolutionModal({ visible, mascot, fromPhase, onClose, storyTitle
               <Text style={styles.kicker}>EVOLUÇÃO</Text>
             </View>
             <Text style={styles.title}>
-              {storyTitle ?? `${mascot.name} virou ${phaseLabels[mascot.phase]}!`}
+              {storyTitle ?? `${mascot.name} mudou para ${emergentPhaseLabels[mascot.phase]}`}
             </Text>
             {fromPhase && (
               <View style={styles.fromRow}>
-                <Text style={styles.from}>{phaseLabels[fromPhase]}</Text>
+                <Text style={styles.from}>{emergentPhaseLabels[fromPhase]}</Text>
                 <Icon name="arrow-right" size={11} color="#D7CDE6" strokeWidth={2.2} />
-                <Text style={[styles.from, styles.fromBold]}>{phaseLabels[mascot.phase]}</Text>
+                <Text style={[styles.from, styles.fromBold]}>{emergentPhaseLabels[mascot.phase]}</Text>
               </View>
             )}
             {storyBody ? (

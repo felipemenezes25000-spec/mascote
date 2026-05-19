@@ -56,6 +56,7 @@ export {
 
 export {
   type Morphology,
+  type MorphPattern,
   morphologyFromGenome,
   morphologySummary,
 } from './morphology';

@@ -21,7 +21,7 @@ import {
 import { applyCheckinToStreak } from '@/lib/streak';
 import { processUnlocks } from '@/lib/unlock';
 import { XP_PER_CHECKIN, applyXp, levelFromXp, phaseFromXp } from '@/lib/xp';
-import { phaseLabels } from '@/lib/phaseLabels';
+import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import {
   applyHabitDrift,
   findNewlyUnlockedMutations,
@@ -217,8 +217,8 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
     await notifications.add({
       user_id: profile.id,
       kind: 'evolution',
-      title: `${finalMascot.name} evoluiu!`,
-      body: `Agora é ${phaseLabels[finalMascot.phase]}.`,
+      title: `${finalMascot.name} mudou.`,
+      body: `Agora em ${emergentPhaseLabels[finalMascot.phase]}.`,
       payload: { phase: finalMascot.phase },
       read_at: null,
     });

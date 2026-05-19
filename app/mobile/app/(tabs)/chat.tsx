@@ -118,6 +118,11 @@ export default function ChatTab() {
         history,
         mascotName: mascot.name,
         userId: profile.id,
+        // DNA injeta DESCRITORES SEMÂNTICOS no system prompt via
+        // dnaPromptSection (NUNCA gene cru — provado em
+        // tests/security/dna-privacy-ai.test.ts). Sem isso, IA fala como
+        // persona genérica, ignorando a identidade da criatura.
+        dna: mascot.dna,
       });
       const reply = await messagesDb.add({
         conversation_id: profile.id,

@@ -39,7 +39,9 @@ import {
   checkins as checkinsDb,
   combo as comboDb,
   comboXpBonus,
+  customization as customizationDb,
   dailyReward,
+  dnaMutations,
   inventory,
   mascots as mascotsDb,
   messages as messagesDb,
@@ -56,7 +58,7 @@ import { maybeNotifyStreakAtRisk, notifyMascotBirthday } from '@/lib/notify';
 import { copyFor, markShown, shouldTrigger } from '@/lib/paywall-triggers';
 import { applyCheckinFully, undoLastCheckin } from '@/lib/checkin';
 import type { CheckinOutcome } from '@/lib/checkin';
-import { phaseLabels } from '@/lib/phaseLabels';
+import { emergentPhaseLabels, phaseLabels } from '@/lib/phaseLabels';
 import { applyXp, xpToNextLevel } from '@/lib/xp';
 import { deriveReflectiveMood } from '@/lib/mood';
 import { buildProactiveContext, runProactiveScan } from '@/lib/proactive';
@@ -65,7 +67,7 @@ import { useStore } from '@/store';
 import { useBehaviorTick, type BehaviorContext } from '@/lib/behavior';
 import { sanitizeGenome } from '@/lib/dna';
 import type { AccessoryId } from '@/components/Mascot';
-import type { Checkin, HabitKind, Mascot as MascotType, MascotMood, MascotPhase, Message, Mission } from '@/types';
+import type { Checkin, HabitKind, MascotCustomization, Mascot as MascotType, MascotMood, MascotPhase, Message, Mission } from '@/types';
 
 const HABITS: HabitKind[] = ['water', 'sleep', 'exercise', 'breath', 'meditation', 'reading', 'journaling', 'outdoor', 'sun'];
 
@@ -116,6 +118,11 @@ export default function Home() {
   const [comboLevel, setComboLevel] = useState(1);
   const [showTour, setShowTour] = useState(false);
   const [totalCheckinsAll, setTotalCheckinsAll] = useState(0);
+  // Customization + mutations carregados da persistência. Passados pro
+  // <Mascot/> principal pra refletir VISUALMENTE no Hero da Home — usuário
+  // precisa SENTIR a evolução biológica da criatura na tela principal.
+  const [customState, setCustomState] = useState<MascotCustomization | null>(null);
+  const [mutationIds, setMutationIds] = useState<readonly string[]>([]);
   // Mood derivado (espelha o user): cai pra mascot.mood quando ainda não
   // temos dados suficientes. Recalculado em loadToday/refreshs.
   const [reflectiveMood, setReflectiveMood] = useState<MascotMood | null>(null);
@@ -250,9 +257,23 @@ export default function Home() {
       // Sem isto, o mood espelho era calculado só no mount inicial — ficava
       // congelado mesmo após check-ins/conversas que mudavam a vibe do user.
       void recomputeReflectiveMood();
+      // Customization (sliders Sims-like) + mutationIds (marcos biológicos).
+      // CRÍTICO: sem isso, mascote no Hero da Home ignora tudo que o user
+      // ajustou em /customize e tudo que desbloqueou via check-ins.
+      void loadIdentity();
       setShowNightWarning(isLateNight());
     }, [profile?.id])
   );
+
+  async function loadIdentity() {
+    if (!profile) return;
+    const [custom, mutations] = await Promise.all([
+      customizationDb.get(profile.id),
+      dnaMutations.listForUser(profile.id),
+    ]);
+    setCustomState(custom);
+    setMutationIds(mutations.map(m => m.mutation_id));
+  }
 
   async function checkAmbientNotifications() {
     if (!profile || !streak) return;
@@ -456,6 +477,11 @@ export default function Home() {
       });
     }
     await loadCloset();
+    // Recarregar identity SE houve novas mutações — sem isso, o Mascot do
+    // Hero não reflete imediatamente o marco visual desbloqueado pelo checkin.
+    if (out.newMutations.length > 0) {
+      await loadIdentity();
+    }
 
     // Paywall contextual ético — só após momento de valor real, nunca em fragilidade
     await maybeShowPaywall(out.mascot, out.streak);
@@ -662,6 +688,8 @@ export default function Home() {
                   accessory={equippedAccId}
                   reduceMotion={settings?.reduce_motion}
                   action={behaviorAction}
+                  customization={customState}
+                  mutationIds={mutationIds}
                 />
               </MascotAmbient>
             </Pressable>
@@ -683,7 +711,7 @@ export default function Home() {
             <View style={[styles.mascotNameBox, { pointerEvents: 'none' }]}>
               <Text style={styles.mascotNameStrong}>{mascot.name}</Text>
               <Text style={styles.mascotPhaseSmall}>
-                nv {mascot.level} · {phaseLabels[mascot.phase]}
+                nv {mascot.level} · {emergentPhaseLabels[mascot.phase]}
               </Text>
             </View>
             {flash && (

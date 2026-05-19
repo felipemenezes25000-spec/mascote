@@ -24,7 +24,13 @@ import { StaggeredView } from '@/components/StaggeredView';
 import { XPBar } from '@/components/XPBar';
 import { getAccessory } from '@/content/accessories';
 import { getPersonality } from '@/content/personalities';
-import { checkins as checkinsDb, dnaMutations, inventory, userScenes } from '@/lib/db';
+import {
+  checkins as checkinsDb,
+  customization as customizationDb,
+  dnaMutations,
+  inventory,
+  userScenes,
+} from '@/lib/db';
 import {
   GENE_KEYS,
   GENE_META,
@@ -46,7 +52,7 @@ import { useStyles, useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 import type { AccessoryId } from '@/components/Mascot';
-import type { HabitKind } from '@/types';
+import type { HabitKind, MascotCustomization } from '@/types';
 
 // Labels PT-BR amigáveis pros 11 genes — vocabulário wellness, não científico.
 // Usa nuance ("afeição visível" em vez de "empatia"; "movimento livre" em vez
@@ -95,20 +101,26 @@ export default function EvolutionTab() {
   const [unlockedMutations, setUnlockedMutations] = useState<UnlockedMutation[]>([]);
   const [habitCounts, setHabitCounts] = useState<Partial<Record<HabitKind, number>>>({});
   const [genomeExpanded, setGenomeExpanded] = useState(false);
+  // Customization carregada pra refletir no Mascot grande desta tela —
+  // sem isso o user vê descritores+marcos textuais mas o boneco continua
+  // padrão. UX-break crítica.
+  const [customState, setCustomState] = useState<MascotCustomization | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       if (!profile) return;
       void (async () => {
-        const [owned, mutations, allCheckins] = await Promise.all([
+        const [owned, mutations, allCheckins, custom] = await Promise.all([
           inventory.listOwned(profile.id),
           dnaMutations.listForUser(profile.id),
           checkinsDb.listAll(profile.id),
+          customizationDb.get(profile.id),
         ]);
         const eq = owned.find(o => o.equipped);
         setEquippedAccId((eq?.accessory_id as AccessoryId) ?? 'none');
         setActiveSceneId(await userScenes.getActive(profile.id));
         setUnlockedMutations(mutations);
+        setCustomState(custom);
         // Conta checkins por hábito pra alimentar findNewlyUnlockedMutations
         // (preview do próximo marco)
         const counts: Partial<Record<HabitKind, number>> = {};
@@ -226,6 +238,8 @@ export default function EvolutionTab() {
                   size={220}
                   accessory={equippedAccId}
                   reduceMotion={settings?.reduce_motion}
+                  customization={customState}
+                  mutationIds={unlockedMutations.map(u => u.mutation_id)}
                 />
               </MascotAmbient>
             </SceneBackground>

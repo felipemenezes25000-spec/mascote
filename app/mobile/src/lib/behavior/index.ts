@@ -26,6 +26,10 @@ export {
   quietObservation,
   expressSocialBurst,
   quietContemplation,
+  morningGreeting,
+  eveningCalm,
+  gentleReturn,
+  moodRecoveryCheer,
   DEFAULT_BEHAVIORS,
 } from './behaviors';
 

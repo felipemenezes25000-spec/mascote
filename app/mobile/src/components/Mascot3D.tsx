@@ -603,15 +603,46 @@ function Body({ dna, morph, palette, mood, reduceMotion }: BodyProps) {
   const color = bodyHex(palette);
   const emissive = glowHex(palette);
 
+  // Pattern visual aplicado via material props — sem shader custom (mais
+  // performante e sem precisar GLSL). Cada pattern produz um look distinto:
+  //  • plain    — material padrão DNA-driven
+  //  • spots    — metalness alto + roughness baixo (pinta brilhante)
+  //  • stripes  — flatShading + roughness alto (facetado opaco)
+  //  • fractal  — flatShading + emissive boost (caótico iluminado)
+  //  • cells    — roughness máximo + metalness médio (casca dura)
+  let mat_roughness = morph.bodyRoughness;
+  let mat_metalness = morph.bodyMetalness;
+  let mat_flatShading = morph.bodyFlatShading;
+  let mat_emissiveIntensity = morph.bodyEmissiveIntensity + mood * 0.18;
+  switch (morph.pattern) {
+    case 'spots':
+      mat_metalness = Math.min(1, mat_metalness + 0.45);
+      mat_roughness = Math.max(0, mat_roughness - 0.25);
+      break;
+    case 'stripes':
+      mat_flatShading = true;
+      mat_roughness = Math.min(1, mat_roughness + 0.25);
+      break;
+    case 'fractal':
+      mat_flatShading = true;
+      mat_emissiveIntensity += 0.25;
+      break;
+    case 'cells':
+      mat_roughness = Math.min(1, mat_roughness + 0.4);
+      mat_metalness = Math.min(1, mat_metalness + 0.2);
+      break;
+    // 'plain' usa defaults DNA-driven
+  }
+
   return (
     <mesh ref={meshRef} geometry={geometry} position={[0, -0.05 + morph.bodyBottomBias * 0.1, 0]}>
       <meshStandardMaterial
         color={color}
-        roughness={morph.bodyRoughness}
-        metalness={morph.bodyMetalness}
-        flatShading={morph.bodyFlatShading}
+        roughness={mat_roughness}
+        metalness={mat_metalness}
+        flatShading={mat_flatShading}
         emissive={emissive}
-        emissiveIntensity={morph.bodyEmissiveIntensity + mood * 0.18}
+        emissiveIntensity={mat_emissiveIntensity}
       />
     </mesh>
   );

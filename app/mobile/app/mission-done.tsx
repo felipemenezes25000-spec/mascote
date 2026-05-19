@@ -7,7 +7,7 @@ import { ConfettiBurst } from '@/components/ConfettiBurst';
 import { Mascot } from '@/components/Mascot';
 import { applyMissionCompletion, COINS_PER_MISSION } from '@/lib/checkin';
 import { missions as missionsDb, todayLocal } from '@/lib/db';
-import { phaseLabels } from '@/lib/phaseLabels';
+import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import { processUnlocks } from '@/lib/unlock';
 import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
@@ -88,7 +88,7 @@ export default function MissionDone() {
     : 'Salvando...';
 
   const titleText = reward?.phaseChanged
-    ? `${mascot.name} evoluiu pra ${phaseLabels[mascot.phase]}!`
+    ? `${mascot.name} entrou em ${emergentPhaseLabels[mascot.phase]}`
     : reward?.leveledUp
       ? `${mascot.name} subiu pro nv ${mascot.level}!`
       : `${mascot.name} tá orgulhoso.`;

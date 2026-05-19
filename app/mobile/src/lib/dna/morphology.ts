@@ -11,6 +11,9 @@
 
 import type { Genome } from './genome';
 
+/** Padrão corporal visual — desbloqueado por mutações ou customização. */
+export type MorphPattern = 'plain' | 'stripes' | 'spots' | 'fractal' | 'cells';
+
 export interface Morphology {
   // Corpo
   bodyHeightStretch: number;
@@ -22,6 +25,12 @@ export interface Morphology {
   bodyRoughness: number;
   bodyMetalness: number;
   bodyFlatShading: boolean;
+  /**
+   * Padrão visual aplicado ao body shader/material. 'plain' = sem padrão.
+   * Default vem do DNA (creativity + chaos altos → 'spots' emergem naturalmente).
+   * Mutations + customization podem sobrescrever via aggregator/overlay.
+   */
+  pattern: MorphPattern;
 
   // Olhos
   eyeSize: number;
@@ -78,6 +87,13 @@ export function morphologyFromGenome(g: Genome): Morphology {
     bodyRoughness: 0.55 - g.discipline * 0.3,
     bodyMetalness: 0.05 + g.discipline * 0.18,
     bodyFlatShading: g.chaos > 0.65,
+    // Pattern emerge organicamente do DNA — alta creativity+chaos vira spots;
+    // alta creativity sem chaos vira cells (organizado); alta disciplina+chaos
+    // baixo deixa plain. Mutations/customization sobrescrevem em pipeline.
+    pattern: g.creativity > 0.75 && g.chaos > 0.5 ? 'spots'
+           : g.creativity > 0.7 ? 'cells'
+           : g.chaos > 0.75 ? 'stripes'
+           : 'plain',
 
     // Olhos
     eyeSize: 0.16 + g.empathy * 0.12 + g.intelligence * 0.05,
