@@ -92,6 +92,12 @@ export interface Mission {
   scheduled_for: string;
   completed_at: string | null;
   created_at: string;
+  /**
+   * ID do template original que originou esta missão (catálogo). Necessário pra
+   * alimentar o bandit ML quando a missão é concluída/skipada. Pode ser null
+   * em missões legadas (criadas antes do bandit) — nesse caso o bandit ignora.
+   */
+  template_id?: string | null;
 }
 
 export interface Streak {
