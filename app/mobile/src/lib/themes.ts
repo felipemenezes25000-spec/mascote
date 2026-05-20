@@ -102,6 +102,7 @@ const FIXED = {
   success: '#7BAE7A',
   warning: '#F2C14E',
   error: '#E96B5C',
+  info: '#6FA9CA',
   // moods
   moodTriste: '#9AABBE',
   moodOk: '#B79FD4',
@@ -114,6 +115,100 @@ const FIXED = {
   fofo: '#E96B5C',
   sabio: '#B79FD4',
 };
+
+/**
+ * Tokens de emoção do mascote — usado em estados, partículas, halos.
+ * Mapeia 1-1 com `MascotMood` (`@/types`) + estados internos da animação.
+ */
+export const EMOTION_COLORS = {
+  idle:     { fg: '#A89578', bg: '#F1E8D9' },
+  happy:    { fg: '#FFB347', bg: '#FFF1D6' },
+  sad:      { fg: '#9AABBE', bg: '#E5EDF6' },
+  tired:    { fg: '#A89578', bg: '#EFE6D6' },
+  calm:     { fg: '#7BAE7A', bg: '#E3F1E0' },
+  proud:    { fg: '#F2C14E', bg: '#FFF6D7' },
+  curious:  { fg: '#B79FD4', bg: '#EFE6F7' },
+  excited:  { fg: '#FF8030', bg: '#FFE3CD' },
+  // tons "low energy" e "comforted" para estados longos
+  comforted:{ fg: '#E96B5C', bg: '#FFE3DD' },
+  focused:  { fg: '#6FA9CA', bg: '#E0EEF5' },
+} as const;
+
+/**
+ * Tokens de raridade — usados em recompensas, mistery box, conquistas, drop de
+ * acessórios. Cada nível tem fg/bg/glow para badge + halo.
+ */
+export const RARITY_COLORS = {
+  common:    { fg: '#5E5448', bg: '#ECE2D5', glow: 'rgba(94,84,72,0.12)' },
+  uncommon:  { fg: '#4A7A52', bg: '#DCEAD9', glow: 'rgba(74,122,82,0.20)' },
+  rare:      { fg: '#3A6FA0', bg: '#D6E4F0', glow: 'rgba(58,111,160,0.28)' },
+  epic:      { fg: '#6B4F8E', bg: '#E5DAF1', glow: 'rgba(107,79,142,0.34)' },
+  legendary: { fg: '#B23F33', bg: '#FFD9C9', glow: 'rgba(242,193,78,0.45)' },
+  mythic:    { fg: '#E08F1A', bg: '#FFE9C2', glow: 'rgba(255,179,71,0.55)' },
+} as const;
+
+/**
+ * Tokens de evolução/arquétipos — espelha `MascotPhase` + os arquétipos do
+ * `EvolutionEngine`. Cada arquétipo tem cor primária e accent para hero.
+ */
+export const ARCHETYPE_COLORS = {
+  // arquétipos do plano (parte_3_produto.md)
+  guardiao:    { fg: '#7BAE7A', accent: '#4A7A52' },
+  explorador:  { fg: '#FF8030', accent: '#E5651A' },
+  sabio:       { fg: '#B79FD4', accent: '#6B4F8E' },
+  artista:     { fg: '#E96B5C', accent: '#B23F33' },
+  brincalhao:  { fg: '#F2C14E', accent: '#E08F1A' },
+  contemplativo:{ fg: '#6FA9CA', accent: '#3A6FA0' },
+} as const;
+
+export const PHASE_COLORS = {
+  ovo:    { fg: '#A89578', bg: '#F1E8D9', glow: 'rgba(168,149,120,0.16)' },
+  bebe:   { fg: '#FFB347', bg: '#FFF1D6', glow: 'rgba(255,179,71,0.20)' },
+  jovem:  { fg: '#7BAE7A', bg: '#E3F1E0', glow: 'rgba(123,174,122,0.20)' },
+  adulto: { fg: '#FF8030', bg: '#FFE3CD', glow: 'rgba(255,128,48,0.24)' },
+  ancestral:{fg: '#B79FD4', bg: '#EFE6F7', glow: 'rgba(183,159,212,0.28)' },
+} as const;
+
+/**
+ * Tokens de gamificação — usados em XP, streak, combo, missões.
+ * Separamos do palette principal porque devem ser CONSISTENTES entre temas.
+ */
+export const GAMIFICATION_COLORS = {
+  xp:       { fg: '#F2C14E', bg: '#FFF6D7' },
+  streakOn: { fg: '#FF8030', bg: '#FFE3CD' },
+  streakOff:{ fg: '#9A8F80', bg: '#ECE2D5' },
+  comboLow: { fg: '#7BAE7A', bg: '#E3F1E0' },
+  comboMid: { fg: '#FFB347', bg: '#FFF1D6' },
+  comboHigh:{ fg: '#FF6F61', bg: '#FFD9D2' },
+  comboMax: { fg: '#F2C14E', bg: '#FFF6D7' },
+  coin:     { fg: '#E08F1A', bg: '#FFE9C2' },
+  gem:      { fg: '#B79FD4', bg: '#EFE6F7' },
+  premium:  { fg: '#F2C14E', bg: '#FFF6D7' },
+} as const;
+
+/**
+ * Tokens semânticos — referencia papéis genéricos (não componentes).
+ * Use estes ao criar primitives novas para evitar hardcode.
+ */
+export const SEMANTIC_TOKENS = {
+  positive: '#7BAE7A',
+  negative: '#E96B5C',
+  caution:  '#F2C14E',
+  neutral:  '#9A8F80',
+  link:     '#3A6FA0',
+  highlight:'#FF8030',
+  /** Texto/ícone sempre legível sobre fundo brand (laranja/coral) — branco fixo. */
+  inkOnBrand: '#FFFFFF',
+  /** Texto sobre fundo escuro (dark mode primário). */
+  inkOnDark: '#FCF3E7',
+  /** Sombra suave fixa para cards em light. */
+  shadowSoft: '#28200F',
+} as const;
+
+export type RarityLevel = keyof typeof RARITY_COLORS;
+export type EmotionKey = keyof typeof EMOTION_COLORS;
+export type ArchetypeKey = keyof typeof ARCHETYPE_COLORS;
+export type PhaseKey = keyof typeof PHASE_COLORS;
 
 /**
  * Cross-platform shadow. Web emite `boxShadow` (CSS string), nativo emite
@@ -211,6 +306,15 @@ export function buildTheme(
       ...surfaces,
       bgDark: SURFACES.dark.bg,
       surfaceDark: SURFACES.dark.surface,
+    },
+    /** Tokens semânticos por categoria — disponíveis via `theme.tokens.*`. */
+    tokens: {
+      emotion: EMOTION_COLORS,
+      rarity: RARITY_COLORS,
+      archetype: ARCHETYPE_COLORS,
+      phase: PHASE_COLORS,
+      gamification: GAMIFICATION_COLORS,
+      semantic: SEMANTIC_TOKENS,
     },
     spacing: {
       xs: 4,
