@@ -98,7 +98,13 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
       if (!profile || !mascot) return;
       haptic('light');
       const value = customValue ?? 1;
-      const out = await applyCheckinFully({ profile, mascot, kind, value });
+      const out = await applyCheckinFully({
+        profile,
+        mascot,
+        kind,
+        value,
+        analyticsPath: 'home',
+      });
       await refreshStreak();
       await refreshWallet();
       await refreshMascot();

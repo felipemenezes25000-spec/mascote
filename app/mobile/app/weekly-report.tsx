@@ -12,6 +12,7 @@ import { addDays, checkins, messages as messagesDb, todayLocal } from '@/lib/db'
 import { generateWeeklyReport } from '@/lib/weeklyReportGenerator';
 import { computeInsights, type Insight } from '@/lib/insights';
 import { loadStoredPersonalization, storedToPartial } from '@/lib/personalization-service';
+import { analytics } from '@/analytics';
 import { entitlementService } from '@/services/subscription';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
@@ -34,6 +35,12 @@ export default function WeeklyReport() {
     if (!profile) return;
     void load();
   }, [profile?.id]);
+
+  useEffect(() => {
+    if (!profile) return;
+    const weekIso = addDays(todayLocal(), -6);
+    analytics.track('weekly_report_viewed', { week_iso: weekIso, tier });
+  }, [profile?.id, tier]);
 
   async function load() {
     if (!profile) return;

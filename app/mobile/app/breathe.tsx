@@ -131,6 +131,7 @@ export default function Breathe() {
         unit: 'cycles',
         baseXp: 25,
         coins: 15,
+        analyticsPath: 'breathe',
       });
       await Promise.all([
         refreshMascot().catch(() => {}),

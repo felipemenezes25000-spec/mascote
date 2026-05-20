@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChatBubble } from '@/components/ChatBubble';
+import { ChatReplyRating } from '@/components/ChatReplyRating';
+import { trackAiReplyRated } from '@/analytics/trackAiReply';
 import { Icon } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
 import { chatSuggestions } from '@/content/replies';
@@ -46,6 +48,7 @@ export default function ChatTab() {
   const [sending, setSending] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [showCvvBanner, setShowCvvBanner] = useState(true);
+  const [ratedMessageIds, setRatedMessageIds] = useState<Set<string>>(() => new Set());
   const listRef = useRef<FlatList<ListItem>>(null);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -164,6 +167,19 @@ export default function ChatTab() {
     });
     setList([greeting]);
     setShowSuggestions(true);
+    setRatedMessageIds(new Set());
+  }
+
+  function shouldShowRating(message: Message): boolean {
+    if (message.role !== 'mascot') return false;
+    if (message.safety_flag === 'critical') return false;
+    if (ratedMessageIds.has(message.id)) return false;
+    return true;
+  }
+
+  function handleReplyRated(messageId: string, helpful: boolean, repetition: boolean) {
+    trackAiReplyRated(helpful, repetition);
+    setRatedMessageIds(prev => new Set(prev).add(messageId));
   }
 
   // monta items com date separators (em horário LOCAL, consistente com todayLocal())
@@ -261,13 +277,22 @@ export default function ChatTab() {
                 </View>
               );
             }
+            const msg = item.message!;
+            const isMascot = msg.role === 'mascot';
             return (
-              <ChatBubble
-                role={item.message!.role === 'user' ? 'user' : 'mascot'}
-                text={item.message!.content}
-                mascotColor={meta.primaryColor}
-                safetyFlag={item.message!.safety_flag}
-              />
+              <View>
+                <ChatBubble
+                  role={isMascot ? 'mascot' : 'user'}
+                  text={msg.content}
+                  mascotColor={meta.primaryColor}
+                  safetyFlag={msg.safety_flag}
+                />
+                {isMascot && shouldShowRating(msg) ? (
+                  <ChatReplyRating
+                    onRate={(helpful, repetition) => handleReplyRated(msg.id, helpful, repetition)}
+                  />
+                ) : null}
+              </View>
             );
           }}
         />

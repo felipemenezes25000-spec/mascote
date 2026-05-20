@@ -6,6 +6,7 @@ import { mockReply, classifyIntent } from '@/content/replies';
 import type { Personality, SafetyFlag } from '@/types';
 import type { AiResponse } from '@/lib/ai';
 import type { MemoryItem } from '@/lib/memory';
+import { applyPersonalityVoice } from './PersonalityVoice';
 
 const MEMORY_TEMPLATES: Record<Personality, (summary: string) => string[]> = {
   calmo: s => [
@@ -54,6 +55,11 @@ export function localFallbackReply(
   if (!reply.endsWith(suffix)) {
     reply = `${reply} ${suffix}`;
   }
+  reply = applyPersonalityVoice(reply, {
+    personality,
+    mascotName: options?.mascotName,
+    memoryKinds: options?.memories?.map(m => ({ kind: m.kind })),
+  });
   return {
     reply,
     safety_flag: 'safe' as SafetyFlag,

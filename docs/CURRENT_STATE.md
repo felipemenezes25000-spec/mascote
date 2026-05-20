@@ -2,13 +2,15 @@
 
 Documento único de verdade operacional. Auditorias antigas (`AUDIT_AAA_COMPLETO.md`, `VEREDITO-FINAL.md`) são históricas — consulte este arquivo primeiro.
 
+**Última verificação:** 2026-05-20 — `npm run test:coverage` rodando 1785 testes, coverage real 72.3% lines.
+
 ## Monorepo
 
 | Pacote | Pasta | Stack |
 |--------|-------|-------|
 | App | `app/mobile` | Expo 51, RN 0.74, Vitest |
 | Landing | `app/web` | Next.js 14, Tailwind |
-| CI | `.github/workflows/ci.yml` | `npm run quality` (typecheck + lint + test) |
+| CI | `.github/workflows/ci.yml` | typecheck + lint + `test:coverage` (enforça thresholds) |
 
 Comandos na **raiz**: `npm run quality`, `npm test`, `npm run typecheck`, `npm run lint`, `npm run web`.
 
@@ -16,7 +18,14 @@ Comandos na **raiz**: `npm run quality`, `npm test`, `npm run typecheck`, `npm r
 
 | Área | Estado | Notas |
 |------|--------|-------|
-| Quality gate | ✅ `npm run quality` (typecheck + ESLint + 1779 testes / 110 arquivos / ~8s) | Reusado pelo CI |
+| Quality gate | ✅ `npm run quality` (typecheck + ESLint + 1808 testes / 113 arquivos / ~7-9s) | Reusado pelo CI |
+| Coverage | 🟡 72.9% lines / 69.4% branches (medido 2026-05-20). Threshold enforçado: 70/66/72/70 | Maestro E2E cobre fluxos nativos faltantes; ver task "noUncheckedIndexedAccess" |
+| Test scripts | ✅ test:unit (1211), test:integration (233), test:security (145), test:ai (208), test:game (21), test:subscription (44), test:ci (full + coverage) | Permite gating granular em CI/pre-commit |
+| Mutations | 12 marcos (7 individuais + 5 combo) — não 50+ como dito em iterações anteriores | [src/lib/dna/mutations.ts](../app/mobile/src/lib/dna/mutations.ts) e [mutations-extended.ts](../app/mobile/src/lib/dna/mutations-extended.ts) |
+| Analytics layer | ✅ Interface + MockProvider + 16 eventos tipados + consent gating | [src/analytics/](../app/mobile/src/analytics/) — provider real (Firebase/PostHog) plugável |
+| Billing demo guard | ✅ `isDemoBilling()` + `isMockInProductionBuild()` + warning estruturado | [billing-provider.ts](../app/mobile/src/services/subscription/billing-provider.ts) |
+| Supabase schema | ✅ SQL pronto (12 tabelas + RLS + indices + triggers) | [docs/SUPABASE_SCHEMA.sql](SUPABASE_SCHEMA.sql) |
+| npm audit | 🟡 25 vulns (15 high, 9 mod, 1 low) — todas tied a Expo SDK 51 chain | [SECURITY_AUDIT.md](SECURITY_AUDIT.md) — fix exige upgrade SDK 51→53 |
 | ESLint | ✅ Flat config (`eslint.config.js`) — RN + TS + react-hooks | Migrado de `.eslintrc.cjs` |
 | Design tokens | ✅ Tokens semânticos por emotion/rarity/archetype/phase/gamification | `src/lib/themes.ts` + `themes.md` |
 | UI primitives | ✅ 24 componentes em `src/components/ui/` (Typography, Input, Badge, …) | Onda A etapa 3 |
@@ -55,11 +64,25 @@ Comandos na **raiz**: `npm run quality`, `npm test`, `npm run typecheck`, `npm r
 
 ```powershell
 # na raiz (recomendado)
-npm run quality   # typecheck + lint + 1779 testes
-npm test
+npm run quality          # typecheck + lint + 1785 testes
+npm test                 # apenas testes (sem coverage)
+npm run test:coverage    # testes + coverage (enforça threshold do CI)
 npm run typecheck
 
 # ou na pasta do mobile
 cd app\mobile
 npm run quality
 ```
+
+## Gaps técnicos conhecidos (alvos pra próximas sessões)
+
+- **`noUncheckedIndexedAccess` desligado** — habilitar surfou 271 erros em 60+ arquivos (Mascot3D, insights, kmeans, tokenize, graph). Sweep dedicado pendente.
+- ✅ **`useBehaviorTick.ts`** — coberto agora (12 testes, ~100%).
+- ✅ **`persistence.ts` (dna)** — coberto agora (11 testes, 100%).
+- **`supabase-stub.ts` em 0% coverage** — esperado, é stub. Candidato a exclude se ficar parado.
+- ✅ **Mascot3D.tsx** — quebrado em [components/mascot-3d/](../app/mobile/src/components/mascot-3d/) (12 subcomponentes, container ficou em 164 linhas).
+- **Vulnerabilidades npm (25)** — upgrade Expo SDK 51→53 em projeto dedicado.
+- **Proxy IA não deployado** — produção depende de BYOK até deploy. Ver [AI_PRODUCTION_PLAN.md](AI_PRODUCTION_PLAN.md).
+- **RevenueCat SDK não vinculado** — `RevenueCatBillingProvider` retorna erro honesto até integração nativa. Ver [PREMIUM_STRATEGY.md](PREMIUM_STRATEGY.md).
+- **Supabase não deployado** — `supabaseSyncRepoStub` delega pra local. Schema pronto em [SUPABASE_SCHEMA.sql](SUPABASE_SCHEMA.sql). Ver [SYNC_ARCHITECTURE.md](SYNC_ARCHITECTURE.md).
+- **Analytics provider real** — só mock por ora. Plugar Firebase/PostHog quando decisão tomada. Ver [src/analytics/](../app/mobile/src/analytics/).

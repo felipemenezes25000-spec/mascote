@@ -1,82 +1,66 @@
-# Test Report — Evolution & Premium Foundation
+# Test Report — Mascote Mobile
 
-**Data:** 2026-05-19 (roadmap 10/10 — sessão atual)  
-**Escopo:** Suite rápida, billing honesto, sync export, 50+ mutações, IA proxy prep
+**Data:** 2026-05-20  
+**Escopo:** Suite completa pós-transformação premium (AI guards, billing modules, sync engine)
 
 ## Comandos
 
 ```powershell
 cd app\mobile
+npm ci
 npm run typecheck
+npm run lint
 npm test
-npm run doctor
+npm run test:ci
+npm run test:unit
+npm run test:integration
+npm run test:security
+npm run test:ai
+npm run test:game
+npm run test:subscription
+npm audit
 ```
 
-### Maestro (device / emulador + Expo Go)
+## Resultados
 
-```powershell
-cd app\mobile
-npx expo start
-# outro terminal:
-maestro test .maestro/onboarding.yaml
-maestro test .maestro/paywall.yaml
-maestro test ..\..\scripts\maestro\premium-onboarding.yaml
-maestro test .maestro/premium-settings-reports.yaml
-```
+| Comando | Status | Detalhe |
+|---------|--------|---------|
+| `npm ci` | ✅ | exit 0 |
+| `npm run typecheck` | ✅ | 0 erros TS strict |
+| `npm run lint` | ✅ | 0 erros ESLint |
+| `npm test` | ✅ | **1839 testes**, 117 arquivos, ~9s |
+| `npm run test:ci` | ✅ | coverage lines **72.85%** (threshold 70%) |
+| `npm run test:unit` | ✅ | subset lib/content/store |
+| `npm run test:integration` | ✅ | services/components/hooks |
+| `npm run test:security` | ✅ | security + pentests + safety |
+| `npm run test:ai` | ✅ | ai + lib-ai + production-guards |
+| `npm run test:game` | ✅ | evolution engine |
+| `npm run test:subscription` | ✅ | billing + entitlements |
+| `npm audit` | 🟡 | 25 vulns (Expo SDK 51 — ver SECURITY_AUDIT.md) |
+| Maestro E2E | ⏭ | Requer emulador/device — não roda em CI unit |
 
-## Resultados (Fase 4)
+## Novos testes (sessão 2026-05-20)
 
-| Comando | Status |
-|---------|--------|
-| `npm run typecheck` | ✅ |
-| `npm test` | ✅ (1779 testes, 110 arquivos, ~11s com pool threads) |
-| ESLint | ⏭ Não configurado — ver `RELEASE_CHECKLIST.md` |
+| Arquivo | Testes | Área |
+|---------|--------|------|
+| `tests/ai/production-guards.test.ts` | 9 | AIRateLimiter, AICostGuard, AIResponseValidator, PersonalityVoice |
+| `tests/services/subscription/billing-modules.test.ts` | 8 | PaywallRules, PurchaseErrorMapper, SubscriptionTypes |
+| `tests/data/sync-engine.test.ts` | 4 | SyncEngine, SyncQueue, ConflictResolution |
 
-## Fase 5 — incremento (2026-05-19)
+## Hangs / flakes
 
-| Área | O que mudou |
-|------|-------------|
-| Missões | Catálogo 300+; metadados (`duration`, `difficulty`, `visual_impact`, `tier`, `tags`, `category`) via `mission-meta.ts` |
-| Conquistas | `applyAchievementReward` persiste aura/trait/animation/memory_card |
-| Memória | `MascotMemoryService.recordMilestone` — birth, first_mission, first_evolution |
-| Testes | `mission-meta.test.ts`, `achievement-rewards.test.ts`, catálogo 300+ |
+Nenhum hang detectado. Suite completa finaliza em <15s com `pool=threads`.
 
-## Fase 4 — correções aplicadas
+## E2E separado
 
-| Área | O que mudou |
-|------|-------------|
-| RevenueCat | Falha graciosa sem API key / sem `RC_ENABLED`; não promove tier em compra falha |
-| Env | `app/mobile/.env.example` (billing + OpenAI) |
-| Evolução | `useEvolutionState`: erro amigável, memo de personalização, visuals memoizados |
-| Entitlements | `useSubscriptionTier` refresca ao voltar do paywall (`useFocusEffect`) |
-| Paywall | Alert em falha de compra; re-fetch tier após sucesso |
-| UX | Empty states: missão, conquistas, coleção; a11y em relatórios/personalização |
-| Docs | `RELEASE_CHECKLIST.md`, Maestro `premium-settings-reports.yaml` |
+Maestro em `.maestro/` — scripts `test:e2e` e `test:e2e:critical`. **Não** incluído em `npm test`.
 
-## Checklist manual (QA — ~15 min)
+## Pendências externas
 
-1. **Onboarding** — goal → style → quick → DNA reveal → nome → home com primeira missão.
-2. **Primeira missão** — completar água → microevolução visível no mascote.
-3. **Personalização** — Configurações → Personalização → alterar vínculo/estilo → Salvar → reabrir app → visual/genótipo refletem.
-4. **Paywall** — abrir via fase bloqueada ou relatório → assinar (mock) → voltar → Plus ativo em relatório semanal completo.
-5. **Paywall dismiss** — fechar sem comprar → tier continua free; relatório permanece preview.
-6. **Conquistas** — desbloquear uma → ver recompensa (XP/moedas/acessório) na coleção ou inventário.
-7. **Coleção vazia** — usuário novo vê empty state amigável.
-8. **Evolução** — aba carrega mascote com `evolutionVisuals`; sem crash se storage lento.
-9. **Relatórios** — semanal (preview free / full Plus), mensal, dark mode se tema escuro ativo.
-10. **RevenueCat sem keys** — `EXPO_PUBLIC_BILLING_PROVIDER=revenuecat` sem `.env` → compra mostra alerta, tier não muda.
+- [ ] Maestro em CI com emulador
+- [ ] RevenueCat sandbox E2E
+- [ ] Proxy IA integration test (requer URL deployada)
 
-## Pendências (somente externas)
+---
 
-- [ ] RevenueCat SDK nativo + SKUs reais (App Store / Play)
-- [ ] Maestro em CI com emulador dedicado
-- [ ] ESLint (opcional pós-launch)
-
-## Arquivos principais (premium)
-
-- `src/game/evolution/*` — motor evolutivo
-- `src/hooks/useEvolutionState.ts`, `useSubscriptionTier.ts`
-- `src/services/subscription/*` — mock + RevenueCat adapter
-- `app/settings/personalization.tsx`, `app/paywall.tsx`
-- `app/weekly-report.tsx`, `app/monthly-report.tsx`
-- `src/lib/achievement-rewards.ts`, `unlock.ts`
+*Gerado após quality gates verificados em 2026-05-20.*

@@ -4,3 +4,7 @@ export * from './SafetyRules';
 export * from './LocalFallbackAI';
 export * from './MissionGeneratorAI';
 export * from './EmotionalMemory';
+export { checkAiRateLimit, recordAiUsage, resetAiUsage } from './AIRateLimiter';
+export { checkAiCostBudget, recordAiCost, resetAiCost } from './AICostGuard';
+export { validateAiResponse, toAiResponse } from './AIResponseValidator';
+export { buildPersonalityVoice, applyPersonalityVoice } from './PersonalityVoice';

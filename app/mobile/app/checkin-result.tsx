@@ -58,6 +58,7 @@ export default function CheckInResult() {
           mascot: runningMascot,
           kind: kind as HabitKind,
           value,
+          analyticsPath: 'mission',
         });
         runningMascot = out.mascot;
         totalXp += out.xpGained;

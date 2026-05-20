@@ -31,6 +31,8 @@ import {
   type Mutation,
   type MutationContext,
 } from '@/lib/dna';
+import { analytics } from '@/analytics';
+import type { CheckinAnalyticsPath } from '@/analytics';
 import type { HabitKind, Mascot, MascotPhase, Mission, Profile, Streak } from '@/types';
 import type { MicroEvolution } from '@/game/evolution/EvolutionTypes';
 
@@ -47,6 +49,8 @@ export interface CheckinInput {
   baseXp?: number;
   /** Moedas — default COINS_PER_CHECKIN. */
   coins?: number;
+  /** Origem do check-in para analytics (Pilar 2). */
+  analyticsPath?: CheckinAnalyticsPath;
 }
 
 export interface CheckinOutcome {
@@ -101,6 +105,7 @@ export async function applyCheckinFully(input: CheckinInput): Promise<CheckinOut
 }
 
 async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcome> {
+  const startedAt = Date.now();
   const { profile, mascot, kind } = input;
   const value = input.value ?? 1;
   const unit = input.unit ?? defaultUnit(kind);
@@ -281,12 +286,30 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
           detail: newMicro[0]?.label,
         });
       } catch { /* non-fatal */ }
+      for (const micro of newMicro) {
+        analytics.track('first_microevolution_seen', { kind: micro.id });
+      }
     }
   } catch (err) {
     logger.warn('[checkin] micro-evolution eval failed (non-fatal)', {
       reason: err instanceof Error ? err.message : 'unknown',
     });
   }
+
+  for (const mutation of newMutations) {
+    analytics.track('mutation_unlocked', {
+      mutation_id: mutation.id,
+      rarity: mutation.rarity,
+    });
+  }
+
+  analytics.track('checkin_completed', {
+    habit_kind: kind,
+    duration_ms: Date.now() - startedAt,
+    path: input.analyticsPath ?? 'other',
+    xp_gained: totalXpGained,
+    phase_changed: finalPhaseChanged,
+  });
 
   return {
     mascot: finalMascot,

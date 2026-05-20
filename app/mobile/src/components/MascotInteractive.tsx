@@ -15,8 +15,10 @@
 import { useCallback, useRef } from 'react';
 import { Platform, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { analytics } from '@/analytics';
+import type { MascotGestureKind } from '@/analytics';
 
-export type MascotGestureKind = 'tap' | 'double' | 'long' | 'pet';
+export type { MascotGestureKind };
 
 interface Props {
   children: React.ReactNode;
@@ -59,14 +61,22 @@ export function MascotInteractive({
     [reduceMotion],
   );
 
+  const emitGesture = useCallback(
+    (kind: MascotGestureKind) => {
+      analytics.track('mascot_gesture', { kind });
+      onGesture(kind);
+    },
+    [onGesture],
+  );
+
   const handlePressIn = useCallback(() => {
     longPressFiredRef.current = false;
     longPressTimerRef.current = setTimeout(() => {
       longPressFiredRef.current = true;
       haptic('medium');
-      onGesture('long');
+      emitGesture('long');
     }, LONG_PRESS_MS);
-  }, [haptic, onGesture]);
+  }, [emitGesture, haptic]);
 
   const handlePressOut = useCallback(() => {
     if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
@@ -79,13 +89,13 @@ export function MascotInteractive({
     if (now - lastTapRef.current < DOUBLE_TAP_MS) {
       lastTapRef.current = 0;
       haptic('medium');
-      onGesture('double');
+      emitGesture('double');
       return;
     }
     lastTapRef.current = now;
     haptic('light');
-    onGesture('tap');
-  }, [disabled, haptic, onGesture]);
+    emitGesture('tap');
+  }, [disabled, emitGesture, haptic]);
 
   // Pan/drag — usamos onTouchMove pra contar movimento contínuo. Throttle
   // evita 60fps de toasts: 1 evento "pet" a cada 350ms basta pra UX.
@@ -94,8 +104,8 @@ export function MascotInteractive({
     const now = Date.now();
     if (now - lastPetAtRef.current < 350) return;
     lastPetAtRef.current = now;
-    onGesture('pet');
-  }, [disabled, onGesture]);
+    emitGesture('pet');
+  }, [disabled, emitGesture]);
 
   return (
     <View

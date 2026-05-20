@@ -5,7 +5,9 @@
 import type { BillingTierId } from '@/content/billing';
 import { getTier } from '@/content/billing';
 import { localSubscriptionRepo } from '@/repositories/local';
+import { trackSubscriptionCancelled } from '@/analytics/trackSubscription';
 import { getBillingProvider } from './billing-provider';
+import { restorePurchasesService } from './RestorePurchasesService';
 
 export class SubscriptionService {
   private billing = getBillingProvider();
@@ -19,13 +21,14 @@ export class SubscriptionService {
   }
 
   async cancel(userId: string) {
+    const previous = await localSubscriptionRepo.getTier(userId);
     await this.billing.cancel(userId);
+    trackSubscriptionCancelled(previous);
   }
 
   async restore(userId: string) {
-    const tier = await this.billing.restore(userId);
-    if (tier !== 'free') await localSubscriptionRepo.setTier(userId, tier);
-    return tier;
+    const result = await restorePurchasesService.restore(userId);
+    return result.tier;
   }
 
   getBenefits(tierId: BillingTierId) {

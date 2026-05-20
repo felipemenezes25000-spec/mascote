@@ -4,9 +4,8 @@
 
 import type { Personality, SafetyFlag } from '@/types';
 import type { AiResponse, GenerateReplyOptions, HistoryMsg } from '@/lib/ai';
-import { classifyOutput } from '@/content/safety';
-import { SAFE_FALLBACK } from '@/content/safety';
 import { logger } from '@/lib/logger';
+import { toAiResponse } from './AIResponseValidator';
 
 const PROXY_TIMEOUT_MS = 20_000;
 
@@ -48,15 +47,7 @@ export async function proxyMascotReply(
     }
     const data = (await res.json()) as { reply?: string; safety_flag?: SafetyFlag };
     if (!data.reply) return null;
-    const outputFlag = classifyOutput(data.reply);
-    if (outputFlag !== 'safe') {
-      return { reply: SAFE_FALLBACK, safety_flag: outputFlag, source: 'fallback' };
-    }
-    return {
-      reply: data.reply,
-      safety_flag: data.safety_flag ?? 'safe',
-      source: 'openai',
-    };
+    return toAiResponse(data, 'openai');
   } catch (err) {
     const safeMsg = err instanceof Error ? err.message : 'unknown';
     logger.warn('[ai] proxy request failed', { reason: safeMsg });

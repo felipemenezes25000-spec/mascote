@@ -15,6 +15,14 @@ import { formatMemoriesForPrompt, recall, type MemoryItem } from '@/lib/memory';
 import { logger } from '@/lib/logger';
 import { classifySafetyEnsemble } from '@/lib/ml/safety/classifier';
 import { isAiProxyConfigured, proxyMascotReply } from '@/ai/ProxyMascotAI';
+import {
+  aiSourceFromResponse,
+  trackAiReplyFailed,
+  trackAiReplyRequested,
+  trackAiReplySucceeded,
+} from '@/analytics/trackAiReply';
+import { localSubscriptionRepo } from '@/repositories/local';
+import type { BillingTierId } from '@/content/billing';
 
 export interface AiResponse {
   reply: string;
@@ -64,6 +72,15 @@ export async function generateReply(
   return generateReplyInternal(personality, userMessage, apiKey, history, mascotName, userId, dna);
 }
 
+async function resolveAiTier(userId: string | undefined): Promise<BillingTierId> {
+  if (!userId) return 'free';
+  try {
+    return await localSubscriptionRepo.getTier(userId);
+  } catch {
+    return 'free';
+  }
+}
+
 async function generateReplyInternal(
   personality: Personality,
   userMessage: string,
@@ -73,6 +90,22 @@ async function generateReplyInternal(
   userId: string | undefined,
   dna: MascotDNA | undefined = undefined
 ): Promise<AiResponse> {
+  const startedAt = Date.now();
+  const tier = await resolveAiTier(userId);
+  const hadApiKey = Boolean(apiKey?.trim());
+  const requestedSource: import('@/analytics').AiReplySource = isAiProxyConfigured()
+    ? 'proxy'
+    : hadApiKey
+      ? 'byok'
+      : 'local';
+  trackAiReplyRequested(tier, requestedSource);
+
+  const finish = (result: AiResponse, usedProxy: boolean): AiResponse => {
+    const source = aiSourceFromResponse(result, { usedProxy, hadApiKey });
+    trackAiReplySucceeded(tier, source, Date.now() - startedAt);
+    return result;
+  };
+
   // === ENSEMBLE SAFETY: regex + sentiment + (futuro) Bayes ===
   // Substitui classifyInput direto pelo ensemble — pega variações que
   // regex sozinha perderia (e.g., sentiment muito negativo sem keyword
@@ -85,14 +118,14 @@ async function generateReplyInternal(
   const legacyFlag = classifyInput(userMessage);
   const inputFlag = inputFlag_ensemble === 'safe' ? legacyFlag : inputFlag_ensemble;
   if (inputFlag === 'critical') {
-    return { reply: CRISIS_REPLY, safety_flag: 'critical', source: 'fallback' };
+    return finish({ reply: CRISIS_REPLY, safety_flag: 'critical', source: 'fallback' }, false);
   }
   // 'high' = distress agudo (pânico, desespero, sem esperança, pensamento intrusivo)
   // — não chega a crise suicida, mas é grave demais pra cair em mock genérico.
   // Trata como CRISIS_REPLY pra incluir referências de ajuda profissional (CVV 188,
   // CAPS). Conservador: melhor redirecionar de mais que de menos.
   if (inputFlag === 'high') {
-    return { reply: CRISIS_REPLY, safety_flag: 'critical', source: 'fallback' };
+    return finish({ reply: CRISIS_REPLY, safety_flag: 'critical', source: 'fallback' }, false);
   }
   // Self-statement clínico: user afirma ter / estar com um quadro. Aí redireciona.
   // Menção casual ("vou no psicólogo", "tomei meu remédio") já é watch via
@@ -104,11 +137,11 @@ async function generateReplyInternal(
     inputFlag === 'watch' &&
     /diagn[óo]stico|(?:isso\s+[éeê]|sou|tenho|estou\s+com|t[ôo]\s+com|minha?|meus?)\s+(?:depress|ansiedade|p[âa]nico|trauma|transtorno|burnout|bipolar|TDAH|TOC\b|esquizofren)/i.test(userMessage)
   ) {
-    return { reply: DIAGNOSIS_REDIRECT, safety_flag: 'watch', source: 'fallback' };
+    return finish({ reply: DIAGNOSIS_REDIRECT, safety_flag: 'watch', source: 'fallback' }, false);
   }
   // anti-pattern emocional: encoraja vínculos humanos sem ser frio
   if (detectAttachment(userMessage)) {
-    return { reply: ATTACHMENT_REPLY, safety_flag: 'watch', source: 'fallback' };
+    return finish({ reply: ATTACHMENT_REPLY, safety_flag: 'watch', source: 'fallback' }, false);
   }
 
   // Recall: até 3 memórias relevantes pra incluir no system prompt da OpenAI.
@@ -129,7 +162,7 @@ async function generateReplyInternal(
       mascotName,
       userId,
     });
-    if (proxied) return proxied;
+    if (proxied) return finish(proxied, true);
   }
 
   if (apiKey) {
@@ -137,20 +170,21 @@ async function generateReplyInternal(
       const reply = await callOpenAI(personality, userMessage, apiKey, history, memories, mascotName, dna);
       const outputFlag = classifyOutput(reply);
       if (outputFlag !== 'safe') {
-        return { reply: SAFE_FALLBACK, safety_flag: outputFlag, source: 'fallback' };
+        return finish({ reply: SAFE_FALLBACK, safety_flag: outputFlag, source: 'fallback' }, false);
       }
-      return { reply, safety_flag: inputFlag, source: 'openai' };
+      return finish({ reply, safety_flag: inputFlag, source: 'openai' }, false);
     } catch (err) {
       // Loga só a MENSAGEM do erro — `err` completo pode conter o Request
       // com Authorization header e vazar a API key.
       const safeMsg = err instanceof Error ? err.message : 'unknown';
       logger.warn('[ai] OpenAI request failed, using mock fallback', { reason: safeMsg });
+      trackAiReplyFailed(tier, 'byok', safeMsg);
     }
   }
 
   const intent = classifyIntent(userMessage);
   const reply = mockReply(personality, intent, mascotName);
-  return { reply, safety_flag: inputFlag, source: 'mock' };
+  return finish({ reply, safety_flag: inputFlag, source: 'mock' }, false);
 }
 
 const OPENAI_TIMEOUT_MS = 15_000;
