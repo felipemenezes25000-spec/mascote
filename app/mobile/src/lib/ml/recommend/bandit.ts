@@ -69,7 +69,12 @@ function gammaSample(k: number, rng: () => number): number {
 export function betaSample(alpha: number, beta: number, rng: () => number = Math.random): number {
   const x = gammaSample(alpha, rng);
   const y = gammaSample(beta, rng);
-  return x / (x + y);
+  const denom = x + y;
+  // Guard: x+y=0 (raríssimo) ou NaN/Infinity caem aqui — devolve 0.5 neutro
+  // em vez de NaN/Infinity que viraria veneno em selectArm.
+  if (!Number.isFinite(denom) || denom <= 0) return 0.5;
+  const v = x / denom;
+  return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
 /**
@@ -139,7 +144,22 @@ export function serializeBandit(state: BanditState): string {
 export function deserializeBandit(raw: string): BanditState {
   try {
     const p = JSON.parse(raw);
-    return { arms: new Map(p.arms) };
+    const arms = new Map<string, BanditArm>();
+    if (Array.isArray(p?.arms)) {
+      for (const entry of p.arms) {
+        if (!Array.isArray(entry) || entry.length !== 2) continue;
+        const [id, value] = entry as [unknown, unknown];
+        if (typeof id !== 'string' || !value || typeof value !== 'object') continue;
+        const v = value as Partial<BanditArm>;
+        // Payload corrompido (alpha/beta undefined) produziria NaN em
+        // estimatedRate e quebraria selectArm. Sanitiza com Beta(1,1) prior.
+        const alpha = Number.isFinite(v.alpha) && (v.alpha as number) > 0 ? (v.alpha as number) : 1;
+        const beta = Number.isFinite(v.beta) && (v.beta as number) > 0 ? (v.beta as number) : 1;
+        const pulls = Number.isFinite(v.pulls) && (v.pulls as number) >= 0 ? Math.floor(v.pulls as number) : 0;
+        arms.set(id, { id, alpha, beta, pulls });
+      }
+    }
+    return { arms };
   } catch {
     return createBandit();
   }

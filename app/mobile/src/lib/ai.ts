@@ -10,7 +10,7 @@ import {
 import { classifyIntent, mockReply } from '@/content/replies';
 import { recall, type MemoryItem } from '@/lib/memory';
 import { logger } from '@/lib/logger';
-import { classifySafetyEnsemble } from '@/lib/ml/safety/classifier';
+import { classifySafetyEnsemble, moreSevere } from '@/lib/ml/safety/classifier';
 import { isAiProxyConfigured, proxyMascotReply } from '@/ai/ProxyMascotAI';
 import { buildMascotSystemPrompt } from '@/ai/MascotPrompt';
 import { validateAiResponse } from '@/ai/AIResponseValidator';
@@ -112,13 +112,15 @@ async function generateReplyInternal(
   // Substitui classifyInput direto pelo ensemble — pega variações que
   // regex sozinha perderia (e.g., sentiment muito negativo sem keyword
   // crítica explícita).
+  //
+  // O ensemble JÁ inclui classifyInput como `regex` internamente e devolve
+  // o flag mais severo entre todos os sinais. Ainda assim chamamos
+  // `classifyInput` de novo e fusionamos via `moreSevere` por defense-in-depth:
+  // se o ensemble mudar no futuro (e.g., comecar a downgradear severidade),
+  // a regex legacy continua sendo um piso inferior garantido. Custo: ~1ms.
   const safety = classifySafetyEnsemble(userMessage);
-  const inputFlag_ensemble = safety.flag;
-  // mantém variável legacy `inputFlag` pra resto do código abaixo
-  // Usa o flag MAIS SEVERO entre o legacy (mantido pra compatibilidade
-  // exata dos testes) e o ensemble (mais conservador).
   const legacyFlag = classifyInput(userMessage);
-  const inputFlag = inputFlag_ensemble === 'safe' ? legacyFlag : inputFlag_ensemble;
+  const inputFlag = moreSevere(safety.flag, legacyFlag);
   if (inputFlag === 'critical') {
     return finish({ reply: CRISIS_REPLY, safety_flag: 'critical', source: 'fallback' }, false);
   }

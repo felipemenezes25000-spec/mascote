@@ -11,6 +11,10 @@ export const xpEvents = {
   },
   async total(user_id: string): Promise<number> {
     const rows = await read<XpEvent>('xp_events');
-    return rows.filter(e => e.user_id === user_id).reduce((sum, e) => sum + e.amount, 0);
+    // `?? 0` defende contra payload corrompido em AsyncStorage (1 NaN
+    // contamina todo o total e o usuário vê "NaN XP" pra sempre).
+    return rows
+      .filter(e => e.user_id === user_id)
+      .reduce((sum, e) => sum + (Number.isFinite(e.amount) ? e.amount : 0), 0);
   },
 };
