@@ -29,7 +29,7 @@ maestro test .maestro/premium-settings-reports.yaml
 | Comando | Status |
 |---------|--------|
 | `npm run typecheck` | ✅ |
-| `npm test` | ✅ (1767+ testes, ~25–35s com pool threads + env node) |
+| `npm test` | ✅ (1779 testes, 110 arquivos, ~11s com pool threads) |
 | ESLint | ⏭ Não configurado — ver `RELEASE_CHECKLIST.md` |
 
 ## Fase 5 — incremento (2026-05-19)

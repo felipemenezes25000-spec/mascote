@@ -88,6 +88,10 @@ race-out*.txt
 test-output.txt
 test-after*.txt
 tsc-output.txt
+**/test-output.txt
+
+# Cache Vitest (node_modules)
+**/.vite/
 
 # Backups locais de refactor (histórico já tá no git)
 *.bak

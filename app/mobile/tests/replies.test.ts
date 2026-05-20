@@ -97,7 +97,7 @@ describe('mockReply — todas personalidades cobrem todas intenções', () => {
     let foundAffective = false;
     for (let i = 0; i < 30; i++) {
       const reply = mockReply('fofo', 'greeting');
-      if (/[💛🌱✨🐣🍵]|fofo|aiii|querid/.test(reply)) {
+      if (/[\u{1F49B}\u{1F331}\u{2728}\u{1F423}\u{1F375}]|fofo|aiii|querid/u.test(reply)) {
         foundAffective = true;
         break;
       }

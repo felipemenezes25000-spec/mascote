@@ -1,133 +1,82 @@
-# Mascote — app local
+# Mascote — app mobile (Expo)
 
-App de autocuidado gamificado rodando 100% local. Sem backend, sem cloud, sem chave de API obrigatória.
+App principal: criatura procedural, hábitos, evolução, chat com IA (mock ou BYOK), gamificação e premium demo — **offline-first** com persistência local.
 
-## Rodar agora
+## Rodar
+
+Na **raiz do monorepo** (recomendado):
+
+```bash
+npm install --prefix app/mobile
+npm run web          # da raiz: Expo web
+```
+
+Ou nesta pasta:
 
 ```powershell
 cd app\mobile
 npx expo start --web
 ```
 
-Abre `http://localhost:8081` automaticamente. Aperta `w` no terminal se não abrir.
+- Web: `http://localhost:8081` (porta padrão do Metro)
+- Expo Go: `npx expo start` e escanear QR (mesmo Wi‑Fi)
+- Android: `npx expo start --android` ou `npm run android`
 
-## Outras formas de rodar
+## Qualidade
 
-**No celular (Expo Go):**
-1. Instala o app **Expo Go** (App Store / Play Store)
-2. `npx expo start`
-3. Escanea o QR code com a câmera (iOS) ou pelo próprio Expo Go (Android)
-4. Celular e PC precisam estar no mesmo Wi-Fi
+```bash
+# na raiz
+npm run typecheck
+npm test
 
-**iOS Simulator (precisa Mac):** `npx expo start --ios`
-**Android Emulator (precisa Android Studio):** `npx expo start --android`
+# aqui
+npm run typecheck
+npm test              # 1779 testes · 110 arquivos · ~11s
+npm run test:coverage
+npm run test:e2e:critical   # Maestro (emulador)
+```
 
-## O que está funcionando
+CI na raiz: `.github/workflows/ci.yml`. E2E Maestro: `.github/workflows/maestro.yml` (nesta pasta).
 
-✓ Onboarding (3 telas) — escolhe personalidade e nomeia o mascote
-✓ Home — mascote animado + 9 hábitos clicáveis + missão do dia
-✓ XP, nível, fases do mascote (ovo → bebê → criança → adolescente → adulto → evoluído)
-✓ Streak com 2 graces (folgas perdoadas)
-✓ Chat com IA — modo mock por personalidade (Calmo, Motivador, Fofo, Sábio)
-✓ Detector de safety (crise → CVV 188 sem chamar IA)
-✓ Tela "Você" com stats da semana
-✓ Paywall demo (sem cobrança real)
-✓ Persistência local (AsyncStorage) — fecha o app, abre de novo, tudo lá
-✓ Reset completo se quiser começar de zero
-
-## Ligar IA real (opcional)
-
-Sem chave: o chat usa respostas pré-escritas por personalidade — funciona pra sentir o app.
-
-Com chave OpenAI:
-1. Pega tua chave em https://platform.openai.com/api-keys (precisa cartão)
-2. No app: aba **Você** → **Adicionar chave OpenAI**
-3. Cola a `sk-...`
-4. Pronto. Usa gpt-4o-mini (baratíssimo).
-
-A chave fica só no teu dispositivo. Não é enviada pra lugar nenhum além da OpenAI.
-
-## Arquitetura
+## Arquitetura (resumo)
 
 ```
 app/mobile/
-├── app/                         ← Expo Router (rotas)
-│   ├── _layout.tsx              root + hidratação
-│   ├── index.tsx                decide rota
-│   ├── onboarding/              welcome → personality → name
-│   ├── (tabs)/                  home, chat, you
-│   └── paywall.tsx              modal
+├── app/                    # Expo Router (~48 rotas)
+│   ├── onboarding/         # signup, age, goal, quiz, meet, push, notice…
+│   ├── (tabs)/             # home, chat, evolution, report
+│   └── …                   # paywall, customize, missions, rewards…
 ├── src/
-│   ├── theme.ts                 cores, espaçamentos, tipografia
-│   ├── types.ts                 tipos do domínio
-│   ├── store.ts                 Zustand (estado global)
-│   ├── content/
-│   │   ├── personalities.ts     4 personalidades
-│   │   ├── missions.ts          15 missões catálogo
-│   │   ├── safety.ts            regex de safety (input + output)
-│   │   └── replies.ts           bank de respostas mock
-│   ├── lib/
-│   │   ├── db.ts                AsyncStorage como banco local
-│   │   ├── xp.ts                regras de XP / fase / nível
-│   │   ├── streak.ts            streak forgiving
-│   │   └── ai.ts                roteador IA (mock | OpenAI)
-│   └── components/              Mascot, HabitChip, MissionCard, etc.
-└── package.json
+│   ├── components/         # Mascot 2D/3D, UI, guards
+│   ├── lib/dna/            # genome, morphology, mutations, palette
+│   ├── lib/behavior/       # utility AI
+│   ├── lib/ml/             # safety, embeddings, memory
+│   ├── game/               # evolution engine, memory service
+│   ├── ai/                 # MascotAI, fallback local, proxy stub
+│   ├── repositories/       # local + sync stub
+│   └── store.ts            # Zustand
+├── tests/                  # Vitest
+└── .maestro/               # flows E2E
 ```
 
-## Banco local
+## Configuração
 
-Tudo guardado em **AsyncStorage** (no celular: SQLite por baixo; na web: localStorage). Sem servidor.
+- Copie `.env.example` → `.env` (`EXPO_PUBLIC_BILLING_PROVIDER=mock` por padrão)
+- OpenAI (opcional): Settings → API Key no app
+- EAS: veja `eas.json.example`
 
-Tabelas (chaves em AsyncStorage `mascote:profiles`, `mascote:checkins`, etc.):
-- `profiles` — você
-- `mascots` — o mascote
-- `checkins` — cada vez que você cuidou de si
-- `missions` — missões diárias
-- `streaks` — sequência de dias
-- `messages` — conversas
-- `xp_events` — log de XP
+## Docs relacionados
 
-Pra resetar tudo: tela **Você** → **Apagar tudo e recomeçar**.
+- [docs/CURRENT_STATE.md](../../docs/CURRENT_STATE.md) — estado real e gaps
+- [docs/PREMIUM_STRATEGY.md](../../docs/PREMIUM_STRATEGY.md)
+- [docs/BETA_RELEASE_CHECKLIST.md](../../docs/BETA_RELEASE_CHECKLIST.md)
+- [README.md](../../README.md) — visão do monorepo
 
-## Premium (Mascote Plus)
+## O que ainda não é produção
 
-- Paywall + entitlements + personalização Sims + relatórios semanal/mensal
-- Billing local **mock** por padrão; RevenueCat adapter pronto (`EXPO_PUBLIC_BILLING_PROVIDER`)
-- Ver `../../docs/PREMIUM_STRATEGY.md` e `../../docs/RELEASE_CHECKLIST.md`
-- Variáveis: `.env.example` nesta pasta
+- Cobrança real (RevenueCat SDK + SKUs nas lojas)
+- Sync multi-dispositivo (Supabase stub)
+- Proxy de IA em produção
+- Push nativo completo
 
-## O que NÃO está aqui (intencionalmente)
-
-✗ Landing page / propaganda
-✗ Cobrança real nas lojas (requer RevenueCat SDK + SKUs — ver RELEASE_CHECKLIST)
-✗ Push notifications
-✗ Backend cloud (Supabase ficou pra depois)
-✗ Login social
-✗ Sync entre dispositivos
-
-Tudo isso está documentado no `plano_mascote/` se um dia quiser ligar.
-
-## Problemas comuns
-
-**"Module not found: react-native-reanimated"**
-→ `npx expo install --fix`
-
-**"Port 8081 in use"**
-→ `npx expo start --port 19000 --web`
-
-**Tela branca no navegador**
-→ Aperta `r` no terminal (recarrega) ou `shift+r` (limpa cache)
-
-**Cache estranho**
-→ `npx expo start --clear`
-
-## Próximos passos (quando quiser ir além)
-
-Veja `plano_mascote/` no diretório pai. Tem 8 docs cobrindo stack, schema, growth, LGPD, etc.
-
-Quando for ligar Supabase + IA real:
-1. Cria projeto em supabase.com
-2. Roda o SQL de `plano_mascote/parte_2_mercado_e_stack.md` (seção 14)
-3. Troca `src/lib/db.ts` por chamadas Supabase (mesma interface)
-4. Adiciona chave OpenAI na aba Você
+Landing de marketing: `../web/`. Plano de negócio: `../../plano_mascote/`.

@@ -151,21 +151,30 @@ Camada premium **100% implementada em código** — billing real depende só de 
 
 - **Docs:** [`docs/PREMIUM_STRATEGY.md`](docs/PREMIUM_STRATEGY.md), [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md)
 - **Env:** copie [`app/mobile/.env.example`](app/mobile/.env.example) → `.env` (`mock` local, `revenuecat` em produção)
-- **Testes:** `npm test` na raiz ou `cd app/mobile && npm test` (1778+)
+- **Testes:** `npm test` na raiz ou `cd app/mobile && npm test` (1779)
 
 ---
 
 ## 🚀 Quick Start
 
-### Web (mais rápido)
+### Na raiz do monorepo (recomendado)
+
+```bash
+npm install --prefix app/mobile
+npm run web          # Expo web → http://localhost:8081
+npm test             # 1779 testes
+npm run typecheck
+```
+
+### Web (direto em `app/mobile`)
 
 ```bash
 cd app/mobile
 npm install
-npx expo start --web --port 8090
+npx expo start --web
 ```
 
-Abre em `http://localhost:8090`.
+Abre em `http://localhost:8081` (ou use `--port 8090` se 8081 estiver ocupada).
 
 ### Android / iOS via Expo Go
 
@@ -199,40 +208,28 @@ npx expo start
 | **IA** | OpenAI gpt-4o-mini (BYOK) com 3 camadas de safety, fallback mock determinístico |
 | **ML on-device** | TF-IDF embeddings, BM25, sentiment, vector store, Naive Bayes, memory graph (Jaccard + temporal) |
 | **Voz procedural** | Web Audio API real-time (Web), no-op gracioso em nativo. Modulada por DNA. |
-| **Testes** | Vitest 4 (**1.714 testes**) + Maestro E2E + fast-check (property tests) |
+| **Testes** | Vitest 4 (**1.779 testes**, 110 arquivos) + Maestro E2E + fast-check (property tests) |
 | **Build** | Expo CLI (web + Android via Gradle + iOS via Xcode) |
 
-### Estrutura
+### Estrutura do monorepo
 
 ```
 mascote/
-├── app/mobile/                       ← React Native app
-│   ├── app/                          ← Expo Router (48 rotas)
-│   │   ├── onboarding/               ← 6 telas de setup
-│   │   ├── (tabs)/                   ← Home · Chat · Evolução · Relatório
-│   │   ├── customize.tsx             ← Sliders Sims/Spore + toggles + postura
-│   │   └── mutations.tsx             ← Catálogo de marcos biológicos
-│   ├── src/
-│   │   ├── components/               ← Mascot 2D/3D, MorphSlider, UnlockToast…
-│   │   ├── lib/
-│   │   │   ├── dna/                  ← genome, morphology, palette, mood,
-│   │   │   │                           mutations, customization, descriptors,
-│   │   │   │                           habitToGene, stories, personalities
-│   │   │   ├── behavior/             ← types, engine, behaviors, useBehaviorTick
-│   │   │   ├── ai.ts                 ← OpenAI BYOK + descritores seguros
-│   │   │   ├── checkin.ts            ← Pipeline transacional withLock
-│   │   │   ├── db.ts                 ← AsyncStorage + migrations versionadas
-│   │   │   ├── memory.ts             ← Recall com embeddings + decay temporal
-│   │   │   └── ml/safety/            ← Ensemble: regex + sentiment + Bayes
-│   │   └── store.ts                  ← Zustand global state
-│   ├── tests/                        ← 88 arquivos, 1.653 testes
-│   └── .maestro/                     ← 8 E2E flows
-├── docs/
-│   ├── AUDIT_AAA_COMPLETO.md         ← Auditoria 30 seções multi-role
-│   ├── ROADMAP_DIGITAL_LIVING_IDENTITY.md  ← Roadmap 6 meses
-│   ├── specs/BACKLOG_DLI_V2.md       ← Specs executáveis pra cada feature
-│   └── screenshots/                  ← Evidência visual via Playwright
-└── prototipo-criatura-procedural.html ← Protótipo HTML standalone
+├── package.json                      ← npm test, typecheck, web (delega ao mobile)
+├── .github/workflows/ci.yml          ← typecheck + testes em PR
+├── app/
+│   ├── mobile/                       ← App Expo / React Native (principal)
+│   │   ├── app/                      ← Expo Router (~48 rotas)
+│   │   ├── src/                      ← DNA, behavior, IA, game, UI
+│   │   ├── tests/                    ← 110 arquivos Vitest, 1779 testes
+│   │   └── .maestro/                 ← flows E2E Maestro
+│   └── web/                          ← Landing Next.js 14 (pt/en)
+├── docs/                             ← Índice: docs/README.md
+├── plano_mascote/                    ← Plano estratégico (7 partes)
+├── scripts/                          ← Smoke Android + Maestro auxiliar
+├── validation/                       ← Validação de mercado (landing + survey)
+├── video-gen/                        ← Gravação opcional de demos
+└── prototipo-criatura-procedural.html  ← Protótipo HTML standalone (referência)
 ```
 
 ---
@@ -341,7 +338,7 @@ Tudo sem chamar IA, sem delay, sem cobrança.
 - ✅ 14 acessórios, 9 cenários, 17 achievements
 
 ### Qualidade
-- ✅ **1.653 testes** passando (88 arquivos)
+- ✅ **1.779 testes** passando (110 arquivos)
 - ✅ **98.9% coverage** em linhas, 97.4% em branches
 - ✅ Typecheck limpo (0 errors)
 - ✅ `npm ci` limpo (sem `--legacy-peer-deps`)
@@ -375,6 +372,8 @@ Detalhes completos: [docs/ROADMAP_DIGITAL_LIVING_IDENTITY.md](docs/ROADMAP_DIGIT
 
 ## 📚 Documentação
 
+- 📁 [**docs/README.md**](docs/README.md) — Índice de toda documentação
+- 📌 [**CURRENT_STATE.md**](docs/CURRENT_STATE.md) — Estado operacional atual (leia primeiro)
 - 📊 [**AUDIT_AAA_COMPLETO.md**](docs/AUDIT_AAA_COMPLETO.md) — Auditoria multi-role em 30 seções (CTO + Game Director + UX + AI + Retention…)
 - 🗺️ [**ROADMAP_DIGITAL_LIVING_IDENTITY.md**](docs/ROADMAP_DIGITAL_LIVING_IDENTITY.md) — Roadmap 6 meses + 11 specs com esforço estimado
 - 📋 [**BACKLOG_DLI_V2.md**](docs/specs/BACKLOG_DLI_V2.md) — Specs executáveis (sequência, definição de pronto, testes obrigatórios)

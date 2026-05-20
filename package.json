@@ -8,6 +8,10 @@
     "web": "npm --prefix app/mobile run web",
     "test": "npm --prefix app/mobile test",
     "typecheck": "npm --prefix app/mobile run typecheck",
-    "test:coverage": "npm --prefix app/mobile run test:coverage"
+    "test:coverage": "npm --prefix app/mobile run test:coverage",
+    "lint": "npm --prefix app/mobile run lint",
+    "quality": "npm --prefix app/mobile run quality",
+    "landing:dev": "npm --prefix app/web run dev",
+    "landing:build": "npm --prefix app/web run build"
   }
 }

@@ -11,6 +11,9 @@ name: E2E (Maestro)
 # em pipeline manual via workflow_dispatch.
 
 on:
+  # Por padrão Maestro NÃO roda em todo PR — só quando flag CI_E2E=1 está ligado
+  # via labels da PR ou via workflow_dispatch. Isso reduz custo (~6min/run) e
+  # mantém critical-path verde sem bloquear PRs leves de docs/styling.
   pull_request:
     paths:
       - 'app/mobile/**'
@@ -22,9 +25,16 @@ on:
         default: 'critical'
         required: false
 
+env:
+  # Liga/desliga via repository variable. Ative com `gh variable set CI_E2E --body 1`.
+  CI_E2E: ${{ vars.CI_E2E || '0' }}
+
 jobs:
   android-emulator:
     name: Android Emulator
+    # Skip job inteiro quando CI_E2E != 1 e o trigger foi pull_request.
+    # workflow_dispatch sempre roda (manual override).
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.CI_E2E == '1' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:

@@ -23,6 +23,10 @@ semanas o que deveria ter rodado em 30 dias antes do código.
 5. **Esperar inscritos** — meta de 100 emails na primeira semana
 6. **Marcar 10 entrevistas** — convidar via email os primeiros 50 inscritos
 
+## Relação com `app/web/`
+
+A **landing de produção** do produto está em `app/web/` (Next.js, i18n). A pasta `validation/landing/` é uma **landing estática mínima** só para testes de mercado (waitlist + survey), deployável em minutos (Vercel/Netlify/GH Pages).
+
 ## O que NÃO está aqui
 
 - Resultados de validação (`results.md` será criado sextas, à medida que os dados chegarem)

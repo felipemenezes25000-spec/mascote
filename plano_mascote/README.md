@@ -5,6 +5,8 @@
 **Para:** Felipe + Renato (fundadores Mascote)
 **Origem:** Resposta ao prompt mega `prompt_mega_mascote_100000_linhas.txt`
 
+> **Implementação atual:** código em `app/mobile/`, landing em `app/web/`, estado técnico em `docs/CURRENT_STATE.md`.
+
 ---
 
 ## Como ler este documento

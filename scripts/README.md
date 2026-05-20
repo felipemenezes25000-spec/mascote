@@ -21,7 +21,8 @@ Resultado vai em `test-screenshots/android-<timestamp>/` com `report.md` listand
 | Arquivo | O que faz |
 |---|---|
 | `android-smoke.ps1` | Valida SDK → sobe AVD → garante Expo no ar → instala app via `expo --android` → captura screenshots em 5 pontos. Falha rápido com mensagens acionáveis. |
-| `maestro/smoke.yaml` | Fluxo declarativo (Maestro) que dirige o app: onboarding → 3 mensagens chat → check-in → 1 missão → teste de safety (CVV 188). |
+| `maestro/smoke.yaml` | Fluxo declarativo (Maestro) auxiliar para `android-smoke.ps1`. Flows canônicos do app ficam em `app/mobile/.maestro/`. |
+| `maestro/premium-onboarding.yaml` | Rascunho/experimento; preferir flows em `app/mobile/.maestro/`. |
 
 ---
 

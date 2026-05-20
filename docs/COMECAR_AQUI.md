@@ -1,11 +1,19 @@
 # Mascote — começar aqui
 
-Felipe, bom dia. App **totalmente alinhado ao handoff de design**. Trinta e tantas telas, 5 paletas, 3 temas, fontes oficiais, roda da sorte, customize completa.
+> **Estado operacional:** [CURRENT_STATE.md](CURRENT_STATE.md) · **Índice docs:** [README.md](README.md) · **Monorepo:** comandos na raiz com `npm run web` / `npm test`.
+
+Tour das telas e do handoff de design. App **alinhado ao handoff**: dezenas de telas, 5 paletas, 3 temas, fontes oficiais, roda da sorte, customize completa.
 
 ## Pra ver agora
 
 ```powershell
-cd C:\Users\Felipe\Documents\mascote\app\mobile
+# na raiz do repo (recomendado)
+cd C:\Users\Felipe\Documents\mascote
+npm install --prefix app/mobile
+npm run web
+
+# ou direto no mobile
+cd app\mobile
 npx expo start --web
 ```
 
