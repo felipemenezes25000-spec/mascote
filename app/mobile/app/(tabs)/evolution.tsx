@@ -55,6 +55,7 @@ import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
 import { EmptyState } from '@/components/EmptyState';
 import { PremiumFeatureGuard } from '@/components/PremiumFeatureGuard';
 import { mascotMemoryService } from '@/game/memory';
+import { archetypeAffinities, type ArchetypeAffinity } from '@/game/evolution/archetypeAffinity';
 import type { Theme } from '@/lib/themes';
 import type { AccessoryId } from '@/components/Mascot';
 import type { HabitKind, MascotCustomization } from '@/types';
@@ -161,6 +162,7 @@ export default function EvolutionTab() {
   const safeDna = mascot.dna ? sanitizeGenome(mascot.dna) : null;
   const descriptors = safeDna ? dnaDescriptors(safeDna) : [];
   const traits = safeDna ? morphologySummary(safeDna) : [];
+  const archetypes: ArchetypeAffinity[] = safeDna ? archetypeAffinities(safeDna).slice(0, 4) : [];
   const totalMutations = MUTATION_CATALOG.length;
   const unlockedIds = new Set(unlockedMutations.map(u => u.mutation_id));
   const unlockedMutationDetails: Array<{ mutation: Mutation; unlocked_at: string }> =
@@ -323,6 +325,46 @@ export default function EvolutionTab() {
                   {totalMutations} marcos biológicos possíveis — cada um único, desbloqueado pelo seu caminho
                 </Text>
               </View>
+            </View>
+          </StaggeredView>
+        )}
+
+        {/* ARQUÉTIPOS — substitui a noção de "fase" pela afinidade DNA × tribo.
+            O usuário vê seu mascote como uma mistura de arquétipos (Lumina 32%,
+            Terra 18%...) em vez de "está na fase Bebê". Mais procedural, menos
+            esteira linear. */}
+        {archetypes.length > 0 && (
+          <StaggeredView index={4} initialDelay={50}>
+            <View style={styles.identityCard}>
+              <View style={styles.identityHeader}>
+                <Icon name="sparkle" size={14} color={theme.colors.primary} strokeWidth={2.4} />
+                <Text style={styles.identityKicker}>Arquétipos dominantes</Text>
+              </View>
+              <View style={styles.genomeList}>
+                {archetypes.map((a, i) => (
+                  <View key={a.id} style={styles.genomeRow}>
+                    <Text style={[styles.genomeLabel, i === 0 && { fontWeight: '700' }]}>
+                      {a.label}
+                    </Text>
+                    <View style={styles.genomeBarTrack}>
+                      <View
+                        style={[
+                          styles.genomeBarFill,
+                          {
+                            width: `${Math.round(a.percent * 100)}%`,
+                            backgroundColor: theme.colors.primary,
+                            opacity: 0.4 + a.percent * 0.6,
+                          },
+                        ]}
+                      />
+                    </View>
+                    <Text style={styles.genomePct}>{Math.round(a.percent * 100)}%</Text>
+                  </View>
+                ))}
+              </View>
+              <Text style={styles.identityFooterText}>
+                {archetypes[0].tagline}
+              </Text>
             </View>
           </StaggeredView>
         )}
@@ -830,6 +872,14 @@ function makeStyles(theme: Theme) {
     genomeBarFill: {
       height: '100%',
       borderRadius: 4,
+    },
+    genomePct: {
+      ...theme.text.xs,
+      color: theme.colors.textSecondary,
+      width: 40,
+      textAlign: 'right',
+      fontFamily: 'JetBrainsMono_500Medium',
+      fontSize: 11,
     },
     linksRow: {
       flexDirection: 'row',

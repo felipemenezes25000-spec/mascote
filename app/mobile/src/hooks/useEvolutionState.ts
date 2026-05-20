@@ -19,6 +19,9 @@ export interface UseEvolutionStateResult {
   refresh: () => Promise<void>;
 }
 
+/** Re-export para uso em features (`@/hooks/useEvolutionState`). */
+export type EvolutionVisuals = MascotEvolutionVisuals;
+
 export function useEvolutionState(
   personalization?: Partial<PersonalizationInput>,
 ): UseEvolutionStateResult {
