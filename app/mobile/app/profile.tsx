@@ -21,7 +21,7 @@ import {
   userScenes,
   xpEvents,
 } from '@/lib/db';
-import { phaseLabels } from '@/lib/phaseLabels';
+import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -135,7 +135,7 @@ export default function You() {
             <View style={styles.heroInfo}>
               <Text style={styles.heroName}>{mascot.name}</Text>
               <Text style={styles.heroSub}>
-                {meta.label} · {phaseLabels[mascot.phase]} · nível {mascot.level}
+                {meta.label} · {emergentPhaseLabels[mascot.phase]} · nível {mascot.level}
               </Text>
             </View>
           </View>
@@ -160,18 +160,18 @@ export default function You() {
         {/* Acesso rápido */}
         <StaggeredView index={3}>
           <View style={styles.quickRow}>
+            <QuickBtn icon="sparkles" label="DNA" onPress={() => router.push('/dna')} />
             <QuickBtn icon="bar-chart" label="Relatório" onPress={() => router.push('/weekly-report')} />
             <QuickBtn icon="gift" label="Closet" onPress={() => router.push('/closet')} />
             <QuickBtn icon="trophy" label="Conquistas" onPress={() => router.push('/achievements')} />
-            <QuickBtn icon="share" label="Compartilhar" onPress={() => router.push('/share')} />
           </View>
         </StaggeredView>
         <StaggeredView index={4}>
           <View style={styles.quickRow}>
-            <QuickBtn icon="help-circle" label="Ajuda" onPress={() => router.push('/help')} />
+            <QuickBtn icon="book" label="Diário" onPress={() => router.push('/diary')} />
+            <QuickBtn icon="share" label="Compartilhar" onPress={() => router.push('/share')} />
             <QuickBtn icon="bell" label="Avisos" onPress={() => router.push('/notifications')} />
-            <QuickBtn icon="lock" label="Privacidade" onPress={() => router.push('/privacy')} />
-            <QuickBtn icon="book" label="Termos" onPress={() => router.push('/terms')} />
+            <QuickBtn icon="help-circle" label="Ajuda" onPress={() => router.push('/help')} />
           </View>
         </StaggeredView>
 

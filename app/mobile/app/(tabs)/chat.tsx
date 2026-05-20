@@ -299,27 +299,44 @@ export default function ChatTab() {
           }}
         />
 
-        {showSuggestions && list.length < 6 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            // `flexGrow: 0` impede o ScrollView de esticar verticalmente em
-            // flex-column. Sem isso, no web RN os chips viravam pills altíssimas
-            // que ocupavam todo o espaço entre as mensagens e o input.
-            style={styles.suggestionsScroll}
-            contentContainerStyle={styles.suggestionsRow}
+        {list.length >= 6 && !showSuggestions ? (
+          <PressableScale
+            style={styles.suggestionsToggle}
+            onPress={() => setShowSuggestions(true)}
+            accessibilityLabel="Mostrar sugestões de conversa"
           >
-            {chatSuggestions.map(s => (
+            <Text style={styles.suggestionsToggleText}>Sugestões ▸</Text>
+          </PressableScale>
+        ) : null}
+        {showSuggestions ? (
+          <View>
+            {list.length >= 6 ? (
               <PressableScale
-                key={s.label}
-                style={styles.suggestionChip}
-                onPress={() => send(s.text)}
+                style={styles.suggestionsToggle}
+                onPress={() => setShowSuggestions(false)}
+                accessibilityLabel="Ocultar sugestões"
               >
-                <Text style={styles.suggestionText}>{s.label}</Text>
+                <Text style={styles.suggestionsToggleText}>Sugestões ▾</Text>
               </PressableScale>
-            ))}
-          </ScrollView>
-        )}
+            ) : null}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.suggestionsScroll}
+              contentContainerStyle={styles.suggestionsRow}
+            >
+              {chatSuggestions.map(s => (
+                <PressableScale
+                  key={s.label}
+                  style={styles.suggestionChip}
+                  onPress={() => send(s.text)}
+                >
+                  <Text style={styles.suggestionText}>{s.label}</Text>
+                </PressableScale>
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
 
         <View style={styles.inputBar}>
           <TextInput
@@ -466,6 +483,18 @@ function makeStyles(theme: Theme) {
       paddingVertical: theme.spacing.sm,
       gap: theme.spacing.sm,
       alignItems: 'center',
+    },
+    suggestionsToggle: {
+      alignSelf: 'center',
+      marginVertical: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: 6,
+    },
+    suggestionsToggleText: {
+      ...theme.text.xs,
+      color: theme.colors.textDim,
+      fontWeight: '700',
+      letterSpacing: 0.5,
     },
     suggestionChip: {
       backgroundColor: theme.colors.surface,

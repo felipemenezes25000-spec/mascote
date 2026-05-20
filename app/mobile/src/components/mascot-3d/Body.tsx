@@ -49,7 +49,7 @@ export function Body({
   const tStart = useRef<number>(performance.now() / 1000);
 
   const geometry = useMemo(() => {
-    const geo = new THREE.IcosahedronGeometry(1, 4);
+    const geo = new THREE.IcosahedronGeometry(1, 5);
     const pos = geo.attributes.position;
     let seedAccum = (dna.empathy + dna.chaos * 100 + dna.creativity * 17) * 1000;
     const pseudoRng = () => {
@@ -72,10 +72,10 @@ export function Body({
         y *= 1 + morph.bodyBottomBias * 0.2;
       }
       const lump = offsets[i] * morph.bodyChaosBumps;
-      x += x * lump * 0.4;
-      z += z * lump * 0.4;
+      x += x * lump * 0.18;
+      z += z * lump * 0.18;
       const protrude =
-        Math.sin(x * 4 + offsets[i]) * Math.cos(z * 3.5 - offsets[i]) * morph.bodyCreativityBumps;
+        Math.sin(x * 3 + offsets[i]) * Math.cos(z * 2.8 - offsets[i]) * morph.bodyCreativityBumps * 0.55;
       const len = Math.sqrt(x * x + y * y + z * z);
       if (len > 0) {
         x += (x / len) * protrude;
@@ -118,12 +118,10 @@ export function Body({
       mat_roughness = Math.max(0, mat_roughness - 0.25);
       break;
     case 'stripes':
-      mat_flatShading = true;
-      mat_roughness = Math.min(1, mat_roughness + 0.25);
+      mat_roughness = Math.min(1, mat_roughness + 0.12);
       break;
     case 'fractal':
-      mat_flatShading = true;
-      mat_emissiveIntensity += 0.25;
+      mat_emissiveIntensity += 0.12;
       break;
     case 'cells':
       mat_roughness = Math.min(1, mat_roughness + 0.4);
@@ -142,7 +140,7 @@ export function Body({
         color={color}
         roughness={mat_roughness}
         metalness={mat_metalness}
-        flatShading={mat_flatShading}
+        flatShading={mat_flatShading && morph.pattern !== 'plain'}
         emissive={emissive}
         emissiveIntensity={mat_emissiveIntensity}
       />

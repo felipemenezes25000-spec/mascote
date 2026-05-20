@@ -38,7 +38,7 @@ export function ModalShell({ visible, onClose, title, children, bottomSheet }: P
         onPress={onClose}
         style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}
       />
-      <SafeAreaView pointerEvents="box-none" style={[styles.safe, bottomSheet && styles.safeBottom]}>
+      <SafeAreaView style={[styles.safe, bottomSheet && styles.safeBottom, { pointerEvents: 'box-none' }]}>
         <View
           style={[
             styles.card,

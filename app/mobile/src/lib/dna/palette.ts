@@ -25,20 +25,22 @@ export interface Palette {
  * Mesma genome = mesma paleta SEMPRE.
  */
 export function paletteFromGenome(g: Genome): Palette {
-  const hue = (g.creativity * 280 + g.empathy * 80 + g.chaos * 60) % 360;
-  const sat = clamp(35 + g.socialEnergy * 50 + g.emotionalDepth * 15, 20, 95);
-  const light = clamp(45 + g.resilience * 18 - g.aggression * 8, 30, 70);
-  const accentHue = (hue + 30 + g.chaos * 90) % 360;
-  const glowHue = (hue + 60) % 360;
-  const accentSat = clamp(sat + 10, 30, 100);
-  const accentLight = clamp(light + 15, 35, 80);
+  // Tons wellness (pêssego, coral, menta) — evita roxo neon “blob alienígena”.
+  const hue =
+    (18 + g.empathy * 42 + g.creativity * 38 + g.socialEnergy * 28 + g.chaos * 12) % 360;
+  const sat = clamp(32 + g.socialEnergy * 28 + g.emotionalDepth * 10, 24, 68);
+  const light = clamp(54 + g.resilience * 10 - g.aggression * 6, 46, 68);
+  const accentHue = (hue + 22 + g.creativity * 18) % 360;
+  const glowHue = (hue + 48) % 360;
+  const accentSat = clamp(sat + 8, 28, 72);
+  const accentLight = clamp(light + 10, 48, 78);
   return {
     body: `hsl(${hue.toFixed(1)}, ${sat.toFixed(1)}%, ${light.toFixed(1)}%)`,
     bodyHSL: [hue, sat, light],
     accent: `hsl(${accentHue.toFixed(1)}, ${accentSat.toFixed(1)}%, ${accentLight.toFixed(1)}%)`,
     accentHSL: [accentHue, accentSat, accentLight],
-    glow: `hsl(${glowHue.toFixed(1)}, 80%, 65%)`,
-    glowHSL: [glowHue, 80, 65],
+    glow: `hsl(${glowHue.toFixed(1)}, 55%, 72%)`,
+    glowHSL: [glowHue, 55, 72],
   };
 }
 

@@ -16,12 +16,8 @@
  */
 
 import { useEffect, useRef } from 'react';
-import {
-  computeCooldownSet,
-  executeBehavior,
-  selectBehavior,
-  DEFAULT_BEHAVIORS,
-} from './index';
+import { DEFAULT_BEHAVIORS } from './behaviors';
+import { computeCooldownSet, executeBehavior, selectBehavior } from './engine';
 import type { Behavior, BehaviorContext, BehaviorEffect } from './types';
 
 export interface UseBehaviorTickOptions {

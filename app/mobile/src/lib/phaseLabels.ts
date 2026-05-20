@@ -13,6 +13,7 @@ import type { MascotPhase } from '@/types';
  * em qualquer texto user-facing. Telas refatoradas (evolution tab) já usam
  * só emergent.
  */
+/** @deprecated UI user-facing — use `emergentPhaseLabels`. */
 export const phaseLabels: Record<MascotPhase, string> = {
   ovo: 'Ovo',
   bebe: 'Bebê',

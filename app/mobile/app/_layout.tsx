@@ -28,10 +28,27 @@ import { StatusBar } from 'expo-status-bar';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { HomeSkeleton } from '@/components/HomeSkeleton';
 import { UnlockToast } from '@/components/UnlockToast';
+import { getProductionViolations, type ProductionConfigViolation } from '@/lib/env/runtime-config';
 import { installTelemetry } from '@/lib/telemetry';
+import { logger } from '@/lib/logger';
 import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import { warmReplyCache } from '@/content/replies';
+
+// Fail-fast em build de produção mal-configurado. Em dev/test, sempre []
+// (a função respeita isProduction). Capturado abaixo num estado para
+// renderizar uma tela explicativa em vez de crash silencioso.
+const BOOT_VIOLATIONS: ProductionConfigViolation[] = getProductionViolations();
+if (BOOT_VIOLATIONS.length > 0) {
+  // Log também — útil em crash report / Sentry quando a tela for ignorada.
+  for (const v of BOOT_VIOLATIONS) {
+    logger.error(`[boot] production config violation: ${v.code}`, {
+      code: v.code,
+      message: v.message,
+      fix: v.fix,
+    });
+  }
+}
 
 // Instalado UMA vez por process (não em render). O sink lê o consent a cada
 // captura via callback, então fica live com mudanças de settings.
@@ -77,6 +94,27 @@ export default function RootLayout() {
       }
     })();
   }, []);
+
+  if (BOOT_VIOLATIONS.length > 0) {
+    return (
+      <View style={[styles.loader, { backgroundColor: theme.colors.bg, paddingHorizontal: 24 }]}>
+        <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 12 }}>
+          Build de produção inseguro
+        </Text>
+        <Text style={{ color: theme.colors.textSecondary, textAlign: 'center', marginBottom: 16 }}>
+          Esta build foi compilada em modo de produção mas tem {BOOT_VIOLATIONS.length} configuração(ões) que comprometem segurança ou cobrança. Não vou rodar.
+        </Text>
+        {BOOT_VIOLATIONS.map((v, i) => (
+          <View key={v.code} style={{ marginBottom: 12, alignSelf: 'stretch' }}>
+            <Text style={{ color: theme.colors.text, fontWeight: '700', marginBottom: 4 }}>
+              {i + 1}. {v.message}
+            </Text>
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>{v.fix}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  }
 
   if (hydrateError) {
     return (
@@ -161,6 +199,8 @@ export default function RootLayout() {
           <Stack.Screen name="mission-done" />
           <Stack.Screen name="evolution" />
           <Stack.Screen name="mascot" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="dna" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="diary" options={{ presentation: 'modal' }} />
           <Stack.Screen name="streak" />
           <Stack.Screen name="inventory" />
           <Stack.Screen name="subscription" options={{ presentation: 'modal' }} />

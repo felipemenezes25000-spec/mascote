@@ -11,6 +11,7 @@
 
 import { forwardRef } from 'react';
 import { Pressable, type PressableProps } from 'react-native';
+import { useWebSafeLongPress } from '@/lib/web-safe-long-press';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -30,10 +31,22 @@ interface Props extends Omit<PressableProps, 'style'> {
 }
 
 export const PressableScale = forwardRef<any, Props>(function PressableScale(
-  { children, style, scale = 0.96, pressedOpacity = 0.85, flat, onPressIn, onPressOut, ...rest },
+  {
+    children,
+    style,
+    scale = 0.96,
+    pressedOpacity = 0.85,
+    flat,
+    onPressIn,
+    onPressOut,
+    onLongPress,
+    delayLongPress,
+    ...rest
+  },
   ref,
 ) {
   const reduceMotion = useStore(s => s.settings?.reduce_motion);
+  const longPress = useWebSafeLongPress(onLongPress ?? undefined, delayLongPress ?? 350);
   const sv = useSharedValue(1);
   const op = useSharedValue(1);
 
@@ -48,6 +61,7 @@ export const PressableScale = forwardRef<any, Props>(function PressableScale(
       <Pressable
         ref={ref}
         {...rest}
+        {...longPress}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         style={({ pressed }) => [
@@ -64,6 +78,7 @@ export const PressableScale = forwardRef<any, Props>(function PressableScale(
     <AnimatedPressable
       ref={ref}
       {...rest}
+      {...longPress}
       onPressIn={e => {
         sv.value = withSpring(scale, { damping: 18, stiffness: 280, mass: 0.5 });
         op.value = withTiming(pressedOpacity, { duration: 80 });

@@ -167,7 +167,7 @@ export default function Welcome() {
                 // QA flagrou: pular sem confirmação faz o usuário perder a apresentação
                 // (mascote, missão diária, segurança) e impacta retenção. Confirmamos
                 // pra dar uma última chance de voltar pro flow recomendado.
-                const goSkip = () => router.push('/onboarding/personality');
+                const goSkip = () => router.push('/onboarding/identity');
                 if (Platform.OS === 'web') {
                   if (typeof window !== 'undefined' && window.confirm('Pular o tour rápido? Você perde a apresentação do mascote e o tutorial.')) goSkip();
                 } else {

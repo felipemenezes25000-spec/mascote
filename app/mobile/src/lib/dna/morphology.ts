@@ -81,12 +81,12 @@ export function morphologyFromGenome(g: Genome): Morphology {
     bodyHeightStretch: 0.7 + g.intelligence * 0.7 + g.empathy * 0.35,
     bodyWidthSquash: 0.85 + g.resilience * 0.45 - g.discipline * 0.15,
     bodyBottomBias: 0.3 + g.resilience * 0.5,
-    bodyChaosBumps: g.chaos * 0.35,
-    bodyCreativityBumps: g.creativity * 0.25,
-    bodyEmissiveIntensity: 0.05 + g.socialEnergy * 0.15,
-    bodyRoughness: 0.55 - g.discipline * 0.3,
-    bodyMetalness: 0.05 + g.discipline * 0.18,
-    bodyFlatShading: g.chaos > 0.65,
+    bodyChaosBumps: g.chaos * 0.1,
+    bodyCreativityBumps: g.creativity * 0.07,
+    bodyEmissiveIntensity: 0.03 + g.socialEnergy * 0.08,
+    bodyRoughness: 0.78 - g.discipline * 0.22,
+    bodyMetalness: 0.02 + g.discipline * 0.08,
+    bodyFlatShading: g.chaos > 0.88,
     // Pattern emerge organicamente do DNA — alta creativity+chaos vira spots;
     // alta creativity sem chaos vira cells (organizado); alta disciplina+chaos
     // baixo deixa plain. Mutations/customization sobrescrevem em pipeline.
@@ -96,12 +96,12 @@ export function morphologyFromGenome(g: Genome): Morphology {
            : 'plain',
 
     // Olhos
-    eyeSize: 0.16 + g.empathy * 0.12 + g.intelligence * 0.05,
-    eyeSpread: 0.32 + (1 - g.intelligence) * 0.1,
-    eyeY: 0.45 + g.intelligence * 0.25,
-    eyeZ: 0.72,
-    pupilSize: 0.4 + g.curiosity * 0.25,
-    pupilEmissive: 0.4 + g.intelligence * 0.5,
+    eyeSize: 0.2 + g.empathy * 0.14 + g.intelligence * 0.04,
+    eyeSpread: 0.36 + (1 - g.intelligence) * 0.08,
+    eyeY: 0.42 + g.intelligence * 0.22,
+    eyeZ: 0.78,
+    pupilSize: 0.36 + g.curiosity * 0.18,
+    pupilEmissive: 0.12 + g.intelligence * 0.22,
     trackingSpeed: 0.04 + g.curiosity * 0.1,
 
     // Membros
@@ -116,7 +116,7 @@ export function morphologyFromGenome(g: Genome): Morphology {
     tailLength: 0.18 + g.creativity * 0.5,
 
     // Espinhos
-    hasSpikes: g.aggression >= 0.55,
+    hasSpikes: g.aggression >= 0.72,
     spikeCount: Math.floor(3 + g.aggression * 7),
     spikeLength: 0.18 + g.aggression * 0.15,
 
@@ -126,8 +126,8 @@ export function morphologyFromGenome(g: Genome): Morphology {
     antennaWiggle: 0.15 * g.curiosity,
 
     // Aura
-    auraParticleCount: Math.floor(40 + g.socialEnergy * 80 + g.creativity * 60),
-    auraOpacity: 0.55 + g.socialEnergy * 0.3,
+    auraParticleCount: Math.floor(12 + g.socialEnergy * 28 + g.creativity * 20),
+    auraOpacity: 0.28 + g.socialEnergy * 0.18,
     auraSize: 0.045 + g.socialEnergy * 0.04,
 
     // Animação geral

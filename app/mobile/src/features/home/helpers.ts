@@ -11,6 +11,14 @@ export function greetingFor(hour: number): string {
   return 'BOA NOITE';
 }
 
+/** Saudação curta para headers estreitos (<380px) — evita truncar "BOA MADRUGADA". */
+export function greetingForCompact(hour: number): string {
+  if (hour < 5) return 'Madrugada';
+  if (hour < 12) return 'Bom dia';
+  if (hour < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
+
 export function moodToEmotionKey(mood: MascotMood): EmotionKey {
   switch (mood) {
     case 'feliz': return 'happy';

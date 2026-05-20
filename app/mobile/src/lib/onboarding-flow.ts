@@ -29,6 +29,9 @@ const STEP_ALIASES: Record<string, OnboardingStep> = {
   meet: 'mascot',
   quiz: 'mascot',
   personality: 'mascot',
+  // identity é um express path que compila objetivo+tom+energia numa única rota.
+  // Visualmente conta como "Passo equivalente ao quick", mas pula goal/style/quick.
+  identity: 'quick',
   push: 'notice',
   hatch: 'mascot',
   dna: 'mascot',
@@ -40,14 +43,14 @@ export const ONBOARDING_TOTAL = ONBOARDING_STEPS.length;
  * Retorna a posição 1-based de uma tela, ou 0 se desconhecida.
  * Telas merged/alt compartilham posição com sua canonical.
  */
-export function stepIndex(name: OnboardingStep | 'quiz' | 'mood' | 'meet' | 'push' | 'personality'): number {
+export function stepIndex(name: OnboardingStep | 'quiz' | 'mood' | 'meet' | 'push' | 'personality' | 'identity'): number {
   const canonical = (STEP_ALIASES[name] ?? name) as OnboardingStep;
   const i = ONBOARDING_STEPS.indexOf(canonical);
   return i === -1 ? 0 : i + 1;
 }
 
 /** "Passo X de Y" formatado pro kicker. */
-export function stepLabel(name: OnboardingStep | 'quiz' | 'mood' | 'meet' | 'push' | 'personality'): string {
+export function stepLabel(name: OnboardingStep | 'quiz' | 'mood' | 'meet' | 'push' | 'personality' | 'identity'): string {
   const i = stepIndex(name);
   return `Passo ${i} de ${ONBOARDING_TOTAL}`;
 }

@@ -14,7 +14,7 @@
  */
 
 import { memo, useMemo, useState } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import type {
   MascotCustomization,
   MascotMood,
@@ -156,12 +156,18 @@ const styles = StyleSheet.create({
   // Halo sutil só na fase 'evoluido' — sinaliza forma rara sem ser ostentoso.
   // Borda fina + leve shadow; evita brilho exagerado que descaracterizaria
   // a paleta DNA própria do mascote.
-  legendaryHalo: {
-    borderRadius: 999,
-    shadowColor: '#FFE5A0',
-    shadowOpacity: 0.45,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 4,
-  },
+  legendaryHalo: Platform.select({
+    web: {
+      borderRadius: 999,
+      boxShadow: '0 0 14px rgba(255, 229, 160, 0.45)',
+    },
+    default: {
+      borderRadius: 999,
+      shadowColor: '#FFE5A0',
+      shadowOpacity: 0.45,
+      shadowRadius: 14,
+      shadowOffset: { width: 0, height: 0 },
+      elevation: 4,
+    },
+  }) ?? {},
 });

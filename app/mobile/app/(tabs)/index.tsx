@@ -26,8 +26,9 @@ import {
   userScenes,
   checkins as checkinsDb,
 } from '@/lib/db';
+import { isNightBannerOnCooldown, markNightBannerDismissed } from '@/lib/nightBannerCooldown';
 import { maybeNotifyStreakAtRisk, notifyMascotBirthday } from '@/lib/notify';
-import { phaseLabels } from '@/lib/phaseLabels';
+import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import { incrementBond } from '@/lib/bond';
 import { xpToNextLevel } from '@/lib/xp';
 import { buildProactiveContext, runProactiveScan } from '@/lib/proactive';
@@ -278,7 +279,15 @@ export default function Home() {
       void ensureTodayMission();
       void loadMascotContextLine();
       void maybeReturnLoop();
-      setShowNightWarning(isLateNight());
+      // V2: respeita cooldown de 8h após dismissal — não vira nag.
+      void (async () => {
+        if (!isLateNight()) {
+          setShowNightWarning(false);
+          return;
+        }
+        const onCooldown = await isNightBannerOnCooldown();
+        setShowNightWarning(!onCooldown);
+      })();
     }, [profile?.id, reload])
   );
 
@@ -382,7 +391,7 @@ export default function Home() {
                 streakLongest: streak?.longest_streak ?? 0,
                 totalCheckins: snapshot.totalCheckinsAll,
                 level: mascot.level,
-                phaseLabel: phaseLabels[mascot.phase],
+                phaseLabel: emergentPhaseLabels[mascot.phase],
                 mascotName: mascot.name,
               }}
             />
@@ -391,7 +400,10 @@ export default function Home() {
 
         <HomeBanner
           showNightWarning={showNightWarning}
-          onDismissNight={() => setShowNightWarning(false)}
+          onDismissNight={() => {
+            setShowNightWarning(false);
+            void markNightBannerDismissed();
+          }}
           seasonalEvent={seasonalEvent}
         />
 

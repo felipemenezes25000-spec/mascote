@@ -17,9 +17,8 @@ import { habitMeta } from '@/content/missions';
 import { addDays, checkins, todayLocal, xpEvents } from '@/lib/db';
 import { isStreakMilestone, nextMilestone } from '@/lib/share';
 import { Button } from '@/components/Button';
-import { PremiumFeatureGuard } from '@/components/PremiumFeatureGuard';
 import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
-import { entitlementService } from '@/services/subscription/EntitlementService';
+import { buildWeeklyInsightLite } from '@/lib/weekly-insight-lite';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
@@ -32,7 +31,8 @@ export default function ReportTab() {
   const mascot = useStore(s => s.mascot);
   const streak = useStore(s => s.streak);
   const { tier } = useSubscriptionTier();
-  const fullReport = entitlementService.canViewFullWeeklyReport(tier);
+  const isPremium = tier !== 'free';
+  const heatmapWeeks = isPremium ? 12 : 4;
   const [all, setAll] = useState<Checkin[]>([]);
   const [countsByDate, setCountsByDate] = useState<Record<string, number>>({});
   const [totalXp, setTotalXp] = useState(0);
@@ -74,6 +74,8 @@ export default function ReportTab() {
     .slice(0, 3)
     .map(([k]) => k as HabitKind);
 
+  const weeklyInsight = buildWeeklyInsightLite(weekCount, habitsThisWeek.size, streak?.current_streak ?? 0);
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -91,25 +93,43 @@ export default function ReportTab() {
         </StaggeredView>
 
         <StaggeredView index={2}>
-          {!fullReport && (
-            <View style={styles.previewBanner}>
-              <Text style={styles.previewText}>Prévia gratuita · heatmap completo no Plus</Text>
-              <Button variant="secondary" label="Ver Plus" onPress={() => router.push('/paywall')} />
+          <Card variant="elevated" padding="md" style={styles.insightCard}>
+            <View style={styles.cardHeader}>
+              <Icon name="sparkles" size={12} color={theme.colors.textSecondary} strokeWidth={2.2} />
+              <Text style={styles.cardTitle}>Insight da semana</Text>
             </View>
-          )}
-          <PremiumFeatureGuard tier={tier} feature="report">
+            <Text style={styles.insightBody}>{weeklyInsight}</Text>
+          </Card>
+        </StaggeredView>
+
+        <StaggeredView index={3}>
           <Card variant="elevated" padding="md" style={styles.card}>
             <View style={styles.cardHeader}>
               <Icon name="calendar" size={12} color={theme.colors.textSecondary} strokeWidth={2.2} />
-              <Text style={styles.cardTitle}>Últimas 12 semanas</Text>
+              <Text style={styles.cardTitle}>
+                {isPremium ? 'Últimas 12 semanas' : 'Últimas 4 semanas'}
+              </Text>
             </View>
-            <Heatmap countsByDate={countsByDate} weeks={12} />
+            <Heatmap countsByDate={countsByDate} weeks={heatmapWeeks} />
+            {!isPremium && (
+              <View style={styles.plusHint}>
+                <Text style={styles.plusHintText}>
+                  Plus expande para 12 semanas + relatório narrativo completo
+                </Text>
+                <Pressable
+                  onPress={() => router.push('/paywall')}
+                  accessibilityRole="link"
+                  accessibilityLabel="Conhecer Plus"
+                >
+                  <Text style={styles.plusLink}>Conhecer →</Text>
+                </Pressable>
+              </View>
+            )}
           </Card>
-          </PremiumFeatureGuard>
         </StaggeredView>
 
         {topHabits.length > 0 && (
-          <StaggeredView index={3}>
+          <StaggeredView index={4}>
             <View style={{ gap: theme.spacing.sm, paddingHorizontal: theme.spacing.lg }}>
               <View style={styles.sectionHeader}>
                 <Icon name="trophy" size={12} color={theme.colors.textSecondary} strokeWidth={2.2} />
@@ -123,20 +143,20 @@ export default function ReportTab() {
           </StaggeredView>
         )}
 
-        <StaggeredView index={4}>
+        <StaggeredView index={5}>
           <PressableScale
             style={styles.bigBtn}
             onPress={() => router.push('/weekly-report')}
             accessibilityRole="button"
             accessibilityLabel="Ver relatório completo"
           >
-            <Icon name="bar-chart" size={16} color="#fff" strokeWidth={2.4} />
+            <Icon name="bar-chart" size={16} color={theme.tokens.semantic.inkOnBrand} strokeWidth={2.4} />
             <Text style={styles.bigBtnText}>Ver relatório narrativo completo</Text>
-            <Icon name="arrow-right" size={16} color="#fff" strokeWidth={2.4} />
+            <Icon name="arrow-right" size={16} color={theme.tokens.semantic.inkOnBrand} strokeWidth={2.4} />
           </PressableScale>
         </StaggeredView>
 
-        <StaggeredView index={5}>
+        <StaggeredView index={6}>
           {(() => {
             const cur = streak?.current_streak ?? 0;
             const milestone = isStreakMilestone(cur);
@@ -161,7 +181,7 @@ export default function ReportTab() {
           })()}
         </StaggeredView>
 
-        <StaggeredView index={6}>
+        <StaggeredView index={7}>
           <Text style={styles.totalXp}>Total acumulado · {totalXp} XP</Text>
           <Text style={styles.disclaimer}>
             Gerado localmente. Nada saiu do seu dispositivo.
@@ -298,8 +318,19 @@ function makeStyles(theme: Theme) {
       textAlign: 'center',
       fontSize: 13,
     },
+    insightCard: {
+      marginHorizontal: theme.spacing.lg,
+      gap: theme.spacing.sm,
+    },
+    insightBody: {
+      ...theme.text.body,
+      color: theme.colors.text,
+      lineHeight: 22,
+      fontFamily: 'InstrumentSerif_400Regular',
+      fontSize: 16,
+    },
     bigBtnText: {
-      color: '#fff',
+      color: theme.tokens.semantic.inkOnBrand,
       fontWeight: '700',
       fontSize: 14.5,
       fontFamily: 'PlusJakartaSans_700Bold',
@@ -324,20 +355,26 @@ function makeStyles(theme: Theme) {
       fontFamily: 'InstrumentSerif_400Regular_Italic',
       marginTop: 4,
     },
-    previewBanner: {
-      marginHorizontal: theme.spacing.lg,
-      padding: theme.spacing.md,
-      backgroundColor: theme.colors.primaryTint,
-      borderRadius: theme.radius.lg,
-      borderWidth: 1,
-      borderColor: theme.colors.primary + '33',
-      gap: theme.spacing.sm,
+    plusHint: {
+      marginTop: theme.spacing.sm,
+      paddingTop: theme.spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.border,
+      flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: theme.spacing.sm,
     },
-    previewText: {
-      ...theme.text.sm,
+    plusHintText: {
+      ...theme.text.xs,
       color: theme.colors.textSecondary,
-      textAlign: 'center',
+      flex: 1,
+      fontStyle: 'italic',
+    },
+    plusLink: {
+      ...theme.text.sm,
+      color: theme.colors.primary,
+      fontWeight: '700',
     },
   });
 }

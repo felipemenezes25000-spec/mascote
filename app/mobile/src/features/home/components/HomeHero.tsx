@@ -88,7 +88,7 @@ export function HomeHero({
       <HeroSwipeable onPrev={onPrev} onNext={onNext}>
         <SceneBackground sceneId={(scene as { id?: string }).id ?? 'room'} height={sceneHeight}>
           {statusLine ? (
-            <View style={styles.bubbleWrap} pointerEvents="none">
+            <View style={[styles.bubbleWrap, { pointerEvents: 'none' }]}>
               <MascotStatusBubble text={statusLine} emotion={emotionKey} />
             </View>
           ) : null}
@@ -194,7 +194,8 @@ function makeStyles(theme: Theme) {
     mascotNameBox: {
       position: 'absolute',
       bottom: 14,
-      left: 14,
+      alignSelf: 'center',
+      maxWidth: '88%',
       backgroundColor: theme.colors.glass,
       paddingHorizontal: theme.spacing.md,
       paddingVertical: 8,

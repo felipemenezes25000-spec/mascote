@@ -108,23 +108,18 @@ export function MascotInteractive({
   }, [disabled, emitGesture]);
 
   return (
-    <View
+    <Pressable
       onTouchMove={handleTouchMove}
-      style={style}
-      pointerEvents="box-only"
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onPress={handlePress}
+      disabled={disabled}
+      style={[style, { pointerEvents: 'box-only' }]}
       accessible
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? 'Interagir com o mascote'}
     >
-      <Pressable
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        onPress={handlePress}
-        disabled={disabled}
-        style={style}
-      >
-        {children}
-      </Pressable>
-    </View>
+      {children}
+    </Pressable>
   );
 }

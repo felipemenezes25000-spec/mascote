@@ -55,7 +55,7 @@ export function EvolutionRevealModal({
         onPress={onClose}
         style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}
       />
-      <SafeAreaView pointerEvents="box-none" style={styles.center}>
+      <SafeAreaView style={[styles.center, { pointerEvents: 'box-none' }]}>
         <Animated.View
           style={[
             styles.card,

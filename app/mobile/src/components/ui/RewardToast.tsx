@@ -42,10 +42,10 @@ export function RewardToast({ visible, message, icon = 'sparkles', iconColor, du
   if (!visible) return null;
   return (
     <Animated.View
-      pointerEvents="none"
       style={[
         styles.wrap,
         {
+          pointerEvents: 'none',
           transform: [{ translateY }],
           opacity,
           backgroundColor: theme.colors.surface,

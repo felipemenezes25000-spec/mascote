@@ -5,9 +5,9 @@
  *  1. Aparecer em payload enviado pra IA (BYOK/OpenAI)
  *  2. Aparecer em mensagens de chat com o mascote
  *  3. Aparecer em logs de nível info+ (só debug aceito)
- *  4. Aparecer em telemetria
- *  5. Ser exposto via URL/QR/share
- *  6. Ser exposto para terceiros via Settings.exportData
+ *  4. Aparecer em telemetria → pentest-surface.test.ts (PENTEST 11)
+ *  5. Ser exposto via URL/QR/share → N/A (sem share de DNA no app)
+ *  6. Export LGPD sem secrets BYOK → pentest-surface.test.ts (PENTEST 12)
  *
  * Estes testes falham se alguém futuramente derrubar a barreira de
  * privacidade — agem como guard rail de code review automatizado.

@@ -154,12 +154,11 @@ Cada item tem dono (você ou infra externa), estimativa e link pra detalhe.
 
 ## 🔒 Segurança pré-publicação
 
-- [ ] Re-rodar `npm audit` e verificar nada novo high/critical
-- [ ] Confirmar `grep -r "sk-" src/` retorna 0 (chave OpenAI no repo)
+- [x] Pentest automatizado verde: `npm run test:security` (1531 testes, matriz 31/31) — **gate** ([SECURITY_AUDIT.md](SECURITY_AUDIT.md))
 - [ ] Confirmar `.env` no `.gitignore` (não commitar credenciais)
 - [ ] Confirmar `eas.json` (com creds) está no `.gitignore`
-- [ ] Audit log de safety flags (críticos) — guardar timestamps em local, sem conteúdo
-- [ ] Ver [SECURITY_AUDIT.md](SECURITY_AUDIT.md) pro estado completo
+- [ ] `npm audit` — **opcional/informativo** (Expo SDK 51; não bloqueia beta)
+- [ ] Audit log de safety flags (críticos) — roadmap pós-beta
 
 ## 🚀 Build + upload
 

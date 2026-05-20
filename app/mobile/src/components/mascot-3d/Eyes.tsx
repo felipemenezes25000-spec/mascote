@@ -138,7 +138,7 @@ function Eye({
 
   const sclera = 0xffffff;
   const pupilColor = new THREE.Color()
-    .setHSL(palette.bodyHSL[0] / 360, 0.35, 0.12)
+    .setHSL(palette.bodyHSL[0] / 360, 0.28, 0.22)
     .getHex();
   const pupilEmissive = glowHex(palette);
 
@@ -148,9 +148,8 @@ function Eye({
         <sphereGeometry args={[morph.eyeSize, 24, 24]} />
         <meshStandardMaterial
           color={sclera}
-          roughness={0.15}
-          emissive={sclera}
-          emissiveIntensity={0.12}
+          roughness={0.35}
+          metalness={0}
         />
       </mesh>
       <mesh ref={pupilRef} position={[0, 0, morph.eyeSize * 0.6]}>
@@ -160,7 +159,7 @@ function Eye({
           roughness={0.3}
           metalness={0.2}
           emissive={pupilEmissive}
-          emissiveIntensity={morph.pupilEmissive + eyeBrightness * 0.6}
+          emissiveIntensity={morph.pupilEmissive + eyeBrightness * 0.25}
         />
       </mesh>
       {/* highlight */}

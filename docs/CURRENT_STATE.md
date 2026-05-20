@@ -20,7 +20,7 @@ Comandos na **raiz**: `npm run quality`, `npm test`, `npm run typecheck`, `npm r
 |------|--------|-------|
 | Quality gate | ✅ `npm run quality` (typecheck + ESLint + 1808 testes / 113 arquivos / ~7-9s) | Reusado pelo CI |
 | Coverage | 🟡 72.9% lines / 69.4% branches (medido 2026-05-20). Threshold enforçado: 70/66/72/70 | Maestro E2E cobre fluxos nativos faltantes; ver task "noUncheckedIndexedAccess" |
-| Test scripts | ✅ test:unit (1211), test:integration (233), test:security (145), test:ai (208), test:game (21), test:subscription (44), test:ci (full + coverage) | Permite gating granular em CI/pre-commit |
+| Test scripts | ✅ test:unit (1211), test:integration (233), test:security (262, matriz 100%), test:ai (208), test:game (21), test:subscription (44), test:ci (full + coverage) | Permite gating granular em CI/pre-commit |
 | Mutations | 12 marcos (7 individuais + 5 combo) — não 50+ como dito em iterações anteriores | [src/lib/dna/mutations.ts](../app/mobile/src/lib/dna/mutations.ts) e [mutations-extended.ts](../app/mobile/src/lib/dna/mutations-extended.ts) |
 | Analytics layer | ✅ Interface + MockProvider + 16 eventos tipados + consent gating | [src/analytics/](../app/mobile/src/analytics/) — provider real (Firebase/PostHog) plugável |
 | Billing demo guard | ✅ `isDemoBilling()` + `isMockInProductionBuild()` + warning estruturado | [billing-provider.ts](../app/mobile/src/services/subscription/billing-provider.ts) |

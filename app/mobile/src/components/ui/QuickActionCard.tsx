@@ -4,6 +4,7 @@
  */
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTheme, useStyles } from '@/lib/useTheme';
+import { useWebSafeLongPress } from '@/lib/web-safe-long-press';
 import type { Theme } from '@/lib/themes';
 import { Typography } from './Typography';
 import { Icon, type IconName } from '@/components/Icon';
@@ -12,6 +13,7 @@ interface Props {
   label: string;
   icon: IconName;
   onPress: () => void;
+  onLongPress?: () => void;
   /** Quando true, indica que o usuário já fez a ação hoje (visualmente "feito"). */
   done?: boolean;
   /** Cor do ícone — default brand. */
@@ -20,15 +22,17 @@ interface Props {
   hint?: string;
 }
 
-export function QuickActionCard({ label, icon, onPress, done, iconColor, hint }: Props) {
+export function QuickActionCard({ label, icon, onPress, onLongPress, done, iconColor, hint }: Props) {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
+  const longPress = useWebSafeLongPress(onLongPress, 400);
   return (
     <Pressable
-      accessibilityRole="button"
       accessibilityLabel={`${label}${hint ? `, ${hint}` : ''}${done ? ', feito hoje' : ''}`}
+      accessibilityHint={onLongPress ? 'Segure para ajustar valor' : undefined}
       accessibilityState={{ selected: done }}
       onPress={onPress}
+      {...longPress}
       style={({ pressed }) => [
         styles.btn,
         done && styles.btnDone,

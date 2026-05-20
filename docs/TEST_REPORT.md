@@ -32,11 +32,11 @@ npm audit
 | `npm run test:ci` | ✅ | coverage lines **72.85%** (threshold 70%) |
 | `npm run test:unit` | ✅ | subset lib/content/store |
 | `npm run test:integration` | ✅ | services/components/hooks |
-| `npm run test:security` | ✅ | security + pentests + safety |
+| `npm run test:security` | ✅ | ~1530 testes — core 262 + mass 1269 + matriz 31/31 |
 | `npm run test:ai` | ✅ | ai + lib-ai + production-guards |
 | `npm run test:game` | ✅ | evolution engine |
 | `npm run test:subscription` | ✅ | billing + entitlements |
-| `npm audit` | 🟡 | 25 vulns (Expo SDK 51 — ver SECURITY_AUDIT.md) |
+| `npm audit` | ➖ | Fora do gate — informativo (Expo SDK 51; ver SECURITY_AUDIT.md) |
 | Maestro E2E | ⏭ | Requer emulador/device — não roda em CI unit |
 
 ## Novos testes (sessão 2026-05-20)

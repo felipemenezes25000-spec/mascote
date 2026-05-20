@@ -223,9 +223,9 @@ function renderScene(id: string, theme: Theme) {
             </SvgLinearGradient>
           </Defs>
           <Rect width="400" height="240" fill="url(#bg-room)" />
-          {/* picture frame */}
-          <Rect x="40" y="50" width="80" height="50" rx="4" fill="none" stroke={theme.colors.border2} strokeWidth="2" />
-          <Rect x="48" y="58" width="64" height="34" rx="2" fill={theme.colors.primarySoft} />
+          {/* quadro discreto à direita — evita “retângulo bege” competindo com o mascote */}
+          <Rect x="300" y="52" width="72" height="44" rx="4" fill="none" stroke={theme.colors.border2} strokeWidth="1.5" opacity="0.7" />
+          <Rect x="308" y="60" width="56" height="28" rx="2" fill={theme.colors.primarySoft} opacity="0.35" />
           {/* plant */}
           <Rect x="300" y="160" width="40" height="50" rx="4" fill="#8C6532" />
           <Circle cx="320" cy="160" r="16" fill="#4F8A4A" />

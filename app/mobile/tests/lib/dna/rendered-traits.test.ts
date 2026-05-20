@@ -45,8 +45,8 @@ describe('Invariante: Mascot3D renderiza traços desbloqueados pelo DNA', () => 
     expect(morphologyFromGenome(g).hasTail).toBe(false);
   });
 
-  it('genome com aggression >= 0.55 → hasSpikes = true', () => {
-    const g = { ...generateGenome(1), aggression: 0.7 };
+  it('genome com aggression >= 0.72 → hasSpikes = true', () => {
+    const g = { ...generateGenome(1), aggression: 0.8 };
     expect(morphologyFromGenome(g).hasSpikes).toBe(true);
     expect(morphologyFromGenome(g).spikeCount).toBeGreaterThan(0);
   });
@@ -68,7 +68,7 @@ describe('Invariante: Mascot3D renderiza traços desbloqueados pelo DNA', () => 
   it('morphologySummary nomeia os traços visíveis presentes', () => {
     const g = {
       empathy: 0.8, curiosity: 0.8, creativity: 0.6, discipline: 0.5,
-      chaos: 0.5, aggression: 0.7, resilience: 0.5, emotionalDepth: 0.5,
+      chaos: 0.5, aggression: 0.8, resilience: 0.5, emotionalDepth: 0.5,
       socialEnergy: 0.5, adaptability: 0.5, intelligence: 0.5,
     };
     const summary = morphologySummary(g);
@@ -117,7 +117,7 @@ describe('Customization respeita identidade genética', () => {
   });
 
   it('force_hide_spikes respeita o mesmo padrão', () => {
-    const g = { ...generateGenome(1), aggression: 0.7 };
+    const g = { ...generateGenome(1), aggression: 0.8 };
     const m = morphologyFromGenome(g);
     expect(m.hasSpikes).toBe(true);
     const withHide = applyCustomization(m, defaultCustom({ force_hide_spikes: true }));
@@ -125,7 +125,7 @@ describe('Customization respeita identidade genética', () => {
   });
 
   it('todos os 3 hidden simultaneamente → criatura "minimalista"', () => {
-    const g = { ...generateGenome(1), creativity: 0.6, curiosity: 0.7, aggression: 0.7 };
+    const g = { ...generateGenome(1), creativity: 0.6, curiosity: 0.7, aggression: 0.8 };
     const m = morphologyFromGenome(g);
     const withHideAll = applyCustomization(m, defaultCustom({
       force_hide_tail: true,

@@ -73,7 +73,7 @@ export function Mouth({
           color={mouthColor}
           roughness={0.5}
           emissive={mouthColor}
-          emissiveIntensity={0.25}
+          emissiveIntensity={0.08}
         />
       </mesh>
     </group>
