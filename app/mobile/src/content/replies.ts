@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Personality } from '@/types';
 
 interface ReplyBank {
@@ -439,7 +440,42 @@ const banks: Record<Personality, ReplyBank> = {
 // evitar que `pick(arr)` retorne a MESMA frase 2× seguidas. Foi exatamente
 // a queixa do QA externo ("Pip sempre responde a mesma coisa"). Com 8-12
 // entradas por bank, pular 1 frase deixa rotação muito mais visível.
+//
+// Persistido em AsyncStorage: antes era Map só em memória e perdia variedade
+// entre app restarts (cold start sempre podia repetir última frase da sessão
+// anterior). Hydratado na primeira chamada via warmReplyCache().
 const lastShown = new Map<string, string>();
+const CACHE_KEY = 'mascote:reply_lastshown:v1';
+let hydrationPromise: Promise<void> | null = null;
+
+export function warmReplyCache(): Promise<void> {
+  if (!hydrationPromise) {
+    hydrationPromise = (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(CACHE_KEY);
+        if (!raw) return;
+        const obj = JSON.parse(raw);
+        if (obj && typeof obj === 'object') {
+          for (const [k, v] of Object.entries(obj)) {
+            if (typeof v === 'string') lastShown.set(k, v);
+          }
+        }
+      } catch {
+        /* hydratação é otimização, nunca bloqueia */
+      }
+    })();
+  }
+  return hydrationPromise;
+}
+
+function persistLastShown(): void {
+  // fire-and-forget — UX não pode bloquear na escrita.
+  const obj: Record<string, string> = {};
+  lastShown.forEach((v, k) => { obj[k] = v; });
+  AsyncStorage.setItem(CACHE_KEY, JSON.stringify(obj)).catch(() => {
+    /* persistência é otimização */
+  });
+}
 
 function pickNonRepeat(arr: string[], key: string): string {
   if (arr.length === 0) return '';
@@ -452,12 +488,15 @@ function pickNonRepeat(arr: string[], key: string): string {
     chosen = arr[Math.floor(Math.random() * arr.length)];
   }
   lastShown.set(key, chosen);
+  persistLastShown();
   return chosen;
 }
 
-/** Apenas para testes — limpa cache de anti-repetição. */
+/** Apenas para testes — limpa cache de anti-repetição (memória + storage). */
 export function __resetReplyCache(): void {
   lastShown.clear();
+  hydrationPromise = null;
+  AsyncStorage.removeItem(CACHE_KEY).catch(() => {});
 }
 
 export type Intent =

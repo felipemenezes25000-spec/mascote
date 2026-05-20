@@ -5,16 +5,16 @@ import {
   DIAGNOSIS_REDIRECT,
   SAFE_FALLBACK,
   classifyInput,
-  classifyOutput,
   detectAttachment,
 } from '@/content/safety';
 import { classifyIntent, mockReply } from '@/content/replies';
-import { dnaPromptSection } from '@/lib/dna/descriptors';
-import type { Genome } from '@/lib/dna/genome';
-import { formatMemoriesForPrompt, recall, type MemoryItem } from '@/lib/memory';
+import { recall, type MemoryItem } from '@/lib/memory';
 import { logger } from '@/lib/logger';
 import { classifySafetyEnsemble } from '@/lib/ml/safety/classifier';
 import { isAiProxyConfigured, proxyMascotReply } from '@/ai/ProxyMascotAI';
+import { buildMascotSystemPrompt } from '@/ai/MascotPrompt';
+import { validateAiResponse } from '@/ai/AIResponseValidator';
+import { rememberReply, shouldRetryForVariety } from '@/ai/AntiRepeatCache';
 import {
   aiSourceFromResponse,
   trackAiReplyFailed,
@@ -28,6 +28,8 @@ export interface AiResponse {
   reply: string;
   safety_flag: SafetyFlag;
   source: 'mock' | 'openai' | 'fallback';
+  /** Token count real quando conhecido (OpenAI/Proxy). Permite cobrança real, não estimativa. */
+  usage?: { totalTokens: number };
 }
 
 export interface HistoryMsg {
@@ -156,23 +158,42 @@ async function generateReplyInternal(
     }
   }
 
+  // Anti-repetição: passa replies recentes pro Proxy/OpenAI evitarem ecoar.
+  // Aplicado uniformemente (proxy + byok + mock); fallback local tem seu
+  // próprio pickNonRepeat por intent. Veja AntiRepeatCache.
+  const recentReplies = userId ? await shouldRetryForVariety(userId, personality) : [];
+
   if (isAiProxyConfigured()) {
     const proxied = await proxyMascotReply(personality, userMessage, {
       history,
       mascotName,
       userId,
+      memories,
+      dna,
+      recentReplies,
     });
-    if (proxied) return finish(proxied, true);
+    if (proxied) {
+      if (userId) await rememberReply(userId, personality, proxied.reply);
+      return finish(proxied, true);
+    }
   }
 
   if (apiKey) {
     try {
-      const reply = await callOpenAI(personality, userMessage, apiKey, history, memories, mascotName, dna);
-      const outputFlag = classifyOutput(reply);
-      if (outputFlag !== 'safe') {
-        return finish({ reply: SAFE_FALLBACK, safety_flag: outputFlag, source: 'fallback' }, false);
+      const { reply, totalTokens } = await callOpenAI(personality, userMessage, apiKey, history, memories, mascotName, dna, recentReplies);
+      const validation = validateAiResponse({ reply }, inputFlag);
+      if (!validation.valid) {
+        // logging útil pra observabilidade de falhas silenciosas do modelo
+        logger.warn('[ai] OpenAI response rejected', { issues: validation.issues });
+        return finish({
+          reply: validation.reply,
+          safety_flag: validation.safety_flag,
+          source: 'fallback',
+        }, false);
       }
-      return finish({ reply, safety_flag: inputFlag, source: 'openai' }, false);
+      if (userId) await rememberReply(userId, personality, validation.reply);
+      const usage = totalTokens > 0 ? { totalTokens } : undefined;
+      return finish({ reply: validation.reply, safety_flag: inputFlag, source: 'openai', usage }, false);
     } catch (err) {
       // Loga só a MENSAGEM do erro — `err` completo pode conter o Request
       // com Authorization header e vazar a API key.
@@ -196,9 +217,16 @@ async function callOpenAI(
   history: HistoryMsg[],
   memories: MemoryItem[] = [],
   mascotName: string | undefined = undefined,
-  dna: MascotDNA | undefined = undefined
-): Promise<string> {
-  const system = systemPrompt(personality, memories, mascotName, dna);
+  dna: MascotDNA | undefined = undefined,
+  recentReplies: string[] = [],
+): Promise<{ reply: string; totalTokens: number }> {
+  const baseSystem = buildMascotSystemPrompt({ personality, memories, mascotName, dna });
+  // Reforço anti-eco: dá os últimos N replies pro modelo evitar repetição.
+  // Inline no system pra não custar mensagens extras na history.
+  const varietyHint = recentReplies.length > 0
+    ? `\n\nEVITE ECOAR ESTAS FRASES RECENTES (varie a forma, mesmo que o sentido seja parecido):\n${recentReplies.map(r => `- "${r}"`).join('\n')}`
+    : '';
+  const system = `${baseSystem}${varietyHint}`;
   const conv = history.slice(-6).map(m => ({
     role: m.role === 'user' ? 'user' : 'assistant',
     content: m.content,
@@ -231,39 +259,9 @@ async function callOpenAI(
     const data = await res.json();
     const content: string | undefined = data?.choices?.[0]?.message?.content;
     if (!content) throw new Error('Sem conteúdo');
-    return content.trim();
+    const totalTokens = Number(data?.usage?.total_tokens) || 0;
+    return { reply: content.trim(), totalTokens };
   } finally {
     clearTimeout(timer);
   }
-}
-
-function systemPrompt(
-  personality: Personality,
-  memories: MemoryItem[] = [],
-  mascotName: string | undefined = undefined,
-  dna: MascotDNA | undefined = undefined
-): string {
-  const base = `Você é um companheiro digital de autocuidado em PT-BR${mascotName ? `, chamado ${mascotName}` : ''}.
-REGRAS INVIOLÁVEIS:
-- Wellness, NUNCA terapia, diagnóstico ou cura.
-- NUNCA use: "depressão", "ansiedade clínica", "transtorno", "diagnóstico", "tratamento", "trauma", "TDAH".
-- Use: "se cuidar", "rotina", "energia", "humor", "respirar", "pausa".
-- Máximo 2 frases. NUNCA mais que 30 palavras.
-- Sem markdown, sem listas, sem links.
-- Lembre do contexto da conversa, mas seja breve.`;
-  const flavor: Record<Personality, string> = {
-    calmo: 'Voz baixa, fala devagar. Sem exclamação. Foca em respiração, sono, silêncio.',
-    motivador: 'Direto, otimista. No máximo 1 ponto de exclamação. Sem "vamoooo".',
-    fofo: 'Doce, afetuoso. Pode usar 1 emoji fofo (🌱 💛 ✨ 🍵 🐣). Sem coração vermelho.',
-    sabio: 'Pensativo. Abre perguntas curtas em vez de dar conselho.',
-  };
-  const memorySection = memories.length > 0
-    ? `\n\nCOISAS QUE VOCÊ JÁ SABE DELE/DELA (use SE FOR RELEVANTE, sem forçar):\n${formatMemoriesForPrompt(memories)}`
-    : '';
-  // dnaSection: descritores seguros derivados do DNA. NUNCA expõe gene cru.
-  // Pipeline: Genome → dnaDescriptors() → frases PT-BR → injeção.
-  // Garantia em tests/security/dna-privacy.test.ts: nem nome de gene nem
-  // valor numérico atravessa essa fronteira.
-  const dnaSection = dna ? dnaPromptSection(dna as Genome) : '';
-  return `${base}\n\nPERSONALIDADE: ${flavor[personality]}${dnaSection}${memorySection}`;
 }

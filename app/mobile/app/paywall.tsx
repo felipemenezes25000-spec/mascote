@@ -13,6 +13,7 @@ import { buildEvolutionState } from '@/game/evolution/EvolutionEngine';
 import { checkins as checkinsDb } from '@/lib/db';
 import { copyFor, type PaywallTrigger } from '@/lib/paywall-triggers';
 import { validateBillingEnv } from '@/lib/billing-config';
+import { isAiProxyConfigured } from '@/ai/ProxyMascotAI';
 import { subscriptionService } from '@/services/subscription';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
@@ -132,6 +133,19 @@ export default function Paywall() {
           <Text style={styles.modeLabel}>{billingEnv.label}</Text>
           <Text style={styles.modeDetail}>{billingEnv.detail}</Text>
         </View>
+
+        {/* Disclosure honesto: se o proxy de IA ainda não foi configurado nessa
+            build, falamos isso na cara. Promessa "IA emocional ilimitada"
+            sem proxy = IA local. Honestidade > conversão suja. */}
+        {!isAiProxyConfigured() ? (
+          <View style={styles.disclosure} accessibilityRole="text">
+            <Text style={styles.disclosureLabel}>Sobre a IA Plus nesta build</Text>
+            <Text style={styles.disclosureDetail}>
+              Esta versão usa IA local (sem cloud). A IA cloud com personalidade chega
+              na próxima atualização — sem custo extra pra quem já é Plus.
+            </Text>
+          </View>
+        ) : null}
 
         <Text style={styles.kicker}>BIPO PLUS</Text>
         <Text style={styles.title}>{triggerCopy.title}</Text>
@@ -278,5 +292,15 @@ function makeStyles(theme: Theme) {
   },
   modeLabel: { ...theme.text.bodyBold, color: theme.colors.text, textAlign: 'center' },
   modeDetail: { ...theme.text.xs, color: theme.colors.textSecondary, textAlign: 'center', lineHeight: 16 },
+  disclosure: {
+    backgroundColor: theme.colors.warning + '14',
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.warning + '40',
+    padding: theme.spacing.md,
+    gap: 4,
+  },
+  disclosureLabel: { ...theme.text.bodyBold, color: theme.colors.text, textAlign: 'center' },
+  disclosureDetail: { ...theme.text.xs, color: theme.colors.textSecondary, textAlign: 'center', lineHeight: 16 },
 });
 }

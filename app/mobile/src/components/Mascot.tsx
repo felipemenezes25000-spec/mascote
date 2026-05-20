@@ -70,8 +70,28 @@ interface Props {
   seedOverride?: number;
 }
 
+/**
+ * Modificador visual por fase macro — torna a "evolução visível" sem
+ * mexer na geometria do 3D (que é puramente DNA-driven).
+ * - ovo/bebê: criatura compacta, sem aura extra
+ * - crianca/adolescente: tamanho médio
+ * - adulto: tamanho pleno
+ * - evoluido: tamanho pleno + halo sutil (forma rara)
+ *
+ * Aplicado via transform scale + ring no container — sobrepõe a render
+ * principal sem regredir morfologia.
+ */
+const PHASE_SCALE: Record<MascotPhase, number> = {
+  ovo: 0.78,
+  bebe: 0.86,
+  crianca: 0.94,
+  adolescente: 0.98,
+  adulto: 1,
+  evoluido: 1.05,
+};
+
 function MascotImpl(props: Props) {
-  const { force2D, force3D, size = 220, style, dnaOverride, seedOverride } = props;
+  const { force2D, force3D, size = 220, style, dnaOverride, seedOverride, phase } = props;
   const mascot = useStore(s => s.mascot);
   const dna = dnaOverride ?? mascot?.dna;
   const seed = seedOverride ?? mascot?.dna_seed ?? 0;
@@ -85,10 +105,19 @@ function MascotImpl(props: Props) {
     return detectCapabilities().canRender3D;
   }, [force2D, force3D, dna, boundaryFallback]);
 
+  const phaseScale = PHASE_SCALE[phase] ?? 1;
+  const isLegendary = phase === 'evoluido';
+
   if (use3D && dna) {
     return (
       <View
-        style={[styles.shell, { width: size, height: size }, style]}
+        style={[
+          styles.shell,
+          { width: size, height: size },
+          isLegendary ? styles.legendaryHalo : null,
+          style,
+          { transform: [{ scale: phaseScale }] },
+        ]}
         accessibilityLabel="mascote procedural"
         accessibilityRole="image"
       >
@@ -123,5 +152,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+  },
+  // Halo sutil só na fase 'evoluido' — sinaliza forma rara sem ser ostentoso.
+  // Borda fina + leve shadow; evita brilho exagerado que descaracterizaria
+  // a paleta DNA própria do mascote.
+  legendaryHalo: {
+    borderRadius: 999,
+    shadowColor: '#FFE5A0',
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 4,
   },
 });

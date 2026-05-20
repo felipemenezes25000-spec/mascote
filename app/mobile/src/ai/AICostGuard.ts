@@ -15,10 +15,15 @@ function todayKey(): string {
 /** Tokens estimados por resposta (gpt-4o-mini ~ prompt+completion). */
 export const ESTIMATED_TOKENS_PER_REPLY = 180;
 
+// Plus = "ilimitado prático". Antes era 50k = ~277 msgs/dia, o que descumpria
+// a promessa "Chat IA ilimitado" para um user power. 500k = ~2700 msgs/dia,
+// muito acima de qualquer uso humano legítimo, mantendo o safety net contra
+// abuso/runaway de custo (produção: backend proxy aplica limite real).
+// Free segue conservador pra preservar margem do trial.
 const DAILY_TOKEN_BUDGET: Record<BillingTierId, number> = {
   free: 2_000,
-  plus_monthly: 50_000,
-  plus_annual: 50_000,
+  plus_monthly: 500_000,
+  plus_annual: 500_000,
 };
 
 export interface CostGuardResult {

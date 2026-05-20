@@ -31,6 +31,7 @@ import { UnlockToast } from '@/components/UnlockToast';
 import { installTelemetry } from '@/lib/telemetry';
 import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
+import { warmReplyCache } from '@/content/replies';
 
 // Instalado UMA vez por process (não em render). O sink lê o consent a cada
 // captura via callback, então fica live com mudanças de settings.
@@ -68,6 +69,9 @@ export default function RootLayout() {
       try {
         setHydrateError(null);
         await hydrate();
+        // Anti-repetição do fallback local sobrevive a restart — hydrate em
+        // background, não bloqueia o app.
+        void warmReplyCache();
       } catch (err) {
         setHydrateError(err instanceof Error ? err.message : 'Falha ao carregar dados');
       }
@@ -156,6 +160,7 @@ export default function RootLayout() {
           <Stack.Screen name="mission" />
           <Stack.Screen name="mission-done" />
           <Stack.Screen name="evolution" />
+          <Stack.Screen name="mascot" options={{ presentation: 'modal' }} />
           <Stack.Screen name="streak" />
           <Stack.Screen name="inventory" />
           <Stack.Screen name="subscription" options={{ presentation: 'modal' }} />

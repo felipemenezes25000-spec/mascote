@@ -49,6 +49,8 @@ interface Props {
   onNext: () => void;
   onGesture: (kind: MascotGestureKind) => void;
   onSceneBadge: () => void;
+  /** Tap no pill de identidade abre /mascot (afinidades + roadmap). */
+  onIdentityPress?: () => void;
   flash: string | null;
   /** Frase emocional curta exibida acima do mascote. */
   statusLine: string;
@@ -74,6 +76,7 @@ export function HomeHero({
   onNext,
   onGesture,
   onSceneBadge,
+  onIdentityPress,
   flash,
   statusLine,
   emotionKey,
@@ -122,7 +125,16 @@ export function HomeHero({
               <Typography variant="mono" style={styles.sceneName}>{scene.name}</Typography>
             </PressableScale>
           )}
-          <View style={[styles.mascotNameBox, { pointerEvents: 'none' }]}>
+          {/* Pill clicável → /mascot (identidade completa: afinidades, genes, roadmap).
+              Antes era View pura — exposição do archétipo só visível, sem ação. */}
+          <PressableScale
+            style={styles.mascotNameBox}
+            onPress={onIdentityPress}
+            disabled={!onIdentityPress}
+            accessibilityRole="button"
+            accessibilityLabel={`Identidade de ${mascot.name}`}
+            accessibilityHint="Abre detalhes de afinidades, genes e próximos marcos"
+          >
             <Typography style={styles.mascotNameStrong}>{mascot.name}</Typography>
             <Typography variant="mono" tone="secondary">
               {(() => {
@@ -132,7 +144,7 @@ export function HomeHero({
                   : `nv ${mascot.level} · ${emergentPhaseLabels[mascot.phase]}`;
               })()}
             </Typography>
-          </View>
+          </PressableScale>
           {flash && (
             <View style={[styles.flash, { pointerEvents: 'none' }]}>
               <Typography variant="bodyBold" style={{ color: theme.tokens.semantic.inkOnBrand }}>

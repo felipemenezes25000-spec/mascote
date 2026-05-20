@@ -72,7 +72,9 @@ export async function mascotReply(
     const result = await baseGenerateReply(personality, userMessage, options);
     if (options?.userId && result.source !== 'fallback') {
       await recordAiUsage(options.userId);
-      await recordAiCost(options.userId);
+      // Usa token count real quando o provider devolveu (OpenAI/Proxy);
+      // estimativa fixa só pra paths que não retornam usage.
+      await recordAiCost(options.userId, result.usage?.totalTokens);
     }
     return result;
   } catch {

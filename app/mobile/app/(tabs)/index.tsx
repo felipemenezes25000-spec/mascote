@@ -28,6 +28,7 @@ import {
 } from '@/lib/db';
 import { maybeNotifyStreakAtRisk, notifyMascotBirthday } from '@/lib/notify';
 import { phaseLabels } from '@/lib/phaseLabels';
+import { incrementBond } from '@/lib/bond';
 import { xpToNextLevel } from '@/lib/xp';
 import { buildProactiveContext, runProactiveScan } from '@/lib/proactive';
 import type { EvolutionStory } from '@/lib/evolution-stories';
@@ -414,6 +415,7 @@ export default function Home() {
             onPrev={() => void cycleScene(-1)}
             onNext={() => void cycleScene(1)}
             onSceneBadge={() => router.push('/closet')}
+            onIdentityPress={() => router.push('/mascot')}
             onGesture={(kind) => {
               setReactBeat(v => v + 1);
               const reasonMap = {
@@ -429,6 +431,9 @@ export default function Home() {
                 const emotion = kind === 'double' ? 0.85 : kind === 'long' ? 0.4 : 0.6;
                 playVoiceLine(profileVoice, { kind: voiceKind, emotion });
               }
+              // Vínculo persistido: gesto efêmero vira história gravada.
+              // Cap diário no bond.ts evita grind; fire-and-forget pra não travar UX.
+              if (profile?.id) void incrementBond(profile.id, kind);
             }}
             flash={flash}
           />

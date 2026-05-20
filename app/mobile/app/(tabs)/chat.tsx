@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChatBubble } from '@/components/ChatBubble';
 import { ChatReplyRating } from '@/components/ChatReplyRating';
+import { TypingIndicator } from '@/components/TypingIndicator';
 import { trackAiReplyRated } from '@/analytics/trackAiReply';
 import { Icon } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
@@ -260,6 +261,7 @@ export default function ChatTab() {
           keyExtractor={i => i.id}
           contentContainerStyle={styles.listContent}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+          ListFooterComponent={sending ? <TypingIndicator mascotColor={meta.primaryColor} /> : null}
           renderItem={({ item }) => {
             if (item.kind === 'date') {
               return (

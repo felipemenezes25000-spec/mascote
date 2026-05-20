@@ -84,14 +84,19 @@ export async function maybeNotifyStreakAtRisk(profile: Profile, streakDays: numb
   if (streakDays < 1 || !lastActive) return;
   const today = todayLocal();
   if (lastActive === today) return;
+  // Streaks de 7+ dias: hábito já provado, grace days protegem se pular um.
+  // Notif "em risco" só gera ansiedade pra esse perfil — silenciamos.
+  // Mantemos só pra streaks 1-6 onde o hábito ainda está se formando e
+  // um lembrete factual ajuda mais que assusta.
+  if (streakDays >= 7) return;
   // 18-22h alerta de streak em risco
   const hour = new Date().getHours();
   if (hour < 18 || hour >= 22) return;
   await notify(
     profile,
     'streak_at_risk',
-    'Streak em risco',
-    `Você tem ${streakDays} dia${streakDays > 1 ? 's' : ''}. Um check-in mantém.`,
+    'Sequência em construção',
+    `Você tem ${streakDays} dia${streakDays > 1 ? 's' : ''}. Um check-in mantém — sem culpa se passar.`,
     { streakDays }
   );
 }
