@@ -95,7 +95,7 @@ function makeStyles(theme: Theme) {
     },
     disabledPrimaryLabel: { color: theme.colors.textDim },
     label: { ...theme.text.bodyBold },
-    primaryLabel: { color: '#fff' },
+    primaryLabel: { color: theme.tokens.semantic.inkOnBrand },
     secondaryLabel: { color: theme.colors.text },
     ghostLabel: { color: theme.colors.primary },
   });

@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
+import { Typography, Input } from '@/components/ui';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
@@ -27,12 +28,12 @@ export default function FeedbackScreen() {
           <Pressable onPress={() => router.back()} hitSlop={10} style={styles.close}>
             <Text style={styles.closeText}>✕</Text>
           </Pressable>
-          <Text style={styles.kicker}>FEEDBACK</Text>
+          <Typography variant="mono" tone="secondary" style={styles.kicker}>FEEDBACK</Typography>
           <View style={{ width: 36 }} />
         </View>
 
-        <Text style={styles.title}>Tá curtindo o Mascote?</Text>
-        <Text style={styles.subtitle}>Sua resposta sincera ajuda a gente a fazer mais bonito.</Text>
+        <Typography variant="title" style={{ marginTop: theme.spacing.lg }}>Tá curtindo o Mascote?</Typography>
+        <Typography tone="secondary">Sua resposta sincera ajuda a gente a fazer mais bonito.</Typography>
 
         <View style={styles.npsRow}>
           {NPS_LABELS.map((emoji, i) => (
@@ -46,18 +47,15 @@ export default function FeedbackScreen() {
           ))}
         </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>O que te faria voltar amanhã?</Text>
-          <TextInput
-            value={text}
-            onChangeText={setText}
-            style={styles.input}
-            placeholder="Pode ser bobagem. Pode ser nada."
-            placeholderTextColor={theme.colors.textDim}
-            multiline
-            maxLength={1000}
-          />
-        </View>
+        <Input
+          label="O que te faria voltar amanhã?"
+          value={text}
+          onChangeText={setText}
+          placeholder="Pode ser bobagem. Pode ser nada."
+          multiline
+          maxLength={1000}
+          style={{ minHeight: 120, textAlignVertical: 'top' }}
+        />
 
         <Button label="Enviar" onPress={submit} disabled={!score} />
       </ScrollView>
@@ -72,15 +70,10 @@ function makeStyles(theme: Theme) {
     headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     close: { width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center', justifyContent: 'center' },
     closeText: { fontSize: 16, color: theme.colors.text },
-    kicker: { ...theme.text.xs, color: theme.colors.textSecondary, fontWeight: '800', letterSpacing: 1 },
-    title: { ...theme.text.h1, color: theme.colors.text, marginTop: theme.spacing.lg },
-    subtitle: { ...theme.text.body, color: theme.colors.textSecondary },
+    kicker: { fontWeight: '800', letterSpacing: 1 },
     npsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: theme.spacing.sm, marginVertical: theme.spacing.lg },
     npsBtn: { flex: 1, aspectRatio: 1, backgroundColor: theme.colors.surface, borderRadius: theme.radius.md, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center', justifyContent: 'center' },
     npsBtnActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
     npsEmoji: { fontSize: 28 },
-    field: { gap: theme.spacing.sm },
-    label: { ...theme.text.sm, color: theme.colors.textSecondary, fontWeight: '600' },
-    input: { backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.md, fontSize: 14, color: theme.colors.text, minHeight: 120, textAlignVertical: 'top' },
   });
 }

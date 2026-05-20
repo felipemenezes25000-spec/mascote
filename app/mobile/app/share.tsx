@@ -234,7 +234,7 @@ function makeStyles(theme: Theme) {
       fontWeight: '600',
     },
     tabLabelActive: {
-      color: '#fff',
+      color: theme.tokens.semantic.inkOnBrand,
       fontWeight: '700',
     },
     previewWrap: { paddingHorizontal: theme.spacing.lg, paddingTop: theme.spacing.md },

@@ -1,9 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
+import { Typography, Input } from '@/components/ui';
 import { getPersonality } from '@/content/personalities';
 import { readSystemReduceMotion } from '@/lib/accessibility';
 import { mascots, profiles, settings as settingsDb, streaks, wallet as walletDb } from '@/lib/db';
@@ -145,38 +146,30 @@ export default function NameStep() {
             <Mascot personality={personality} phase="ovo" mood="feliz" size={180} />
           </View>
           <View style={styles.form}>
-            <Text style={styles.kicker}>{stepLabel('name')}</Text>
-            <Text style={styles.title}>Vamos nos apresentar</Text>
+            <Typography variant="mono" tone="brand" style={styles.kicker}>{stepLabel('name')}</Typography>
+            <Typography variant="title">Vamos nos apresentar</Typography>
 
-            <View style={styles.field}>
-              <Text style={styles.label}>Como você quer ser chamado(a)?</Text>
-              <TextInput
-                testID="user_name_input"
-                accessibilityLabel="Seu nome"
-                value={userName}
-                onChangeText={setUserName}
-                placeholder="Seu nome"
-                placeholderTextColor={theme.colors.textDim}
-                style={styles.input}
-                autoFocus
-                returnKeyType="next"
-                maxLength={40}
-              />
-            </View>
+            <Input
+              testID="user_name_input"
+              accessibilityLabel="Seu nome"
+              label="Como você quer ser chamado(a)?"
+              value={userName}
+              onChangeText={setUserName}
+              placeholder="Seu nome"
+              autoFocus
+              returnKeyType="next"
+              maxLength={40}
+            />
 
-            <View style={styles.field}>
-              <Text style={styles.label}>Nome do seu Mascote</Text>
-              <TextInput
-                value={mascotName}
-                onChangeText={setMascotName}
-                placeholder={defaultMascotName}
-                placeholderTextColor={theme.colors.textDim}
-                style={styles.input}
-                returnKeyType="done"
-                onSubmitEditing={finish}
-                maxLength={30}
-              />
-            </View>
+            <Input
+              label="Nome do seu Mascote"
+              value={mascotName}
+              onChangeText={setMascotName}
+              placeholder={defaultMascotName}
+              returnKeyType="done"
+              onSubmitEditing={finish}
+              maxLength={30}
+            />
           </View>
           <Button label="Pronto. Vamos começar." onPress={finish} disabled={!userName.trim()} />
         </View>
@@ -197,19 +190,6 @@ function makeStyles(theme: Theme) {
   },
   mascotWrap: { alignItems: 'center', paddingVertical: theme.spacing.md },
   form: { flex: 1, gap: theme.spacing.lg },
-  kicker: { ...theme.text.xs, color: theme.colors.primary, fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase' },
-  title: { ...theme.text.h1, color: theme.colors.text },
-  field: { gap: theme.spacing.sm },
-  label: { ...theme.text.sm, color: theme.colors.textSecondary, fontWeight: '600' },
-  input: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    fontSize: 18,
-    color: theme.colors.text,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
+  kicker: { fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase' },
 });
 }

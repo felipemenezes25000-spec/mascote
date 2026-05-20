@@ -232,7 +232,7 @@ export default function SettingsScreen() {
                     <View style={[styles.dot, { backgroundColor: p.primaryColor }]} />
                     <Text style={[
                       styles.personalityText,
-                      mascot.personality === p.id && { color: '#fff', fontWeight: '700' },
+                      mascot.personality === p.id && { color: theme.tokens.semantic.inkOnBrand, fontWeight: '700' },
                     ]}>
                       {p.label}
                     </Text>
@@ -326,13 +326,18 @@ export default function SettingsScreen() {
         <Section title="Inteligência artificial">
           <Text style={styles.hint}>
             {apiKey
-              ? '✓ Conectado à OpenAI (gpt-4o-mini)'
-              : 'Modo offline. Respostas pré-escritas por personalidade.'}
+              ? '✓ Conversas usando sua chave OpenAI (gpt-4o-mini, BYOK).'
+              : 'Modo offline. Respostas pré-escritas seguras por personalidade.'}
+          </Text>
+          <Text style={styles.hintSmall}>
+            Por padrão o app funciona offline. Se você optar por conectar uma
+            chave (BYOK = "bring your own key"), suas mensagens passam pela
+            OpenAI — só você paga, só você decide.
           </Text>
           {!showKey ? (
             <Button
               variant="ghost"
-              label={apiKey ? 'Trocar chave OpenAI' : 'Adicionar chave OpenAI'}
+              label={apiKey ? 'Trocar chave OpenAI' : 'Conectar chave (BYOK)'}
               onPress={() => setShowKey(true)}
             />
           ) : (
@@ -357,7 +362,11 @@ export default function SettingsScreen() {
                 }} />
               </View>
               <Text style={styles.hintSmall}>
-                A chave é guardada criptografada no Keychain/Keystore do seu aparelho. Só é enviada pra OpenAI.
+                A chave fica criptografada no Keychain/Keystore do aparelho.
+                Mensagens viajam direto pra OpenAI — sem nosso servidor.
+                Quando o proxy oficial estiver no ar, ele será preferido
+                automaticamente e você pode remover a chave sem perder o
+                modo IA.
               </Text>
             </View>
           )}
@@ -568,7 +577,7 @@ function makeStyles(theme: Theme) {
   segmentItem: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: theme.radius.pill },
   segmentItemActive: { backgroundColor: theme.colors.primary },
   segmentText: { ...theme.text.xs, color: theme.colors.textSecondary, fontWeight: '700' },
-  segmentTextActive: { color: '#fff' },
+  segmentTextActive: { color: theme.tokens.semantic.inkOnBrand },
   disclaimer: {
     ...theme.text.xs,
     color: theme.colors.textDim,

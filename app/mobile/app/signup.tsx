@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
+import { Typography, Input } from '@/components/ui';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
@@ -21,38 +22,30 @@ export default function Signup() {
           </Pressable>
           <View style={{ flex: 1, justifyContent: 'center', gap: theme.spacing.lg }}>
             <View style={{ gap: theme.spacing.sm }}>
-              <Text style={styles.kicker}>BEM-VINDO</Text>
-              <Text style={styles.title}>Criar conta</Text>
-              <Text style={styles.subtitle}>
+              <Typography variant="mono" tone="brand" style={styles.kicker}>BEM-VINDO</Typography>
+              <Typography variant="title">Criar conta</Typography>
+              <Typography tone="secondary">
                 Tudo fica no seu dispositivo. Não exigimos email real nessa demo local.
-              </Text>
+              </Typography>
             </View>
             <View style={{ gap: theme.spacing.md }}>
-              <View>
-                <Text style={styles.label}>Como você quer ser chamado(a)?</Text>
-                <TextInput
-                  value={name}
-                  onChangeText={setName}
-                  style={styles.input}
-                  placeholder="Seu nome"
-                  placeholderTextColor={theme.colors.textDim}
-                  autoFocus
-                  maxLength={40}
-                />
-              </View>
-              <View>
-                <Text style={styles.label}>Email (opcional)</Text>
-                <TextInput
-                  value={email}
-                  onChangeText={setEmail}
-                  style={styles.input}
-                  placeholder="voce@exemplo.com"
-                  placeholderTextColor={theme.colors.textDim}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  maxLength={100}
-                />
-              </View>
+              <Input
+                label="Como você quer ser chamado(a)?"
+                value={name}
+                onChangeText={setName}
+                placeholder="Seu nome"
+                autoFocus
+                maxLength={40}
+              />
+              <Input
+                label="Email (opcional)"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="voce@exemplo.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                maxLength={100}
+              />
             </View>
             <View style={{ gap: theme.spacing.sm }}>
               <Button
@@ -62,9 +55,9 @@ export default function Signup() {
                 }
                 disabled={!name.trim()}
               />
-              <Text style={styles.legal}>
+              <Typography variant="mono" tone="dim" align="center">
                 Ao continuar, você concorda com a Política de Privacidade e Termos.
-              </Text>
+              </Typography>
             </View>
           </View>
         </View>
@@ -79,20 +72,6 @@ function makeStyles(theme: Theme) {
     container: { flex: 1, paddingHorizontal: theme.spacing.lg, paddingTop: theme.spacing.lg, paddingBottom: theme.spacing.lg },
     back: { alignSelf: 'flex-start', padding: 6 },
     backText: { fontSize: 24, color: theme.colors.text },
-    kicker: { ...theme.text.xs, color: theme.colors.primary, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
-    title: { ...theme.text.h1, color: theme.colors.text },
-    subtitle: { ...theme.text.body, color: theme.colors.textSecondary },
-    label: { ...theme.text.sm, color: theme.colors.textSecondary, fontWeight: '600', marginBottom: 8 },
-    input: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.radius.md,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.md,
-      fontSize: 16,
-      color: theme.colors.text,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-    },
-    legal: { ...theme.text.xs, color: theme.colors.textDim, textAlign: 'center' },
+    kicker: { fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
   });
 }

@@ -4,6 +4,9 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
+import { PaywallCard } from '@/components/ui';
+import type { ArchetypeKey } from '@/lib/themes';
+import type { Personality } from '@/types';
 import { getTier } from '@/content/billing';
 import { modifiersToVisuals } from '@/game/evolution/PhenotypeRenderer';
 import { buildEvolutionState } from '@/game/evolution/EvolutionEngine';
@@ -15,6 +18,13 @@ import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { BillingTierId } from '@/content/billing';
+
+const PERSONALITY_TO_ARCHETYPE: Record<Personality, ArchetypeKey> = {
+  calmo: 'contemplativo',
+  motivador: 'explorador',
+  fofo: 'brincalhao',
+  sabio: 'sabio',
+};
 
 export default function Paywall() {
   const theme = useTheme();
@@ -127,6 +137,19 @@ export default function Paywall() {
         <Text style={styles.title}>{triggerCopy.title}</Text>
         <Text style={styles.sub}>{triggerCopy.body}</Text>
 
+        {/* PaywallCard emocional alinhado a arquétipo da personalidade —
+            mostra "antes/depois" em duas colunas com CTA destacado. */}
+        <PaywallCard
+          archetype={PERSONALITY_TO_ARCHETYPE[mascot?.personality ?? 'fofo']}
+          beforeTitle="Hoje"
+          beforeBody="Cuidados básicos, evolução natural."
+          afterTitle="Com Plus"
+          afterBody="Mascote 3D completo, mutações raras, IA emocional, sem limite."
+          ctaLabel={isPremium ? 'Continuar como Plus' : `Começar ${annual.trialDays} dias grátis`}
+          onPress={() => void handleSubscribe('plus_annual')}
+          helper={purchaseBlocked ? 'Configure RevenueCat antes de cobrar.' : undefined}
+        />
+
         <View style={styles.featureList}>
           {monthly.benefits.map(f => (
             <Text key={f} style={styles.feature}>✓  {f}</Text>
@@ -237,7 +260,7 @@ function makeStyles(theme: Theme) {
     paddingHorizontal: theme.spacing.sm, paddingVertical: 3,
     borderRadius: theme.radius.pill,
   },
-  badgeText: { color: '#fff', fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
+  badgeText: { color: theme.tokens.semantic.inkOnBrand, fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
   planTitle: { ...theme.text.bodyBold, color: theme.colors.text },
   planPrice: { ...theme.text.h3, color: theme.colors.primary, marginTop: 4 },
   planSub: { ...theme.text.xs, color: theme.colors.textSecondary },

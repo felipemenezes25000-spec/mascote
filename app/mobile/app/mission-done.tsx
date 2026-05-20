@@ -8,6 +8,7 @@ import { Mascot } from '@/components/Mascot';
 import { applyMissionCompletion, COINS_PER_MISSION } from '@/lib/checkin';
 import { buildMascotContextLine } from '@/lib/mascot-context-line';
 import { missions as missionsDb, todayLocal } from '@/lib/db';
+import { recordMissionOutcome } from '@/services/missions';
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import { processUnlocks } from '@/lib/unlock';
 import { useTheme } from '@/lib/useTheme';
@@ -56,6 +57,13 @@ export default function MissionDone() {
         return;
       }
       const out = await applyMissionCompletion({ profile, mascot, mission });
+      // Bandit feedback — alimenta o ranker pra a próxima sugestão. Só conta
+      // como "completion success" se o pipeline efetivamente registrou (não
+      // foi noop por idempotência). Missões legadas sem template_id são noop
+      // dentro do `recordMissionOutcome`.
+      if (mission.template_id && !out.alreadyCompleted) {
+        void recordMissionOutcome(mission.template_id, true);
+      }
       await refreshMascot();
       await refreshWallet();
       setResultMascot(out.mascot);
