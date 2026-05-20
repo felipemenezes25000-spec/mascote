@@ -48,6 +48,7 @@ export default function CheckInResult() {
     if (persistedRef.current || answers === null) return;
     if (!profile || !mascot) return;
     persistedRef.current = true;
+    let alive = true;
     void (async () => {
       let runningMascot = mascot;
       let totalXp = 0;
@@ -60,6 +61,7 @@ export default function CheckInResult() {
           value,
           analyticsPath: 'mission',
         });
+        if (!alive) return;
         runningMascot = out.mascot;
         totalXp += out.xpGained;
         totalCoins += out.coinsGained;
@@ -70,12 +72,16 @@ export default function CheckInResult() {
         for (const sc of out.unlocks.scenes)
           enqueueToast({ kind: 'scene', emoji: sc.emoji, title: sc.name, subtitle: 'Cenário desbloqueado' });
       }
+      if (!alive) return;
       setPersistedXp(totalXp);
       setCoinsGained(totalCoins);
       await refreshMascot();
       await refreshStreak();
       await refreshWallet();
     })();
+    return () => {
+      alive = false;
+    };
   }, [profile?.id, mascot?.id, answers]);
 
   if (!mascot) return <Redirect href='/splash' />;

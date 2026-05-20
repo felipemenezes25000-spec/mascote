@@ -38,7 +38,13 @@ export default function CheckIn() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <View style={styles.headerRow}>
-          <Pressable onPress={() => router.back()} hitSlop={10} style={styles.close}>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={10}
+            style={styles.close}
+            accessibilityRole="button"
+            accessibilityLabel="Voltar"
+          >
             <Text style={styles.closeText}>←</Text>
           </Pressable>
           <Text style={styles.kicker}>CHECK-IN {step + 1}/{QUESTIONS.length}</Text>

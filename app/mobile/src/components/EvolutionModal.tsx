@@ -40,6 +40,14 @@ export function EvolutionModal({ visible, mascot, fromPhase, onClose, storyTitle
 
   useEffect(() => {
     if (visible) {
+      // Cancela animações em curso antes de reassignar valores iniciais —
+      // sem isso, withRepeat anteriores continuam rodando enquanto novos
+      // são empilhados a cada abrir/fechar rápido (causa jank).
+      cancelAnimation(glow);
+      cancelAnimation(scale);
+      cancelAnimation(sparkle1);
+      cancelAnimation(sparkle2);
+      cancelAnimation(sparkle3);
       glow.value = 0;
       scale.value = 0.6;
       sparkle1.value = 0;

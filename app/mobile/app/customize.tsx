@@ -23,6 +23,7 @@ import {
   mascots as mascotsDb,
   missions as missionsDb,
   settings as settingsDb,
+  todayLocal,
   userScenes,
 } from '@/lib/db';
 import { PALETTES, type BrandPalette } from '@/lib/themes';
@@ -107,7 +108,7 @@ export default function Customize() {
     const updated = await mascotsDb.upsert({ user_id: mascot!.user_id, personality: p });
     setMascot(updated);
     // resetar missão do dia (vai gerar nova alinhada com a personalidade nova)
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayLocal();
     const todays = await missionsDb.forDate(profile!.id, today);
     for (const m of todays) {
       if (m.status === 'pending') await missionsDb.update(m.id, { status: 'expired' });
@@ -172,7 +173,13 @@ export default function Customize() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.headerRow}>
-        <Pressable onPress={() => router.back()} style={styles.close} hitSlop={10}>
+        <Pressable
+          onPress={() => router.back()}
+          style={styles.close}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar personalização"
+        >
           <Text style={styles.closeText}>✕</Text>
         </Pressable>
         <Text style={styles.headerTitle}>Personalizar</Text>

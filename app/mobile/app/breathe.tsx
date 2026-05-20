@@ -22,6 +22,7 @@ import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
 import { applyCheckinFully } from '@/lib/checkin';
+import { logger } from '@/lib/logger';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import { makeShadow } from '@/lib/themes';
@@ -91,6 +92,7 @@ export default function Breathe() {
     intervalRef.current = setInterval(() => {
       setSecondsLeft(s => Math.max(1, s - 1));
     }, 1000);
+    if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       if (next === 'inhale') transitionTo('hold', currentCycle);
       else if (next === 'hold') transitionTo('exhale', currentCycle);
@@ -144,9 +146,12 @@ export default function Breathe() {
         enqueueToast({ kind: 'accessory', emoji: acc.emoji, title: acc.name, subtitle: 'Equipe no Closet' });
       for (const sc of out.unlocks.scenes)
         enqueueToast({ kind: 'scene', emoji: sc.emoji, title: sc.name, subtitle: 'Cenário desbloqueado' });
-    } catch {
+    } catch (err) {
       // Mantém o usuário na tela "done" mesmo sem reward — não trava UI.
       // Tela já mostra "+25 XP" estático, mas o cap diário pode ter limitado.
+      logger.warn('[breathe] applyCheckinFully failed', {
+        reason: err instanceof Error ? err.message : 'unknown',
+      });
     }
   }
 

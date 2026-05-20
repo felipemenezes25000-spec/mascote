@@ -218,7 +218,10 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
       const today = todayLocal();
       const claimed = await dailyReward.claim(profile.id, today);
       if (!claimed) return;
-      const reward = DAILY_REWARDS[claimed.current_day - 1];
+      // Defensive bounds: se current_day > DAILY_REWARDS.length, wrap pelo ciclo.
+      const idx = Math.max(0, Math.min(DAILY_REWARDS.length - 1, claimed.current_day - 1));
+      const reward = DAILY_REWARDS[idx];
+      if (!reward) return;
       await walletDb.add(profile.id, reward.coins, reward.gems ?? 0);
       await refreshWallet();
       onClaimed(claimed.current_day);

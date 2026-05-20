@@ -5,6 +5,7 @@
 import { useEffect } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import Animated, {
+  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
@@ -28,14 +29,17 @@ export function Skeleton({ width = '100%', height = 16, radius = 8, style }: Pro
 
   useEffect(() => {
     if (reduceMotion) {
+      cancelAnimation(opacity);
       opacity.value = 0.55;
       return;
     }
+    cancelAnimation(opacity);
     opacity.value = withRepeat(
       withTiming(0.8, { duration: 900, easing: Easing.inOut(Easing.ease) }),
       -1,
       true
     );
+    return () => cancelAnimation(opacity);
   }, [reduceMotion]);
 
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));

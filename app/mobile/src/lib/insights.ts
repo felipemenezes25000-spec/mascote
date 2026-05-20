@@ -10,6 +10,7 @@
  */
 
 import { classifyIntent } from '@/content/replies';
+import { dateLocal } from '@/lib/db';
 import { analyzeSentiment } from '@/lib/ml/text/sentiment-lex';
 import { emptyChain, notableTransitions, trainSequence } from '@/lib/ml/temporal/markov';
 import { autoK, kmeans } from '@/lib/ml/cluster/kmeans';
@@ -74,7 +75,12 @@ export function buildDailyVibes(ctx: InsightContext): DailyVibe[] {
   const dailyVibeSum = new Map<string, { sum: number; n: number }>();
   for (const m of ctx.messages) {
     if (m.role !== 'user') continue;
-    const day = m.created_at.slice(0, 10);
+    // Local-date pra bater com `occurred_on` dos check-ins (todayLocal-based).
+    // Fallback pro slice se o ISO for malformado (defensivo).
+    const parsed = new Date(m.created_at);
+    const day = Number.isFinite(parsed.getTime())
+      ? dateLocal(parsed)
+      : m.created_at.slice(0, 10);
     const intent = classifyIntent(m.content);
     /* v8 ignore next — `?? 0` é guard pra intent fora de VIBE_BY_INTENT
        (classifyIntent retorna apenas Intents conhecidos do union type). */

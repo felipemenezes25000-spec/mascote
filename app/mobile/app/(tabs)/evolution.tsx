@@ -124,6 +124,7 @@ export default function EvolutionTab() {
   useFocusEffect(
     useCallback(() => {
       if (!profile) return;
+      let alive = true;
       void (async () => {
         const [owned, mutations, allCheckins, custom] = await Promise.all([
           inventory.listOwned(profile.id),
@@ -131,9 +132,12 @@ export default function EvolutionTab() {
           checkinsDb.listAll(profile.id),
           customizationDb.get(profile.id),
         ]);
+        if (!alive) return;
         const eq = owned.find(o => o.equipped);
         setEquippedAccId((eq?.accessory_id as AccessoryId) ?? 'none');
-        setActiveSceneId(await userScenes.getActive(profile.id));
+        const sceneId = await userScenes.getActive(profile.id);
+        if (!alive) return;
+        setActiveSceneId(sceneId);
         setUnlockedMutations(mutations);
         setCustomState(custom);
         // Conta checkins por hábito pra alimentar findNewlyUnlockedMutations
@@ -144,8 +148,12 @@ export default function EvolutionTab() {
         }
         setHabitCounts(counts);
         const snap = await mascotMemoryService.snapshot(profile.id, '');
+        if (!alive) return;
         setMemorySnippets(snap.entries.slice(0, 5).map(e => e.summary));
       })();
+      return () => {
+        alive = false;
+      };
     }, [profile?.id])
   );
 

@@ -406,8 +406,15 @@ async function markRecalled(
 ): Promise<void> {
   const ids = new Set(recalledIds);
   const nowIso = now.toISOString();
-  const updated = items.map(i => (ids.has(i.id) ? { ...i, last_recalled_at: nowIso } : i));
-  await write(userId, updated);
+  // Lock pra evitar clobber de writes concorrentes (rememberFromMessage,
+  // forgetMemory). Lemos `items` novamente DENTRO do lock pra não escrever
+  // sobre uma versão stale capturada antes.
+  await withLock(`memory:${userId}`, async () => {
+    const fresh = await read(userId);
+    const baseline = fresh.length > 0 ? fresh : items;
+    const updated = baseline.map(i => (ids.has(i.id) ? { ...i, last_recalled_at: nowIso } : i));
+    await write(userId, updated);
+  });
 }
 
 /** Retorna TODAS memórias (pra debug / tela "o que o mascote sabe sobre mim"). */

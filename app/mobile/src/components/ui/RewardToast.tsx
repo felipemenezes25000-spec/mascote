@@ -25,19 +25,35 @@ export function RewardToast({ visible, message, icon = 'sparkles', iconColor, du
   const theme = useTheme();
   const translateY = useRef(new Animated.Value(40)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+  const aliveRef = useRef(true);
+  useEffect(() => {
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
+    };
+  }, []);
   useEffect(() => {
     if (!visible) return;
-    Animated.parallel([
+    const enter = Animated.parallel([
       Animated.timing(translateY, { toValue: 0, duration: 220, useNativeDriver: true }),
       Animated.timing(opacity, { toValue: 1, duration: 220, useNativeDriver: true }),
-    ]).start();
+    ]);
+    enter.start();
+    const exitRef: { current: Animated.CompositeAnimation | null } = { current: null };
     const t = setTimeout(() => {
-      Animated.parallel([
+      exitRef.current = Animated.parallel([
         Animated.timing(translateY, { toValue: 40, duration: 200, useNativeDriver: true }),
         Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
-      ]).start(() => onDismiss?.());
+      ]);
+      exitRef.current.start(() => {
+        if (aliveRef.current) onDismiss?.();
+      });
     }, durationMs);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      enter.stop();
+      exitRef.current?.stop();
+    };
   }, [visible, durationMs, onDismiss, translateY, opacity]);
   if (!visible) return null;
   return (

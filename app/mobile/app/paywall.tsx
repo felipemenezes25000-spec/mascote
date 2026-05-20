@@ -47,13 +47,21 @@ export default function Paywall() {
 
   useEffect(() => {
     if (!profile) return;
-    void subscriptionService.getCurrentTier(profile.id).then(setTier);
+    let alive = true;
+    void subscriptionService.getCurrentTier(profile.id).then(t => {
+      if (alive) setTier(t);
+    });
+    return () => {
+      alive = false;
+    };
   }, [profile?.id]);
 
   useEffect(() => {
     if (!profile || !mascot) return;
+    let alive = true;
     void (async () => {
       const all = await checkinsDb.listAll(profile.id);
+      if (!alive) return;
       const state = buildEvolutionState({ mascot, checkins: all, streak });
       setBeforeVisuals(modifiersToVisuals(state.phenotype.displayModifiers));
       setAfterVisuals(modifiersToVisuals({
@@ -63,6 +71,9 @@ export default function Paywall() {
         activeEnergy: true,
       }));
     })();
+    return () => {
+      alive = false;
+    };
   }, [profile?.id, mascot, streak]);
 
   async function handleSubscribe(selected: BillingTierId) {

@@ -15,6 +15,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { MascotGestureKind } from '@/analytics';
+import { todayLocal, withLock } from '@/lib/db';
 
 const TOTAL_KEY = (userId: string) => `mascote:bond:total:${userId}`;
 const BY_KIND_KEY = (userId: string) => `mascote:bond:by_kind:${userId}`;
@@ -30,7 +31,7 @@ const GESTURE_WEIGHT: Record<MascotGestureKind, number> = {
 };
 
 function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
+  return todayLocal();
 }
 
 async function readNumber(key: string): Promise<number> {
@@ -82,30 +83,32 @@ export async function incrementBond(
   userId: string,
   kind: MascotGestureKind,
 ): Promise<{ added: number; capped: boolean }> {
-  const weight = GESTURE_WEIGHT[kind] ?? 1;
-  const today = todayKey();
-  const todayXp = await readNumber(DAILY_KEY(userId, today));
-  const room = Math.max(0, DAILY_CAP - todayXp);
-  const added = Math.min(weight, room);
-  const capped = added < weight;
+  return withLock(`bond:${userId}`, async () => {
+    const weight = GESTURE_WEIGHT[kind] ?? 1;
+    const today = todayKey();
+    const todayXp = await readNumber(DAILY_KEY(userId, today));
+    const room = Math.max(0, DAILY_CAP - todayXp);
+    const added = Math.min(weight, room);
+    const capped = added < weight;
 
-  try {
-    if (added > 0) {
-      const total = await readNumber(TOTAL_KEY(userId));
-      await Promise.all([
-        AsyncStorage.setItem(TOTAL_KEY(userId), String(total + added)),
-        AsyncStorage.setItem(DAILY_KEY(userId, today), String(todayXp + added)),
-      ]);
+    try {
+      if (added > 0) {
+        const total = await readNumber(TOTAL_KEY(userId));
+        await Promise.all([
+          AsyncStorage.setItem(TOTAL_KEY(userId), String(total + added)),
+          AsyncStorage.setItem(DAILY_KEY(userId, today), String(todayXp + added)),
+        ]);
+      }
+      // by-kind cresce sempre — útil pra "interagiu 500 vezes" mesmo
+      // depois do cap diário (pra não desencorajar quem brinca demais).
+      const byKind = (await readObject<Partial<Record<MascotGestureKind, number>>>(BY_KIND_KEY(userId))) ?? {};
+      byKind[kind] = (byKind[kind] ?? 0) + 1;
+      await AsyncStorage.setItem(BY_KIND_KEY(userId), JSON.stringify(byKind));
+    } catch {
+      /* persistência é otimização — não trava UX */
     }
-    // by-kind cresce sempre — útil pra "interagiu 500 vezes" mesmo
-    // depois do cap diário (pra não desencorajar quem brinca demais).
-    const byKind = (await readObject<Partial<Record<MascotGestureKind, number>>>(BY_KIND_KEY(userId))) ?? {};
-    byKind[kind] = (byKind[kind] ?? 0) + 1;
-    await AsyncStorage.setItem(BY_KIND_KEY(userId), JSON.stringify(byKind));
-  } catch {
-    /* persistência é otimização — não trava UX */
-  }
-  return { added, capped };
+    return { added, capped };
+  });
 }
 
 /** Label de tier amigável pra UI. Limiares conservadores. */
@@ -118,10 +121,15 @@ export function bondTierLabel(total: number): string {
 }
 
 export async function __resetBond(userId: string): Promise<void> {
-  const today = todayKey();
-  await Promise.all([
-    AsyncStorage.removeItem(TOTAL_KEY(userId)),
-    AsyncStorage.removeItem(DAILY_KEY(userId, today)),
-    AsyncStorage.removeItem(BY_KIND_KEY(userId)),
-  ]);
+  return withLock(`bond:${userId}`, async () => {
+    // Garbage-collect ALL daily keys for this user, não só o de hoje.
+    const allKeys = await AsyncStorage.getAllKeys();
+    const dailyPrefix = `mascote:bond:daily:${userId}:`;
+    const userDaily = allKeys.filter(k => k.startsWith(dailyPrefix));
+    await Promise.all([
+      AsyncStorage.removeItem(TOTAL_KEY(userId)),
+      AsyncStorage.removeItem(BY_KIND_KEY(userId)),
+      ...userDaily.map(k => AsyncStorage.removeItem(k)),
+    ]);
+  });
 }

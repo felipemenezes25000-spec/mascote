@@ -3,7 +3,7 @@
  * Mostra: data, título, snippet, badge de raridade (se houver), tone arquétipo.
  */
 import { View, StyleSheet, Pressable, type ViewStyle } from 'react-native';
-import { useTheme, useStyles } from '@/lib/useTheme';
+import { useStyles } from '@/lib/useTheme';
 import type { Theme, RarityLevel } from '@/lib/themes';
 import { Typography } from './Typography';
 import { Badge } from './Badge';
@@ -24,20 +24,10 @@ interface Props {
 }
 
 export function MemoryCard({ memory, onPress, style }: Props) {
-  const theme = useTheme();
   const styles = useStyles(makeStyles);
-  const Wrapper: any = onPress ? Pressable : View;
-  return (
-    <Wrapper
-      onPress={onPress}
-      accessibilityRole={onPress ? 'button' : undefined}
-      accessibilityLabel={`Memória: ${memory.title}`}
-      style={({ pressed }: { pressed?: boolean }) => [
-        styles.card,
-        pressed && { opacity: 0.92 },
-        style,
-      ]}
-    >
+  // Inner content idêntico em ambos os casos — só o wrapper muda.
+  const content = (
+    <>
       {memory.emoji ? <Typography style={styles.emoji}>{memory.emoji}</Typography> : null}
       <View style={styles.body}>
         <Typography variant="caption" tone="dim">{memory.date}</Typography>
@@ -49,7 +39,33 @@ export function MemoryCard({ memory, onPress, style }: Props) {
           </View>
         ) : null}
       </View>
-    </Wrapper>
+    </>
+  );
+  if (onPress) {
+    return (
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`Memória: ${memory.title}`}
+        style={({ pressed }) => [
+          styles.card,
+          pressed && { opacity: 0.92 },
+          style,
+        ]}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+  // View NÃO suporta style callable — fix do bug onde a função chegava cru
+  // e o card ficava sem estilo. Passamos array estático.
+  return (
+    <View
+      accessibilityLabel={`Memória: ${memory.title}`}
+      style={[styles.card, style]}
+    >
+      {content}
+    </View>
   );
 }
 

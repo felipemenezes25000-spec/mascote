@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/Icon';
+import { dateLocal, daysBetween, todayLocal } from '@/lib/db';
 import { buildMascotDiary, type DiaryEntry, type DiaryEntryKind } from '@/lib/diary/mascotDiary';
 import { listMemories, type MemoryItem } from '@/lib/memory';
 import { useTheme } from '@/lib/useTheme';
@@ -60,32 +61,48 @@ export default function DiaryScreen() {
 
   useEffect(() => {
     if (!profile?.id || !mascot) return;
+    let alive = true;
     void (async () => {
       const result = await buildMascotDiary({
         mascot,
         userId: profile.id,
         displayName: profile.display_name,
       });
-      setEntries(result);
+      if (alive) setEntries(result);
     })();
+    return () => {
+      alive = false;
+    };
   }, [profile?.id, mascot?.id]);
 
   useEffect(() => {
     if (!profile?.id) return;
+    let alive = true;
     void (async () => {
       const all = await listMemories(profile.id);
+      if (!alive) return;
       const sorted = [...all].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
       setMemories(sorted);
     })();
+    return () => {
+      alive = false;
+    };
   }, [profile?.id]);
 
   const memoriesByBucket = useMemo(() => {
     if (!memories) return null;
     const map: Record<string, MemoryItem[]> = {};
+    const today = todayLocal();
     for (const m of memories) {
-      const ageDays = Math.floor((Date.now() - new Date(m.created_at).getTime()) / 86_400_000);
+      // Bucket por DIA LOCAL — memória de 23h ontem com user abrindo às 1h
+      // de hoje aparece em "Esta semana", não "Hoje".
+      const parsed = new Date(m.created_at);
+      const memDay = Number.isFinite(parsed.getTime())
+        ? dateLocal(parsed)
+        : m.created_at.slice(0, 10);
+      const ageDays = daysBetween(memDay, today);
       const bucket =
         ageDays <= 0 ? 'Hoje'
           : ageDays <= 7 ? 'Esta semana'

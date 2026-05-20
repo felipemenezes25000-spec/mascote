@@ -60,7 +60,9 @@ const ORDER: Record<SafetyFlag, number> = {
 /* v8 ignore next 3 — helper exportado pra uso futuro; testes diretos não
    conseguem cobrir branch `<` porque é privado dentro do ensemble. */
 function moreSevere(a: SafetyFlag, b: SafetyFlag): SafetyFlag {
-  return ORDER[a] >= ORDER[b] ? a : b;
+  // `?? 0` defensivo: se SafetyFlag ganhar um nível e ORDER não for atualizado,
+  // a comparação degenera pra "safe" em vez de NaN >= num = false silencioso.
+  return (ORDER[a] ?? 0) >= (ORDER[b] ?? 0) ? a : b;
 }
 
 export function classifySafetyEnsemble(

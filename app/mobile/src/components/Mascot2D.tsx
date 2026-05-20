@@ -207,6 +207,21 @@ function MascotImpl({
     }
   }, [reactTrigger]);
 
+  // Cleanup global: cancela todas as animações em curso no unmount.
+  // Sem isso, animações de phase-transition / hop continuam rodando worklets
+  // no UI thread após o componente sair da árvore.
+  useEffect(() => {
+    return () => {
+      cancelAnimation(hop);
+      cancelAnimation(breath);
+      cancelAnimation(blink);
+      cancelAnimation(phaseScale);
+      cancelAnimation(phaseFlash);
+      cancelAnimation(phaseRotate);
+      cancelAnimation(moodTilt);
+    };
+  }, []);
+
   const wrapStyle = useAnimatedStyle(() => ({
     transform: [
       { translateY: hop.value },

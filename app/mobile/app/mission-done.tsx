@@ -47,16 +47,19 @@ export default function MissionDone() {
     if (persistedRef.current) return;
     if (!profile || !mascot) return;
     persistedRef.current = true;
+    let alive = true;
     void (async () => {
       const mid = params.mid;
       const today = todayLocal();
       const todays = await missionsDb.forDate(profile.id, today);
+      if (!alive) return;
       const mission = mid ? todays.find(m => m.id === mid) ?? todays[0] : todays[0];
       if (!mission) {
-        setReward({ xp: 0, coins: 0, leveledUp: false, phaseChanged: false });
+        if (alive) setReward({ xp: 0, coins: 0, leveledUp: false, phaseChanged: false });
         return;
       }
       const out = await applyMissionCompletion({ profile, mascot, mission });
+      if (!alive) return;
       // Bandit feedback — alimenta o ranker pra a próxima sugestão. Só conta
       // como "completion success" se o pipeline efetivamente registrou (não
       // foi noop por idempotência). Missões legadas sem template_id são noop
@@ -66,6 +69,7 @@ export default function MissionDone() {
       }
       await refreshMascot();
       await refreshWallet();
+      if (!alive) return;
       setResultMascot(out.mascot);
       setReward({
         xp: out.xpGained,
@@ -79,11 +83,13 @@ export default function MissionDone() {
         out.phaseChanged ? 'evolution' : 'mission_done',
         apiKey,
       );
+      if (!alive) return;
       setMascotLine(line);
       // Disparos de unlock pós-mission (achievements/scenes destravados pelo
       // novo level ou phase) — ficam disponíveis ao voltar pra Home.
       if (!out.alreadyCompleted && streak) {
         const unlocks = await processUnlocks(profile, out.mascot, streak);
+        if (!alive) return;
         for (const a of unlocks.achievements)
           enqueueToast({ kind: 'achievement', emoji: a.emoji, title: a.title, subtitle: a.description });
         for (const acc of unlocks.accessories)
@@ -92,6 +98,9 @@ export default function MissionDone() {
           enqueueToast({ kind: 'scene', emoji: sc.emoji, title: sc.name, subtitle: 'Cenário desbloqueado' });
       }
     })();
+    return () => {
+      alive = false;
+    };
   }, [profile?.id, mascot?.id]);
 
   useEffect(() => {

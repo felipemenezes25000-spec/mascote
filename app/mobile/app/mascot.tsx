@@ -315,20 +315,20 @@ function estimateProgress(cond: MutationCondition, ctx: ProgressContext): number
   if (cond.geneAbove) {
     for (const [key, threshold] of Object.entries(cond.geneAbove)) {
       const v = ctx.genome[key as keyof typeof ctx.genome] ?? 0;
-      scores.push(Math.min(1, v / threshold));
+      scores.push(threshold > 0 ? Math.min(1, v / threshold) : 1);
     }
   }
   if (cond.habitCheckinsAtLeast) {
     for (const [habit, count] of Object.entries(cond.habitCheckinsAtLeast) as [HabitKind, number][]) {
       const v = ctx.habitCheckinCounts[habit] ?? 0;
-      scores.push(Math.min(1, v / count));
+      scores.push(count > 0 ? Math.min(1, v / count) : 1);
     }
   }
   if (typeof cond.streakAtLeast === 'number') {
-    scores.push(Math.min(1, ctx.currentStreak / cond.streakAtLeast));
+    scores.push(cond.streakAtLeast > 0 ? Math.min(1, ctx.currentStreak / cond.streakAtLeast) : 1);
   }
   if (typeof cond.daysSinceCreatedAtLeast === 'number') {
-    scores.push(Math.min(1, ctx.daysSinceCreated / cond.daysSinceCreatedAtLeast));
+    scores.push(cond.daysSinceCreatedAtLeast > 0 ? Math.min(1, ctx.daysSinceCreated / cond.daysSinceCreatedAtLeast) : 1);
   }
   if (scores.length === 0) return 0;
   return scores.reduce((s, n) => s + n, 0) / scores.length;

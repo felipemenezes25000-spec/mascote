@@ -58,6 +58,9 @@ function MascotAmbientImpl({ size, children, reduceMotion, modeOverride }: Props
   // Curious tilt: rotação suave sin oscilante
   const tilt = useSharedValue(0);
   useEffect(() => {
+    // Cancela qualquer loop em curso ANTES de reassignar — sem isso,
+    // toggles rápidos de shouldAnimate empilham withRepeat órfãos.
+    cancelAnimation(tilt);
     if (!shouldAnimate) {
       tilt.value = 0;
       return;

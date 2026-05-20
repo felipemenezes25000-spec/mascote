@@ -32,7 +32,16 @@ export class VectorStore<M = Record<string, unknown>> {
   // mesmo AsyncStorage.getItem em vez de dispará-lo duas vezes e perderem
   // entre si o conteúdo do `this.records`.
   private loadingPromise: Promise<void> | null = null;
+  // Cauda da fila de escritas. Serializa upsert/remove pra evitar dois
+  // findIndex(-1) seguidos com o mesmo id (que produziria duplicatas).
+  private writeChain: Promise<unknown> = Promise.resolve();
   constructor(private readonly namespace: string, private readonly maxRecords = 1000) {}
+
+  private enqueueWrite<T>(fn: () => Promise<T>): Promise<T> {
+    const next = this.writeChain.then(fn, fn);
+    this.writeChain = next.catch(() => undefined);
+    return next;
+  }
 
   async load(): Promise<void> {
     if (this.loaded) return;
@@ -66,16 +75,20 @@ export class VectorStore<M = Record<string, unknown>> {
 
   async upsert(record: VectorRecord<M>): Promise<void> {
     await this.load();
-    const idx = this.records.findIndex(r => r.id === record.id);
-    if (idx >= 0) this.records[idx] = record;
-    else this.records.push(record);
-    await this.save();
+    return this.enqueueWrite(async () => {
+      const idx = this.records.findIndex(r => r.id === record.id);
+      if (idx >= 0) this.records[idx] = record;
+      else this.records.push(record);
+      await this.save();
+    });
   }
 
   async remove(id: string): Promise<void> {
     await this.load();
-    this.records = this.records.filter(r => r.id !== id);
-    await this.save();
+    return this.enqueueWrite(async () => {
+      this.records = this.records.filter(r => r.id !== id);
+      await this.save();
+    });
   }
 
   async search(

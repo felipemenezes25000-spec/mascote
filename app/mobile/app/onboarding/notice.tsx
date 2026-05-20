@@ -62,7 +62,7 @@ export default function Notice() {
     } catch (e) {
       // Pacote é nice-to-have — nunca bloqueia entrada na home.
     }
-    router.replace('/(tabs)?welcome=1');
+    router.replace({ pathname: '/(tabs)', params: { welcome: '1' } });
   }
 
   return (

@@ -204,6 +204,9 @@ export async function runProactiveScan(ctx: ProactiveContext): Promise<Proactive
       }
       const trigger = await def.test(ctx);
       if (!trigger.fire) return null;
+      // markFired ANTES de notify: se o app for morto entre os dois, é
+      // melhor perder uma notificação do que disparar duplicada no próximo scan.
+      await markFired(ctx.profile.id, def.id);
       const created = await notify(
         ctx.profile,
         'reminder',
@@ -217,7 +220,6 @@ export async function runProactiveScan(ctx: ProactiveContext): Promise<Proactive
       /* v8 ignore next — notify retorna null sob push_enabled=false / pause /
          quiet hours; testado mas o branch específico marca aqui. */
       if (!created) return null;
-      await markFired(ctx.profile.id, def.id);
       return def.id;
     });
     if (result) fired.push(result);

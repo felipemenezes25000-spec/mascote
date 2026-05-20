@@ -21,6 +21,7 @@ import {
 } from '@/lib/ml/recommend/bandit';
 import { pickMissionWithBandit, type RankingContext } from '@/lib/ml/recommend/mission-ranker';
 import { missionCatalog, pickDailyMission, type MissionTemplate } from '@/content/missions';
+import { withLock } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import type { HabitKind, MascotMood, Personality } from '@/types';
 
@@ -113,9 +114,13 @@ export async function recordMissionOutcome(missionTemplateId: string, completed:
     logger.warn('[bandit] unknown mission id, skipping reward', { missionTemplateId });
     return;
   }
-  const state = await loadBandit();
-  recordReward(state, missionTemplateId, completed ? 1 : 0);
-  await saveBandit(state);
+  // Lock pra evitar read-modify-write race quando duas missões fecham juntas
+  // (raro mas possível em StrictMode/re-mount do result screen).
+  return withLock('bandit_missions', async () => {
+    const state = await loadBandit();
+    recordReward(state, missionTemplateId, completed ? 1 : 0);
+    await saveBandit(state);
+  });
 }
 
 /**

@@ -151,7 +151,7 @@ function renderScene(id: string, theme: Theme) {
                   y={y + 4}
                   width={18}
                   height="32"
-                  fill={['#C44747', '#D9A04A', '#5E8E5C', '#3E6FAB', '#A66BCB', '#FF8030'][((x + y) / 30) | 0 % 6]}
+                  fill={['#C44747', '#D9A04A', '#5E8E5C', '#3E6FAB', '#A66BCB', '#FF8030'][(((x + y) / 30) | 0) % 6]}
                 />
               ))}
               <Rect x="20" y={y + 38} width="360" height="4" fill="#3D2E1F" />

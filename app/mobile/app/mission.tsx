@@ -64,7 +64,13 @@ export default function MissionDetail() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.headerRow}>
-          <Pressable onPress={() => router.back()} hitSlop={10} style={styles.close}>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={10}
+            style={styles.close}
+            accessibilityRole="button"
+            accessibilityLabel="Voltar"
+          >
             <Text style={styles.closeText}>←</Text>
           </Pressable>
           <Text style={styles.kicker}>MISSÃO DE HOJE</Text>

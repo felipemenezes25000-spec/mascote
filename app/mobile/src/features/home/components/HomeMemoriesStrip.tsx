@@ -51,13 +51,18 @@ export function HomeMemoriesStrip({ userId, refreshKey }: Props) {
 
   useEffect(() => {
     if (!userId) return;
+    let alive = true;
     void (async () => {
       const all = await listMemories(userId);
+      if (!alive) return;
       const sorted = [...all].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
       setMemories(sorted.slice(0, 3));
     })();
+    return () => {
+      alive = false;
+    };
   }, [userId, refreshKey]);
 
   if (memories.length === 0) return null;

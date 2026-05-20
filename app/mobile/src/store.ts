@@ -166,22 +166,23 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   enqueueToast(t) {
-    const state = get();
-    if (state.currentToast === null) {
-      set({ currentToast: t });
-    } else {
-      set({ toastQueue: [...state.toastQueue, t] });
-    }
+    // Forma funcional evita race quando múltiplos toasts são enfileirados
+    // no mesmo tick (ex: processUnlocks disparando vários).
+    set(state =>
+      state.currentToast === null
+        ? { currentToast: t }
+        : { toastQueue: [...state.toastQueue, t] },
+    );
   },
 
   shiftToast() {
-    const state = get();
-    if (state.toastQueue.length > 0) {
-      const [next, ...rest] = state.toastQueue;
-      set({ currentToast: next, toastQueue: rest });
-    } else {
-      set({ currentToast: null });
-    }
+    set(state => {
+      if (state.toastQueue.length > 0) {
+        const [next, ...rest] = state.toastQueue;
+        return { currentToast: next, toastQueue: rest };
+      }
+      return { currentToast: null };
+    });
   },
 
   async driftDnaFromHabit(habit, intensity) {

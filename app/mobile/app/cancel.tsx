@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
-import { addDays, settings as settingsDb } from '@/lib/db';
+import { addDays, settings as settingsDb, todayLocal } from '@/lib/db';
 import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
@@ -19,7 +19,7 @@ export default function Cancel() {
 
   async function pause30() {
     if (!profile) return;
-    const until = addDays(new Date().toISOString().slice(0, 10), 30);
+    const until = addDays(todayLocal(), 30);
     await settingsDb.update(profile.id, { paused_until: until });
     await refreshSettings();
     setStep('pause');

@@ -85,9 +85,8 @@ export default function NameStep() {
       pronoun: (params.pronoun as 'ele' | 'ela' | 'elu') ?? 'ele',
       primaryGoal: (params.primaryGoal as UserGoal) ?? 'saude_geral',
     };
-    const seed = params.dna_seed
-      ? parseInt(params.dna_seed, 10)
-      : seedFromOnboardingAnswers(answers);
+    const parsedSeed = params.dna_seed ? parseInt(params.dna_seed, 10) : NaN;
+    const seed = Number.isFinite(parsedSeed) ? parsedSeed : seedFromOnboardingAnswers(answers);
     const input = buildPersonalizationInput(answers, mascotName.trim() || defaultMascotName, personality);
     const genotype = generateGenotype({ ...input, seed });
     const dna = sanitizeGenome(genotype.genome);

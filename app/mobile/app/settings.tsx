@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
 import { personalities, getPersonality } from '@/content/personalities';
-import { addDays, exportAll, importAll, mascots as mascotsDb, profiles, resetAll, settings as settingsDb } from '@/lib/db';
+import { addDays, exportAll, importAll, mascots as mascotsDb, profiles, resetAll, settings as settingsDb, todayLocal } from '@/lib/db';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -67,7 +67,7 @@ export default function SettingsScreen() {
 
   async function pause30Days() {
     if (!profile) return;
-    const until = addDays(new Date().toISOString().slice(0, 10), 30);
+    const until = addDays(todayLocal(), 30);
     await settingsDb.update(profile.id, { paused_until: until });
     await refreshSettings();
     Alert.alert('Pausa ativada', `Mascote pausado até ${until}. Volta quando quiser.`);
@@ -169,12 +169,18 @@ export default function SettingsScreen() {
 
   const themeOptions: ThemeMode[] = ['system', 'light', 'dark'];
   const pmeta = getPersonality(mascot.personality);
-  const paused = settings.paused_until && settings.paused_until > new Date().toISOString().slice(0, 10);
+  const paused = settings.paused_until && settings.paused_until > todayLocal();
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.headerRow}>
-        <Pressable onPress={() => router.back()} hitSlop={10} style={styles.close}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={10}
+          style={styles.close}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar configurações"
+        >
           <Text style={styles.closeText}>✕</Text>
         </Pressable>
         <Text style={styles.headerTitle}>Configurações</Text>

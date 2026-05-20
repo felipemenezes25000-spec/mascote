@@ -69,11 +69,22 @@ export function Tour({ visible, onDone }: Props) {
       opacity.value = withTiming(0, { duration: 200 });
       if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
       exitTimerRef.current = setTimeout(() => {
+        exitTimerRef.current = null;
         onDone();
         setStep(0);
         opacity.value = withTiming(1);
       }, 220);
     }
+  }
+
+  function skip() {
+    // Limpa timer pendente — se o user pulou logo após "Bora começar",
+    // o setTimeout ainda firaria onDone+setStep depois.
+    if (exitTimerRef.current) {
+      clearTimeout(exitTimerRef.current);
+      exitTimerRef.current = null;
+    }
+    onDone();
   }
 
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
@@ -82,7 +93,7 @@ export function Tour({ visible, onDone }: Props) {
   if (!visible) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onDone}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={skip}>
       <Animated.View style={[styles.backdrop, animatedStyle]}>
         <View style={styles.card}>
           <View style={styles.iconCircle}>
@@ -111,7 +122,7 @@ export function Tour({ visible, onDone }: Props) {
               strokeWidth={2.4}
             />
           </PressableScale>
-          <Pressable onPress={onDone} hitSlop={10} style={styles.skip} accessibilityLabel="Pular tour">
+          <Pressable onPress={skip} hitSlop={10} style={styles.skip} accessibilityLabel="Pular tour">
             <Text style={styles.skipText}>pular</Text>
           </Pressable>
         </View>

@@ -5,11 +5,12 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { BillingTierId } from '@/content/billing';
+import { todayLocal } from '@/lib/db';
 
 const BUDGET_KEY = (userId: string) => `mascote:ai_cost:${userId}:${todayKey()}`;
 
 function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
+  return todayLocal();
 }
 
 /** Tokens estimados por resposta (gpt-4o-mini ~ prompt+completion). */

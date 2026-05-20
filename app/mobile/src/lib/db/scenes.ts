@@ -13,16 +13,26 @@ async function readScenes(): Promise<OwnedScene[]> {
     return r;
   });
   if (dirty) {
-    const seen = new Map<string, OwnedScene>();
-    for (const r of migrated) {
-      const key = `${r.user_id}|${r.scene_id}`;
-      const prev = seen.get(key);
-      if (!prev) seen.set(key, r);
-      else seen.set(key, { ...prev, active: prev.active || r.active });
-    }
-    const deduped = Array.from(seen.values());
-    await write<OwnedScene>('scenes', deduped);
-    return deduped;
+    // Wrap a migração no lock pra evitar dois `readScenes` paralelos
+    // (ex: tab evolution + home no boot) ambos rodando a fix com snapshots
+    // diferentes e clobbando o write.
+    return withLock('scenes', async () => {
+      const fresh = await read<OwnedScene>('scenes');
+      const migratedFresh = fresh.map(r => {
+        const newId = normalizeSceneId(r.scene_id);
+        return newId !== r.scene_id ? { ...r, scene_id: newId } : r;
+      });
+      const seen = new Map<string, OwnedScene>();
+      for (const r of migratedFresh) {
+        const key = `${r.user_id}|${r.scene_id}`;
+        const prev = seen.get(key);
+        if (!prev) seen.set(key, r);
+        else seen.set(key, { ...prev, active: prev.active || r.active });
+      }
+      const deduped = Array.from(seen.values());
+      await write<OwnedScene>('scenes', deduped);
+      return deduped;
+    });
   }
   return migrated;
 }

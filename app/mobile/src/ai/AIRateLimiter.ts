@@ -4,12 +4,13 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { BillingTierId } from '@/content/billing';
+import { todayLocal } from '@/lib/db';
 import { entitlementService } from '@/services/subscription/EntitlementService';
 
 const KEY = (userId: string) => `mascote:ai_usage:${userId}:${todayKey()}`;
 
 function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
+  return todayLocal();
 }
 
 export interface RateLimitResult {

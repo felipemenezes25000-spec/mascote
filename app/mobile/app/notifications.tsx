@@ -61,9 +61,13 @@ export default function NotificationsScreen() {
 
   async function tap(n: InAppNotification) {
     await notifDb.markRead(n.id);
-    if (n.kind === 'weekly_report') router.replace('/weekly-report');
-    else if (n.kind === 'evolution' || n.kind === 'level_up') router.back();
-    else router.back();
+    if (n.kind === 'weekly_report') {
+      router.replace('/weekly-report');
+      return;
+    }
+    // Deep-link safe: se a tela foi aberta direto (sem back stack), cai pro home.
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)');
   }
 
   if (!profile) return <Redirect href="/splash" />;
