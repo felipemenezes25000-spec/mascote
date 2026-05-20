@@ -12,6 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useTheme } from '@/lib/useTheme';
+import { useStore } from '@/store';
 
 interface Props {
   width?: number | string;
@@ -22,20 +23,27 @@ interface Props {
 
 export function Skeleton({ width = '100%', height = 16, radius = 8, style }: Props) {
   const theme = useTheme();
-  const opacity = useSharedValue(0.4);
+  const reduceMotion = useStore(s => s.settings?.reduce_motion);
+  const opacity = useSharedValue(reduceMotion ? 0.55 : 0.4);
 
   useEffect(() => {
+    if (reduceMotion) {
+      opacity.value = 0.55;
+      return;
+    }
     opacity.value = withRepeat(
       withTiming(0.8, { duration: 900, easing: Easing.inOut(Easing.ease) }),
       -1,
       true
     );
-  }, []);
+  }, [reduceMotion]);
 
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
+  const Box = reduceMotion ? View : Animated.View;
+
   return (
-    <Animated.View
+    <Box
       style={[
         styles.base,
         {
@@ -44,7 +52,7 @@ export function Skeleton({ width = '100%', height = 16, radius = 8, style }: Pro
           borderRadius: radius,
           backgroundColor: theme.colors.border,
         },
-        animatedStyle,
+        ...(reduceMotion ? [] : [animatedStyle]),
         style,
       ]}
     />

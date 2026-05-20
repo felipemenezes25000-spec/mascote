@@ -44,6 +44,7 @@ export default function RootLayout() {
   const currentToast = useStore(s => s.currentToast);
   const shiftToast = useStore(s => s.shiftToast);
   const theme = useTheme();
+  const reduceMotion = useStore(s => s.settings?.reduce_motion);
   const statusBarStyle = theme.mode === 'dark' ? 'light' : 'dark';
   const [hydrateError, setHydrateError] = useState<string | null>(null);
 
@@ -89,6 +90,8 @@ export default function RootLayout() {
               setHydrateError(e instanceof Error ? e.message : 'Falha ao carregar dados')
             );
           }}
+          accessibilityRole="button"
+          accessibilityLabel="Tentar carregar de novo"
           style={{
             backgroundColor: theme.colors.primary,
             paddingHorizontal: 24,
@@ -127,8 +130,8 @@ export default function RootLayout() {
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: theme.colors.bg },
-            animation: 'slide_from_right',
-            animationDuration: 280,
+            animation: reduceMotion ? 'fade' : 'slide_from_right',
+            animationDuration: reduceMotion ? 0 : 280,
           }}
         >
           <Stack.Screen name="index" />

@@ -728,6 +728,11 @@ function freshSettings(user_id: string): Settings {
 }
 
 export const settings = {
+  /** True quando o usuário já tem row persistida (não só defaults em memória). */
+  async hasPersisted(user_id: string): Promise<boolean> {
+    const rows = await read<Settings>('settings');
+    return rows.some(s => s.user_id === user_id);
+  },
   /** Pure getter: retorna config sem persistir. */
   async get(user_id: string): Promise<Settings> {
     const rows = await read<Settings>('settings');

@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
 import { getPersonality } from '@/content/personalities';
+import { readSystemReduceMotion } from '@/lib/accessibility';
 import { mascots, profiles, settings as settingsDb, streaks, wallet as walletDb } from '@/lib/db';
 import { seedFromOnboardingAnswers, mapMoodToMascot, type OnboardingAnswers, type StylePreset } from '@/lib/onboarding-evolution';
 import { buildPersonalizationInput } from '@/lib/onboarding-evolution';
@@ -112,10 +113,12 @@ export default function NameStep() {
     } catch {
       /* memória não bloqueia onboarding */
     }
+    const osReduceMotion = await readSystemReduceMotion();
     await settingsDb.update(profile.id, {
       first_mission_pending: true,
       onboarding_bond: answers.bondType,
       onboarding_tone: answers.communicationTone,
+      ...(osReduceMotion ? { reduce_motion: true } : {}),
     } as Record<string, unknown>);
     const [streak, settings, wallet] = await Promise.all([
       streaks.get(profile.id),

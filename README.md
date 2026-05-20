@@ -10,7 +10,8 @@
 
 ---
 
-[![Tests](https://img.shields.io/badge/tests-1714%2F1714-brightgreen?style=for-the-badge)](app/mobile/tests/)
+[![Tests](https://img.shields.io/badge/tests-1779%2F1779-brightgreen?style=for-the-badge)](app/mobile/tests/)
+[![CI](https://img.shields.io/badge/CI-typecheck%20%2B%20tests-blue?style=for-the-badge)](.github/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-98.9%25-brightgreen?style=for-the-badge)](app/mobile/vitest.config.ts)
 [![Typecheck](https://img.shields.io/badge/typecheck-clean-blue?style=for-the-badge)](app/mobile/tsconfig.json)
 [![License](https://img.shields.io/badge/license-private-lightgrey?style=for-the-badge)](LICENSE)
@@ -150,7 +151,7 @@ Camada premium **100% implementada em código** — billing real depende só de 
 
 - **Docs:** [`docs/PREMIUM_STRATEGY.md`](docs/PREMIUM_STRATEGY.md), [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md)
 - **Env:** copie [`app/mobile/.env.example`](app/mobile/.env.example) → `.env` (`mock` local, `revenuecat` em produção)
-- **Testes:** `cd app/mobile && npm test` (1757+)
+- **Testes:** `npm test` na raiz ou `cd app/mobile && npm test` (1778+)
 
 ---
 
@@ -401,11 +402,10 @@ Cada preset é genome base + **`genomeFromPreset(seed, preset, variance=0.1)`** 
 
 Esse é um projeto fechado em desenvolvimento ativo. Para questões técnicas, abra issue.
 
-Antes de qualquer PR:
+Antes de qualquer PR (veja também [CONTRIBUTING.md](CONTRIBUTING.md)):
 ```bash
-cd app/mobile
 npm run typecheck     # Deve passar 100%
-npm test              # 1.653/1.653
+npm test              # 1779/1779
 ```
 
 ---

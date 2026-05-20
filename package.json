@@ -1,0 +1,13 @@
+{
+  "name": "mascote",
+  "private": true,
+  "description": "Digital Living Identity — criatura procedural que evolui com seus hábitos",
+  "scripts": {
+    "mobile": "npm --prefix app/mobile",
+    "start": "npm --prefix app/mobile run start",
+    "web": "npm --prefix app/mobile run web",
+    "test": "npm --prefix app/mobile test",
+    "typecheck": "npm --prefix app/mobile run typecheck",
+    "test:coverage": "npm --prefix app/mobile run test:coverage"
+  }
+}

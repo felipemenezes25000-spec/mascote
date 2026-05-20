@@ -2,8 +2,9 @@
  * Zustand store — estado global do app.
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as accessibility from '@/lib/accessibility';
 import { useStore } from '@/store';
 import { mascots, profiles, settings, streaks, wallet as walletDb } from '@/lib/db';
 
@@ -39,6 +40,17 @@ describe('hydrate', () => {
     expect(s.hydrated).toBe(true);
     expect(s.profile?.display_name).toBe('Felipe');
     expect(s.mascot?.name).toBe('X');
+  });
+
+  it('primeira sessão + SO reduce motion → persiste reduce_motion', async () => {
+    vi.spyOn(accessibility, 'readSystemReduceMotion').mockResolvedValue(true);
+    const p = await profiles.upsert({ display_name: 'A11y' });
+    await mascots.upsert({ user_id: p.id, name: 'Y' });
+    await useStore.getState().hydrate();
+    expect(useStore.getState().settings?.reduce_motion).toBe(true);
+    const persisted = await settings.get(p.id);
+    expect(persisted.reduce_motion).toBe(true);
+    vi.restoreAllMocks();
   });
 });
 

@@ -165,6 +165,9 @@ vi.mock('react-native', () => {
     InteractionManager: {
       runAfterInteractions: (cb: () => void) => { cb(); return { cancel: () => undefined }; },
     },
+    AccessibilityInfo: {
+      isReduceMotionEnabled: vi.fn(() => Promise.resolve(false)),
+    },
   };
 });
 

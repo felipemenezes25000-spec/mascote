@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { HabitKind, Mascot, MascotDNA, Profile, Settings, Streak, Wallet } from '@/types';
 import { applyHabitDrift, sanitizeGenome } from '@/lib/dna';
+import { readSystemReduceMotion } from '@/lib/accessibility';
 import { mascots, profiles, runMigrations, settings, streaks, wallet as walletDb } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { SECURE_KEYS, secureGet, secureRemove, secureSet } from '@/lib/secureStore';
@@ -77,14 +78,27 @@ export const useStore = create<AppState>((set, get) => ({
     // numa única espera. Promise.all + catch defaultivo por valor.
     /* v8 ignore start — todos os getters abaixo têm try/catch interno;
        estes .catch são redundância defensiva caso o contrato mude. */
-    const [mascot, streak, set_, w] = await Promise.all([
+    const [mascot, streak, set_, w, settingsPersisted] = await Promise.all([
       mascots.forUser(profile.id).catch(() => null),
       streaks.get(profile.id).catch(() => null),
       settings.get(profile.id).catch(() => null),
       walletDb.get(profile.id).catch(() => null),
+      settings.hasPersisted(profile.id).catch(() => false),
     ]);
+    let resolvedSettings = set_;
+    // Primeira sessão: honra "reduzir movimento" do SO antes de qualquer toggle manual.
+    if (!settingsPersisted && resolvedSettings) {
+      try {
+        const osReduce = await readSystemReduceMotion();
+        if (osReduce) {
+          resolvedSettings = await settings.update(profile.id, { reduce_motion: true });
+        }
+      } catch {
+        // intencional: defaults seguem válidos
+      }
+    }
     /* v8 ignore stop */
-    set({ profile, mascot, streak, settings: set_, wallet: w, openAiKey, hydrated: true });
+    set({ profile, mascot, streak, settings: resolvedSettings, wallet: w, openAiKey, hydrated: true });
   },
 
   setProfile(p) {
