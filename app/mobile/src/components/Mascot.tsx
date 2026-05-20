@@ -13,7 +13,7 @@
  * **Princípio:** zero quebra. Se algo falha, cai pro 2D sem aviso.
  */
 
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import type {
   MascotCustomization,
@@ -25,7 +25,8 @@ import type {
 import { detectCapabilities } from '@/lib/deviceCapabilities';
 import { useStore } from '@/store';
 import { Mascot2D, type AccessoryId } from '@/components/Mascot2D';
-import { Mascot3D } from '@/components/Mascot3D';
+import { Mascot3DLazy } from '@/components/Mascot3DLazy';
+import { Mascot3DBoundary } from '@/components/Mascot3DBoundary';
 import type { MascotEvolutionVisuals } from '@/game/evolution/PhenotypeRenderer';
 import type { MascotAnimationKind } from '@/lib/animation-triggers';
 
@@ -74,13 +75,15 @@ function MascotImpl(props: Props) {
   const mascot = useStore(s => s.mascot);
   const dna = dnaOverride ?? mascot?.dna;
   const seed = seedOverride ?? mascot?.dna_seed ?? 0;
+  const [boundaryFallback, setBoundaryFallback] = useState(false);
 
   const use3D = useMemo(() => {
+    if (boundaryFallback) return false;
     if (force2D) return false;
     if (force3D) return true;
-    if (!dna) return false; // sem DNA → ainda no fluxo legado, mostra 2D
+    if (!dna) return false;
     return detectCapabilities().canRender3D;
-  }, [force2D, force3D, dna]);
+  }, [force2D, force3D, dna, boundaryFallback]);
 
   if (use3D && dna) {
     return (
@@ -89,17 +92,22 @@ function MascotImpl(props: Props) {
         accessibilityLabel="mascote procedural"
         accessibilityRole="image"
       >
-        <Mascot3D
-          dna={dna as MascotDNA}
-          seed={seed}
-          size={size}
-          reduceMotion={props.reduceMotion}
-          customization={props.customization}
-          mutationIds={props.mutationIds}
-          mood={props.mood}
-          action={props.action}
-          evolutionVisuals={props.evolutionVisuals}
-        />
+        <Mascot3DBoundary
+          fallback={<Mascot2D {...props} />}
+          onFallback={() => setBoundaryFallback(true)}
+        >
+          <Mascot3DLazy
+            dna={dna as MascotDNA}
+            seed={seed}
+            size={size}
+            reduceMotion={props.reduceMotion}
+            customization={props.customization}
+            mutationIds={props.mutationIds}
+            mood={props.mood}
+            action={props.action}
+            evolutionVisuals={props.evolutionVisuals}
+          />
+        </Mascot3DBoundary>
       </View>
     );
   }
