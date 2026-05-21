@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { mockReply } from '@/content/replies';
-import { runMigrations } from '@/lib/db';
+import { CURRENT_SCHEMA_VERSION, runMigrations } from '@/lib/db';
 import { combo } from '@/lib/db';
 import { getEvolutionStory } from '@/lib/evolution-stories';
 import { useStore } from '@/store';
@@ -72,8 +72,8 @@ describe('db.ts missing migration error', () => {
     // Marcamos esse path como defensivo unreachable abaixo.
     await AsyncStorage.setItem('mascote:_meta', JSON.stringify({ schema: 0 }));
     const meta = await runMigrations();
-    // CURRENT_SCHEMA_VERSION = 3; a partir de schema=0, todas migrations rodam.
-    expect(meta.schema).toBe(3);
+    // A partir de schema=0, todas migrations rodam até a versão atual.
+    expect(meta.schema).toBe(CURRENT_SCHEMA_VERSION);
   });
 });
 

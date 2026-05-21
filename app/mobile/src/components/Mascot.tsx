@@ -73,21 +73,19 @@ interface Props {
 /**
  * Modificador visual por fase macro — torna a "evolução visível" sem
  * mexer na geometria do 3D (que é puramente DNA-driven).
- * - ovo/bebê: criatura compacta, sem aura extra
- * - crianca/adolescente: tamanho médio
- * - adulto: tamanho pleno
- * - evoluido: tamanho pleno + halo sutil (forma rara)
  *
- * Aplicado via transform scale + ring no container — sobrepõe a render
- * principal sem regredir morfologia.
+ * QA 2026-05 flagrou que o range antigo (0.78→1.05) era praticamente imperceptível
+ * — usuário Premium chegava ao 'evoluido' e via o mesmo desenho do ovo só 1.05× maior.
+ * Novo range (0.55→1.25) dá diferença visível clara entre fases, e a fase 'evoluido'
+ * ganha halo dourado + aura ampla pra recompensar visualmente o R$249/ano.
  */
 const PHASE_SCALE: Record<MascotPhase, number> = {
-  ovo: 0.78,
-  bebe: 0.86,
-  crianca: 0.94,
-  adolescente: 0.98,
-  adulto: 1,
-  evoluido: 1.05,
+  ovo: 0.55,
+  bebe: 0.72,
+  crianca: 0.88,
+  adolescente: 1.0,
+  adulto: 1.12,
+  evoluido: 1.25,
 };
 
 function MascotImpl(props: Props) {

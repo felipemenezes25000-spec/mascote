@@ -31,8 +31,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { useTheme } from '@/lib/useTheme';
-import type { MascotMood, MascotPhase, Personality } from '@/types';
+import type { MascotDNA, MascotMood, MascotPhase, Personality } from '@/types';
 import { getPersonality } from '@/content/personalities';
+import { paletteFromGenome, type Genome } from '@/lib/dna';
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 
@@ -65,16 +66,44 @@ interface Props {
    */
   accessory?: AccessoryId | { emoji?: string; slot?: string; id?: AccessoryId } | null;
   reduceMotion?: boolean;
+  /**
+   * DNA opcional — quando passado, sobrescreve paleta baseada em personality
+   * com paleta derivada do genoma. Garante que o fallback 2D seja a MESMA
+   * criatura cromática que o 3D — não um "robô laranja genérico".
+   *
+   * Se ausente, mantém comportamento legado (personality.primaryColor).
+   */
+  dna?: MascotDNA;
 }
 
-// my phase -> handoff stage (1..5)
+// Cada fase tem stage ÚNICO (1..6) — antes ovo e bebe compartilhavam stage 1
+// (visualmente idênticos) e adolescente = criança visualmente. QA flagrou
+// 2026-05 que a "evolução" não aparecia. Agora cada fase muda morfologia real.
 const phaseToStage: Record<MascotPhase, number> = {
   ovo: 1,
-  bebe: 1,
-  crianca: 2,
-  adolescente: 3,
-  adulto: 4,
-  evoluido: 5,
+  bebe: 2,
+  crianca: 3,
+  adolescente: 4,
+  adulto: 5,
+  evoluido: 6,
+};
+
+// Personalidade afeta a forma da cabeça (não só cor). 4 silhuetas distintas:
+//  - calmo:   arredondado, neutro
+//  - motivador: alongado vertical (postura aberta)
+//  - fofo:    super redondo, bochechas sempre marcadas
+//  - sabio:   estreito + alto (silhueta contemplativa)
+interface PersonalityShape {
+  headRx: number;       // raio horizontal da cabeça
+  headRy: number;       // raio vertical
+  headTopOffset: number; // deslocamento Y do topo da cabeça
+  cheekAlways: boolean;
+}
+const personalityShapes: Record<Personality, PersonalityShape> = {
+  calmo:     { headRx: 52, headRy: 46, headTopOffset: 0,  cheekAlways: false },
+  motivador: { headRx: 48, headRy: 52, headTopOffset: -3, cheekAlways: false },
+  fofo:      { headRx: 56, headRy: 50, headTopOffset: 2,  cheekAlways: true },
+  sabio:     { headRx: 44, headRy: 56, headTopOffset: -4, cheekAlways: false },
 };
 
 // my mood -> handoff mood
@@ -101,6 +130,7 @@ function MascotImpl({
   reactTrigger = 0,
   accessory,
   reduceMotion,
+  dna,
 }: Props) {
   const theme = useTheme();
   const meta = getPersonality(personality);
@@ -235,24 +265,39 @@ function MascotImpl({
     transform: [{ scale: 1 + phaseFlash.value * 0.4 }],
   }));
 
-  // CORREÇÃO: antes brand=theme.colors.primary fazia TODOS os mascotes parecerem
-  // laranja idêntico — Bipo (Calmo) deveria ser sage, Lulu (Fofo) coral, Aro
-  // (Sábio) lilac. Personalidade visual só estava nas bochechas, que é micro.
-  // Agora cada mascote tem sua identidade cromática real.
-  const brand = meta.primaryColor;
-  const brandDeep = meta.accentColor;
-  const accent = meta.accentColor;
-  const accentDeep = meta.primaryColor;
+  // PALETA: prioridade DNA → personality preset → tema (último recurso).
+  //
+  // **Por que DNA primeiro:** o Mascot2D é fallback do 3D. Se o 3D usa cor
+  // derivada do genome via paletteFromGenome(), o 2D PRECISA usar a mesma cor
+  // pra não quebrar a fantasia ("é a mesma criatura, só renderizada diferente").
+  //
+  // Sem DNA, cai pra preset por personality (Calmo=sage, Motivador=brand,
+  // Fofo=coral, Sábio=lilac) — comportamento legado preservado.
+  const dnaPalette = dna ? paletteFromGenome(dna as Genome) : null;
+  const brand = dnaPalette?.body ?? meta.primaryColor;
+  const brandDeep = dnaPalette?.accent ?? meta.accentColor;
+  const accent = dnaPalette?.accent ?? meta.accentColor;
+  const accentDeep = dnaPalette?.body ?? meta.primaryColor;
 
-  // QA flagrou: 'ovo' e 'bebe' eram visualmente IDÊNTICOS (ambos mapeavam pra
-  // stage 1). Agora 'ovo' (phase==='ovo') é uma silhueta de casca arredondada
-  // SEM cabeça/antena — primeira evolução nível 1→2 (ovo→bebe) dá um wow real.
+  // Morfologia por fase — cada fase adiciona elementos NOVOS visíveis.
+  //  ovo (1):       só casca, sem cabeça
+  //  bebe (2):      cabeça pequena, sem antena, sem corpo
+  //  crianca (3):   + antena + corpo
+  //  adolescente (4): + cauda segmentada (traço DLI primeira aparição)
+  //  adulto (5):    + braços + antena dupla
+  //  evoluido (6):  + halo + asas + aura
   const isEgg = phase === 'ovo';
   const showHead = !isEgg;
-  const showBody = stage >= 2;
-  const showArms = stage >= 4;
-  const showHalo = stage >= 5;
-  const scaleFactor = isEgg ? 0.7 : (0.78 + stage * 0.045);
+  const showAntenna = stage >= 3;
+  const showBody = stage >= 3;
+  const showTail = stage >= 4;
+  const showArms = stage >= 5;
+  const showDoubleAntenna = stage >= 5;
+  const showHalo = stage >= 6;
+  const showWings = stage >= 6;
+  const showAura = stage >= 6;
+  const shape = personalityShapes[personality] ?? personalityShapes.calmo;
+  const scaleFactor = isEgg ? 0.7 : (0.74 + stage * 0.04);
   const eyeWide = hMood === 'proud' || hMood === 'happy';
   const smileSign = hMood === 'sad' ? -1 : hMood === 'sleepy' ? 0 : 1;
 
@@ -305,7 +350,32 @@ function MascotImpl({
           {/* shadow */}
           <Ellipse cx="100" cy="200" rx={45 * scaleFactor} ry="5" fill="rgba(30,20,10,0.14)" />
 
-          {/* halo (stage 5) */}
+          {/* AURA — stage 6 (evoluido). 3 anéis concêntricos sutis. */}
+          {showAura && (
+            <G>
+              <Circle cx="100" cy="110" r={92 * scaleFactor} fill={brand} opacity="0.06" />
+              <Circle cx="100" cy="110" r={80 * scaleFactor} fill={accent} opacity="0.05" />
+              <Circle cx="100" cy="110" r={68 * scaleFactor} fill={brand} opacity="0.07" />
+            </G>
+          )}
+
+          {/* ASAS — stage 6. Duas pétalas laterais cobrindo bordas do corpo. */}
+          {showWings && (
+            <G transform={`translate(100 130) scale(${scaleFactor}) translate(-100 -130)`}>
+              <Path
+                d="M 60 120 Q 18 100 26 145 Q 40 165 62 150 Z"
+                fill={accent}
+                opacity="0.55"
+              />
+              <Path
+                d="M 140 120 Q 182 100 174 145 Q 160 165 138 150 Z"
+                fill={accent}
+                opacity="0.55"
+              />
+            </G>
+          )}
+
+          {/* halo (stage 6 evoluido) */}
           {showHalo && (
             <Ellipse
               cx="100"
@@ -319,7 +389,16 @@ function MascotImpl({
             />
           )}
 
-          {/* body (stage 2+) */}
+          {/* CAUDA SEGMENTADA — stage 4+ (adolescente). Traço DLI visível. */}
+          {showTail && (
+            <G transform={`translate(100 180) scale(${scaleFactor}) translate(-100 -180)`}>
+              <Circle cx="155" cy="190" r="7" fill={brand} opacity="0.92" />
+              <Circle cx="167" cy="186" r="5.5" fill={brand} opacity="0.85" />
+              <Circle cx="176" cy="180" r="4" fill={accent} opacity="0.9" />
+            </G>
+          )}
+
+          {/* body (stage 3+ crianca) */}
           {showBody && (
             <G transform={`translate(100 180) scale(${scaleFactor}) translate(-100 -180)`}>
               <Rect x="60" y="125" width="80" height="60" rx="22" fill={brand} />
@@ -343,16 +422,35 @@ function MascotImpl({
           {/* head wrapper — escondido quando phase === 'ovo' (mostra apenas casca) */}
           {showHead && (
           <G transform={`translate(100 100) scale(${scaleFactor}) translate(-100 -100)`}>
-            {/* antenna */}
-            <Line x1="100" y1="36" x2="100" y2="52" stroke={brand} strokeWidth="4" strokeLinecap="round" />
-            <Circle cx="100" cy="32" r="6" fill={brand} />
-            <Circle cx="98" cy="30" r="1.6" fill="#FFFFFF" opacity="0.6" />
+            {/* ANTENA CENTRAL — stage 3+ (criança). Bebê não tem antena. */}
+            {showAntenna && (
+              <>
+                <Line x1="100" y1="36" x2="100" y2="52" stroke={brand} strokeWidth="4" strokeLinecap="round" />
+                <Circle cx="100" cy="32" r="6" fill={brand} />
+                <Circle cx="98" cy="30" r="1.6" fill="#FFFFFF" opacity="0.6" />
+              </>
+            )}
+            {/* ANTENAS LATERAIS — stage 5+ (adulto). Visual de "evoluído" antes do halo. */}
+            {showDoubleAntenna && (
+              <>
+                <Line x1="78" y1="44" x2="68" y2="32" stroke={brand} strokeWidth="3" strokeLinecap="round" />
+                <Circle cx="66" cy="30" r="4" fill={accent} />
+                <Line x1="122" y1="44" x2="132" y2="32" stroke={brand} strokeWidth="3" strokeLinecap="round" />
+                <Circle cx="134" cy="30" r="4" fill={accent} />
+              </>
+            )}
 
-            {/* head */}
-            <Rect x="48" y="50" width="104" height="92" rx="34" fill="url(#mRad)" />
+            {/* head — proporção por personalidade (calmo arredondado, motivador alongado, fofo redondo, sabio estreito) */}
+            <Ellipse
+              cx="100"
+              cy={96 + shape.headTopOffset}
+              rx={shape.headRx}
+              ry={shape.headRy}
+              fill="url(#mRad)"
+            />
 
             {/* face plate */}
-            <Rect x="62" y="64" width="76" height="68" rx="22" fill="#FFFFFF" />
+            <Ellipse cx="100" cy={100 + shape.headTopOffset} rx={shape.headRx - 14} ry={shape.headRy - 14} fill="#FFFFFF" />
 
             {/* eyes (com blink animado por opacidade controlada — simplificado) */}
             {hMood === 'sleepy' ? (
@@ -364,11 +462,11 @@ function MascotImpl({
               <AnimatedEyes blink={blink} eyeWide={eyeWide} />
             )}
 
-            {/* cheeks (happy/proud) */}
-            {(hMood === 'happy' || hMood === 'proud') && (
+            {/* cheeks — fofo sempre tem, outros só em happy/proud */}
+            {(shape.cheekAlways || hMood === 'happy' || hMood === 'proud') && (
               <>
-                <Ellipse cx="72" cy="112" rx="6" ry="3" fill={accent} opacity="0.45" />
-                <Ellipse cx="128" cy="112" rx="6" ry="3" fill={accent} opacity="0.45" />
+                <Ellipse cx="72" cy="112" rx="6" ry="3" fill={accent} opacity={shape.cheekAlways ? 0.55 : 0.45} />
+                <Ellipse cx="128" cy="112" rx="6" ry="3" fill={accent} opacity={shape.cheekAlways ? 0.55 : 0.45} />
               </>
             )}
 

@@ -9,7 +9,36 @@
  * falsos positivos (devices fracos que travam tentando 3D).
  */
 
+import { requireOptionalNativeModule } from 'expo-modules-core';
 import { Platform } from 'react-native';
+
+/** expo-gl nativo — ausente em dev clients antigos sem rebuild. */
+function hasExpoGLNative(): boolean {
+  if (Platform.OS === 'web') return true;
+  return requireOptionalNativeModule('ExponentGLObjectManager') != null;
+}
+
+/**
+ * Checa se o browser tem WebGL real disponível (não só o canvas API).
+ * Cacheia o resultado — query do contexto é cara, e capability não muda
+ * dentro de uma sessão.
+ */
+let webglCache: boolean | null = null;
+function hasWebGL(): boolean {
+  if (webglCache !== null) return webglCache;
+  if (typeof document === 'undefined') {
+    webglCache = false;
+    return false;
+  }
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
+    webglCache = gl != null;
+  } catch {
+    webglCache = false;
+  }
+  return webglCache;
+}
 
 export interface Capabilities {
   /** true se podemos renderizar Mascot3D com R3F. */
@@ -36,9 +65,22 @@ export function detectCapabilities(override?: boolean): Capabilities {
     return { canRender3D: false, reason: 'user override (off)', qualityTier: 'low' };
   }
 
-  // Web: sempre 3D, qualidade alta (assume desktop ou laptop com WebGL).
+  // Web: checa WebGL real. Antes assumíamos disponível, mas QA flagrou que
+  // headless browsers (Playwright, e2e) e alguns devices low-end caem em
+  // canvas vazio sem disparar o Mascot3DBoundary (que só pega throws).
   if (Platform.OS === 'web') {
-    return { canRender3D: true, reason: 'web (WebGL assumido)', qualityTier: 'high' };
+    if (hasWebGL()) {
+      return { canRender3D: true, reason: 'web (WebGL OK)', qualityTier: 'high' };
+    }
+    return { canRender3D: false, reason: 'web sem WebGL', qualityTier: 'low' };
+  }
+
+  if (!hasExpoGLNative()) {
+    return {
+      canRender3D: false,
+      reason: 'expo-gl nativo indisponível (rebuild do app)',
+      qualityTier: 'low',
+    };
   }
 
   // iOS: 14+ → 3D ativado.

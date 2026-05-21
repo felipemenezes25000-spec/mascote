@@ -39,7 +39,7 @@ describe('migration v1→v2 — robustez', () => {
     const db = await import('@/lib/db');
     await expect(db.runMigrations()).resolves.toBeDefined();
     const meta = JSON.parse(storage['mascote:_meta'] ?? '{}');
-    expect(meta.schema).toBe(3);
+    expect(meta.schema).toBe(db.CURRENT_SCHEMA_VERSION);
   });
 
   it('mascots vazios: migration v1→v2 é no-op silencioso', async () => {

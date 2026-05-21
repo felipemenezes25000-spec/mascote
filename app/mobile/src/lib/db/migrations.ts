@@ -5,6 +5,10 @@
  *  v1 — base inicial; renomeia legado 'quarto' → 'room' em scenes.
  *  v2 — adiciona `dna` e `dna_seed` em mascots.
  *  v3 — adiciona tabelas `dna_mutations` e `customization` (vazias inicialmente).
+ *  v4 — renomeia streaks.last_checkin_date → last_active_date e backfill grace_days_left.
+ *  v5 — remove campos legados de settings (theme, dark_mode, haptics, sounds,
+ *       notifications, push_subscribed) que sumiram do schema mas continuavam
+ *       persistidos — risco de view ler campo stale.
  *
  * Bumps requerem (a) incrementar CURRENT_SCHEMA_VERSION, (b) adicionar entry no
  * SCHEMA_MIGRATIONS na posição (current → next).
@@ -16,7 +20,7 @@ import {
   writeAny,
 } from './internal';
 
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 5;
 
 export interface DbMeta {
   schema: number;
@@ -81,6 +85,53 @@ const SCHEMA_MIGRATIONS: readonly Migration[] = [
     if (muts.length === 0) await writeT('dna_mutations', []);
     const cust = await readT('customization');
     if (cust.length === 0) await writeT('customization', []);
+  },
+  // 3 → 4: streaks tinha last_checkin_date no schema antigo, código novo lê
+  // last_active_date — sem essa migração, daysBetween(undefined, today) crasha.
+  // Também backfill grace_days_left quando ausente.
+  async (readT, writeT) => {
+    const streaksRows = await readT('streaks');
+    if (streaksRows.length === 0) return;
+    let touched = false;
+    const next = streaksRows.map(row => {
+      const r = row as Record<string, unknown> & {
+        last_checkin_date?: string | null;
+        last_active_date?: string | null;
+        grace_days_left?: number;
+      };
+      let merged = r as Record<string, unknown>;
+      if (r.last_active_date === undefined && r.last_checkin_date !== undefined) {
+        touched = true;
+        const { last_checkin_date, ...rest } = r;
+        merged = { ...rest, last_active_date: last_checkin_date ?? null };
+      }
+      const finalRow = merged as Record<string, unknown> & { grace_days_left?: number };
+      if (typeof finalRow.grace_days_left !== 'number') {
+        touched = true;
+        finalRow.grace_days_left = 2;
+      }
+      return finalRow;
+    });
+    if (touched) await writeT('streaks', next);
+  },
+  // 4 → 5: limpa campos legados de settings que sumiram do schema.
+  async (readT, writeT) => {
+    const settingsRows = await readT('settings');
+    if (settingsRows.length === 0) return;
+    const LEGACY_FIELDS = ['theme', 'dark_mode', 'haptics', 'sounds', 'notifications', 'push_subscribed'] as const;
+    let touched = false;
+    const next = settingsRows.map(row => {
+      const r = row as Record<string, unknown>;
+      const cleaned: Record<string, unknown> = { ...r };
+      for (const f of LEGACY_FIELDS) {
+        if (f in cleaned) {
+          delete cleaned[f];
+          touched = true;
+        }
+      }
+      return cleaned;
+    });
+    if (touched) await writeT('settings', next);
   },
 ];
 

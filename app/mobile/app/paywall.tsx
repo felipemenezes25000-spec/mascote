@@ -16,6 +16,7 @@ import { validateBillingEnv } from '@/lib/billing-config';
 import { isAiProxyConfigured } from '@/ai/ProxyMascotAI';
 import { subscriptionService } from '@/services/subscription';
 import { useStore } from '@/store';
+import { safeBack } from '@/lib/router-utils';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { BillingTierId } from '@/content/billing';
@@ -84,7 +85,7 @@ export default function Paywall() {
       if (result.success) {
         const next = await subscriptionService.getCurrentTier(profile.id);
         setTier(next);
-        router.back();
+        safeBack();
         return;
       }
       Alert.alert(
@@ -110,7 +111,7 @@ export default function Paywall() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Pressable onPress={() => router.back()} style={styles.close} hitSlop={10} accessibilityLabel="Fechar">
+        <Pressable onPress={() => safeBack()} style={styles.close} hitSlop={10} accessibilityLabel="Fechar">
           <Text style={styles.closeText}>✕</Text>
         </Pressable>
 
@@ -219,7 +220,7 @@ export default function Paywall() {
           />
         )}
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => safeBack()}
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Continuar com versão grátis"

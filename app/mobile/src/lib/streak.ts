@@ -29,7 +29,9 @@ export function nextStreakState(
   let graceUsed = false;
   let brokenAndRestarted = false;
 
-  if (current.last_active_date === null) {
+  // Trata undefined igual a null — estado persistido de versões antigas
+  // (ou downgrade entre schemas) pode ter o campo ausente.
+  if (current.last_active_date == null) {
     nextStreak = 1;
   } else {
     const diff = daysBetween(current.last_active_date, today);

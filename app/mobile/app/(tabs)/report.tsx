@@ -74,7 +74,12 @@ export default function ReportTab() {
     .slice(0, 3)
     .map(([k]) => k as HabitKind);
 
-  const weeklyInsight = buildWeeklyInsightLite(weekCount, habitsThisWeek.size, streak?.current_streak ?? 0);
+  const weeklyInsight = buildWeeklyInsightLite(
+    weekCount,
+    habitsThisWeek.size,
+    streak?.current_streak ?? 0,
+    mascot?.name,
+  );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>

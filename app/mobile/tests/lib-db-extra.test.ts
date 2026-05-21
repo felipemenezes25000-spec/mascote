@@ -14,6 +14,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
+  CURRENT_SCHEMA_VERSION,
   addDays,
   combo,
   dailyReward,
@@ -53,9 +54,9 @@ describe('runMigrations', () => {
     const parsed = JSON.parse(raw!);
     expect(parsed[0].scene_id).toBe('room');
     const meta = await readMeta();
-    // runMigrations sobe até CURRENT_SCHEMA_VERSION (v3 desde a migration de
-    // dna_mutations + customization). Cada bump aqui deve refletir o atual.
-    expect(meta.schema).toBe(3);
+    // runMigrations sobe até CURRENT_SCHEMA_VERSION. Usar a constante evita
+    // ter que atualizar este teste a cada bump.
+    expect(meta.schema).toBe(CURRENT_SCHEMA_VERSION);
   });
 
   it('idempotente: chamar 2x não afeta', async () => {

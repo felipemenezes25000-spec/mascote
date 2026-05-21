@@ -4,10 +4,33 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-function mockPlatform(os: string, version: string | number) {
+function mockPlatform(os: string, version: string | number, expoGL = true) {
   vi.doMock('react-native', () => ({
     Platform: { OS: os, Version: version },
   }));
+  vi.doMock('expo-modules-core', () => ({
+    requireOptionalNativeModule: vi.fn((name: string) =>
+      name === 'ExponentGLObjectManager' && expoGL ? {} : null,
+    ),
+  }));
+}
+
+/**
+ * Esses testes rodam em pool de threads sem jsdom — não há `document` global.
+ * Stubamos via globalThis pra que detectCapabilities() acesse o objeto fake.
+ * Cleanup feito em afterEach via `delete (globalThis as any).document`.
+ */
+function stubWebGLAvailable(available: boolean) {
+  const fakeDocument = {
+    createElement: (tag: string) => {
+      if (tag !== 'canvas') return {};
+      return {
+        getContext: () => (available ? ({} as WebGLRenderingContext) : null),
+      };
+    },
+  };
+  // @ts-expect-error injeção de document fake só pra teste
+  globalThis.document = fakeDocument;
 }
 
 describe('detectCapabilities', () => {
@@ -16,6 +39,8 @@ describe('detectCapabilities', () => {
   });
   afterEach(() => {
     vi.doUnmock('react-native');
+    // @ts-expect-error limpa stub injetado por stubWebGLAvailable
+    delete globalThis.document;
   });
 
   it('override true habilita 3D mesmo em platform fraca', async () => {
@@ -32,12 +57,22 @@ describe('detectCapabilities', () => {
     expect(c.canRender3D).toBe(false);
   });
 
-  it('web habilita 3D em qualidade alta', async () => {
+  it('web habilita 3D em qualidade alta quando WebGL disponível', async () => {
     mockPlatform('web', 0);
+    stubWebGLAvailable(true);
     const { detectCapabilities } = await import('@/lib/deviceCapabilities');
     const c = detectCapabilities();
     expect(c.canRender3D).toBe(true);
     expect(c.qualityTier).toBe('high');
+  });
+
+  it('web SEM WebGL cai pro 2D (headless browsers, devices low-end)', async () => {
+    mockPlatform('web', 0);
+    stubWebGLAvailable(false);
+    const { detectCapabilities } = await import('@/lib/deviceCapabilities');
+    const c = detectCapabilities();
+    expect(c.canRender3D).toBe(false);
+    expect(c.reason).toContain('WebGL');
   });
 
   it('iOS 16+ habilita 3D high', async () => {
@@ -91,5 +126,13 @@ describe('detectCapabilities', () => {
     const { detectCapabilities } = await import('@/lib/deviceCapabilities');
     const c = detectCapabilities();
     expect(c.canRender3D).toBe(false);
+  });
+
+  it('Android forte sem expo-gl nativo cai pro 2D', async () => {
+    mockPlatform('android', 34, false);
+    const { detectCapabilities } = await import('@/lib/deviceCapabilities');
+    const c = detectCapabilities();
+    expect(c.canRender3D).toBe(false);
+    expect(c.reason).toContain('expo-gl');
   });
 });
