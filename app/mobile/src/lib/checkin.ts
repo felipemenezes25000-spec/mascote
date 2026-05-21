@@ -277,7 +277,11 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
       try {
         const { mascotMemoryService } = await import('@/game/memory/MascotMemoryService');
         await mascotMemoryService.recordMilestone(profile.id, 'first_mission');
-      } catch { /* non-fatal */ }
+      } catch (err) {
+        logger.warn('[checkin] first_mission milestone failed (non-fatal)', {
+          reason: err instanceof Error ? err.message : 'unknown',
+        });
+      }
     }
     if (newMicro.length > 0) {
       try {
@@ -285,7 +289,11 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
         await mascotMemoryService.recordMilestone(profile.id, 'first_evolution', {
           detail: newMicro[0]?.label,
         });
-      } catch { /* non-fatal */ }
+      } catch (err) {
+        logger.warn('[checkin] first_evolution milestone failed (non-fatal)', {
+          reason: err instanceof Error ? err.message : 'unknown',
+        });
+      }
       for (const micro of newMicro) {
         analytics.track('first_microevolution_seen', { kind: micro.id });
       }

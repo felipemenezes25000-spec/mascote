@@ -12,6 +12,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
+  addDays,
   checkins,
   combo,
   mascots,
@@ -113,12 +114,13 @@ describe('applyCheckinFully — XP cap diário (150)', () => {
 describe('applyCheckinFully — streak milestone (multiplos de 7)', () => {
   it('streak 7 → bônus 50 XP + 1 gem', async () => {
     const { profile, mascot } = await setupUser();
-    // simula streak 6 já no banco
+    // simula streak 6 já no banco — last_active_date = ontem para o pipeline avançar pra 7 hoje.
+    // (Não usar data hardcoded: ela fica stale conforme o relógio anda e o gap excede grace.)
     await streaks.upsert({
       user_id: profile.id,
       current_streak: 6,
       longest_streak: 6,
-      last_active_date: '2026-05-17',
+      last_active_date: addDays(todayLocal(), -1),
       grace_days_left: 2,
       updated_at: new Date().toISOString(),
     });

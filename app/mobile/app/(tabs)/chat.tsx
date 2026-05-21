@@ -22,7 +22,9 @@ import { chatSuggestions } from '@/content/replies';
 import { getPersonality } from '@/content/personalities';
 import { dateLocal, messages as messagesDb, todayLocal } from '@/lib/db';
 import { generateReply } from '@/lib/ai';
+import { logger } from '@/lib/logger';
 import { rememberFromMessage } from '@/lib/memory';
+import { creatureMoments } from '@/lib/moments';
 import { entitlementService } from '@/services/subscription/EntitlementService';
 import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
 import { useStore } from '@/store';
@@ -120,7 +122,26 @@ export default function ChatTab() {
       if (!messageOverride) setInput('');
 
       // Extrai memórias da mensagem do user em background (não bloqueia resposta).
-      void rememberFromMessage(profile.id, text).catch(() => {});
+      // Quando algo se torna memória, emite 'chat.memory_saved' pra outros
+      // sistemas reagirem (ex: ProgressPulse de "criatura aprendeu algo novo").
+      void rememberFromMessage(profile.id, text)
+        .then((memory) => {
+          if (memory) {
+            creatureMoments.emit('chat.memory_saved', {
+              kind: (memory as { kind?: string }).kind ?? 'message',
+              summary: (memory as { summary?: string; content?: string }).summary
+                ?? (memory as { content?: string }).content
+                ?? text.slice(0, 80),
+            });
+          }
+        })
+        .catch((err) => {
+          // Falha em memory é não-fatal pro chat — mas catch silencioso
+          // mascarava AsyncStorage cheio / embedding service offline em prod.
+          logger.warn('[chat] rememberFromMessage failed (non-fatal)', {
+            reason: err instanceof Error ? err.message : 'unknown',
+          });
+        });
 
       scheduleScrollToEnd(60);
 
@@ -149,6 +170,11 @@ export default function ChatTab() {
         cached: false,
       });
       setList(prev => [...prev, reply]);
+      // Emite moment — outros sistemas (analytics, animação, voz) podem reagir.
+      creatureMoments.emit('chat.reply_received', {
+        source: result.source as 'mock' | 'fallback' | 'openai' | 'proxy',
+        safety_flag: result.safety_flag,
+      });
       scheduleScrollToEnd(80);
     } finally {
       setSending(false);
