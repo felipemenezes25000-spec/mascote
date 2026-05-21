@@ -14,7 +14,14 @@ function freshCombo(user_id: string): Combo {
 
 function decayCombo(c: Combo, now: Date = new Date()): Combo {
   if (!c.last_action_at) return c;
-  const hoursSince = (now.getTime() - new Date(c.last_action_at).getTime()) / (1000 * 60 * 60);
+  // last_action_at vem de toISOString() em writes próprios, mas storage corrompido
+  // pode trazer string inválida — Date inválida → NaN → comparação NaN > X é false,
+  // então combo nunca decairia. Guard explícito repara o estado.
+  const lastMs = new Date(c.last_action_at).getTime();
+  if (!Number.isFinite(lastMs)) {
+    return { ...c, current: 1, last_action_at: null, updated_at: now.toISOString() };
+  }
+  const hoursSince = (now.getTime() - lastMs) / (1000 * 60 * 60);
   if (hoursSince > COMBO_TIMEOUT_HOURS && c.current > 1) {
     return { ...c, current: 1, updated_at: now.toISOString() };
   }

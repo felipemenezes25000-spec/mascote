@@ -4,6 +4,7 @@
 
 import type { MascotPhase } from '@/types';
 import type { BillingTierId } from '@/content/billing';
+import { hasEntitlement } from './SubscriptionTypes';
 
 const FREE_MAX_PHASE: MascotPhase = 'adolescente';
 const PREMIUM_MAX_PHASE: MascotPhase = 'evoluido';
@@ -43,8 +44,11 @@ export class EntitlementService {
     return rarity === 'common' || rarity === 'rare';
   }
 
+  // TIER_TO_ENTITLEMENTS dá 'legendary' só pra plus_annual — usar hasEntitlement
+  // mantém consistência: plus_monthly NÃO deve ver form lendária, pra evitar
+  // bypass de quem paga mensal e teria acesso ao tier alto sem upgrade.
   canAccessLegendaryForm(tier: BillingTierId): boolean {
-    return tier !== 'free';
+    return hasEntitlement(tier, 'legendary');
   }
 
   canAccessRareScenario(tier: BillingTierId): boolean {
