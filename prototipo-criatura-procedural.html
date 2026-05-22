@@ -357,6 +357,77 @@
       </button>
     </div>
 
+    <!-- ENVELHECIMENTO + adaptação ao user -->
+    <h2 style="margin-top:18px"><span class="dot"></span>Tempo de vida</h2>
+    <div id="life-section" style="font-size:11px; line-height:1.55;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+        <span style="color:var(--muted); letter-spacing:1.4px; text-transform:uppercase; font-size:9.5px;">Fase atual</span>
+        <span id="life-phase-label" style="font-weight:700; color:var(--text);">OVO</span>
+      </div>
+      <div style="height:5px; background:rgba(255,255,255,0.06); border-radius:3px; overflow:hidden; margin-bottom:8px;">
+        <div id="life-phase-fill" style="height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); width:0%; transition:width 0.4s cubic-bezier(.2,.7,.3,1); box-shadow:0 0 8px rgba(122,184,255,0.5);"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-bottom:10px;">
+        <span id="life-age-display">0 dias</span>
+        <span id="life-next-display">— em — dias</span>
+      </div>
+      <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+        <button class="time-btn" data-scale="0" title="pausa">⏸</button>
+        <button class="time-btn" data-scale="1" title="1d/s — observar">1×</button>
+        <button class="time-btn" data-scale="10" title="10d/s — semanas em segundos">10×</button>
+        <button class="time-btn active" data-scale="30" title="30d/s — mês por segundo">30×</button>
+        <button class="time-btn" data-scale="120" title="120d/s — rápido demo">120×</button>
+      </div>
+    </div>
+
+    <h2 style="margin-top:14px"><span class="dot"></span>Sua idade</h2>
+    <div style="font-size:11px; line-height:1.5; margin-bottom:6px; color:var(--muted);">
+      o tom dela adapta — jovem vê algo brilhante, sereno vê algo contemplativo
+    </div>
+    <div id="user-band-row" style="display:flex; gap:4px; flex-wrap:wrap;">
+      <button class="band-btn" data-band="16-24">16–24</button>
+      <button class="band-btn active" data-band="25-34">25–34</button>
+      <button class="band-btn" data-band="35-44">35–44</button>
+      <button class="band-btn" data-band="45+">45+</button>
+    </div>
+
+    <h2 style="margin-top:18px"><span class="dot"></span>Fale com ela</h2>
+    <div style="font-size:11px; line-height:1.5; color:var(--muted); margin-bottom:8px;">
+      o tom da conversa molda o DNA — calma soma empatia, motivação soma energia, perguntas somam curiosidade
+    </div>
+    <div style="display:flex; gap:6px;">
+      <input id="chat-input" type="text" placeholder="diga algo…"
+             style="flex:1; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 10px; color:var(--text); font-size:12px; font-family:inherit; outline:none;">
+      <button class="btn" id="chat-send" style="padding:6px 12px; font-size:11px;">▶</button>
+    </div>
+    <div id="chat-feedback" style="margin-top:6px; font-size:10px; color:var(--accent); min-height:14px; opacity:0; transition:opacity 0.4s;"></div>
+
+    <style>
+      .time-btn, .band-btn {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: var(--text);
+        font-family: ui-monospace, monospace;
+        font-size: 10.5px;
+        padding: 5px 9px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.18s;
+        letter-spacing: 0.4px;
+      }
+      .time-btn:hover, .band-btn:hover {
+        background: rgba(255,255,255,0.08);
+        border-color: rgba(140,180,255,0.25);
+      }
+      .time-btn.active, .band-btn.active {
+        background: linear-gradient(135deg, rgba(122,184,255,0.22), rgba(255,155,208,0.18));
+        border-color: rgba(140,180,255,0.4);
+        color: #fff;
+        box-shadow: 0 0 12px rgba(122,184,255,0.25);
+      }
+      .band-btn { flex: 1; min-width: 50px; text-align: center; }
+    </style>
+
     <div class="essence-card">
       <div class="essence-title">Princípios invioláveis</div>
       <div class="essence-grid">
@@ -580,27 +651,105 @@ function getArchetype(dna) {
    COR — paleta HSL derivada do DNA.
    Hue rotaciona com criatividade, saturação com energia, lightness com resiliência.
    ========================================================================= */
-function getPalette(dna) {
-  const hue = (dna.creativity * 280 + dna.empathy * 80 + dna.chaos * 60) % 360;
-  const sat = 35 + dna.socialEnergy * 50 + dna.emotionalDepth * 15;
-  const light = 45 + dna.resilience * 18 - dna.aggression * 8;
-  const accentHue = (hue + 30 + dna.chaos * 90) % 360;
+/** HSL→hex helper. Three.js r128 NÃO parseia strings `hsl(...)` — só hex.
+ * Sem isso `new THREE.Color('hsl(...)')` vira #ffffff silenciosamente. */
+function hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const k = n => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  const toByte = v => Math.round(255 * v);
+  return (toByte(f(0)) << 16) | (toByte(f(8)) << 8) | toByte(f(4));
+}
+
+function getPalette(dna, userMod = USER_BANDS['25-34']) {
+  // v3 (2026-05-22): paleta wellness saturada + adaptação à idade do user.
+  // - 16-24: cooler (hueShift -8) e mais bright/saturated → kawaii
+  // - 25-34: default
+  // - 35-44: mais quente, menos saturado → contemplativo
+  // - 45+: âmbar/dourado, mais escuro → sereno
+  const hueBase = 35; // pêssego como âncora
+  const hueShift = (dna.creativity * 80 + dna.empathy * 40 + dna.chaos * 30) - 60;
+  const hue = (hueBase + hueShift + (userMod.hueShift ?? 0) + 360) % 360;
+  // FLOOR de saturação 65% — antes podia cair pra 35% (cinza-bege).
+  const satRaw = Math.max(65, 60 + dna.socialEnergy * 30 + dna.emotionalDepth * 12);
+  const sat = Math.min(95, satRaw * (userMod.satMult ?? 1));
+  // Lightness 52-66 — não vai pra branco lavado nem cinza escuro
+  const lightRaw = 56 + dna.resilience * 12 - dna.aggression * 5;
+  const light = Math.max(48, Math.min(72, lightRaw + (userMod.lightShift ?? 0)));
+  const accentHue = (hue + 25 + dna.chaos * 40) % 360;
+  const accentSat = Math.min(88, sat + 12);
+  const accentLight = Math.min(78, light + 12);
+  const glowHue = (hue + 35) % 360;
   return {
     body: `hsl(${hue}, ${sat}%, ${light}%)`,
+    bodyHex: hslToHex(hue, sat, light),
     bodyHSL: [hue, sat, light],
-    accent: `hsl(${accentHue}, ${sat + 10}%, ${light + 15}%)`,
-    accentHSL: [accentHue, sat + 10, light + 15],
-    glow: `hsl(${(hue + 60) % 360}, 80%, 65%)`,
-    glowHSL: [(hue + 60) % 360, 80, 65],
+    accent: `hsl(${accentHue}, ${accentSat}%, ${accentLight}%)`,
+    accentHex: hslToHex(accentHue, accentSat, accentLight),
+    accentHSL: [accentHue, accentSat, accentLight],
+    glow: `hsl(${glowHue}, 85%, 72%)`,
+    glowHex: hslToHex(glowHue, 85, 72),
+    glowHSL: [glowHue, 85, 72],
   };
 }
+
+/* =========================================================================
+   PHASES — ciclo de vida do mascote (idade → fase visual)
+   =========================================================================
+   Cada fase tem morfologia distinta. Não é só "scale crescente" — é mudança
+   estrutural real: ovo não tem rosto, bebê não tem membros, adolescente ganha
+   cauda, adulto forma plena, evoluído ganha aura/halo.
+   ========================================================================= */
+const PHASES = {
+  egg:        { minDays: 0,   label: 'OVO',         scale: 0.62, hasEyes: false, maxLimbs: 0, hasTail: false, hasAntennae: false, allowSpikes: false, glowMult: 0.4,  outline: true  },
+  baby:       { minDays: 3,   label: 'BEBÊ',        scale: 0.78, hasEyes: true,  maxLimbs: 0, hasTail: false, hasAntennae: false, allowSpikes: false, glowMult: 0.7,  outline: false, eyeBoost: 1.35 },
+  child:      { minDays: 14,  label: 'CRIANÇA',     scale: 0.92, hasEyes: true,  maxLimbs: 1, hasTail: false, hasAntennae: true,  allowSpikes: false, glowMult: 0.85, outline: false, eyeBoost: 1.18 },
+  adolescent: { minDays: 30,  label: 'ADOLESCENTE', scale: 1.04, hasEyes: true,  maxLimbs: 2, hasTail: true,  hasAntennae: true,  allowSpikes: false, glowMult: 1.0,  outline: false, eyeBoost: 1.05 },
+  adult:      { minDays: 90,  label: 'ADULTO',      scale: 1.12, hasEyes: true,  maxLimbs: 2, hasTail: true,  hasAntennae: true,  allowSpikes: true,  glowMult: 1.15, outline: false, eyeBoost: 1.0  },
+  evolved:    { minDays: 365, label: 'EVOLUÍDO',    scale: 1.20, hasEyes: true,  maxLimbs: 2, hasTail: true,  hasAntennae: true,  allowSpikes: true,  glowMult: 1.5,  outline: false, eyeBoost: 1.0,  hasHalo: true, hasWings: true },
+};
+const PHASE_ORDER = ['egg', 'baby', 'child', 'adolescent', 'adult', 'evolved'];
+
+function phaseFromAge(days) {
+  let last = PHASES.egg, lastKey = 'egg';
+  for (const key of PHASE_ORDER) {
+    if (days >= PHASES[key].minDays) { last = PHASES[key]; lastKey = key; }
+  }
+  return { key: lastKey, ...last };
+}
+
+function nextPhaseInfo(days) {
+  for (const key of PHASE_ORDER) {
+    if (days < PHASES[key].minDays) return { key, ...PHASES[key], daysUntil: PHASES[key].minDays - days };
+  }
+  return null;
+}
+
+/* =========================================================================
+   USER AGE — adaptação à idade da pessoa.
+   =========================================================================
+   16-24: kawaii, formas redondas brilhantes, paleta mais cool/saturada.
+   25-34: balanceado, default.
+   35-44: contemplativo, expressão mais "pensativa", paleta mais quente.
+   45+:   sereno, formas mais arredondadas, paleta âmbar/dourada.
+   ========================================================================= */
+const USER_BANDS = {
+  '16-24': { hueShift: -8, satMult: 1.08, lightShift: 4,  eyeMult: 1.12, bodyRound: 1.05, label: '16–24 (jovem)'  },
+  '25-34': { hueShift: 0,  satMult: 1.0,  lightShift: 0,  eyeMult: 1.0,  bodyRound: 1.0,  label: '25–34 (default)' },
+  '35-44': { hueShift: 8,  satMult: 0.95, lightShift: -3, eyeMult: 0.94, bodyRound: 0.98, label: '35–44 (maduro)'  },
+  '45+':   { hueShift: 15, satMult: 0.9,  lightShift: -5, eyeMult: 0.9,  bodyRound: 0.96, label: '45+ (sereno)'    },
+};
+let currentUserBand = '25-34';
 
 /* =========================================================================
    THREE.JS — cena, render, criatura procedural
    ========================================================================= */
 const sceneRoot = document.getElementById('scene');
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x0a0e1a, 0.022);
+// fog warm dark (era 0x0a0e1a azul-petróleo). Agora tom marrom-burgundy
+// que casa com paleta wellness sem competir com a cor da criatura.
+scene.fog = new THREE.FogExp2(0x1a0e0a, 0.018);
 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 0.6, 6.2);
@@ -616,15 +765,19 @@ renderer.toneMappingExposure = 1.05;
 sceneRoot.appendChild(renderer.domElement);
 
 // Lights — soft key + rim + ambient (Pixar-ish)
-const ambient = new THREE.AmbientLight(0x4060a0, 0.55);
+// v2: ambient cream warm (era 0x4060a0 azul-roxo que tingia tudo de azul).
+// Agora a cor HSL real da criatura aparece sem viés cromático.
+const ambient = new THREE.AmbientLight(0xfff5e8, 0.62);
 scene.add(ambient);
-const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
+const keyLight = new THREE.DirectionalLight(0xfff8ee, 1.05);
 keyLight.position.set(3, 4, 4);
 scene.add(keyLight);
-const rimLight = new THREE.DirectionalLight(0xff9bd0, 0.55);
+// Rim sutil — coral em vez de pink berrante
+const rimLight = new THREE.DirectionalLight(0xffcdb6, 0.45);
 rimLight.position.set(-4, 2, -3);
 scene.add(rimLight);
-const fillLight = new THREE.PointLight(0x7ab8ff, 0.45, 12);
+// Fill bottom — leve azul-céu pra balance, mais discreto
+const fillLight = new THREE.PointLight(0xb6d4ff, 0.32, 12);
 fillLight.position.set(0, -2, 3);
 scene.add(fillLight);
 
@@ -659,30 +812,154 @@ scene.add(atmoPoints);
    CREATURE — construído proceduralmente a partir do DNA
    ========================================================================= */
 class Creature {
-  constructor(dna, seed) {
+  constructor(dna, seed, ageDays = 0, userBand = '25-34') {
     this.dna = dna;
     this.seed = seed;
+    this.ageDays = ageDays;
+    this.userBand = userBand;
     this.rng = mulberry32(seed ^ 0xBEEF);
     this.group = new THREE.Group();
     this.parts = {};
-    this.palette = getPalette(dna);
+    // Phase + user band são lidos no momento da build pra determinar morfologia
+    this.phase = phaseFromAge(ageDays);
+    this.userMod = USER_BANDS[userBand] ?? USER_BANDS['25-34'];
+    this.palette = getPalette(dna, this.userMod);
     this.build();
   }
 
   build() {
     while (this.group.children.length) this.group.remove(this.group.children[0]);
+    // Ovo é construção totalmente diferente — só casca translúcida sem rosto.
+    // Outras fases compartilham mesma estrutura mas com partes condicionalmente
+    // ativadas via this.phase flags (hasEyes, maxLimbs, hasTail, etc).
+    if (this.phase.key === 'egg') {
+      this.buildEggShell();
+      this.buildAura();
+      return;
+    }
     this.buildBody();
-    this.buildEyes();
-    this.buildLimbs();
-    this.buildTail();
-    this.buildSpikes();
-    this.buildAntennae();
+    if (this.phase.hasEyes) this.buildEyes();
+    if (this.phase.maxLimbs > 0) this.buildLimbs();
+    if (this.phase.hasTail) this.buildTail();
+    if (this.phase.allowSpikes) this.buildSpikes();
+    if (this.phase.hasAntennae) this.buildAntennae();
+    if (this.phase.hasHalo) this.buildHalo();
+    if (this.phase.hasWings) this.buildWings();
     this.buildAura();
   }
 
-  /* BODY — icosahedron com deslocamento procedural baseado em DNA */
+  /* OVO — casca translúcida com silhueta interior pulsando.
+   * Sem rosto, sem membros. Apenas um símbolo de potencial. A criatura
+   * "real" está se formando dentro, sutilmente visível como gradient.
+   */
+  buildEggShell() {
+    const geo = new THREE.SphereGeometry(0.78, 64, 64);
+    // estica vertical levemente pra parecer ovo (não esfera perfeita)
+    const pos = geo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const y = pos.getY(i);
+      pos.setY(i, y * 1.18 + (y > 0 ? 0.02 : -0.05));
+    }
+    geo.computeVertexNormals();
+
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(this.palette.bodyHex).lerp(new THREE.Color(0xfff5e8), 0.55),
+      roughness: 0.32,
+      metalness: 0.12,
+      emissive: new THREE.Color(this.palette.glowHex),
+      emissiveIntensity: 0.22,
+    });
+    this.parts.body = new THREE.Mesh(geo, mat);
+    this.parts.body.position.y = 0.05;
+    this.group.add(this.parts.body);
+
+    // núcleo interno luminoso visível através da casca (translucidez fake)
+    const coreGeo = new THREE.SphereGeometry(0.32, 24, 24);
+    const coreMat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(this.palette.glowHex),
+      transparent: true,
+      opacity: 0.55,
+      blending: THREE.AdditiveBlending,
+    });
+    const core = new THREE.Mesh(coreGeo, coreMat);
+    core.position.y = -0.05;
+    this.parts.eggCore = core;
+    this.group.add(core);
+
+    this.parts.bodyBaseScale = 1;
+    this.parts.bodyHeight = 1.2;
+    this.parts.isEgg = true;
+  }
+
+  /* HALO — anel dourado horizontal acima da cabeça (fase evoluído) */
+  buildHalo() {
+    const geo = new THREE.TorusGeometry(0.55, 0.045, 12, 48);
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0xffe5a0,
+      emissive: 0xffd460,
+      emissiveIntensity: 1.2,
+      roughness: 0.2,
+      metalness: 0.6,
+    });
+    const halo = new THREE.Mesh(geo, mat);
+    halo.position.y = 1.05;
+    halo.rotation.x = Math.PI / 2;
+    this.parts.halo = halo;
+    this.group.add(halo);
+  }
+
+  /* WINGS — duas pétalas laterais translúcidas (fase evoluído) */
+  buildWings() {
+    const wingGroup = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(this.palette.accentHex),
+      emissive: new THREE.Color(this.palette.glowHex),
+      emissiveIntensity: 0.4,
+      transparent: true,
+      opacity: 0.65,
+      roughness: 0.3,
+      metalness: 0.1,
+      side: THREE.DoubleSide,
+    });
+    for (const sign of [-1, 1]) {
+      // pétala arqueada via PlaneGeometry deformada
+      const geo = new THREE.PlaneGeometry(0.8, 0.55, 8, 6);
+      const pos = geo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), y = pos.getY(i);
+        // curva pétala (X positivo afasta + curva Y)
+        pos.setX(i, x + Math.sin(Math.abs(y * 3)) * 0.08);
+        pos.setZ(i, Math.sin(x * 1.5) * 0.15);
+      }
+      geo.computeVertexNormals();
+      const wing = new THREE.Mesh(geo, mat);
+      wing.position.set(sign * 0.55, 0.2, -0.1);
+      wing.rotation.y = sign * 0.6;
+      wing.rotation.z = sign * 0.2;
+      wing.userData.phase = sign * 0.5;
+      wingGroup.add(wing);
+    }
+    this.parts.wings = wingGroup;
+    this.parts.wingArray = wingGroup.children;
+    this.group.add(wingGroup);
+  }
+
+  /* BODY — icosahedron com deslocamento procedural baseado em DNA.
+   *
+   * v2 (2026-05-22): visual "slime rancher" — gelatinoso translúcido com
+   * clearcoat brilhante. Antes era low-poly "geode quebrado" hostil.
+   *
+   * Mudanças críticas:
+   *  - detail 4 → 5 (4× mais polígonos, smooth)
+   *  - chaosBumps 0.35 → 0.08 (sutil, não agressivo)
+   *  - creativityBumps 0.25 → 0.06 (suave)
+   *  - lump multiplier 0.4 → 0.12 (per-vertex noise muito mais leve)
+   *  - removido flatShading (smooth shading sempre)
+   *  - MeshStandard → MeshPhysical com clearcoat 0.85 + transmission 0.12
+   *    + sheen 0.5 + ior 1.4 (gel jelly look)
+   */
   buildBody() {
-    const detail = 4;
+    const detail = 5;
     const geo = new THREE.IcosahedronGeometry(1, detail);
     const pos = geo.attributes.position;
     const rng = mulberry32(this.seed);
@@ -694,8 +971,8 @@ class Creature {
     const heightStretch = 0.7 + this.dna.intelligence * 0.7 + this.dna.empathy * 0.35;
     const widthSquash   = 0.85 + this.dna.resilience * 0.45 - this.dna.discipline * 0.15;
     const bottomBias    = 0.3 + this.dna.resilience * 0.5;
-    const chaosBumps    = this.dna.chaos * 0.35;
-    const creativityBumps = this.dna.creativity * 0.25;
+    const chaosBumps    = this.dna.chaos * 0.08;
+    const creativityBumps = this.dna.creativity * 0.06;
 
     for (let i = 0; i < pos.count; i++) {
       let x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
@@ -710,11 +987,12 @@ class Creature {
         z *= 1 + bottomBias * 0.3;
         y *= 1 + bottomBias * 0.2;
       }
-      // chaos lumps (per-vertex random displacement)
+      // chaos lumps sutis (per-vertex random displacement) — multiplicador
+      // 0.12 dá organicidade sem quebrar a silhueta de "criatura viva".
       const lump = noise[i] * chaosBumps;
-      x += x * lump * 0.4;
-      z += z * lump * 0.4;
-      // creative protrusions (sinusoidal patterns)
+      x += x * lump * 0.12;
+      z += z * lump * 0.12;
+      // creative protrusions (sinusoidal patterns) — agora 0.3× do valor antigo
       const protrude = Math.sin(x * 4 + this.seed) * Math.cos(z * 3.5 - this.seed)
                      * creativityBumps;
       const len = Math.sqrt(x*x + y*y + z*z);
@@ -727,68 +1005,96 @@ class Creature {
     }
     geo.computeVertexNormals();
 
+    // MeshStandard ajustado pra parecer gel (Three r128 não tem transmission
+    // estável). Stack: roughness baixa + metalness sutil + emissive forte =
+    // ilusão de translucent com inner glow. Look "Slime Rancher" sem precisar
+    // de cubeCamera ou env probe.
     const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(this.palette.body),
-      roughness: 0.55 - this.dna.discipline * 0.3,
-      metalness: 0.05 + this.dna.discipline * 0.18,
-      flatShading: this.dna.chaos > 0.65,
-      emissive: new THREE.Color(this.palette.glow),
-      emissiveIntensity: 0.05 + this.dna.socialEnergy * 0.15,
+      color: new THREE.Color(this.palette.bodyHex),
+      roughness: 0.28 - this.dna.discipline * 0.12,
+      metalness: 0.08 + this.dna.discipline * 0.10,
+      emissive: new THREE.Color(this.palette.glowHex),
+      emissiveIntensity: 0.28 + this.dna.socialEnergy * 0.30,
     });
 
     this.parts.body = new THREE.Mesh(geo, mat);
     this.parts.body.position.y = -0.05 + bottomBias * 0.1;
+    // Aplicar phase scale (ovo pequeno, evoluído grande) + user bodyRound
+    // (jovem = mais redondinho/inflado, sereno = mais compacto).
+    const phaseS = this.phase.scale ?? 1;
+    const userRound = this.userMod?.bodyRound ?? 1;
+    this.parts.body.scale.set(phaseS * userRound, phaseS, phaseS * userRound);
     this.group.add(this.parts.body);
 
     // store baseline for breathing
-    this.parts.bodyBaseScale = 1;
+    this.parts.bodyBaseScale = phaseS;
+    this.parts.bodyBaseScaleXZ = phaseS * userRound;
     this.parts.bodyHeight = heightStretch;
   }
 
-  /* EYES — proporção dirigida por empatia e inteligência */
+  /* EYES — proporção dirigida por empatia e inteligência.
+   *
+   * v2: olhos cartoon grandes (Slime Rancher / Bugsnax / Pixar). Antes eram
+   * pupilas pequenas que pareciam botões pretos. Agora pupila ocupa 62% do
+   * sclera + 2 highlights (catch-light grande + sparkle pequeno).
+   */
   buildEyes() {
     const eyeGroup = new THREE.Group();
-    const eyeSize = 0.16 + this.dna.empathy * 0.12 + this.dna.intelligence * 0.05;
-    const eyeSpread = 0.32 + (1 - this.dna.intelligence) * 0.1;
-    const eyeY = 0.45 + this.dna.intelligence * 0.25;
-    const eyeZ = 0.72;
+    // base 0.22 + eyeBoost da fase (bebê tem olhos enormes: 1.35×) + userMod
+    // (jovem = olhos um pouco maiores, kawaii)
+    const phaseEyeBoost = this.phase.eyeBoost ?? 1;
+    const userEyeMult = this.userMod?.eyeMult ?? 1;
+    const eyeSize = (0.22 + this.dna.empathy * 0.10 + this.dna.intelligence * 0.04)
+                  * phaseEyeBoost * userEyeMult;
+    const eyeSpread = 0.34 + (1 - this.dna.intelligence) * 0.08;
+    const eyeY = 0.38 + this.dna.intelligence * 0.22;
+    const eyeZ = 0.74;
 
-    // sclera
-    const scleraGeo = new THREE.SphereGeometry(eyeSize, 28, 28);
+    // sclera vidro brilhante — MeshStandard com low roughness simula highlight
+    const scleraGeo = new THREE.SphereGeometry(eyeSize, 32, 32);
     const scleraMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
-      roughness: 0.15,
-      metalness: 0.05,
-      emissive: 0xffffff,
-      emissiveIntensity: 0.12,
+      roughness: 0.10,
+      metalness: 0.15,
+      emissive: 0xfff8f0,
+      emissiveIntensity: 0.22,
     });
 
-    // pupil — escuro com brilho. Cor pode shiftar com humor.
-    const pupilSize = eyeSize * (0.4 + this.dna.curiosity * 0.25);
-    const pupilGeo = new THREE.SphereGeometry(pupilSize, 20, 20);
+    // pupila grande (62% do sclera) com íris colorida no fundo
+    const pupilSize = eyeSize * (0.62 + this.dna.curiosity * 0.18);
+    const pupilGeo = new THREE.SphereGeometry(pupilSize, 24, 24);
+    // pupila não totalmente preta — tom escuro do hue do corpo dá "alma colorida"
     const pupilColor = new THREE.Color().setHSL(
-      this.palette.bodyHSL[0] / 360, 0.35, 0.12
+      this.palette.bodyHSL[0] / 360, 0.55, 0.14
     );
     const pupilMat = new THREE.MeshStandardMaterial({
-      color: pupilColor, roughness: 0.3, metalness: 0.2,
-      emissive: new THREE.Color(this.palette.glow),
-      emissiveIntensity: 0.4 + this.dna.intelligence * 0.5,
+      color: pupilColor,
+      roughness: 0.25,
+      metalness: 0.15,
+      emissive: new THREE.Color(this.palette.glowHex),
+      emissiveIntensity: 0.55 + this.dna.intelligence * 0.4,
     });
 
-    // highlight (catch-light)
-    const hlGeo = new THREE.SphereGeometry(pupilSize * 0.3, 12, 12);
+    // catch-light principal (highlight grande superior-esquerdo)
+    const hlGeo = new THREE.SphereGeometry(pupilSize * 0.42, 14, 14);
     const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    // sparkle secundário (highlight pequeno inferior-direito) — "vida" no olho
+    const hl2Geo = new THREE.SphereGeometry(pupilSize * 0.18, 10, 10);
+    const hl2Mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
     for (const sign of [-1, 1]) {
       const e = new THREE.Group();
       const s = new THREE.Mesh(scleraGeo, scleraMat);
       e.add(s);
       const p = new THREE.Mesh(pupilGeo, pupilMat);
-      p.position.z = eyeSize * 0.6;
+      p.position.z = eyeSize * 0.55;
       e.add(p);
       const hl = new THREE.Mesh(hlGeo, hlMat);
-      hl.position.set(pupilSize * 0.4, pupilSize * 0.3, eyeSize * 0.85);
+      hl.position.set(-pupilSize * 0.32, pupilSize * 0.38, eyeSize * 0.92);
       e.add(hl);
+      const hl2 = new THREE.Mesh(hl2Geo, hl2Mat);
+      hl2.position.set(pupilSize * 0.35, -pupilSize * 0.28, eyeSize * 0.88);
+      e.add(hl2);
       e.position.set(sign * eyeSpread, eyeY, eyeZ);
       e.userData.basePos = e.position.clone();
       e.userData.pupil = p;
@@ -800,12 +1106,15 @@ class Creature {
     this.group.add(eyeGroup);
   }
 
-  /* LIMBS — número derivado de chaos e creativity (0 a 4 pares) */
+  /* LIMBS — número derivado de chaos e creativity, capeado pela fase.
+   * v2: max 2 pares (silhueta limpa). v3: cap pela fase (criança max 1 par,
+   * adolescente+ max 2 pares). */
   buildLimbs() {
-    const limbCount = Math.floor(this.dna.creativity * 3 + this.dna.chaos * 2);
+    const phaseCap = this.phase.maxLimbs ?? 2;
+    const limbCount = Math.min(phaseCap, Math.floor(this.dna.creativity * 1.5 + this.dna.chaos * 1));
     const limbGroup = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(this.palette.body).multiplyScalar(0.85),
+      color: new THREE.Color(this.palette.bodyHex).multiplyScalar(0.85),
       roughness: 0.5, metalness: 0.05,
     });
     for (let i = 0; i < limbCount; i++) {
@@ -844,9 +1153,9 @@ class Creature {
     const segments = 8;
     const tailGroup = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(this.palette.accent),
+      color: new THREE.Color(this.palette.accentHex),
       roughness: 0.4, metalness: 0.1,
-      emissive: new THREE.Color(this.palette.glow),
+      emissive: new THREE.Color(this.palette.glowHex),
       emissiveIntensity: 0.15 + this.dna.socialEnergy * 0.2,
     });
     for (let i = 0; i < segments; i++) {
@@ -863,13 +1172,14 @@ class Creature {
     this.group.add(tailGroup);
   }
 
-  /* SPIKES — se aggression > 0.55 */
+  /* SPIKES — só se aggression > 0.70 (raro). v2: threshold subiu de 0.55
+   * pra 0.70 e count máximo de 10 pra 5. Spikes viravam "porco-espinho". */
   buildSpikes() {
-    if (this.dna.aggression < 0.55) return;
-    const count = Math.floor(3 + this.dna.aggression * 7);
+    if (this.dna.aggression < 0.70) return;
+    const count = Math.floor(2 + this.dna.aggression * 3);
     const spikeGroup = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(this.palette.accent).multiplyScalar(0.7),
+      color: new THREE.Color(this.palette.accentHex).multiplyScalar(0.7),
       roughness: 0.3, metalness: 0.4,
     });
     for (let i = 0; i < count; i++) {
@@ -897,12 +1207,12 @@ class Creature {
     if (this.dna.curiosity < 0.55) return;
     const antennaGroup = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(this.palette.body).multiplyScalar(0.7),
+      color: new THREE.Color(this.palette.bodyHex).multiplyScalar(0.7),
       roughness: 0.4, metalness: 0.1,
     });
     const bulbMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(this.palette.glow),
-      emissive: new THREE.Color(this.palette.glow),
+      color: new THREE.Color(this.palette.glowHex),
+      emissive: new THREE.Color(this.palette.glowHex),
       emissiveIntensity: 0.9,
       roughness: 0.2,
     });
@@ -946,7 +1256,7 @@ class Creature {
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.userData = { orbits };
     const mat = new THREE.PointsMaterial({
-      color: new THREE.Color(this.palette.glow),
+      color: new THREE.Color(this.palette.glowHex),
       size: 0.045 + this.dna.socialEnergy * 0.04,
       transparent: true,
       opacity: 0.55 + this.dna.socialEnergy * 0.3,
@@ -963,8 +1273,39 @@ class Creature {
     const breathFreq = 1.0 - this.dna.emotionalDepth * 0.4;
     const breathAmp = 0.04 + this.dna.empathy * 0.04;
     const breath = 1 + Math.sin(t * breathFreq * 2) * breathAmp;
+    // SQUASH-STRETCH JELLY — volume-preserving wobble que dá "sensação de vivo".
+    // Quando Y estica, XZ comprime (inversamente). Frequência 1.6× do breath
+    // pra criar polirritmia (não monotônico). Amplitude maior em chaos alto.
+    const jellyAmp = 0.025 + this.dna.chaos * 0.025 + this.dna.socialEnergy * 0.015;
+    const jelly = Math.sin(t * breathFreq * 3.2) * jellyAmp;
+    const jellyY = 1 + jelly;       // quando jelly positivo: estica Y
+    const jellyXZ = 1 - jelly * 0.55; // comprime XZ (volume-preserving aprox)
     if (this.parts.body) {
-      this.parts.body.scale.set(breath, breath * (1 + breathAmp * 0.3), breath);
+      // Combina baseline (phase scale + userMod bodyRound) × breath × jelly
+      const baseXZ = this.parts.bodyBaseScaleXZ ?? this.parts.bodyBaseScale ?? 1;
+      const baseY = this.parts.bodyBaseScale ?? 1;
+      this.parts.body.scale.set(
+        baseXZ * breath * jellyXZ,
+        baseY * breath * (1 + breathAmp * 0.3) * jellyY,
+        baseXZ * breath * jellyXZ,
+      );
+    }
+    // Ovo: núcleo interno pulsa com frequência mais lenta e amplitude maior
+    if (this.parts.isEgg && this.parts.eggCore) {
+      const pulse = 1 + Math.sin(t * 1.6) * 0.18;
+      this.parts.eggCore.scale.setScalar(pulse);
+      this.parts.eggCore.material.opacity = 0.45 + Math.sin(t * 1.6) * 0.18;
+    }
+    // Halo gira lentamente (fase evoluído)
+    if (this.parts.halo) {
+      this.parts.halo.rotation.z = t * 0.4;
+      this.parts.halo.position.y = 1.05 + Math.sin(t * 1.2) * 0.04;
+    }
+    // Asas batem suavemente
+    if (this.parts.wingArray) {
+      for (const w of this.parts.wingArray) {
+        w.rotation.z = w.userData.phase + Math.sin(t * 2.4) * 0.18;
+      }
     }
 
     // IDLE WOBBLE — figura em 8 leve
@@ -1086,9 +1427,10 @@ function spawnCreature(seed, presetKey) {
   state.seed = seed;
   state.preset = presetKey || null;
   state.dna = generateDNA(seed, presetKey);
-  state.creature = new Creature(state.dna, seed);
   state.birthTime = Date.now();
   state.ageDays = 0;
+  state.lastPhaseKey = 'egg';
+  state.creature = new Creature(state.dna, seed, state.ageDays, currentUserBand);
   state.mutations = [];
   state.memories = [
     `nasceu há instantes com seed #${seed}`,
@@ -1097,6 +1439,21 @@ function spawnCreature(seed, presetKey) {
   scene.add(state.creature.group);
   updateSceneTint(state.dna);
   renderAllUI();
+}
+
+/** Rebuild a criatura preservando state (DNA, age, seed) — usado quando phase
+ * muda automaticamente pelo envelhecimento, ou quando user band muda. */
+function rebuildCreature(reason) {
+  if (!state.creature) return;
+  scene.remove(state.creature.group);
+  state.creature.dispose();
+  state.creature = new Creature(state.dna, state.seed, state.ageDays, currentUserBand);
+  scene.add(state.creature.group);
+  updateSceneTint(state.dna);
+  if (reason) addMemory(reason);
+  renderTraits();
+  renderIdentity();
+  renderLifeSection();
 }
 
 function getInitialFeeling(dna) {
@@ -1148,6 +1505,13 @@ window.addEventListener('mousemove', e => {
    RENDER LOOP
    ========================================================================= */
 const clock = new THREE.Clock();
+// AUTO-AGING — tempo real progride a idade do mascote.
+// 1 segundo real = 1 dia virtual (acelera demonstração; em produção seria
+// 1 dia real = 1 dia virtual). Pode ser ajustado em runtime via slider.
+let timeScale = 1.0; // dias virtuais por segundo real
+let agingPaused = false;
+let lastUITick = 0;
+
 function animate() {
   requestAnimationFrame(animate);
   const dt = clock.getDelta();
@@ -1156,6 +1520,25 @@ function animate() {
   // smooth mouse
   mouse.x += (mouse.tx - mouse.x) * 0.06;
   mouse.y += (mouse.ty - mouse.y) * 0.06;
+
+  // Auto-aging: idade progride com tempo real. Detecta phase change e
+  // dispara rebuild com memória narrativa (sensação de "ele cresceu!")
+  if (state.creature && !agingPaused) {
+    state.ageDays += dt * timeScale;
+    const newPhase = phaseFromAge(state.ageDays);
+    if (newPhase.key !== state.lastPhaseKey) {
+      state.lastPhaseKey = newPhase.key;
+      rebuildCreature(`✦ entrou na fase ${newPhase.label.toLowerCase()}`);
+    }
+    // UI tick: atualiza traits (idade, próxima fase) a cada 0.5s pra evitar
+    // re-render constante.
+    if (t - lastUITick > 0.5) {
+      lastUITick = t;
+      renderTraits();
+      renderIdentity();
+      renderLifeSection();
+    }
+  }
 
   // mood = function of trait composition + time
   const mood = Math.sin(t * 0.2) * 0.2 + 0.5
@@ -1235,13 +1618,14 @@ function refreshGeneUI() {
 let rebuildTimer = null;
 function rebuildLightly() {
   // debounce: rebuild creature mesh after small pause
+  // BUG fix 2026-05-22: estava passando só (dna, seed) — perdia ageDays e
+  // userBand, sempre voltando pra ovo. Agora preserva tudo.
   clearTimeout(rebuildTimer);
   rebuildTimer = setTimeout(() => {
     if (!state.creature) return;
-    state.creature.palette = getPalette(state.dna);
     scene.remove(state.creature.group);
     state.creature.dispose();
-    state.creature = new Creature(state.dna, state.seed);
+    state.creature = new Creature(state.dna, state.seed, state.ageDays, currentUserBand);
     scene.add(state.creature.group);
     updateSceneTint(state.dna);
   }, 90);
@@ -1341,6 +1725,7 @@ function renderAllUI() {
   renderMood();
   renderTraits();
   renderMemory();
+  renderLifeSection();
 }
 
 /* =========================================================================
@@ -1401,6 +1786,139 @@ document.getElementById('btn-evolve').addEventListener('click', () => {
     addMemory('a criatura ganhou estabilidade emocional');
   }
 });
+
+/* =========================================================================
+   LIFE SECTION — render phase progress + idade + próxima fase
+   ========================================================================= */
+function renderLifeSection() {
+  if (!state.creature) return;
+  const phase = phaseFromAge(state.ageDays);
+  const next = nextPhaseInfo(state.ageDays);
+  document.getElementById('life-phase-label').textContent = phase.label;
+  const ageDisplay = state.ageDays < 1
+    ? `${(state.ageDays * 24).toFixed(1)} horas`
+    : state.ageDays < 60
+      ? `${state.ageDays.toFixed(1)} dias`
+      : state.ageDays < 365
+        ? `${(state.ageDays / 30).toFixed(1)} meses`
+        : `${(state.ageDays / 365).toFixed(1)} anos`;
+  document.getElementById('life-age-display').textContent = ageDisplay;
+  if (next) {
+    const daysUntil = next.daysUntil;
+    const unit = daysUntil < 1 ? `${(daysUntil * 24).toFixed(0)}h` : `${daysUntil.toFixed(1)}d`;
+    document.getElementById('life-next-display').textContent =
+      `→ ${next.label.toLowerCase()} em ${unit}`;
+    // progress da fase atual: quanto avançou desde minDays até next.minDays
+    const phaseStart = phase.minDays;
+    const phaseEnd = next.minDays;
+    const pct = Math.max(0, Math.min(100, ((state.ageDays - phaseStart) / (phaseEnd - phaseStart)) * 100));
+    document.getElementById('life-phase-fill').style.width = pct + '%';
+  } else {
+    document.getElementById('life-next-display').textContent = '→ longevidade plena';
+    document.getElementById('life-phase-fill').style.width = '100%';
+  }
+}
+
+// Time scale buttons (pausa, 1×, 10×, 30×, 120×)
+document.querySelectorAll('.time-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const scale = parseFloat(btn.dataset.scale);
+    if (scale === 0) { agingPaused = true; }
+    else { agingPaused = false; timeScale = scale; }
+  });
+});
+
+// User age band — adapta paleta + proporções
+document.querySelectorAll('.band-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.band-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentUserBand = btn.dataset.band;
+    rebuildCreature(`adaptou ao tom da pessoa: ${USER_BANDS[currentUserBand].label}`);
+  });
+});
+
+/* =========================================================================
+   SENTIMENT ANALYSIS — keyword-based, intencionalmente simples.
+   Cada mensagem do user pode disparar drift em até 3 genes (delta sutil 0.025).
+   Não classifica "sentimento bom/ruim" — só intenção (calmo/motivador/curioso etc).
+   ========================================================================= */
+const SENTIMENT_LEXICON = [
+  { keys: ['calma', 'paz', 'tranqui', 'sereno', 'devagar', 'respira', 'silenc'],
+    genes: { empathy: 0.03, resilience: 0.025, emotionalDepth: 0.02 },
+    label: 'tom calmo' },
+  { keys: ['vai', 'bora', 'energia', 'forte', 'capaz', 'consegu', 'foco', 'meta'],
+    genes: { socialEnergy: 0.03, adaptability: 0.025, discipline: 0.02 },
+    label: 'tom motivador' },
+  { keys: ['?', 'como', 'por que', 'o que', 'quem', 'quando', 'curios', 'descobr'],
+    genes: { curiosity: 0.035, intelligence: 0.025 },
+    label: 'tom curioso' },
+  { keys: ['triste', 'cansad', 'mal', 'ansios', 'ruim', 'pesado', 'difíc', 'dificil', 'sozin'],
+    genes: { emotionalDepth: 0.035, empathy: 0.025, resilience: 0.02 },
+    label: 'tom vulnerável' },
+  { keys: ['louco', 'caos', 'doido', 'random', 'aleator', 'absurdo', 'maluco'],
+    genes: { chaos: 0.035, creativity: 0.025 },
+    label: 'tom caótico' },
+  { keys: ['rotina', 'plano', 'discipli', 'organiz', 'estrutu', 'ordem', 'horár'],
+    genes: { discipline: 0.035, intelligence: 0.02 },
+    label: 'tom estruturado' },
+  { keys: ['amor', 'querid', 'gosto', 'amo', 'fofa', 'fofin', 'companh'],
+    genes: { empathy: 0.04, socialEnergy: 0.025 },
+    label: 'tom afetuoso' },
+  { keys: ['cria', 'invent', 'imagina', 'sonh', 'arte', 'desenh', 'novo'],
+    genes: { creativity: 0.04, curiosity: 0.02 },
+    label: 'tom criativo' },
+];
+
+function analyzeAndDrift(text) {
+  const lower = text.toLowerCase();
+  const matched = [];
+  const driftMap = {};
+  for (const entry of SENTIMENT_LEXICON) {
+    if (entry.keys.some(k => lower.includes(k))) {
+      matched.push(entry.label);
+      for (const [g, d] of Object.entries(entry.genes)) {
+        driftMap[g] = (driftMap[g] || 0) + d;
+      }
+    }
+  }
+  // Aplica drift no DNA (clamp 0.02-0.98)
+  const significant = [];
+  for (const [g, d] of Object.entries(driftMap)) {
+    const before = state.dna[g];
+    state.dna[g] = Math.max(0.02, Math.min(0.98, before + d));
+    if (Math.abs(state.dna[g] - before) > 0.01) significant.push(g);
+  }
+  return { matched, significant };
+}
+
+document.getElementById('chat-send').addEventListener('click', sendChat);
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendChat();
+});
+
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const { matched, significant } = analyzeAndDrift(text);
+  const feedback = document.getElementById('chat-feedback');
+  if (matched.length > 0) {
+    feedback.textContent = `↺ ${matched.join(' · ')} — DNA se moldou`;
+    rebuildLightly();
+    refreshGeneUI();
+    renderTraits(); renderMood(); renderIdentity();
+    addMemory(`você disse algo com ${matched[0]}`);
+  } else {
+    feedback.textContent = `· ouviu sem se transformar (tom neutro)`;
+    addMemory(`você falou, ela escutou`);
+  }
+  feedback.style.opacity = '1';
+  setTimeout(() => { feedback.style.opacity = '0'; }, 2400);
+  input.value = '';
+}
 
 /* PRESETS — 4 personalidades base */
 function renderPresets() {
