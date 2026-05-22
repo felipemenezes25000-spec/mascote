@@ -1,0 +1,8 @@
+# Fecha o tour de 4 passos na primeira entrada na home.
+appId: app.meumascote.dev
+---
+- runFlow:
+    when:
+      visible: "Pular tour|pular|Esse é seu Mascote"
+    commands:
+      - tapOn: "Pular tour"

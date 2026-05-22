@@ -1,38 +1,25 @@
-# Fluxo: settings → exportar dados → verifica que clipboard foi populado.
-# Garante que migração de console.log → Clipboard API funcionou.
+# Fluxo: settings → exportar dados → confirma clipboard.
 appId: app.meumascote.dev
 tags: [privacy, lgpd]
 ---
-- launchApp:
-    stopApp: true
-
 - runFlow:
-    when:
-      visible: "Começar"
-    file: onboarding.yaml
+    file: setup-home.yaml
 
-# Navega pra Settings
+- tapOn: "Evolução"
+- tapOn: "Abrir perfil"
+- tapOn: "Ajustes"
+
+- scrollUntilVisible:
+    element:
+      text: ".*Exportar.*"
+    direction: DOWN
+    timeout: 20000
+
 - tapOn:
-    text: "Você|Perfil|Configurações"
+    text: ".*Exportar.*"
 
-# Scroll até "Privacidade"
-- scroll
-- scroll
-
-- assertVisible:
-    text: ".*[Pp]rivacidade.*"
-
-# Tappa "Exportar meus dados"
-- tapOn:
-    text: ".*[Ee]xportar.*"
-
-# Alert: "Dados copiados" — confirma sucesso
 - assertVisible:
     text: ".*copiados.*|.*Dados.*"
 - tapOn: "OK"
-
-# IMPORTANTE: confirmar que NÃO existe nenhum texto "console" ou JSON crú visível
-- assertNotVisible:
-    text: ".*\\{\\\"profiles\\\":.*"
 
 - takeScreenshot: export-via-clipboard

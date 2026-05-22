@@ -2,36 +2,22 @@
 appId: app.meumascote.dev
 tags: [chat, safety]
 ---
-- launchApp:
-    stopApp: true
-
 - runFlow:
-    when:
-      visible: "Começar"
-    file: onboarding.yaml
+    file: setup-home.yaml
 
-# Navega pra aba Conversar
-- tapOn:
-    text: "Conversar|Chat"
+- tapOn: "Conversar"
 
 - tapOn:
     id: "chat_input"
 
-- inputText: "oi mascote, bebi 4 copos de água hoje"
-- hideKeyboard
-- tapOn:
-    text: "Enviar"
+- inputText: "oi mascote, bebi 4 copos de agua hoje"
 
-# Espera resposta aparecer
-- assertVisible:
-    text: ".*"
-    waitToSettleTimeoutMs: 5000
+- tapOn: "Enviar mensagem"
 
-# Banner CVV deve estar VISÍVEL no chat (sempre, prevenção wellness)
-- assertVisible:
-    text: ".*188.*|.*CVV.*"
+- extendedWaitUntil:
+    visible: ".*188.*|.*CVV.*"
+    timeout: 30000
 
-# E o reply NÃO deve conter linguagem médica
 - assertNotVisible: "depressão"
 - assertNotVisible: "diagnóstico"
 - assertNotVisible: "antidepressivo"

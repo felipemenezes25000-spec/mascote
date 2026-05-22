@@ -1,24 +1,22 @@
-# Fluxo: navega pra paywall, verifica que o billing.ts é consultado
-# (preços e tiers consistentes), volta sem comprar.
+# Paywall via Evolução → Perfil → Ajustes → Assinatura → trial
 appId: app.meumascote.dev
 tags: [billing]
 ---
-- launchApp:
-    stopApp: true
-
 - runFlow:
-    when:
-      visible: "Começar"
-    file: onboarding.yaml
+    file: setup-home.yaml
 
-# Vai pra settings → subscription
-- tapOn:
-    text: "Você|Perfil|Settings|Configurações"
+- tapOn: "Evolução"
+- tapOn: "Abrir perfil"
+- tapOn: "Ajustes"
 
-- tapOn:
-    text: ".*[Aa]ssinatura.*|.*[Pp]lano.*"
+- scrollUntilVisible:
+    element:
+      text: "Assinatura e planos"
+    direction: DOWN
+    timeout: 30000
 
-# Subscription mostra Free + Plus Anual + Plus Mensal
+- tapOn: "Assinatura e planos"
+
 - assertVisible: "Free"
 - assertVisible:
     text: ".*Plus.*"
@@ -27,17 +25,14 @@ tags: [billing]
 - assertVisible:
     text: "R\\$\\s*249"
 
-# Tappa "Começar trial" → vai pro paywall.tsx
 - tapOn:
-    text: ".*trial.*|.*[Cc]omeçar.*"
+    text: ".*trial.*7.*dias.*"
 
-# Paywall: 2 cards (Anual + Mensal)
 - assertVisible: "Anual"
 - assertVisible: "Mensal"
 - assertVisible:
     text: ".*RECOMENDADO.*"
 
-# Volta sem comprar
-- tapOn: "Continuar grátis"
+- tapOn: "Fico com a versão grátis por enquanto"
 
 - takeScreenshot: paywall-dismissed

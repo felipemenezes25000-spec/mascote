@@ -1,67 +1,89 @@
-# Fluxo: onboarding completo, do welcome até a home.
-# Cobre: navegação multi-tela, persistência (profile + mascot), inputs.
+# Fluxo v2: welcome → signup → age → goal+mood → style → quick → mascot → name → notice → home
 appId: app.meumascote.dev
 tags: [critical, onboarding]
 ---
-# Limpa estado: garante que o app começa do zero.
 - clearState
 
 - launchApp
 
-# Welcome screen
-- assertVisible: "Mascote"
-- assertVisible:
-    text: ".*30 segundos.*"
-    enabled: true
+- extendedWaitUntil:
+    visible: "Começar"
+    timeout: 90000
 - tapOn: "Começar"
 
-# Idade
-- assertVisible: "Passo 1 de"
+# Signup
+- assertVisible: "Criar conta"
+- tapOn: "Seu nome"
+- inputText: "Felipe"
+- hideKeyboard
+- tapOn: "Continuar"
+
+# Idade (Passo 1) — aguarda navegação pós-signup
+- extendedWaitUntil:
+    visible: "Qual sua faixa de idade?"
+    timeout: 30000
+- assertVisible:
+    text: ".*Passo 1 de.*"
 - tapOn: "25–34"
 - tapOn: "Continuar"
 
-# Goal
-- assertVisible: "Passo 2 de"
-- tapOn:
-    index: 0  # primeiro objetivo
-- tapOn: "Continuar"
-
-# Mood
-- assertVisible: "Passo 3 de"
-- tapOn:
-    text: ".*ok.*|.*feliz.*"
-- tapOn: "Continuar"
-
-# Mascote (escolha visual)
-- assertVisible: "Passo 4 de"
-- tapOn:
-    index: 0
-- tapOn: "Continuar"
-
-# Personality
-- assertVisible: "Passo 5 de"
-- tapOn: "Calmo"
-- tapOn: "Continuar"
-
-# Name
-- assertVisible: "Passo 6 de"
-- tapOn:
-    id: "user_name_input"
-- inputText: "Felipe"
-- hideKeyboard
-- tapOn: "Pronto"
-
-# Push consent
-- assertVisible: "Passo 7 de"
-- tapOn:
-    text: "Agora não|Sim, pode me avisar"
-
-# Notice (disclaimer wellness)
+# Objetivo + humor (Passo 2)
 - assertVisible:
-    text: ".*16.*"
-- tapOn: "Entendi"
+    text: ".*Passo 2 de.*"
+- tapOn: "Melhorar meu sono"
+- tapOn: "Humor 4 de 5"
+- tapOn: "Continuar"
 
-# Home — verifica que mascote tá lá
+# Estilo (Passo 3)
 - assertVisible:
-    text: "Felipe|streak|hábito"
+    text: ".*Passo 3 de.*"
+- tapOn: "Suave"
+- tapOn: "Continuar"
+
+# Quick — vínculo, tom, pronome (Passo 4)
+- assertVisible:
+    text: ".*Passo 4 de.*"
+- tapOn: "Companheiro leve"
+- tapOn: "Carinhoso"
+- tapOn: "Ele / dele"
+- tapOn: "Revelar DNA"
+
+# Mascot — DNA + chocar (Passo 5)
+- assertVisible:
+    text: ".*Passo 5 de.*"
+- tapOn: "Chocar o ovo"
+- extendedWaitUntil:
+    visible: "Dar um nome"
+    timeout: 60000
+- tapOn: "Dar um nome"
+
+# Nome (Passo 6)
+- extendedWaitUntil:
+    visible: "Vamos nos apresentar"
+    timeout: 30000
+- runFlow:
+    when:
+      visible: "Vamos nos apresentar"
+    commands:
+      - tapOn:
+          id: "onboarding_name_finish"
+
+# Notice + push (Passo 7)
+- extendedWaitUntil:
+    visible: "Entendi e quero começar"
+    timeout: 30000
+- assertVisible:
+    text: ".*Passo 7 de.*"
+- tapOn: "Entendi e quero começar"
+
+- runFlow:
+    file: dismiss-tour.yaml
+
+# Home — finish() persiste perfil/mascote antes do replace; aguarda tab bar.
+- extendedWaitUntil:
+    visible: "Conversar"
+    timeout: 120000
+- extendedWaitUntil:
+    visible: "Cuide de você|Bebi 1 copo|NÍVEL"
+    timeout: 60000
 - takeScreenshot: onboarding-complete

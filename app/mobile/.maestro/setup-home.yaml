@@ -1,0 +1,26 @@
+# Garante app na home (onboarding completo). Usado por checkin e chat-crisis.
+appId: app.meumascote.dev
+---
+- launchApp:
+    stopApp: true
+
+- extendedWaitUntil:
+    visible:
+      "Começar|Conversar|Cuide de você|Bebi 1 copo"
+    timeout: 120000
+
+- runFlow:
+    when:
+      visible: "Começar"
+    file: onboarding.yaml
+
+- runFlow:
+    file: dismiss-tour.yaml
+
+- extendedWaitUntil:
+    visible: "Conversar"
+    timeout: 90000
+
+- extendedWaitUntil:
+    visible: "Cuide de você"
+    timeout: 60000

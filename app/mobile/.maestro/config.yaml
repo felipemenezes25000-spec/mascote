@@ -15,6 +15,16 @@ tags:
 flows:
   - "*.yaml"
   - "!config.yaml"
+  - "!setup-home.yaml"
+  - "!dismiss-tour.yaml"
 
 executionOrder:
   continueOnFailure: false
+  flowsOrder:
+    - onboarding
+    - checkin
+    - chat-crisis
+    - chat-safe
+    - paywall
+    - settings-export
+    - dynamic-text

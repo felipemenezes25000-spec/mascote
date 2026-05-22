@@ -21,17 +21,19 @@ describe('BILLING_TIERS', () => {
     expect(free.totalCents).toBe(0);
   });
 
-  it('Plus mensal R$ 24,90', () => {
+  it('Bipo Plus mensal R$ 19,90', () => {
     const m = getTier('plus_monthly');
-    expect(m.monthlyCents).toBe(2490);
-    expect(m.totalCents).toBe(2490);
+    expect(m.name).toBe('Bipo Plus');
+    expect(m.monthlyCents).toBe(1990);
+    expect(m.totalCents).toBe(1990);
     expect(m.period).toBe('monthly');
     expect(m.trialDays).toBe(7);
   });
 
-  it('Plus anual R$ 249,00 com badge "RECOMENDADO"', () => {
+  it('Bipo Plus anual R$ 199,00 com badge "RECOMENDADO"', () => {
     const a = getTier('plus_annual');
-    expect(a.totalCents).toBe(24900);
+    expect(a.name).toBe('Bipo Plus Anual');
+    expect(a.totalCents).toBe(19900);
     expect(a.period).toBe('annual');
     expect(a.badge).toBe('RECOMENDADO');
   });
@@ -72,8 +74,8 @@ describe('formatPerMonth', () => {
   it('"Grátis" para free', () => {
     expect(formatPerMonth(getTier('free'))).toBe('Grátis');
   });
-  it('"R$ 24,90/mês" para mensal', () => {
-    expect(formatPerMonth(getTier('plus_monthly'))).toBe('R$ 24,90/mês');
+  it('"R$ 19,90/mês" para mensal', () => {
+    expect(formatPerMonth(getTier('plus_monthly'))).toBe('R$ 19,90/mês');
   });
   it('"R$ X,YY/mês (cobrado R$ A,BC/ano)" para anual', () => {
     const s = formatPerMonth(getTier('plus_annual'));

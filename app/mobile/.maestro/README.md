@@ -37,11 +37,11 @@ maestro test .maestro/  # todos
 
 | Arquivo | Cobre |
 |---|---|
-| `onboarding.yaml` | welcome → age → goal → mood → personality → name → push → notice → home |
+| `onboarding.yaml` | welcome → signup → age → goal+mood → style → quick → mascot → name → notice → home |
 | `checkin.yaml` | abrir home + tappear hábito + verificar contador |
 | `chat-safe.yaml` | enviar msg neutra; verificar reply sem disclaimer |
 | `chat-crisis.yaml` | enviar msg crítica; verificar CRISIS_REPLY com CVV 188 |
-| `paywall.yaml` | navegar pra paywall; ver 2 planos; voltar sem comprar |
+| `paywall.yaml` | settings → assinatura → paywall; ver planos; voltar sem comprar |
 | `settings-export.yaml` | exportar dados → assertar clipboard preenchido |
 | `dynamic-text.yaml` | togglar dynamic_text → ver fonte mudar |
 

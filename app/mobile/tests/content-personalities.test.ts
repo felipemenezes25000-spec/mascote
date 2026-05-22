@@ -77,21 +77,39 @@ describe('getPersonality', () => {
   });
 });
 
-describe('personality bestFor — coberturas distintas', () => {
-  it('calmo cobre sono / meditação', () => {
+describe('personality bestFor — coberturas distintas (alinhado ao site)', () => {
+  it('calmo (Bipo): sono · respiração · pausa', () => {
     const calmo = getPersonality('calmo');
-    expect(calmo.bestFor.join(' ').toLowerCase()).toMatch(/sono|medita/);
+    const tags = calmo.bestFor.join(' ').toLowerCase();
+    expect(tags).toMatch(/sono/);
+    expect(tags).toMatch(/respira/);
+    expect(tags).toMatch(/pausa/);
   });
-  it('motivador cobre exercício / foco', () => {
+  it('motivador (Zip): exercício · foco · hidratação', () => {
     const motivador = getPersonality('motivador');
-    expect(motivador.bestFor.join(' ').toLowerCase()).toMatch(/exerc|foco|hidrata|organiza/);
+    const tags = motivador.bestFor.join(' ').toLowerCase();
+    expect(tags).toMatch(/exerc/);
+    expect(tags).toMatch(/foco/);
+    expect(tags).toMatch(/hidrata/);
   });
-  it('fofo cobre vínculo / gratidão', () => {
+  it('fofo (Lulu, A Companheira): diário · gratidão · conexão', () => {
     const fofo = getPersonality('fofo');
-    expect(fofo.bestFor.join(' ').toLowerCase()).toMatch(/grati|vínculo|vitória|humor/);
+    const tags = fofo.bestFor.join(' ').toLowerCase();
+    expect(tags).toMatch(/diári/);
+    expect(tags).toMatch(/grati/);
+    expect(tags).toMatch(/conex/);
   });
-  it('sabio cobre reflexão / leitura', () => {
+  it('sabio (Aro): reflexão · leitura · intenção', () => {
     const sabio = getPersonality('sabio');
-    expect(sabio.bestFor.join(' ').toLowerCase()).toMatch(/reflex|leitura|journ|espiritu/);
+    const tags = sabio.bestFor.join(' ').toLowerCase();
+    expect(tags).toMatch(/reflex/);
+    expect(tags).toMatch(/leitura/);
+    expect(tags).toMatch(/inten/);
+  });
+});
+
+describe('Lulu = Companheira (não "Fofo" no rótulo visível)', () => {
+  it('label visível é "Companheira" (alinha com site)', () => {
+    expect(getPersonality('fofo').label).toBe('Companheira');
   });
 });
