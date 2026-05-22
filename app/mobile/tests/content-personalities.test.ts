@@ -41,10 +41,12 @@ describe('personalities catalog', () => {
     expect(names.get('sabio')).toBe('Aro');
   });
 
-  it('greetings são em PT-BR (heurística: chars acentuados ou palavras PT)', () => {
+  it('greetings são em PT-BR (heurística: palavras/marcadores comuns)', () => {
+    // Heurística ampla — qualquer palavra/marcador típico de PT-BR informal.
+    // Cobre as 4 frases canônicas alinhadas com o site (mascotevirtual.com.br).
+    const ptMarker = /você|hoje|vamos|bora|que|um|seu|agora|contigo|conta|pra|tá|vivo|eu|sem|com|você|teu/i;
     for (const p of personalities) {
-      // pelo menos uma palavra portuguesa comum
-      expect(p.greeting).toMatch(/você|hoje|vamos|bora|que|um|seu/i);
+      expect(p.greeting).toMatch(ptMarker);
     }
   });
 

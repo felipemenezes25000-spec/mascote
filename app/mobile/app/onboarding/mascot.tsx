@@ -33,8 +33,16 @@ import { sanitizeGenome } from '@/lib/dna';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { BondType, CommunicationTone, UserGoal } from '@/game/evolution/EvolutionTypes';
+import type { Personality } from '@/types';
 
 type Phase = 'reveal' | 'hatch' | 'birth';
+
+const VALID_PERSONALITIES: readonly Personality[] = ['calmo', 'motivador', 'fofo', 'sabio'];
+
+function parsePersonality(raw: string | undefined): Personality | undefined {
+  if (!raw) return undefined;
+  return VALID_PERSONALITIES.includes(raw as Personality) ? (raw as Personality) : undefined;
+}
 
 export default function MascotBirth() {
   const theme = useTheme();
@@ -43,6 +51,7 @@ export default function MascotBirth() {
     goal?: string; mood?: string; style?: string;
     bond?: string; tone?: string; pronoun?: string; primaryGoal?: string;
     display_name?: string; age_band?: string;
+    personality?: string;
   }>();
 
   const answers = useMemo((): OnboardingAnswers => ({
@@ -55,9 +64,12 @@ export default function MascotBirth() {
     primaryGoal: (params.primaryGoal as UserGoal) ?? 'saude_geral',
   }), [params]);
 
-  const personality = personalityFromBond(answers.bondType);
+  // Personality vem explícita do usuário (escolha direta do mascote em
+  // quick.tsx/identity.tsx). Se não vier — fluxos legados ou deep-links —
+  // cai no derivado-do-bond pra não quebrar.
+  const personality = parsePersonality(params.personality) ?? personalityFromBond(answers.bondType);
   const preview = useMemo(
-    () => generateOnboardingPreview(answers, getPersonality(personality).mascotName),
+    () => generateOnboardingPreview(answers, getPersonality(personality).mascotName, personality),
     [answers, personality],
   );
   const visuals = useMemo(

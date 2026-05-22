@@ -40,10 +40,10 @@ tags: [critical, onboarding]
 - tapOn: "Suave"
 - tapOn: "Continuar"
 
-# Quick — vínculo, tom, pronome (Passo 4)
+# Quick — mascote, tom, pronome (Passo 4)
 - assertVisible:
     text: ".*Passo 4 de.*"
-- tapOn: "Companheiro leve"
+- tapOn: "Bipo · O Calmo"
 - tapOn: "Carinhoso"
 - tapOn: "Ele / dele"
 - tapOn: "Revelar DNA"

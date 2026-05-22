@@ -381,6 +381,14 @@ vi.mock('expo-blur', () => ({
   BlurView: makeHostComponent('blur-view'),
 }));
 
+// ============= BrandLogo asset =============
+// PNG não é parseável pelo oxc do vitest; o módulo brandLogoAsset isola
+// o require() e mockamos aqui pra devolver um id numérico — mesmo formato
+// que Metro retorna em runtime nativo.
+vi.mock('@/components/brandLogoAsset', () => ({
+  LOGO_SOURCE: 1,
+}));
+
 // ============= Mascot3D (R3F + three) =============
 // Mascot3D usa @react-three/fiber/native + three; ambos têm source não-TS que
 // o transformer oxc do vitest não digere (token `typeof` em runtime modules).

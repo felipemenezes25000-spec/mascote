@@ -105,8 +105,9 @@ export function buildPersonalizationInput(
 export function generateOnboardingPreview(
   answers: OnboardingAnswers,
   mascotName = 'Mascote',
+  personality?: Personality,
 ): EvolutionPreview {
-  const input = buildPersonalizationInput(answers, mascotName);
+  const input = buildPersonalizationInput(answers, mascotName, personality);
   return generateEvolutionPreview(input);
 }
 

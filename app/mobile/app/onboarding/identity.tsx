@@ -24,6 +24,7 @@ import { stepLabel } from '@/lib/onboarding-flow';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { BondType, CommunicationTone } from '@/game/evolution/EvolutionTypes';
+import type { Personality } from '@/types';
 
 type Step = 0 | 1 | 2;
 
@@ -41,10 +42,12 @@ interface Tom {
   tone: CommunicationTone;
 }
 
-interface Energia {
-  id: string;
+interface Mascote {
+  id: 'bipo' | 'zip' | 'lulu' | 'aro';
+  mascotName: string;
   label: string;
-  desc: string;
+  tagline: string;
+  personality: Personality;
   bond: BondType;
   icon: IconName;
 }
@@ -66,12 +69,14 @@ const TONS: Tom[] = [
   { id: 'direto',     label: 'Direto',     desc: 'Vai no ponto, sem rodeio',         tone: 'direto' },
 ];
 
-const ENERGIAS: Energia[] = [
-  { id: 'guardiao',    label: 'Guardião',    desc: 'Te protege, te lembra dos limites',     bond: 'guardiao',        icon: 'shield' },
-  { id: 'explorador',  label: 'Explorador',  desc: 'Curioso, gosta de variedade',           bond: 'companheiro',     icon: 'sparkles' },
-  { id: 'sonhador',    label: 'Sonhador',    desc: 'Vê o mundo com leveza e mistério',      bond: 'espirito',        icon: 'sparkle' },
-  { id: 'focado',      label: 'Focado',      desc: 'Centrado, segue contigo no fundamental', bond: 'avatar_interior', icon: 'target' },
-  { id: 'criativo',    label: 'Criativo',    desc: 'Inventa, brinca, traz cor',             bond: 'criatura_fofa',   icon: 'star' },
+// Substituído "Energia" abstrata pela escolha direta dos 4 mascotes oficiais —
+// alinha com landing mascotevirtual.com.br. Bond é derivado do mascote pra
+// alimentar o motor de DNA sem perder a essência procedural.
+const MASCOTES: Mascote[] = [
+  { id: 'bipo', mascotName: 'Bipo', label: 'O Calmo',       tagline: 'Presença que não corre.',  personality: 'calmo',     bond: 'companheiro',   icon: 'wind' },
+  { id: 'zip',  mascotName: 'Zip',  label: 'O Motivador',   tagline: 'Energia que não bate.',    personality: 'motivador', bond: 'guardiao',      icon: 'zap' },
+  { id: 'lulu', mascotName: 'Lulu', label: 'A Companheira', tagline: 'Carinho que escuta.',      personality: 'fofo',      bond: 'criatura_fofa', icon: 'heart' },
+  { id: 'aro',  mascotName: 'Aro',  label: 'O Sábio',       tagline: 'Pergunta que ilumina.',    personality: 'sabio',     bond: 'espirito',      icon: 'sparkle' },
 ];
 
 export default function IdentityOnboarding() {
@@ -82,7 +87,7 @@ export default function IdentityOnboarding() {
   const [step, setStep] = useState<Step>(0);
   const [objetivo, setObjetivo] = useState<Objetivo | null>(null);
   const [tom, setTom] = useState<Tom | null>(null);
-  const [energia, setEnergia] = useState<Energia | null>(null);
+  const [mascote, setMascote] = useState<Mascote | null>(null);
 
   const totalSteps = 3;
   const progress = ((step + 1) / totalSteps) * 100;
@@ -90,7 +95,7 @@ export default function IdentityOnboarding() {
   const proceed = () => {
     if (step === 0 && objetivo) setStep(1);
     else if (step === 1 && tom) setStep(2);
-    else if (step === 2 && energia && objetivo && tom) finish(objetivo, tom, energia);
+    else if (step === 2 && mascote && objetivo && tom) finish(objetivo, tom, mascote);
   };
 
   const back = () => {
@@ -98,10 +103,10 @@ export default function IdentityOnboarding() {
     else setStep((step - 1) as Step);
   };
 
-  const finish = (o: Objetivo, t: Tom, e: Energia) => {
-    // Pula goal/style/quick — identity já cobre o essencial. Os rótulos do
-    // spec (Guardião / Sonhador / etc.) viajam como params extras pra UI
-    // poder exibir "Você escolheu Guardião" no DNA reveal e diary.
+  const finish = (o: Objetivo, t: Tom, m: Mascote) => {
+    // Pula goal/style/quick — identity já cobre o essencial. Personality
+    // vem direta do mascote escolhido; bond viaja pra alimentar DNA mas
+    // não decide mais a personalidade.
     router.push({
       pathname: '/onboarding/mascot',
       params: {
@@ -109,14 +114,15 @@ export default function IdentityOnboarding() {
         goal: o.goalId,
         mood: params.mood ?? '4',
         style: 'soft',
-        bond: e.bond,
+        bond: m.bond,
         tone: t.tone,
         pronoun: 'ele',
         primaryGoal: mapGoalToUserGoal(o.goalId),
+        personality: m.personality,
         // labels do spec — preservados pra UI/copy
         identity_objetivo: o.id,
         identity_tom: t.id,
-        identity_energia: e.id,
+        identity_mascote: m.id,
       },
     });
   };
@@ -124,7 +130,7 @@ export default function IdentityOnboarding() {
   const canProceed =
     (step === 0 && !!objetivo) ||
     (step === 1 && !!tom) ||
-    (step === 2 && !!energia);
+    (step === 2 && !!mascote);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -157,11 +163,11 @@ export default function IdentityOnboarding() {
           />
         )}
         {step === 2 && (
-          <StepEnergia
+          <StepMascote
             theme={theme}
             styles={styles}
-            selected={energia}
-            onSelect={setEnergia}
+            selected={mascote}
+            onSelect={setMascote}
           />
         )}
 
@@ -235,31 +241,35 @@ function StepTom({
   );
 }
 
-function StepEnergia({
+function StepMascote({
   theme, styles, selected, onSelect,
-}: { theme: Theme; styles: ReturnType<typeof makeStyles>; selected: Energia | null; onSelect: (e: Energia) => void }) {
+}: { theme: Theme; styles: ReturnType<typeof makeStyles>; selected: Mascote | null; onSelect: (m: Mascote) => void }) {
   return (
     <>
       <StaggeredView index={0}>
-        <Text style={styles.title}>Qual energia combina mais com você?</Text>
-        <Text style={styles.subtitle}>Vai influenciar o DNA dele — corpo, postura, jeito de reagir.</Text>
+        <Text style={styles.title}>Quem vai cuidar com você?</Text>
+        <Text style={styles.subtitle}>Quatro almas, um mascote. Escolhe quem combina com seu momento.</Text>
       </StaggeredView>
       <ScrollView contentContainerStyle={{ gap: theme.spacing.sm, paddingBottom: theme.spacing.md }}>
-        {ENERGIAS.map((e, i) => (
-          <StaggeredView key={e.id} index={i + 1} step={40}>
+        {MASCOTES.map((m, i) => (
+          <StaggeredView key={m.id} index={i + 1} step={40}>
             <PressableScale
-              style={[styles.opt, selected?.id === e.id && styles.optSelected]}
-              onPress={() => onSelect(e)}
-              accessibilityLabel={e.label}
+              style={[styles.opt, selected?.id === m.id && styles.optSelected]}
+              onPress={() => onSelect(m)}
+              accessibilityLabel={`${m.mascotName} — ${m.label}`}
             >
-              <View style={[styles.iconWrap, selected?.id === e.id && styles.iconWrapSelected]}>
-                <Icon name={e.icon} size={18} color={selected?.id === e.id ? '#fff' : theme.colors.primary} strokeWidth={2.2} />
+              <View style={[styles.iconWrap, selected?.id === m.id && styles.iconWrapSelected]}>
+                <Icon name={m.icon} size={18} color={selected?.id === m.id ? '#fff' : theme.colors.primary} strokeWidth={2.2} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.optLabel, selected?.id === e.id && styles.optLabelSelected]}>{e.label}</Text>
-                <Text style={[styles.optDesc, selected?.id === e.id && styles.optDescSelected]}>{e.desc}</Text>
+                <Text style={[styles.optLabel, selected?.id === m.id && styles.optLabelSelected]}>
+                  {m.mascotName} · {m.label}
+                </Text>
+                <Text style={[styles.optDesc, selected?.id === m.id && styles.optDescSelected]} numberOfLines={2}>
+                  "{m.tagline}"
+                </Text>
               </View>
-              {selected?.id === e.id && <Icon name="check" size={18} color="#fff" strokeWidth={2.8} />}
+              {selected?.id === m.id && <Icon name="check" size={18} color="#fff" strokeWidth={2.8} />}
             </PressableScale>
           </StaggeredView>
         ))}

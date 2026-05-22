@@ -10,12 +10,25 @@ import { mapGoalToUserGoal } from '@/lib/onboarding-evolution';
 import { stepLabel } from '@/lib/onboarding-flow';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
+import type { Personality } from '@/types';
 
-const BONDS: { id: BondType; label: string }[] = [
-  { id: 'companheiro', label: 'Companheiro leve' },
-  { id: 'guardiao', label: 'Guardião protetor' },
-  { id: 'criatura_fofa', label: 'Bichinho fofo' },
-  { id: 'espirito', label: 'Espírito guia' },
+interface MascoteEscolha {
+  id: 'bipo' | 'zip' | 'lulu' | 'aro';
+  mascotName: string;
+  label: string;
+  tagline: string;
+  personality: Personality;
+  bond: BondType;
+}
+
+// Alinhado com landing mascotevirtual.com.br — usuário escolhe DIRETAMENTE
+// entre os 4 personagens canônicos. Bond derivado pra alimentar DNA sem
+// pedir uma 2ª pergunta redundante.
+const MASCOTES: MascoteEscolha[] = [
+  { id: 'bipo', mascotName: 'Bipo', label: 'Bipo · O Calmo',       tagline: 'Presença que não corre.', personality: 'calmo',     bond: 'companheiro' },
+  { id: 'zip',  mascotName: 'Zip',  label: 'Zip · O Motivador',    tagline: 'Energia que não bate.',   personality: 'motivador', bond: 'guardiao' },
+  { id: 'lulu', mascotName: 'Lulu', label: 'Lulu · A Companheira', tagline: 'Carinho que escuta.',     personality: 'fofo',      bond: 'criatura_fofa' },
+  { id: 'aro',  mascotName: 'Aro',  label: 'Aro · O Sábio',        tagline: 'Pergunta que ilumina.',   personality: 'sabio',     bond: 'espirito' },
 ];
 
 const TONES: { id: CommunicationTone; label: string }[] = [
@@ -35,11 +48,11 @@ export default function QuickQuestions() {
   const theme = useTheme();
   const styles = makeStyles(theme);
   const params = useLocalSearchParams<{ goal?: string; style?: string }>();
-  const [bond, setBond] = useState<BondType | null>(null);
+  const [mascote, setMascote] = useState<MascoteEscolha | null>(null);
   const [tone, setTone] = useState<CommunicationTone | null>(null);
   const [pronoun, setPronoun] = useState<'ele' | 'ela' | 'elu' | null>(null);
 
-  const canContinue = !!(bond && tone && pronoun);
+  const canContinue = !!(mascote && tone && pronoun);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -49,11 +62,21 @@ export default function QuickQuestions() {
           <Text style={styles.title}>Só mais 3 toques</Text>
         </StaggeredView>
         <ScrollView contentContainerStyle={{ gap: theme.spacing.lg }}>
-          <Section title="Tipo de vínculo">
-            {BONDS.map(b => (
-              <Chip key={b.id} label={b.label} selected={bond === b.id} onPress={() => setBond(b.id)} />
+          <Section title="Seu mascote">
+            {MASCOTES.map(m => (
+              <Chip
+                key={m.id}
+                label={m.label}
+                selected={mascote?.id === m.id}
+                onPress={() => setMascote(m)}
+              />
             ))}
           </Section>
+          {mascote && (
+            <Text style={{ ...theme.text.xs, color: theme.colors.textSecondary, fontStyle: 'italic' }}>
+              "{mascote.tagline}"
+            </Text>
+          )}
           <Section title="Tom de conversa">
             {TONES.map(t => (
               <Chip key={t.id} label={t.label} selected={tone === t.id} onPress={() => setTone(t.id)} />
@@ -73,10 +96,11 @@ export default function QuickQuestions() {
               pathname: '/onboarding/mascot',
               params: {
                 ...params,
-                bond: bond ?? '',
+                bond: mascote?.bond ?? '',
                 tone: tone ?? '',
                 pronoun: pronoun ?? '',
                 primaryGoal: mapGoalToUserGoal(params.goal ?? ''),
+                personality: mascote?.personality ?? '',
               },
             })
           }
