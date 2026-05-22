@@ -32,10 +32,19 @@ export default function StreakScreen() {
     }
     const spent = await walletDb.spend(profile.id, FREEZE_COST, 0);
     if (!spent) return;
-    await streaksDb.upsert({
-      ...streak,
-      grace_days_left: Math.min(5, streak.grace_days_left + 1),
-    });
+    // Refund se upsert falhar — sem o try, falha no AsyncStorage entre os
+    // dois writes deixava as 50 moedas perdidas SEM o freeze, sem feedback.
+    try {
+      await streaksDb.upsert({
+        ...streak,
+        grace_days_left: Math.min(5, streak.grace_days_left + 1),
+      });
+    } catch (err) {
+      await walletDb.add(profile.id, FREEZE_COST, 0);
+      await refreshWallet();
+      Alert.alert('Não foi possível', 'Reverti a compra. Tenta de novo.');
+      return;
+    }
     await refreshStreak();
     await refreshWallet();
     Alert.alert('Freeze adicionado', `Agora você tem ${Math.min(5, streak.grace_days_left + 1)} folgas.`);

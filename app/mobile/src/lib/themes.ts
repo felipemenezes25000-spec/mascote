@@ -205,6 +205,29 @@ export const SEMANTIC_TOKENS = {
   shadowSoft: '#28200F',
 } as const;
 
+/**
+ * Tokens de celebração — paleta intencionalmente FORA do range wellness/warm.
+ *
+ * Usado em momentos de "ápice emocional" (evolução, mutação rara, level up)
+ * onde queremos contraste cintilante contra fundo escuro do modal. Não usar
+ * em UI corrente — esses tons quebram a regra "wellness only" se aplicados
+ * fora de overlays celebrativos.
+ */
+export const CELEBRATION_COLORS = {
+  /** Dourado vibrante — sparkles, kickers, quotes. */
+  gold: '#FFD56B',
+  /** Lilás claro — texto de transição ("de → para"). */
+  lilac: '#D7CDE6',
+  /** Lilás muito pálido — texto de história longa em modal escuro. */
+  lilacDim: '#EDE5F5',
+  /** Overlay escuro do modal — combina com texto claro. */
+  overlay: 'rgba(20,16,28,0.85)',
+  /** Glow translúcido suave atrás do mascote celebrativo. */
+  spotlight: 'rgba(255,255,255,0.10)',
+  /** Borda dourada sutil em quote bubble. */
+  goldRing: 'rgba(255,213,107,0.3)',
+} as const;
+
 export type RarityLevel = keyof typeof RARITY_COLORS;
 export type EmotionKey = keyof typeof EMOTION_COLORS;
 export type ArchetypeKey = keyof typeof ARCHETYPE_COLORS;
@@ -253,6 +276,11 @@ function hexToRgba(color: string, alpha: number): string {
   let hex = color.replace('#', '');
   if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
   if (hex.length === 8) hex = hex.slice(0, 6);
+  // Sem o /[0-9a-f]{6}/ guard, hex inválido (ex.: '#GGG' vindo de palette
+  // corrompida) virava `parseInt('GG', 16) = NaN`, produzindo
+  // `rgba(NaN, NaN, NaN, 0.2)` — string CSS inválida que silenciosamente
+  // sumia a borda/sombra no web e crashava o LinearGradient no nativo.
+  if (!/^[0-9a-fA-F]{6}$/.test(hex)) return `rgba(0, 0, 0, ${alpha})`;
   const r = parseInt(hex.slice(0, 2), 16);
   const g = parseInt(hex.slice(2, 4), 16);
   const b = parseInt(hex.slice(4, 6), 16);
@@ -283,7 +311,11 @@ export function buildTheme(
   paletteId: BrandPalette,
   options: BuildThemeOptions = {}
 ) {
-  const palette = PALETTES[paletteId];
+  // Fallback defensivo: paletteId vem do AsyncStorage e pode estar com valor
+  // legado (build antiga gravou 'aqua', já removido) ou corrompido. Sem o
+  // `?? PALETTES.classic`, palette virava undefined e o app crashava em
+  // `palette.brand` no primeiro render — quebrando o fluxo de hydrate.
+  const palette = PALETTES[paletteId] ?? PALETTES.classic;
   const resolvedMode: ResolvedMode = mode === 'system' ? 'light' : mode;
   const surfaces = SURFACES[resolvedMode];
   // No dark, brand tint vira "burnt" não "claro"
@@ -315,6 +347,8 @@ export function buildTheme(
       phase: PHASE_COLORS,
       gamification: GAMIFICATION_COLORS,
       semantic: SEMANTIC_TOKENS,
+      /** Apenas em overlays celebrativos (EvolutionModal, MutationToast). */
+      celebration: CELEBRATION_COLORS,
     },
     spacing: {
       xs: 4,

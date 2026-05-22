@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -104,6 +104,18 @@ export function UnlockToast({ data, onDone }: Props) {
   const insets = useSafeAreaInsets();
   const y = useSharedValue(-80);
   const opacity = useSharedValue(0);
+  // Ref pra `onDone` evita stale closure quando o componente recebe um novo
+  // callback do parent enquanto a animação está rodando (deps `[data]` não
+  // re-executa a effect ao trocar de callback). Sem isso o toast emitia a
+  // *velha* callback ao finalizar, o que perdia toasts encadeados.
+  const onDoneRef = useRef(onDone);
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
+  // Callback estável (não recria a cada render) que sempre invoca o `onDone`
+  // mais recente via ref. Necessário pra runOnJS — arrow inline dentro do
+  // worklet não fecha sobre `onDoneRef.current` da forma esperada.
+  const fireDone = useCallback(() => onDoneRef.current(), []);
 
   useEffect(() => {
     if (data) {
@@ -118,7 +130,7 @@ export function UnlockToast({ data, onDone }: Props) {
         withDelay(
           2400,
           withTiming(-100, { duration: 300 }, finished => {
-            if (finished) runOnJS(onDone)();
+            if (finished) runOnJS(fireDone)();
           }),
         ),
       );

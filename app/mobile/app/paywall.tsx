@@ -78,7 +78,11 @@ export default function Paywall() {
   }, [profile?.id, mascot, streak]);
 
   async function handleSubscribe(selected: BillingTierId) {
-    if (!profile || purchaseBlocked) return;
+    // Re-entry guard: `setLoading` só repropaga via render, então cliques rápidos
+    // (até 1 frame de diferença) ainda enxergam loading=false e disparavam duas
+    // compras paralelas — gerando 2x cobrança no mock provider. `disabled` no
+    // botão ajuda mas não fecha a janela entre click → setLoading aplicado.
+    if (!profile || purchaseBlocked || loading) return;
     setLoading(true);
     try {
       const result = await subscriptionService.subscribe(profile.id, selected);

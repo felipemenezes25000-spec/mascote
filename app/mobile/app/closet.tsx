@@ -120,7 +120,18 @@ export default function Closet() {
       Alert.alert('Não foi possível', 'Saldo mudou. Tenta de novo.');
       return;
     }
-    await inventory.unlock(profile.id, id);
+    // Spend já saiu — se inventory.unlock falhar, devolve as moedas pra
+    // evitar perda silenciosa do saldo (acontece se AsyncStorage corromper
+    // a tabela de inventário entre os dois writes). Sem este try, o usuário
+    // perdia coins sem o acessório.
+    try {
+      await inventory.unlock(profile.id, id);
+    } catch (err) {
+      await walletDb.add(profile.id, price, 0);
+      await refreshWallet();
+      Alert.alert('Não foi possível', 'Reverti a compra. Tenta de novo.');
+      return;
+    }
     await refreshWallet();
     await load();
     Alert.alert('Comprado!', 'Equipe quando quiser.');
@@ -152,7 +163,15 @@ export default function Closet() {
       Alert.alert('Não foi possível', 'Saldo mudou. Tenta de novo.');
       return;
     }
-    await userScenes.unlock(profile.id, id);
+    // Mesma razão de buyAccessory: refund se userScenes.unlock quebrar.
+    try {
+      await userScenes.unlock(profile.id, id);
+    } catch (err) {
+      await walletDb.add(profile.id, price, 0);
+      await refreshWallet();
+      Alert.alert('Não foi possível', 'Reverti a compra. Tenta de novo.');
+      return;
+    }
     await refreshWallet();
     await load();
     Alert.alert('Cenário comprado!', 'Toca em "Usar" pra ativar.');

@@ -14,6 +14,7 @@ import { persistOnboardingPersonalization } from '@/lib/personalization-service'
 import { generateGenotype } from '@/game/evolution/GenotypeGenerator';
 import { sanitizeGenome } from '@/lib/dna';
 import type { BondType, CommunicationTone, UserGoal } from '@/game/evolution/EvolutionTypes';
+import { getOnboardingDraft } from '@/lib/onboarding-draft';
 import { stepLabel } from '@/lib/onboarding-flow';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
@@ -56,8 +57,12 @@ export default function NameStep() {
   const defaultMascotName = useMemo(() => getPersonality(personality).mascotName, [personality]);
   // Pré-preenche com o nome capturado em /signup (propagado via URL pelas
   // telas intermediárias com `...params`). Sem isso, usuário re-digita.
-  const [userName, setUserName] = useState(params.display_name?.trim() ?? '');
+  const draft = getOnboardingDraft();
+  const [userName, setUserName] = useState(
+    params.display_name?.trim() || draft.display_name?.trim() || '',
+  );
   const [mascotName, setMascotName] = useState(defaultMascotName);
+  const [saving, setSaving] = useState(false);
   const setProfile = useStore(s => s.setProfile);
   const setMascot = useStore(s => s.setMascot);
   const setStreak = useStore(s => s.setStreak);
@@ -65,7 +70,13 @@ export default function NameStep() {
   const setWallet = useStore(s => s.setWallet);
 
   async function finish() {
-    if (!userName.trim()) return;
+    // Re-entry guard: o pipeline abaixo faz ~8 awaits em sequência (upsert
+    // profile/mascot, persist personalization, recordMilestone x2, update
+    // settings, Promise.all de 3 reads, set state). Sem o flag, double-tap
+    // cria 2 perfis duplicados antes do botão atualizar via `disabled`.
+    if (saving || !userName.trim()) return;
+    setSaving(true);
+    try {
     const profile = await profiles.upsert({
       display_name: userName.trim(),
       age_band: ageBand,
@@ -132,6 +143,11 @@ export default function NameStep() {
     setWallet(wallet);
     // Flow v2: skip push.tsx — notice.tsx agora tem toggle de push inline
     router.push({ pathname: '/onboarding/notice', params: { personality } });
+    } finally {
+      // Reseta `saving` no finally garante que erro inesperado no upsert
+      // não trava o botão em loading permanente (UX morta sem feedback).
+      setSaving(false);
+    }
   }
 
   return (
@@ -155,8 +171,8 @@ export default function NameStep() {
               value={userName}
               onChangeText={setUserName}
               placeholder="Seu nome"
-              autoFocus
-              returnKeyType="next"
+              returnKeyType="done"
+              blurOnSubmit
               maxLength={40}
             />
 
@@ -166,11 +182,15 @@ export default function NameStep() {
               onChangeText={setMascotName}
               placeholder={defaultMascotName}
               returnKeyType="done"
-              onSubmitEditing={finish}
               maxLength={30}
             />
           </View>
-          <Button label="Pronto. Vamos começar." onPress={finish} disabled={!userName.trim()} />
+          <Button
+            testID="onboarding_name_finish"
+            label={saving ? 'Criando seu mascote...' : 'Pronto. Vamos começar.'}
+            onPress={finish}
+            disabled={!userName.trim() || saving}
+          />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

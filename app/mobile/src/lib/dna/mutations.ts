@@ -402,11 +402,17 @@ export function applyMutationVisualImpact(
   // Multiplicadores morfológicos (typesafe — só aplica keys que existem)
   type MorphKeys = keyof Morphology;
   for (const [key, mult] of Object.entries(impact.morphologyMultipliers)) {
-    if (typeof mult !== 'number') continue;
+    if (typeof mult !== 'number' || !Number.isFinite(mult)) continue;
+    // Cap per-param em [0.25, 4]: compõe multiplicativamente em
+    // `aggregateVisualImpact`, então 5 mutations c/ mult=1.5 viraria 7.6× —
+    // explodindo morfologia fora da faixa visual prevista pelo renderer 3D
+    // (orelhas ocupando 30% do canvas etc). 0.25 mínimo evita partes
+    // somindo (mult=0 colapsava o mesh).
+    const safeMult = Math.max(0.25, Math.min(4, mult));
     const k = key as MorphKeys;
     const cur = out[k];
     if (typeof cur === 'number') {
-      (out as Record<MorphKeys, unknown>)[k] = cur * mult;
+      (out as Record<MorphKeys, unknown>)[k] = cur * safeMult;
     }
   }
   // glowBoost: incremento aditivo no emissive intensity do corpo.

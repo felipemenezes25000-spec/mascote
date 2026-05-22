@@ -1,10 +1,11 @@
 import { router, Redirect } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
 import { addDays, settings as settingsDb, todayLocal } from '@/lib/db';
+import { mockBillingProvider } from '@/services/subscription/MockBillingProvider';
 import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
@@ -23,6 +24,38 @@ export default function Cancel() {
     await settingsDb.update(profile.id, { paused_until: until });
     await refreshSettings();
     setStep('pause');
+  }
+
+  async function switchToFree() {
+    if (!profile) return;
+    // Confirma antes de cancelar — sem isso, um tap acidental no card já
+    // baixava o plano sem segunda chance e o usuário descobria só quando
+    // tentava usar feature Plus. Padrão consistente com confirmDelete em
+    // settings.tsx (dialog destrutivo sempre exige confirmação explícita).
+    Alert.alert(
+      'Mudar pra Free?',
+      'Você perde os benefícios Plus imediatamente (mascote 3D completo, mutações raras, IA emocional). Os dados ficam aqui.',
+      [
+        { text: 'Continuo Plus', style: 'cancel' },
+        {
+          text: 'Mudar pra Free',
+          style: 'destructive',
+          onPress: async () => {
+            if (!profile) return;
+            try {
+              await mockBillingProvider.cancel(profile.id);
+              Alert.alert(
+                'Plano gratuito',
+                'Você voltou pro plano Free. Seus dados e o mascote continuam aqui; recursos premium ficam limitados.',
+              );
+              router.back();
+            } catch {
+              Alert.alert('Ops', 'Não consegui alterar o plano agora. Tenta de novo.');
+            }
+          },
+        },
+      ],
+    );
   }
 
   if (!profile || !mascot) return <Redirect href="/splash" />;
@@ -61,7 +94,7 @@ export default function Cancel() {
               <Text style={styles.cardBody}>
                 Você mantém o mascote e o histórico, com limites de uso.
               </Text>
-              <Button variant="secondary" label="Mudar pra Free" onPress={() => router.back()} />
+              <Button variant="secondary" label="Mudar pra Free" onPress={() => void switchToFree()} />
             </View>
 
             <Pressable onPress={() => setStep('confirm')}>

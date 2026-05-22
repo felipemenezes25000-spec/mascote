@@ -60,9 +60,20 @@ export default function SettingsScreen() {
   }
 
   async function updateSetting<K extends keyof Settings>(key: K, value: Settings[K]) {
-    if (!profile) return;
-    const next = await settingsDb.update(profile.id, { [key]: value } as Partial<Settings>);
-    setSettings(next);
+    if (!profile || !settings) return;
+    // Persist primeiro, depois aplica no store — se DB falhar, store fica intacto.
+    // Antes: `setSettings(next)` rodava só após sucesso, mas sem catch o erro
+    // subia silenciosamente em onPress (Switch trocava visualmente via state
+    // controlado pelo `settings.X`, mas update falhava e UI ficava mentindo).
+    try {
+      const next = await settingsDb.update(profile.id, { [key]: value } as Partial<Settings>);
+      setSettings(next);
+    } catch (err) {
+      Alert.alert(
+        'Não consegui salvar',
+        'Tenta de novo em alguns segundos. Se persistir, reinicia o app.',
+      );
+    }
   }
 
   async function pause30Days() {
@@ -311,6 +322,16 @@ export default function SettingsScreen() {
           </Text>
         </Section>
 
+        {/* Plano */}
+        <Section title="Plano">
+          <Pressable onPress={() => router.push('/subscription')} style={styles.linkRow}>
+            <Text style={styles.linkText}>Assinatura e planos</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push('/cancel')} style={styles.linkRow}>
+            <Text style={styles.linkText}>Pausar ou cancelar assinatura</Text>
+          </Pressable>
+        </Section>
+
         {/* Pausa */}
         <Section title="Pausa">
           {paused ? (
@@ -388,6 +409,9 @@ export default function SettingsScreen() {
             value={settings.consent_analytics}
             onChange={v => updateSetting('consent_analytics', v)}
           />
+          <Pressable onPress={() => router.push('/feedback')} style={styles.linkRow}>
+            <Text style={styles.linkText}>Enviar feedback</Text>
+          </Pressable>
           <Pressable onPress={exportData} style={styles.linkRow}>
             <Text style={styles.linkText}>Exportar meus dados (JSON)</Text>
           </Pressable>

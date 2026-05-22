@@ -3,7 +3,7 @@
  */
 
 import type { MacroPhaseId, MicroEvolution } from './EvolutionTypes';
-import type { UnlockedMutation } from '@/lib/dna/mutations';
+import { getMutationById, type UnlockedMutation } from '@/lib/dna/mutations';
 
 export type TimelineEventKind = 'macro_phase' | 'micro_evolution' | 'mutation' | 'recovery';
 
@@ -40,11 +40,17 @@ export function buildEvolutionTimeline(input: {
     });
   }
   for (const mut of input.mutations) {
+    // Resolve `mutation_id` (técnico, ex.: `mut.bioluminescent_form`) pro
+    // `name` humano em PT-BR catalogado (ex.: "Forma bioluminescente"). Sem
+    // isso a UI mostrava o ID cru na timeline, vazando jargão interno e
+    // confundindo o usuário.
+    const meta = getMutationById(mut.mutation_id);
     events.push({
       id: mut.mutation_id,
       kind: 'mutation',
-      label: mut.mutation_id,
+      label: meta?.name ?? mut.mutation_id,
       at: mut.unlocked_at,
+      detail: meta?.description,
     });
   }
   if (input.recoveries > 0) {
