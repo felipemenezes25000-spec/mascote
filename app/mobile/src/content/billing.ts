@@ -3,7 +3,8 @@
  *
  * Quando os mesmos tiers/preços apareciam em telas diferentes (paywall.tsx
  * e subscription.tsx), divergiam — R$19,90 vs R$24,90, 2 tiers vs 3 tiers.
- * Esse arquivo centraliza pra evitar drift.
+ * Esse arquivo centraliza pra evitar drift. Preço canônico: R$ 19,90/mês,
+ * R$ 199,00/ano — alinhado com landing mascotevirtual.com.br.
  *
  * IMPORTANTE: estes são preços de DEMO. Em produção real, o app precisa
  * integrar com RevenueCat / StoreKit / Play Billing e ler IDs de SKU
@@ -48,9 +49,9 @@ const free: BillingTier = {
 
 const plusMonthly: BillingTier = {
   id: 'plus_monthly',
-  name: 'Plus',
-  monthlyCents: 2490,
-  totalCents: 2490,
+  name: 'Bipo Plus',
+  monthlyCents: 1990,
+  totalCents: 1990,
   period: 'monthly',
   trialDays: 7,
   benefits: [
@@ -66,14 +67,14 @@ const plusMonthly: BillingTier = {
 
 const plusAnnual: BillingTier = {
   id: 'plus_annual',
-  name: 'Plus Anual',
-  monthlyCents: Math.round(24900 / 12),
-  totalCents: 24900,
+  name: 'Bipo Plus Anual',
+  monthlyCents: Math.round(19900 / 12),
+  totalCents: 19900,
   period: 'annual',
   trialDays: 7,
   benefits: plusMonthly.benefits,
   badge: 'RECOMENDADO',
-  savingsPct: Math.round((1 - 24900 / 12 / 2490) * 100),
+  savingsPct: Math.round((1 - 19900 / 12 / 1990) * 100),
 };
 
 export const BILLING_TIERS: readonly BillingTier[] = [free, plusMonthly, plusAnnual];

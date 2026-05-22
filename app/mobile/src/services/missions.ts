@@ -23,6 +23,7 @@ import { pickMissionWithBandit, type RankingContext } from '@/lib/ml/recommend/m
 import { missionCatalog, pickDailyMission, type MissionTemplate } from '@/content/missions';
 import { withLock } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { creatureMoments } from '@/lib/moments';
 import type { HabitKind, MascotMood, Personality } from '@/types';
 
 const BANDIT_KEY = 'mascote:_bandit_missions';
@@ -116,11 +117,22 @@ export async function recordMissionOutcome(missionTemplateId: string, completed:
   }
   // Lock pra evitar read-modify-write race quando duas missões fecham juntas
   // (raro mas possível em StrictMode/re-mount do result screen).
-  return withLock('bandit_missions', async () => {
+  await withLock('bandit_missions', async () => {
     const state = await loadBandit();
     recordReward(state, missionTemplateId, completed ? 1 : 0);
     await saveBandit(state);
   });
+  // Emite moment APÓS persistir reward — outros sistemas reagem em paralelo
+  // (analytics, animação celebrativa, memória "completou X"). Só emite quando
+  // de fato completada (skip não dispara reação positiva).
+  if (completed) {
+    const template = missionCatalog.find((m) => m.id === missionTemplateId);
+    creatureMoments.emit('mission.completed', {
+      missionId: missionTemplateId,
+      xpGained: template?.xp_reward ?? 0,
+      coinsGained: 0, // bandit não rastreia coins; quem paga é o caller (checkin/mission-done)
+    });
+  }
 }
 
 /**

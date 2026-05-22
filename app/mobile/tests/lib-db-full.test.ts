@@ -136,8 +136,10 @@ describe('db: exportAll / importAll', () => {
 describe('db: resetAll', () => {
   beforeEach(() => __asyncStorageReset());
 
-  it('limpa todas as tabelas + meta + chaves externas (paywall_shown, birthday_shown)', async () => {
+  it('limpa todas as tabelas + meta + chaves mascote:* + externas (paywall_shown, birthday_shown)', async () => {
     await AsyncStorage.setItem('mascote:profiles', JSON.stringify([{ id: 'x' }]));
+    await AsyncStorage.setItem('mascote:bond:total:u1', '10');
+    await AsyncStorage.setItem('mascote:feedback:queue', '[]');
     await AsyncStorage.setItem('paywall_shown:upsell_a', '1');
     await AsyncStorage.setItem('birthday_shown:7', '1');
     await AsyncStorage.setItem('mascote:_meta', JSON.stringify({ schema: 1 }));
@@ -145,6 +147,8 @@ describe('db: resetAll', () => {
     await resetAll();
 
     expect(await AsyncStorage.getItem('mascote:profiles')).toBeNull();
+    expect(await AsyncStorage.getItem('mascote:bond:total:u1')).toBeNull();
+    expect(await AsyncStorage.getItem('mascote:feedback:queue')).toBeNull();
     expect(await AsyncStorage.getItem('paywall_shown:upsell_a')).toBeNull();
     expect(await AsyncStorage.getItem('birthday_shown:7')).toBeNull();
     expect(await AsyncStorage.getItem('mascote:_meta')).toBeNull();

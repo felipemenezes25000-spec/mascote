@@ -20,12 +20,17 @@
     "test:ai": "vitest run --pool=threads tests/ai/ tests/lib-ai tests/lib-ml",
     "test:game": "vitest run --pool=threads tests/game/",
     "test:subscription": "vitest run --pool=threads tests/content-billing tests/lib-paywall-triggers tests/services/subscription",
+    "test:guarantees": "vitest run --pool=threads tests/guarantees/",
     "coverage:gaps": "node scripts/coverage-gaps.js",
     "test:e2e": "maestro test .maestro/",
     "test:e2e:critical": "maestro test --include-tags=critical .maestro/",
     "test:e2e:cloud": "maestro cloud .maestro/",
+    "setup:e2e:win": "powershell -ExecutionPolicy Bypass -File scripts/setup-android-e2e-windows.ps1",
+    "emulator:start": "powershell -ExecutionPolicy Bypass -File scripts/start-emulator.ps1",
+    "test:e2e:win": "powershell -ExecutionPolicy Bypass -File scripts/run-e2e-windows.ps1",
     "doctor": "npx expo-doctor",
     "build-icons": "node scripts/build-icons.js",
+    "audit:visual": "node scripts/audit-visual.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "quality": "npm run typecheck && npm run lint && npm test"
@@ -78,6 +83,7 @@
     "@typescript-eslint/parser": "^7.18.0",
     "@vitest/coverage-v8": "^4.1.6",
     "@vitest/ui": "^4.1.6",
+    "babel-plugin-module-resolver": "^5.0.3",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "eslint": "^8.57.1",
     "eslint-plugin-react": "^7.37.5",
@@ -89,5 +95,12 @@
     "typescript": "~5.3.3",
     "vitest": "^4.1.6"
   },
-  "private": true
+  "private": true,
+  "engines": {
+    "node": ">=18 <=22"
+  },
+  "overrides": {
+    "react-native": "0.74.5",
+    "@react-native/virtualized-lists": "0.74.87"
+  }
 }

@@ -41,14 +41,12 @@ const PERSONALIZATION_EXPORT_KEY = (uid: string) => `mascote:personalization:${u
 
 export async function resetAll(): Promise<void> {
   const allKeys = await AsyncStorage.getAllKeys();
+  const mascoteKeys = allKeys.filter(k => k.startsWith('mascote:'));
   const externalKeys = allKeys.filter(
-    k => k.startsWith('paywall_shown:') || k.startsWith('birthday_shown:')
+    k => k.startsWith('paywall_shown:') || k.startsWith('birthday_shown:'),
   );
-  await Promise.all([
-    ...ALL_TABLES.map(t => AsyncStorage.removeItem(KEY(t))),
-    ...externalKeys.map(k => AsyncStorage.removeItem(k)),
-    AsyncStorage.removeItem(META_KEY),
-  ]);
+  const toRemove = [...new Set([...mascoteKeys, ...externalKeys])];
+  await Promise.all(toRemove.map(k => AsyncStorage.removeItem(k)));
 }
 
 async function readRaw(table: string): Promise<unknown[]> {

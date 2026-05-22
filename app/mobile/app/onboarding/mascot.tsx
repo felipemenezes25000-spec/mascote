@@ -134,6 +134,7 @@ export default function MascotBirth() {
                 phase="bebe"
                 mood={mood}
                 size={170}
+                force2D
                 dnaOverride={dna}
                 seedOverride={preview.seed}
                 evolutionVisuals={visuals}

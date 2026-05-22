@@ -16,9 +16,19 @@ interface Props {
   variant?: Variant;
   disabled?: boolean;
   style?: ViewStyle;
+  testID?: string;
+  accessibilityLabel?: string;
 }
 
-export function Button({ label, onPress, variant = 'primary', disabled, style }: Props) {
+export function Button({
+  label,
+  onPress,
+  variant = 'primary',
+  disabled,
+  style,
+  testID,
+  accessibilityLabel,
+}: Props) {
   const styles = useStyles(makeStyles);
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
@@ -31,6 +41,8 @@ export function Button({ label, onPress, variant = 'primary', disabled, style }:
   return (
     <Animated.View style={[animStyle, style]}>
       <Pressable
+        testID={testID}
+        accessibilityLabel={accessibilityLabel ?? label}
         onPress={onPress}
         disabled={disabled}
         onPressIn={() => {

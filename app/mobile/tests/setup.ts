@@ -46,6 +46,11 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
   default: asyncStorageMock,
 }));
 
+vi.mock('expo-modules-core', () => ({
+  requireOptionalNativeModule: vi.fn(() => ({})),
+  requireNativeModule: vi.fn(() => ({})),
+}));
+
 // ============= React Native mock (full enough p/ renderHook + render) =============
 // O bundle real do RN tem código Flow que vitest não parseia. Em vez de carregar
 // o bundle, exportamos componentes primitivos que react-test-renderer consegue

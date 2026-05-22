@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Typography, Input } from '@/components/ui';
+import { clearOnboardingDraft, setOnboardingDraft } from '@/lib/onboarding-draft';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
@@ -12,6 +13,10 @@ export default function Signup() {
   const styles = makeStyles(theme);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+
+  useEffect(() => {
+    clearOnboardingDraft();
+  }, []);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -50,9 +55,11 @@ export default function Signup() {
             <View style={{ gap: theme.spacing.sm }}>
               <Button
                 label="Continuar"
-                onPress={() =>
-                  router.push({ pathname: '/onboarding/age', params: { display_name: name.trim() || 'Você' } })
-                }
+                onPress={() => {
+                  const display_name = name.trim() || 'Você';
+                  setOnboardingDraft({ display_name });
+                  router.push({ pathname: '/onboarding/age', params: { display_name } });
+                }}
                 disabled={!name.trim()}
               />
               <Typography variant="mono" tone="dim" align="center">

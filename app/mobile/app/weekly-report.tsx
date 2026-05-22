@@ -1,7 +1,8 @@
 import { router, Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Typography } from '@/components/ui';
 import { Button } from '@/components/Button';
 import { HabitChart } from '@/components/HabitChart';
 import { Heatmap } from '@/components/Heatmap';
@@ -129,9 +130,9 @@ export default function WeeklyReport() {
           accessibilityRole="button"
           accessibilityLabel="Fechar relatório semanal"
         >
-          <Text style={styles.closeText}>✕</Text>
+          <Typography variant="body" style={styles.closeText}>✕</Typography>
         </Pressable>
-        <Text style={styles.headerTitle}>Você essa semana</Text>
+        <Typography variant="heading" style={styles.headerTitle}>Você essa semana</Typography>
         <View style={{ width: 36 }} />
       </View>
 
@@ -147,29 +148,29 @@ export default function WeeklyReport() {
               reduceMotion
             />
             <View>
-              <Text style={styles.letterKicker}>CARTA DA SEMANA</Text>
-              <Text style={styles.letterFrom}>— {mascot.name}</Text>
+              <Typography variant="mono" tone="brand" style={styles.letterKicker}>CARTA DA SEMANA</Typography>
+              <Typography variant="mono" tone="secondary" style={styles.letterFrom}>— {mascot.name}</Typography>
             </View>
           </View>
-          <Text style={styles.letterGreeting}>{narrative.greeting}</Text>
-          <Text style={styles.letterBody}>{narrative.evolutionNote}</Text>
-          <Text style={styles.letterBody}>{narrative.highlight}</Text>
+          <Typography variant="bodyBold" style={styles.letterGreeting}>{narrative.greeting}</Typography>
+          <Typography variant="body" style={styles.letterBody}>{narrative.evolutionNote}</Typography>
+          <Typography variant="body" style={styles.letterBody}>{narrative.highlight}</Typography>
           {fullReport ? (
             <>
-              <Text style={styles.letterBody}>{narrative.observation}</Text>
-              <Text style={styles.letterBody}>{narrative.nudge}</Text>
+              <Typography variant="body" style={styles.letterBody}>{narrative.observation}</Typography>
+              <Typography variant="body" style={styles.letterBody}>{narrative.nudge}</Typography>
             </>
           ) : (
-            <Text style={styles.letterBody}>
+            <Typography variant="body" style={styles.letterBody}>
               Plus desbloqueia observações profundas, heatmap e exportação — sem pressa.
-            </Text>
+            </Typography>
           )}
-          <Text style={styles.letterClosing}>{narrative.closing}</Text>
+          <Typography variant="body" tone="secondary" style={styles.letterClosing}>{narrative.closing}</Typography>
         </View>
 
         {!fullReport && (
           <View style={styles.previewBanner}>
-            <Text style={styles.previewText}>Prévia gratuita · relatório completo no Plus</Text>
+            <Typography variant="body" style={styles.previewText}>Prévia gratuita · relatório completo no Plus</Typography>
             <Button variant="secondary" label="Ver Plus" onPress={() => router.push('/paywall')} />
           </View>
         )}
@@ -178,16 +179,16 @@ export default function WeeklyReport() {
         {/* Insights longitudinais — só aparece se houver descobertas */}
         {insights.length > 0 && (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>O que {mascot.name} percebeu</Text>
+            <Typography variant="mono" tone="secondary" style={styles.sectionTitle}>O que {mascot.name} percebeu</Typography>
             {insights.map((ins, i) => (
               <View key={i} style={styles.insightRow}>
-                <Text style={styles.insightBullet}>·</Text>
-                <Text style={styles.insightText}>{ins.text}</Text>
+                <Typography variant="bodyBold" tone="brand" style={styles.insightBullet}>·</Typography>
+                <Typography variant="body" style={styles.insightText}>{ins.text}</Typography>
               </View>
             ))}
-            <Text style={styles.insightDisclaimer}>
+            <Typography variant="mono" tone="dim" style={styles.insightDisclaimer}>
               Observações do seu padrão. Não é diagnóstico.
-            </Text>
+            </Typography>
           </View>
         )}
 
@@ -201,14 +202,14 @@ export default function WeeklyReport() {
 
         {/* Heatmap */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Últimas 12 semanas</Text>
+          <Typography variant="mono" tone="secondary" style={styles.sectionTitle}>Últimas 12 semanas</Typography>
           <Heatmap countsByDate={countsByDate} weeks={12} />
         </View>
 
         {/* Charts por hábito */}
         {topHabitsForCharts.length > 0 && (
           <View style={{ gap: theme.spacing.sm }}>
-            <Text style={styles.sectionTitleOutside}>Hábitos da semana</Text>
+            <Typography variant="mono" tone="secondary" style={styles.sectionTitleOutside}>Hábitos da semana</Typography>
             {topHabitsForCharts.map(k => {
               const habCheckins = weekCheckins.filter(c => c.habit_kind === k);
               return <HabitChart key={k} kind={k} checkins={habCheckins} days={7} />;
@@ -222,9 +223,9 @@ export default function WeeklyReport() {
           <Button label="Compartilhar relatório" variant="secondary" onPress={() => void shareReport()} />
         )}
 
-        <Text style={styles.footer}>
+        <Typography variant="mono" tone="dim" style={styles.footer}>
           Relatório gerado localmente, com base no que você registrou. Nada saiu do seu dispositivo.
-        </Text>
+        </Typography>
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
@@ -235,8 +236,8 @@ function Stat({ label, value }: { label: string; value: string }) {
   const styles = useStyles(makeStyles);
   return (
     <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Typography variant="heading" style={styles.statValue}>{value}</Typography>
+      <Typography variant="mono" tone="secondary" style={styles.statLabel}>{label}</Typography>
     </View>
   );
 }

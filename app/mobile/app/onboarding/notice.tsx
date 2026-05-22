@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { inventory, mascots as mascotsDb, settings as settingsDb, wallet as walletDb } from '@/lib/db';
+import { clearOnboardingDraft } from '@/lib/onboarding-draft';
 import { stepLabel } from '@/lib/onboarding-flow';
 import { useStore } from '@/store';
 import { useTheme } from '@/lib/useTheme';
@@ -62,6 +63,7 @@ export default function Notice() {
     } catch (e) {
       // Pacote é nice-to-have — nunca bloqueia entrada na home.
     }
+    clearOnboardingDraft();
     router.replace({ pathname: '/(tabs)', params: { welcome: '1' } });
   }
 

@@ -29,3 +29,14 @@ export { QuestCard } from './QuestCard';
 export { EvolutionRevealModal } from './EvolutionRevealModal';
 // EmptyState reusa o existente (já implementado).
 export { EmptyState } from '@/components/EmptyState';
+
+// --- Living Identity Design — primitives orgânicos do mascote-centered design.
+export { SectionHeader, type SectionHeaderProps } from './SectionHeader';
+export { LivingCard, type LivingCardProps, type LivingCardTone } from './LivingCard';
+export { ProgressPulse, type ProgressPulseProps } from './ProgressPulse';
+export { CreatureHero, type CreatureHeroProps } from './CreatureHero';
+export {
+  CreatureReactionToast,
+  type CreatureReactionToastProps,
+  type ReactionKind,
+} from './CreatureReactionToast';

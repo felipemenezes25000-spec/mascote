@@ -27,6 +27,7 @@ import { createAnimationAction } from '@/lib/animation-triggers';
 import { sanitizeGenome } from '@/lib/dna';
 import { playVoiceLine, voiceProfileFromGenome } from '@/lib/voice';
 import { getEvolutionStory, type EvolutionStory } from '@/lib/evolution-stories';
+import { creatureMoments } from '@/lib/moments';
 import type { HabitKind, Mascot, MascotPhase, Profile, Settings, Streak } from '@/types';
 import { useStore } from '@/store';
 
@@ -110,12 +111,38 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
       await refreshMascot();
       opts.onCheckinDone(out);
 
+      // Wiring de moments — bus central reage em paralelo (animação, memória,
+      // analytics, voz). Não substitui as side effects locais abaixo; ADICIONA
+      // uma camada de pub/sub pra desacoplar.
+      creatureMoments.emit('checkin.completed', {
+        habit: kind,
+        intensity: value,
+        xpGained: out.xpGained,
+      });
+      // Moment específico do hábito — handlers podem reagir só ao que importa
+      // (ex: SoundService toca som de água apenas em 'habit.water').
+      switch (kind) {
+        case 'water':      creatureMoments.emit('habit.water', { intensity: value }); break;
+        case 'sleep':      creatureMoments.emit('habit.sleep', { intensity: value }); break;
+        case 'exercise':   creatureMoments.emit('habit.exercise', { intensity: value }); break;
+        case 'meditation': creatureMoments.emit('habit.meditation', { intensity: value }); break;
+        case 'reading':    creatureMoments.emit('habit.reading', { intensity: value }); break;
+        case 'breath':     creatureMoments.emit('habit.breath', { intensity: value }); break;
+        case 'outdoor':    creatureMoments.emit('habit.outdoor', { intensity: value }); break;
+        case 'sun':        creatureMoments.emit('habit.sun', { intensity: value }); break;
+        case 'journaling': creatureMoments.emit('habit.journaling', { intensity: value }); break;
+      }
+
       if (out.streakMilestone) {
         enqueueToast({
           kind: 'info',
           emoji: '🔥',
           title: `Streak de ${out.streak.current_streak} dias!`,
           subtitle: `+${out.xpGained} XP · +${out.gemsGained} 💎`,
+        });
+        creatureMoments.emit('streak.milestone', {
+          days: out.streak.current_streak,
+          isFirst: out.streak.current_streak === 7,
         });
       }
 
@@ -132,6 +159,10 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
           totalCheckins: opts.totalCheckinsAll + 1,
           daysSinceCreated,
           currentStreak: out.streak.current_streak,
+        });
+        creatureMoments.emit('phase.advanced', {
+          from: out.prevPhase,
+          to: out.mascot.phase,
         });
         opts.onEvolution({ fromPhase: out.prevPhase, mascot: out.mascot, story });
       } else if (out.leveledUp) {
@@ -153,11 +184,16 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
 
       if (out.newMicroEvolutions.length > 0) {
         opts.onAnimation('micro_evolution');
+        const first = out.newMicroEvolutions[0];
         enqueueToast({
           kind: 'info',
           emoji: '✨',
           title: 'Microevolução!',
-          subtitle: out.newMicroEvolutions[0]?.label ?? 'Seu mascote mudou sutilmente',
+          subtitle: first?.label ?? 'Seu mascote mudou sutilmente',
+        });
+        creatureMoments.emit('microevolution.observed', {
+          kind: (first as { kind?: string } | undefined)?.kind ?? 'unknown',
+          description: first?.label ?? 'Seu mascote mudou sutilmente',
         });
       }
 
@@ -171,6 +207,10 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
           title: mut.name,
           subtitle: mut.description,
           rarity: mut.rarity === 'common' ? 'common' : mut.rarity,
+        });
+        creatureMoments.emit('mutation.unlocked', {
+          mutationId: mut.id,
+          rarity: mut.rarity as 'common' | 'rare' | 'epic' | 'legendary',
         });
       }
       await opts.onReloadCloset();

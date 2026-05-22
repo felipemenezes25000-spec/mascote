@@ -30,9 +30,11 @@ export function Tail({
     for (let i = 0; i < segs.length; i++) {
       const t01 = i / morph.tailSegments;
       const wave = Math.sin(t * 1.5 - t01 * 4) * 0.3 * (0.5 + t01);
-      const cx = -t01 * len * segs.length * 0.5;
+      // Posição: deslocamento radial proporcional a tailLength (sem multiplicar
+      // por segs.length — antes esticava a cauda 8x e jogava fora da câmera).
+      const cx = -t01 * len * 0.5;
       const cy = -0.3 - t01 * 0.3;
-      const cz = -0.4 - t01 * len * segs.length * 0.5;
+      const cz = -0.4 - t01 * len * 0.5;
       segs[i].position.set(cx + wave * 0.2, cy + wave * 0.2, cz);
       segs[i].scale.setScalar(1 - t01 * 0.3);
     }

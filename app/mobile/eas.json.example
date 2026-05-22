@@ -1,25 +1,56 @@
 {
   "cli": {
-    "version": ">= 12.0.0"
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
-    },
-    "preview": {
       "distribution": "internal",
       "env": {
+        "EXPO_PUBLIC_ENV": "development",
         "EXPO_PUBLIC_BILLING_PROVIDER": "mock"
       }
     },
-    "production": {
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "android": { "buildType": "apk" },
       "env": {
-        "EXPO_PUBLIC_BILLING_PROVIDER": "revenuecat"
+        "EXPO_PUBLIC_ENV": "preview",
+        "EXPO_PUBLIC_BILLING_PROVIDER": "mock"
+      }
+    },
+    "preview-rc": {
+      "extends": "preview",
+      "env": {
+        "EXPO_PUBLIC_ENV": "preview",
+        "EXPO_PUBLIC_BILLING_PROVIDER": "revenuecat",
+        "EXPO_PUBLIC_RC_ENABLED": "true"
+      }
+    },
+    "production": {
+      "channel": "production",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_ENV": "production",
+        "EXPO_PUBLIC_BILLING_PROVIDER": "revenuecat",
+        "EXPO_PUBLIC_RC_ENABLED": "true"
       }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "YOUR_APPLE_ID@example.com",
+        "ascAppId": "1234567890",
+        "appleTeamId": "ABCDE12345"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-key.json",
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
   }
 }
