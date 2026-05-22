@@ -61,7 +61,7 @@ const quiz: QuizQ[] = [
 export default function Quiz() {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
-  const params = useLocalSearchParams<{ age_band: string }>();
+  const params = useLocalSearchParams<{ age_band?: string; display_name?: string }>();
   const [step, setStep] = useState(0);
   const [scores, setScores] = useState<Record<Personality, number>>({
     calmo: 0,
@@ -105,13 +105,13 @@ export default function Quiz() {
               label={`Vou de ${meta.label}`}
               onPress={() =>
                 router.replace({
-                  pathname: '/onboarding/name',
-                  params: { personality: winner, age_band: params.age_band ?? '' },
+                  pathname: '/onboarding/goal',
+                  params: { age_band: params.age_band ?? '', display_name: params.display_name ?? '' },
                 })
               }
             />
-            <Pressable onPress={() => router.push('/onboarding/personality')}>
-              <Text style={styles.linkText}>Hmm, deixa eu olhar todas</Text>
+            <Pressable onPress={() => router.replace('/onboarding/goal')}>
+              <Text style={styles.linkText}>Prefiro o tour completo</Text>
             </Pressable>
           </View>
         </View>
@@ -130,15 +130,22 @@ export default function Quiz() {
           </View>
           <Text style={styles.title}>{q.question}</Text>
         </View>
-        <View style={{ gap: theme.spacing.sm }}>
+        <View style={{ gap: theme.spacing.sm }} accessibilityRole="radiogroup">
           {q.options.map((opt, i) => (
-            <Pressable key={i} onPress={() => answer(opt)} style={styles.opt}>
+            <Pressable
+              key={i}
+              onPress={() => answer(opt)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: false }}
+              accessibilityLabel={opt.label}
+              style={styles.opt}
+            >
               <Text style={styles.optLabel}>{opt.label}</Text>
             </Pressable>
           ))}
         </View>
-        <Pressable onPress={() => router.push('/onboarding/personality')}>
-          <Text style={styles.linkText}>Pular quiz e escolher direto</Text>
+        <Pressable onPress={() => router.replace('/onboarding/goal')}>
+          <Text style={styles.linkText}>Pular quiz e seguir o tour</Text>
         </Pressable>
       </View>
     </SafeAreaView>

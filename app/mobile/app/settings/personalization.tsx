@@ -17,6 +17,7 @@ import {
   savePersonalization,
   storedToPartial,
 } from '@/lib/personalization-service';
+import { creatureMoments } from '@/lib/moments';
 import { personalityFromBond, seedFromOnboardingAnswers, type OnboardingAnswers } from '@/lib/onboarding-evolution';
 import { useEvolutionState } from '@/hooks/useEvolutionState';
 import { useStore } from '@/store';
@@ -164,6 +165,7 @@ export default function PersonalizationSettings() {
         stylePreset: draft.stylePreset,
         initialAccessoryIds: draft.initialAccessoryIds,
       };
+      const prevSceneId = mascot?.dna ? (mascot as unknown as { initial_scene_id?: string }).initial_scene_id : undefined;
       await savePersonalization(profile.id, input, {
         pronoun: draft.pronoun,
         initialSceneId: draft.initialSceneId,
@@ -171,6 +173,19 @@ export default function PersonalizationSettings() {
       const updated = await applyPersonalizationToMascot(mascot, input);
       setMascot(updated);
       await refreshSettings();
+      // Emite moments — bus reage em paralelo (preview live, analytics,
+      // memória "criatura mudou de cara"). Aditivo, não substitui handlers.
+      creatureMoments.emit('customization.changed', {
+        field: 'personalization_bundle',
+        from: prevSceneId ?? null,
+        to: draft.initialSceneId,
+      });
+      if (draft.initialSceneId && draft.initialSceneId !== prevSceneId) {
+        creatureMoments.emit('scene.changed', { sceneId: draft.initialSceneId });
+      }
+      for (const accId of draft.initialAccessoryIds ?? []) {
+        creatureMoments.emit('accessory.equipped', { accessoryId: accId });
+      }
       router.back();
     } finally {
       setSaving(false);
@@ -178,8 +193,14 @@ export default function PersonalizationSettings() {
   }
 
   async function setPalette(p: BrandPalette) {
+    const prev = settings?.brand_palette;
     const next = await settingsDb.update(profile!.id, { brand_palette: p });
     setSettings(next);
+    creatureMoments.emit('customization.changed', {
+      field: 'brand_palette',
+      from: prev,
+      to: p,
+    });
   }
 
   const pmeta = getPersonality(draft.personality);
@@ -362,9 +383,12 @@ function Chip({ label, selected, onPress }: { label: string; selected: boolean; 
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      accessibilityLabel={label}
       style={[styles.chip, selected && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
     >
-      <Text style={[styles.chipText, selected && { color: '#fff' }]}>{label}</Text>
+      <Text style={[styles.chipText, selected && { color: theme.tokens.semantic.inkOnBrand }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -434,6 +458,6 @@ function makeStyles(theme: Theme) {
       borderColor: 'transparent',
     },
     swatchOn: { borderColor: theme.colors.text },
-    swatchText: { fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.9)' },
+    swatchText: { fontSize: 9, fontWeight: '700', color: theme.tokens.semantic.inkOnBrand, opacity: 0.9 },
   });
 }

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
+import { setOnboardingDraft } from '@/lib/onboarding-draft';
 import { stepLabel } from '@/lib/onboarding-flow';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -21,7 +22,7 @@ const options: { id: AgeBand; label: string; allowed: boolean }[] = [
 export default function Age() {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
-  const params = useLocalSearchParams<{ display_name?: string }>();
+  const params = useLocalSearchParams<{ display_name?: string; express?: string }>();
   const [selected, setSelected] = useState<AgeBand | null>(null);
 
   function next() {
@@ -36,9 +37,16 @@ export default function Age() {
     }
     // Propaga display_name capturado em /signup pra ser pré-preenchido em /name.
     // Sem isso, o usuário re-digita o nome duas vezes ao longo do onboarding.
+    const display_name = params.display_name ?? undefined;
+    if (display_name) setOnboardingDraft({ display_name });
+    setOnboardingDraft({ age_band: selected });
+    const base = {
+      age_band: selected,
+      ...(display_name ? { display_name } : {}),
+    };
     router.push({
-      pathname: '/onboarding/goal',
-      params: { age_band: selected, ...(params.display_name ? { display_name: params.display_name } : {}) },
+      pathname: params.express === '1' ? '/onboarding/identity' : '/onboarding/goal',
+      params: base,
     });
   }
 
@@ -52,11 +60,14 @@ export default function Age() {
             Vou usar isso só pra adaptar o tom. Idade fica no seu dispositivo, não compartilhamos.
           </Text>
         </View>
-        <View style={styles.options}>
+        <View style={styles.options} accessibilityRole="radiogroup">
           {options.map(o => (
             <Pressable
               key={o.id}
               onPress={() => setSelected(o.id)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: selected === o.id }}
+              accessibilityLabel={o.label}
               style={[styles.opt, selected === o.id && styles.optSelected]}
             >
               <Text style={[styles.optLabel, selected === o.id && styles.optLabelSelected]}>
@@ -96,6 +107,6 @@ function makeStyles(theme: Theme) {
   },
   optSelected: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
   optLabel: { ...theme.text.bodyBold, color: theme.colors.text },
-  optLabelSelected: { color: '#fff' },
+  optLabelSelected: { color: theme.tokens.semantic.inkOnBrand },
 });
 }

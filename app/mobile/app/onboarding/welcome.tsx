@@ -2,7 +2,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
-import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -163,23 +163,23 @@ export default function Welcome() {
           <Animated.View style={[styles.footer, footerStyle]}>
             <Button label="Começar" onPress={() => router.push('/signup')} />
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Pular descobrimento e escolher direto"
               onPress={() => {
                 // QA flagrou: pular sem confirmação faz o usuário perder a apresentação
-                // (mascote, missão diária, segurança) e impacta retenção. Confirmamos
-                // pra dar uma última chance de voltar pro flow recomendado.
-                const goSkip = () => router.push('/onboarding/identity');
-                if (Platform.OS === 'web') {
-                  if (typeof window !== 'undefined' && window.confirm('Pular o tour rápido? Você perde a apresentação do mascote e o tutorial.')) goSkip();
-                } else {
-                  Alert.alert(
-                    'Pular o tour?',
-                    'Você perde a apresentação do mascote e a explicação rápida das missões. Dá pra voltar depois nas configurações.',
-                    [
-                      { text: 'Volto pro tour', style: 'cancel' },
-                      { text: 'Pular mesmo assim', style: 'destructive', onPress: goSkip },
-                    ],
-                  );
-                }
+                // (mascote, missão diária, segurança) e impacta retenção. Alert.alert
+                // do RN-Web cai em window.confirm/alert nativo, mas controlamos o
+                // wording num único lugar — antes tinha 2 textos divergentes.
+                const goSkip = () =>
+                  router.push({ pathname: '/onboarding/age', params: { express: '1' } });
+                Alert.alert(
+                  'Pular o tour?',
+                  'Você perde a apresentação do mascote e a explicação rápida das missões. Dá pra voltar depois nas configurações.',
+                  [
+                    { text: 'Volto pro tour', style: 'cancel' },
+                    { text: 'Pular mesmo assim', style: 'destructive', onPress: goSkip },
+                  ],
+                );
               }}
             >
               <Text style={styles.linkText}>Pular descobrimento e escolher direto</Text>

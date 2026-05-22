@@ -18,6 +18,7 @@ import type { Mascot as MascotType, MascotPhase } from '@/types';
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
+import { CELEBRATION_COLORS as CELEBRATION } from '@/lib/themes';
 
 interface Props {
   visible: boolean;
@@ -32,6 +33,7 @@ interface Props {
 
 export function EvolutionModal({ visible, mascot, fromPhase, onClose, storyTitle, storyBody, storyQuote }: Props) {
   const styles = useStyles(makeStyles);
+  const theme = useTheme();
   const glow = useSharedValue(0);
   const scale = useSharedValue(0.6);
   const sparkle1 = useSharedValue(0);
@@ -119,13 +121,13 @@ export function EvolutionModal({ visible, mascot, fromPhase, onClose, storyTitle
         <View style={[styles.center, { pointerEvents: 'box-none' }]}>
           <Animated.View style={[styles.glow, glowStyle]} />
           <Animated.View style={[styles.sparkle, styles.s1, s1Style]}>
-            <Icon name="sparkle" size={26} color="#FFD56B" strokeWidth={1.6} fill="#FFD56B" />
+            <Icon name="sparkle" size={26} color={CELEBRATION.gold} strokeWidth={1.6} fill={CELEBRATION.gold} />
           </Animated.View>
           <Animated.View style={[styles.sparkle, styles.s2, s2Style]}>
-            <Icon name="sparkle" size={22} color="#FFD56B" strokeWidth={1.6} fill="#FFD56B" />
+            <Icon name="sparkle" size={22} color={CELEBRATION.gold} strokeWidth={1.6} fill={CELEBRATION.gold} />
           </Animated.View>
           <Animated.View style={[styles.sparkle, styles.s3, s3Style]}>
-            <Icon name="sparkle" size={28} color="#FFD56B" strokeWidth={1.6} fill="#FFD56B" />
+            <Icon name="sparkle" size={28} color={CELEBRATION.gold} strokeWidth={1.6} fill={CELEBRATION.gold} />
           </Animated.View>
           <Animated.View style={mascotStyle}>
             <Mascot
@@ -137,7 +139,7 @@ export function EvolutionModal({ visible, mascot, fromPhase, onClose, storyTitle
           </Animated.View>
           <View style={styles.textBox}>
             <View style={styles.kickerRow}>
-              <Icon name="sparkles" size={11} color="#FFD56B" strokeWidth={2.4} />
+              <Icon name="sparkles" size={11} color={CELEBRATION.gold} strokeWidth={2.4} />
               <Text style={styles.kicker}>EVOLUÇÃO</Text>
             </View>
             <Text style={styles.title}>
@@ -146,7 +148,7 @@ export function EvolutionModal({ visible, mascot, fromPhase, onClose, storyTitle
             {fromPhase && (
               <View style={styles.fromRow}>
                 <Text style={styles.from}>{emergentPhaseLabels[fromPhase]}</Text>
-                <Icon name="arrow-right" size={11} color="#D7CDE6" strokeWidth={2.2} />
+                <Icon name="arrow-right" size={11} color={CELEBRATION.lilac} strokeWidth={2.2} />
                 <Text style={[styles.from, styles.fromBold]}>{emergentPhaseLabels[mascot.phase]}</Text>
               </View>
             )}
@@ -161,9 +163,9 @@ export function EvolutionModal({ visible, mascot, fromPhase, onClose, storyTitle
               </View>
             )}
           </View>
-          <PressableScale style={styles.ctaBtn} onPress={onClose} accessibilityLabel="Continuar">
+          <PressableScale style={styles.ctaBtn} onPress={onClose} accessibilityLabel="Continuar" accessibilityRole="button">
             <Text style={styles.ctaText}>Continuar</Text>
-            <Icon name="arrow-right" size={14} color="#fff" strokeWidth={2.6} />
+            <Icon name="arrow-right" size={14} color={theme.tokens.semantic.inkOnBrand} strokeWidth={2.6} />
           </PressableScale>
         </View>
       </Pressable>
@@ -175,7 +177,7 @@ function makeStyles(theme: Theme) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: 'rgba(20,16,28,0.85)',
+      backgroundColor: CELEBRATION.overlay,
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -197,14 +199,14 @@ function makeStyles(theme: Theme) {
     textBox: { alignItems: 'center', gap: 6 },
     kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
     kicker: {
-      color: '#FFD56B',
+      color: CELEBRATION.gold,
       fontSize: 11,
       fontWeight: '800',
       letterSpacing: 1.8,
       fontFamily: 'JetBrainsMono_500Medium',
     },
     title: {
-      color: '#fff',
+      color: theme.tokens.semantic.inkOnBrand,
       fontSize: 30,
       textAlign: 'center',
       fontFamily: 'InstrumentSerif_400Regular',
@@ -219,25 +221,25 @@ function makeStyles(theme: Theme) {
       marginTop: 4,
     },
     from: {
-      color: '#D7CDE6',
+      color: CELEBRATION.lilac,
       fontSize: 13,
       fontStyle: 'italic',
       fontFamily: 'InstrumentSerif_400Regular_Italic',
     },
     fromBold: {
-      color: '#FFD56B',
+      color: CELEBRATION.gold,
       fontStyle: 'normal',
       fontFamily: 'InstrumentSerif_400Regular',
     },
     hint: {
-      color: '#D7CDE6',
+      color: CELEBRATION.lilac,
       fontSize: 14,
       marginTop: 6,
       fontStyle: 'italic',
       fontFamily: 'InstrumentSerif_400Regular_Italic',
     },
     story: {
-      color: '#EDE5F5',
+      color: CELEBRATION.lilacDim,
       fontSize: 15,
       lineHeight: 22,
       textAlign: 'center',
@@ -249,13 +251,13 @@ function makeStyles(theme: Theme) {
       marginTop: theme.spacing.sm,
       paddingHorizontal: theme.spacing.md,
       paddingVertical: 10,
-      backgroundColor: 'rgba(255,255,255,0.10)',
+      backgroundColor: CELEBRATION.spotlight,
       borderRadius: theme.radius.md,
       borderWidth: 1,
-      borderColor: 'rgba(255,213,107,0.3)',
+      borderColor: CELEBRATION.goldRing,
     },
     quoteText: {
-      color: '#FFD56B',
+      color: CELEBRATION.gold,
       fontStyle: 'italic',
       fontSize: 15,
       textAlign: 'center',
@@ -272,7 +274,7 @@ function makeStyles(theme: Theme) {
       borderRadius: theme.radius.pill,
     },
     ctaText: {
-      color: '#fff',
+      color: theme.tokens.semantic.inkOnBrand,
       fontWeight: '700',
       fontSize: 15,
       fontFamily: 'PlusJakartaSans_700Bold',

@@ -116,7 +116,12 @@ export function MascotInteractive({
       disabled={disabled}
       style={[style, { pointerEvents: 'box-only' }]}
       accessible
-      accessibilityRole="button"
+      // role="imagebutton" evita button-in-button no RN Web (Pressable com
+      // role=button vira <button>; o mascote tem filhos clicáveis em
+      // PressableScale com role=button, e siblings que também viram <button>).
+      // imagebutton mapeia pra <div role="button"> no DOM e elimina o warning
+      // validateDOMNesting de <button> em <button>.
+      accessibilityRole="imagebutton"
       accessibilityLabel={accessibilityLabel ?? 'Interagir com o mascote'}
     >
       {children}

@@ -10,7 +10,7 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -56,6 +56,7 @@ export default function Breathe() {
   const [phase, setPhase] = useState<Phase>('idle');
   const [cycle, setCycle] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [rewardOk, setRewardOk] = useState(false);
 
   const scale = useSharedValue(0.7);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,11 +77,11 @@ export default function Breathe() {
   }
 
   function transitionTo(next: Exclude<Phase, 'idle'>, currentCycle: number) {
-    setPhase(next);
     if (next === 'done') {
-      void finish();
+      void completeSession();
       return;
     }
+    setPhase(next);
     const spec = PHASES[next];
     scale.value = withTiming(spec.scale, {
       duration: spec.duration,
@@ -99,7 +100,7 @@ export default function Breathe() {
       else if (next === 'exhale') {
         const nextCycle = currentCycle + 1;
         setCycle(nextCycle);
-        if (nextCycle >= TOTAL_CYCLES) transitionTo('done', nextCycle);
+        if (nextCycle >= TOTAL_CYCLES) void completeSession();
         else transitionTo('inhale', nextCycle);
       }
     }, spec.duration);
@@ -117,13 +118,14 @@ export default function Breathe() {
     scale.value = withTiming(0.7, { duration: 500 });
   }
 
-  async function finish() {
+  async function completeSession() {
     cleanup();
-    if (!profile || !mascot) return;
-    // try/catch ao redor de applyCheckinFully: se AsyncStorage falhar a meio do
-    // pipeline (xp event vs wallet, p.ex.), a tela "Terminou" ainda renderiza
-    // e o user não fica preso num estado intermediário. Refreshes também
-    // catch — leitura falha mantém o estado anterior em memória.
+    if (!profile || !mascot) {
+      Alert.alert('Ops', 'Não encontrei seu mascote. Volta pra Home e tenta de novo.');
+      setPhase('idle');
+      setRewardOk(false);
+      return;
+    }
     try {
       const out = await applyCheckinFully({
         profile,
@@ -146,12 +148,18 @@ export default function Breathe() {
         enqueueToast({ kind: 'accessory', emoji: acc.emoji, title: acc.name, subtitle: 'Equipe no Closet' });
       for (const sc of out.unlocks.scenes)
         enqueueToast({ kind: 'scene', emoji: sc.emoji, title: sc.name, subtitle: 'Cenário desbloqueado' });
+      setRewardOk(true);
+      setPhase('done');
     } catch (err) {
-      // Mantém o usuário na tela "done" mesmo sem reward — não trava UI.
-      // Tela já mostra "+25 XP" estático, mas o cap diário pode ter limitado.
       logger.warn('[breathe] applyCheckinFully failed', {
         reason: err instanceof Error ? err.message : 'unknown',
       });
+      Alert.alert(
+        'Não salvei o check-in',
+        'A respiração terminou, mas não consegui registrar. Tenta de novo.',
+      );
+      setPhase('idle');
+      setRewardOk(false);
     }
   }
 
@@ -175,20 +183,24 @@ export default function Breathe() {
           <Text style={styles.subtitle}>
             5 ciclos completos. Sente o ritmo do coração mais devagar?
           </Text>
-          <View style={styles.rewards}>
-            <View style={styles.reward}>
-              <Icon name="zap" size={11} color={theme.colors.primary} strokeWidth={2.4} fill={theme.colors.primary} />
-              <Text style={styles.rewardText}>+25 XP</Text>
+          {rewardOk ? (
+            <View style={styles.rewards}>
+              <View style={styles.reward}>
+                <Icon name="zap" size={11} color={theme.colors.primary} strokeWidth={2.4} fill={theme.colors.primary} />
+                <Text style={styles.rewardText}>+25 XP</Text>
+              </View>
+              <View style={styles.reward}>
+                <Icon name="coins" size={11} color={theme.colors.primaryDeep} strokeWidth={2.4} />
+                <Text style={styles.rewardText}>+15</Text>
+              </View>
+              <View style={styles.reward}>
+                <Icon name="check" size={11} color={theme.colors.success} strokeWidth={2.6} />
+                <Text style={styles.rewardText}>check-in</Text>
+              </View>
             </View>
-            <View style={styles.reward}>
-              <Icon name="coins" size={11} color={theme.colors.primaryDeep} strokeWidth={2.4} />
-              <Text style={styles.rewardText}>+15</Text>
-            </View>
-            <View style={styles.reward}>
-              <Icon name="check" size={11} color={theme.colors.success} strokeWidth={2.6} />
-              <Text style={styles.rewardText}>check-in</Text>
-            </View>
-          </View>
+          ) : (
+            <Text style={styles.subtitle}>Sessão concluída.</Text>
+          )}
           <Button label="Voltar pra Home" onPress={() => router.replace('/(tabs)')} />
         </View>
       </SafeAreaView>
@@ -359,14 +371,14 @@ function makeStyles(theme: Theme) {
       ...makeShadow(theme.colors.primary, 0, 0, 40, 0.55, 10),
     },
     phaseLabel: {
-      color: '#fff',
+      color: theme.tokens.semantic.inkOnBrand,
       fontWeight: '800',
       fontSize: 16,
       letterSpacing: 2.5,
       fontFamily: 'JetBrainsMono_500Medium',
     },
     phaseTimer: {
-      color: '#fff',
+      color: theme.tokens.semantic.inkOnBrand,
       fontSize: 72,
       lineHeight: 76,
       marginTop: 4,
