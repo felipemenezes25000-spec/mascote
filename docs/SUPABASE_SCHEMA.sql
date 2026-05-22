@@ -1,5 +1,14 @@
 -- ============================================================================
--- Mascote — Supabase schema (v1) — 2026-05-20
+-- Mascote — Supabase schema (v1.1) — 2026-05-22
+-- ============================================================================
+-- v1.1 hardening (2026-05-22):
+--   * set_updated_at agora tem SET search_path (CVE function_search_path_mutable)
+--   * mascots: CHECK constraints em xp/level/energy/health/name (defense in depth)
+--   * mission_completions: CHECK em xp/coins_awarded (anti-abuse)
+--   * backups: CHECK em payload_size (cap 10MiB)
+--   * active_mascots view: security_invoker=on (RLS-aware no Postgres 15+)
+--   * +ai_usage table (movida do README) — necessária pro rate-limit do proxy
+--   * +safety_flags table — audit server-side de classificações high/critical
 -- ============================================================================
 --
 -- Schema inicial pra sync opcional. App é LOCAL-FIRST: cada tabela aqui é
@@ -25,13 +34,18 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Trigger genérico de updated_at -----------------------------------------------
+-- SECURITY: search_path explícito previne shadowing (CVE function_search_path_mutable).
+-- Sem isso, um schema malicioso no search_path poderia interceptar NOW().
 CREATE OR REPLACE FUNCTION public.set_updated_at()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- ============================================================================
 -- 1. user_profiles — extensão de auth.users com prefs/onboarding state
@@ -64,20 +78,22 @@ CREATE POLICY "users_update_self" ON public.user_profiles
 CREATE TABLE IF NOT EXISTS public.mascots (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  name         text NOT NULL,
+  name         text NOT NULL CHECK (char_length(name) BETWEEN 1 AND 60),
   personality  text NOT NULL CHECK (personality IN ('calmo','motivador','fofo','sabio')),
   phase        text NOT NULL DEFAULT 'ovo'
                  CHECK (phase IN ('ovo','bebe','crianca','adolescente','adulto','evoluido','rara')),
   mood         text NOT NULL DEFAULT 'ok'
                  CHECK (mood IN ('triste','ok','feliz','empolgado','exausto')),
-  xp           int NOT NULL DEFAULT 0,
-  level        int NOT NULL DEFAULT 1,
-  energy       int NOT NULL DEFAULT 50,
-  health       int NOT NULL DEFAULT 80,
+  -- Defense in depth: service_role bypassa RLS, então CHECKs no DB são a
+  -- última linha contra estado corrompido (sincs maliciosos, bugs do client).
+  xp           int NOT NULL DEFAULT 0     CHECK (xp >= 0),
+  level        int NOT NULL DEFAULT 1     CHECK (level >= 1 AND level <= 999),
+  energy       int NOT NULL DEFAULT 50    CHECK (energy BETWEEN 0 AND 100),
+  health       int NOT NULL DEFAULT 80    CHECK (health BETWEEN 0 AND 100),
   created_at   timestamptz NOT NULL DEFAULT NOW(),
   updated_at   timestamptz NOT NULL DEFAULT NOW(),
   deleted_at   timestamptz,
-  version      int NOT NULL DEFAULT 1
+  version      int NOT NULL DEFAULT 1     CHECK (version >= 1)
 );
 
 CREATE INDEX idx_mascots_user ON public.mascots(user_id) WHERE deleted_at IS NULL;
@@ -189,10 +205,10 @@ CREATE TABLE IF NOT EXISTS public.mission_completions (
   mission_id      uuid REFERENCES public.missions(id) ON DELETE SET NULL,
   template_id     text NOT NULL,
   outcome         text NOT NULL CHECK (outcome IN ('completed','skipped','expired')),
-  xp_awarded      int NOT NULL DEFAULT 0,
-  coins_awarded   int NOT NULL DEFAULT 0,
+  xp_awarded      int NOT NULL DEFAULT 0 CHECK (xp_awarded >= 0 AND xp_awarded <= 10000),
+  coins_awarded   int NOT NULL DEFAULT 0 CHECK (coins_awarded >= 0 AND coins_awarded <= 10000),
   completed_at    timestamptz NOT NULL DEFAULT NOW(),
-  idempotency_key text NOT NULL,
+  idempotency_key text NOT NULL CHECK (char_length(idempotency_key) BETWEEN 1 AND 128),
   UNIQUE (user_id, idempotency_key)
 );
 
@@ -270,7 +286,8 @@ CREATE TABLE IF NOT EXISTS public.backups (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   payload      jsonb NOT NULL,  -- SyncPayload completo
-  payload_size int NOT NULL,
+  -- Cap em ~10 MiB pra prevenir backups gigantes (cliente tem cap próprio também).
+  payload_size int NOT NULL CHECK (payload_size > 0 AND payload_size <= 10485760),
   created_at   timestamptz NOT NULL DEFAULT NOW()
 );
 
@@ -296,17 +313,76 @@ CREATE POLICY "sync_metadata_self" ON public.sync_metadata
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- ============================================================================
+-- 13. ai_usage — audit log do proxy IA (cotas por tier + observabilidade)
+-- ============================================================================
+-- Antes estava só no README do edge function — quem aplicasse o schema sem
+-- ler o README quebrava o rate-limit em prod (checkRateLimit falha aberto).
+-- Movido pra cá pra ser parte do schema canônico.
+CREATE TABLE IF NOT EXISTS public.ai_usage (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      uuid NOT NULL,  -- pode ser auth.users.id OU hash (legacy)
+  tier         text NOT NULL CHECK (tier IN ('free','plus_monthly','plus_annual','legendary')),
+  timestamp    timestamptz NOT NULL DEFAULT NOW(),
+  tokens_in    int CHECK (tokens_in IS NULL OR tokens_in >= 0),
+  tokens_out   int CHECK (tokens_out IS NULL OR tokens_out >= 0),
+  latency_ms   int CHECK (latency_ms IS NULL OR latency_ms >= 0),
+  cached       boolean NOT NULL DEFAULT false,
+  source       text NOT NULL CHECK (source IN ('openai','fallback','cache')),
+  safety_flag  text NOT NULL CHECK (safety_flag IN ('safe','watch','high','critical'))
+);
+
+-- Index pro checkRateLimit (filtra por user + dia)
+CREATE INDEX IF NOT EXISTS idx_ai_usage_user_time
+  ON public.ai_usage(user_id, timestamp DESC);
+
+ALTER TABLE public.ai_usage ENABLE ROW LEVEL SECURITY;
+-- Só service_role escreve (edge function). Cliente pode ler o próprio histórico
+-- (debug/quota dashboard).
+CREATE POLICY "ai_usage_read_self" ON public.ai_usage
+  FOR SELECT USING (auth.uid()::text = user_id::text);
+
+-- ============================================================================
+-- 14. safety_flags — auditoria server-side de mensagens classificadas
+-- ============================================================================
+-- Não armazena CONTEÚDO da mensagem (privacy-first). Só metadados pra:
+--  - medir taxa de high/critical (saber se cliente está classificando bem)
+--  - detectar abuso (mesmo user_id repetindo critical 50x/dia)
+--  - audit pós-incidente (sem PII, só timestamp + classificação)
+CREATE TABLE IF NOT EXISTS public.safety_flags (
+  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       uuid NOT NULL,
+  flag          text NOT NULL CHECK (flag IN ('safe','watch','high','critical')),
+  source        text NOT NULL CHECK (source IN ('client','server')),
+  -- Hash do conteúdo (NÃO o conteúdo) — permite deduplicar sem armazenar texto.
+  content_hash  text,
+  occurred_at   timestamptz NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_safety_flags_user_time
+  ON public.safety_flags(user_id, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS idx_safety_flags_flag_time
+  ON public.safety_flags(flag, occurred_at DESC)
+  WHERE flag IN ('high','critical');
+
+ALTER TABLE public.safety_flags ENABLE ROW LEVEL SECURITY;
+-- Usuário lê o próprio histórico de flags (transparência). Service_role escreve.
+CREATE POLICY "safety_flags_read_self" ON public.safety_flags
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- ============================================================================
 -- Views auxiliares
 -- ============================================================================
 
 -- mascote ativo (não-deletado) por usuário
-CREATE OR REPLACE VIEW public.active_mascots AS
+-- security_invoker=on faz a view respeitar RLS do caller (Postgres 15+).
+-- Sem isso, view roda como o owner (postgres) e BYPASSARIA RLS — vazando
+-- todas as mascots de todos os usuários.
+CREATE OR REPLACE VIEW public.active_mascots
+  WITH (security_invoker = on) AS
   SELECT * FROM public.mascots WHERE deleted_at IS NULL;
 
 -- ============================================================================
 -- Próximos passos (não criados aqui — exigem decisão de produto):
 --  - chats: messages do usuário com IA (decidir retenção pré-publicação)
---  - safety_flags: log de mensagens flagged como critical/high (audit)
---  - ai_usage: cotas por plano (RevenueCat webhook + edge function)
 --  - feature_flags: gradual rollout de features novas
 -- ============================================================================

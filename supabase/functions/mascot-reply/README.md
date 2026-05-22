@@ -15,31 +15,15 @@ Proxy IA do Mascote. Chave OpenAI **NUNCA** vai no cliente — fica como secret 
    supabase link --project-ref <YOUR_REF>
    ```
 
-3. Crie a tabela `ai_usage` (não está em SUPABASE_SCHEMA.sql porque é específica do proxy):
-   ```sql
-   CREATE TABLE IF NOT EXISTS public.ai_usage (
-     id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-     user_id     uuid NOT NULL,
-     tier        text NOT NULL,
-     timestamp   timestamptz NOT NULL DEFAULT NOW(),
-     tokens_in   int,
-     tokens_out  int,
-     latency_ms  int,
-     cached      boolean DEFAULT false,
-     source      text,
-     safety_flag text
-   );
-   ALTER TABLE public.ai_usage ENABLE ROW LEVEL SECURITY;
-   -- Só service role escreve — política aberta de SELECT pra debug
-   CREATE POLICY "ai_usage_read_self" ON public.ai_usage
-     FOR SELECT USING (auth.uid()::text = user_id::text);
-   CREATE INDEX idx_ai_usage_user_time ON public.ai_usage(user_id, timestamp DESC);
-   ```
+3. Aplique o schema canônico (`docs/SUPABASE_SCHEMA.sql`) — `ai_usage` e
+   `safety_flags` já estão lá desde v1.1 (2026-05-22).
 
 4. Set secrets:
    ```powershell
    supabase secrets set OPENAI_API_KEY=sk-XXXX
    supabase secrets set OPENAI_MODEL=gpt-4o-mini
+   # Em produção, deixe REQUIRE_AUTH=true (default). False só pra dev local.
+   # supabase secrets set REQUIRE_AUTH=true
    ```
 
 5. Deploy:
@@ -106,6 +90,9 @@ Ajustar em `index.ts` → `DAILY_QUOTA`.
 - ✅ Audit log em `ai_usage` registra **somente metadados** (tokens, latency, source) — NUNCA o conteúdo
 - ✅ Cache 24h reduz custo em saudações repetidas
 - ✅ Fallback local quando OpenAI 5xx — usuário NUNCA recebe erro técnico
+- ✅ JWT validado server-side (REQUIRE_AUTH=true). Cliente NÃO escolhe seu próprio tier — é lido de `subscription_status`.
+- ✅ NaN guards em `tokens_in/out` (OpenAI já retornou undefined/null em incidentes)
+- ✅ Insert errors do Postgres são logados (antes silenciavam via try/catch sem error-check)
 
 ## Custos esperados
 
