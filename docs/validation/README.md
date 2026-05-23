@@ -16,7 +16,7 @@ semanas o que deveria ter rodado em 30 dias antes do código.
 
 ## Como começar (em 4 horas)
 
-1. **Deploy landing** — `cd validation/landing && vercel deploy` (ou push pra Netlify/GH Pages)
+1. **Deploy landing** — `cd docs/validation/landing && vercel deploy` (ou push pra Netlify/GH Pages)
 2. **Configurar survey** — importar `survey-template.md` em Tally.so (40 min)
 3. **Conectar landing → survey** — adicionar redirect após waitlist signup
 4. **Configurar 1 ad** — Meta Ads R$ 200/3 dias targeting Brasil, mulher 22-38, interesse "wellness"
@@ -25,7 +25,7 @@ semanas o que deveria ter rodado em 30 dias antes do código.
 
 ## Relação com `app/web/`
 
-A **landing de produção** do produto está em `app/web/` (Next.js, i18n). A pasta `validation/landing/` é uma **landing estática mínima** só para testes de mercado (waitlist + survey), deployável em minutos (Vercel/Netlify/GH Pages).
+A **landing de produção** do produto está em `app/web/` (Next.js, i18n). A pasta `docs/validation/landing/` é uma **landing estática mínima** só para testes de mercado (waitlist + survey), deployável em minutos (Vercel/Netlify/GH Pages).
 
 ## O que NÃO está aqui
 

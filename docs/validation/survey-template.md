@@ -122,4 +122,4 @@ gente entender melhor o que você precisa? Ganharia 1 ano grátis do app no lan�
 - ≥ 50% identificam-se com pelo menos uma persona em Q10
 - ≥ 20% topam entrevista em Q13 (alto sinal de engajamento)
 
-**Output:** relatório resumido em `validation/results.md` toda sexta.
+**Output:** relatório resumido em `docs/validation/results.md` toda sexta.

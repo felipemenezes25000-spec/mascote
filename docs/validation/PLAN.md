@@ -23,7 +23,7 @@ endereça esse gap em modo de **validação acelerada paralela ao soft launch**.
 ## Cronograma (4 semanas, paralelo a polish do app)
 
 **Semana 1 (sprint validação):**
-- Deploy landing em mascote.app (skeleton em `validation/landing/`)
+- Deploy landing em mascote.app (skeleton em `docs/validation/landing/`)
 - Configurar form de waitlist + survey via Tally/Google Forms (template em `survey-template.md`)
 - Lançar 1 ad de R$ 200 no Meta para PT-BR feminino 22-38, interesse "self-care"
 - Postar 3 vídeos orgânicos no TikTok
@@ -91,7 +91,7 @@ endereça esse gap em modo de **validação acelerada paralela ao soft launch**.
 
 ## Como reportar (consolidação semanal)
 
-A cada sexta-feira, atualizar `validation/results.md` (criar) com:
+A cada sexta-feira, atualizar `docs/validation/results.md` (criar) com:
 - Métricas da semana vs anterior
 - Trechos qualitativos relevantes (anonimizados)
 - Hipóteses fortalecidas / refutadas

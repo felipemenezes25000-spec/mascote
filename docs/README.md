@@ -44,7 +44,7 @@
 | `../app/web/` | Landing Next.js |
 | `./plano/` | Plano estratégico de negócio (7 partes) |
 | `../scripts/` | Smoke Android + Maestro auxiliar |
-| `../validation/` | Validação de mercado (landing estática + survey) |
+| `./validation/` | Validação de mercado (landing estática + survey) |
 
 ## Comandos (raiz do repo)
 
