@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Mascote — GLB Viewer (carregando assets reais)</title>
+<style>
+  :root {
+    --bg-1: #0a0807;
+    --bg-2: #1a1410;
+    --panel: rgba(18, 14, 12, 0.85);
+    --panel-border: rgba(255, 200, 160, 0.18);
+    --text: #fff5e8;
+    --muted: #b0a090;
+    --accent: #ffb060;
+    --premium: #ffd060;
+    --signature: #ff7095;
+    --good: #80ff90;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; font-family: -apple-system, "Segoe UI", sans-serif; }
+  body {
+    background: radial-gradient(ellipse at 50% 30%, var(--bg-2), var(--bg-1) 70%);
+    color: var(--text);
+    user-select: none;
+  }
+  #scene { position: fixed; inset: 0; z-index: 0; }
+  .ui-shell {
+    position: fixed; inset: 0; z-index: 10;
+    display: grid;
+    grid-template-columns: 280px 1fr 340px;
+    pointer-events: none;
+  }
+  .panel {
+    background: var(--panel);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    margin: 14px;
+    padding: 16px;
+    pointer-events: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 28px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  h2 {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  h2 .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--good); box-shadow: 0 0 8px var(--good);
+  }
+  .preset-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .preset-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 14px 10px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .preset-btn:hover { background: rgba(255,176,96,0.15); border-color: var(--accent); }
+  .preset-btn.active {
+    background: linear-gradient(135deg, rgba(255,176,96,0.3), rgba(255,112,149,0.2));
+    border-color: var(--accent);
+    box-shadow: 0 0 16px rgba(255,176,96,0.3);
+  }
+  .preset-name { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+  .preset-tag { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+
+  .slot-tabs {
+    display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .slot-tab {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 5px 10px;
+    font-size: 11px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--muted);
+  }
+  .slot-tab.active {
+    background: var(--accent);
+    color: #1a0e0a;
+    border-color: var(--accent);
+  }
+
+  .acc-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  }
+  .acc-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.18s;
+    position: relative;
+  }
+  .acc-card:hover {
+    background: rgba(255,176,96,0.12);
+    border-color: rgba(255,176,96,0.3);
+  }
+  .acc-card.equipped {
+    background: linear-gradient(135deg, rgba(128,255,144,0.18), rgba(80,200,255,0.15));
+    border-color: var(--good);
+    box-shadow: 0 0 12px rgba(128,255,144,0.3);
+  }
+  .acc-card.locked {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .acc-name { font-size: 11px; font-weight: 700; margin-bottom: 3px; }
+  .acc-tier {
+    font-size: 9px; letter-spacing: 0.5px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 2px;
+  }
+  .acc-tier.free { background: rgba(128,255,144,0.2); color: var(--good); }
+  .acc-tier.premium { background: rgba(255,208,96,0.2); color: var(--premium); }
+  .acc-tier.signature { background: rgba(255,112,149,0.2); color: var(--signature); }
+  .acc-price { font-size: 10px; color: var(--muted); }
+  .acc-anim {
+    position: absolute; top: 6px; right: 6px;
+    font-size: 12px;
+  }
+
+  .info-block {
+    margin-top: 14px; padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .info-item {
+    display: flex; justify-content: space-between;
+    font-size: 11px; padding: 4px 0;
+    color: var(--muted);
+  }
+  .info-item strong { color: var(--text); font-weight: 600; }
+
+  .center-hint {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    text-align: center; color: var(--muted); font-size: 11px;
+    pointer-events: none; z-index: 20;
+    letter-spacing: 0.5px;
+  }
+  .total-spent {
+    background: linear-gradient(135deg, rgba(255,176,96,0.15), rgba(255,112,149,0.10));
+    border: 1px solid rgba(255,176,96,0.3);
+    border-radius: 10px;
+    padding: 10px;
+    margin-top: 12px;
+    text-align: center;
+  }
+  .total-spent .amount {
+    font-size: 18px; font-weight: 800;
+    background: linear-gradient(90deg, var(--accent), var(--signature));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .total-spent .label {
+    font-size: 9px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase;
+  }
+
+  .loading {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-1);
+    z-index: 100; color: var(--muted);
+    transition: opacity 0.4s;
+  }
+  .loading.hidden { opacity: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<div id="loading" class="loading">
+  <div style="text-align: center;">
+    <div style="font-size: 24px; margin-bottom: 12px;">🎮</div>
+    <div>Carregando GLBs Blender...</div>
+  </div>
+</div>
+
+<div id="scene"></div>
+
+<div class="ui-shell">
+  <!-- LEFT: Personality picker -->
+  <div class="panel">
+    <h2><span class="dot"></span>Personalidade</h2>
+    <div class="preset-row" id="personalities">
+      <button class="preset-btn active" data-preset="bipo">
+        <div class="preset-name">Bipo</div>
+        <div class="preset-tag">CALMO</div>
+      </button>
+      <button class="preset-btn" data-preset="zip">
+        <div class="preset-name">Zip</div>
+        <div class="preset-tag">MOTIVADOR</div>
+      </button>
+      <button class="preset-btn" data-preset="lulu">
+        <div class="preset-name">Lulu</div>
+        <div class="preset-tag">FOFO</div>
+      </button>
+      <button class="preset-btn" data-preset="aro">
+        <div class="preset-name">Aro</div>
+        <div class="preset-tag">SÁBIO</div>
+      </button>
+    </div>
+
+    <div class="info-block">
+      <h2><span class="dot"></span>Identidade</h2>
+      <div class="info-item">Nome: <strong id="mascot-name">Bipo</strong></div>
+      <div class="info-item">Personalidade: <strong id="mascot-personality">Calmo</strong></div>
+      <div class="info-item">Acessórios equipados: <strong id="equipped-count">0</strong></div>
+    </div>
+
+    <div class="total-spent">
+      <div class="amount" id="total-spent">R$ 0,00</div>
+      <div class="label">total investido</div>
+    </div>
+
+    <div class="info-block">
+      <div style="font-size: 11px; color: var(--muted); line-height: 1.6;">
+        <strong style="color:var(--text);">↻ Arraste</strong> pra rotacionar.<br>
+        <strong style="color:var(--text);">Scroll</strong> pra zoom.<br>
+        <strong style="color:var(--text);">Click no acessório</strong> pra equipar/remover.
+      </div>
+    </div>
+  </div>
+
+  <div></div>
+
+  <!-- RIGHT: Accessories store -->
+  <div class="panel">
+    <h2><span class="dot"></span>Loja de Acessórios</h2>
+    <div class="slot-tabs" id="slot-tabs">
+      <button class="slot-tab active" data-slot="all">Todos</button>
+      <button class="slot-tab" data-slot="head">Cabeça</button>
+      <button class="slot-tab" data-slot="face">Rosto</button>
+      <button class="slot-tab" data-slot="neck">Pescoço</button>
+      <button class="slot-tab" data-slot="back">Costas</button>
+      <button class="slot-tab" data-slot="aura">Aura</button>
+    </div>
+    <div class="acc-grid" id="acc-grid"></div>
+  </div>
+</div>
+
+<div class="center-hint">
+  Click and drag the mascot · scroll to zoom · click accessories to equip
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.166.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.166.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ========================================================================
+// REGISTRY — espelha scripts/blender/generate_accessory.py
+// ========================================================================
+const ACCESSORIES = [
+  // FREE
+  { id: 'cap_classic',     tier: 'free', slot: 'head', name: 'Boné Clássico', unlocked: true, anim: false },
+  { id: 'beanie',          tier: 'free', slot: 'head', name: 'Gorro Bordô',   unlocked: true, anim: false },
+  { id: 'flower_daisy',    tier: 'free', slot: 'head', name: 'Margarida',     unlocked: true, anim: false },
+  { id: 'sunglasses',      tier: 'free', slot: 'face', name: 'Óculos Escuros',unlocked: true, anim: false },
+  { id: 'glasses_round',   tier: 'free', slot: 'face', name: 'Óculos Redondos',unlocked: true, anim: false },
+  { id: 'scarf_cozy',      tier: 'free', slot: 'neck', name: 'Cachecol',      unlocked: true, anim: false },
+  { id: 'bow_tie',         tier: 'free', slot: 'neck', name: 'Gravata Borb.', unlocked: true, anim: false },
+  // PREMIUM ESTÁTICO
+  { id: 'crown_royal',     tier: 'premium', slot: 'head', name: 'Coroa Real',     price: 9.90,  unlocked: false, anim: false },
+  { id: 'crown_flowers',   tier: 'premium', slot: 'head', name: 'Coroa Flores',   price: 7.90,  unlocked: false, anim: false },
+  { id: 'monocle_gold',    tier: 'premium', slot: 'face', name: 'Monóculo',       price: 5.90,  unlocked: false, anim: false },
+  { id: 'cape_velvet',     tier: 'premium', slot: 'neck', name: 'Capa Veludo',    price: 12.90, unlocked: false, anim: false },
+  // PREMIUM ANIMATED
+  { id: 'wings_angel',     tier: 'premium', slot: 'back', name: 'Asas Anjo',      price: 14.90, unlocked: false, anim: true },
+  { id: 'wings_dragon',    tier: 'premium', slot: 'back', name: 'Asas Dragão',    price: 14.90, unlocked: false, anim: true },
+  { id: 'wings_butterfly', tier: 'premium', slot: 'back', name: 'Asas Borboleta', price: 12.90, unlocked: false, anim: true },
+  { id: 'halo_radiant',    tier: 'premium', slot: 'head', name: 'Halo Radiante',  price: 9.90,  unlocked: false, anim: true },
+  // SIGNATURE
+  { id: 'flame_mane',      tier: 'signature', slot: 'head', name: 'Juba de Fogo',    price: 24.90, unlocked: false, anim: true },
+  { id: 'aura_cosmic',     tier: 'signature', slot: 'aura', name: 'Aura Cósmica',    price: 29.90, unlocked: false, anim: true },
+  { id: 'heart_glow',      tier: 'signature', slot: 'aura', name: 'Corações Brilho', price: 19.90, unlocked: false, anim: true },
+  { id: 'sword_floating',  tier: 'signature', slot: 'back', name: 'Espada Lendária', price: 22.90, unlocked: false, anim: true },
+];
+
+const PERSONALITY_LABELS = {
+  bipo: 'Calmo',
+  zip: 'Motivador',
+  lulu: 'Fofo',
+  aro: 'Sábio',
+};
+
+// ========================================================================
+// STATE
+// ========================================================================
+const state = {
+  currentPersonality: 'bipo',
+  mascotMesh: null,
+  equipped: new Map(), // slot → {accessoryId, mesh, mixer}
+  selectedSlot: 'all',
+  totalSpent: 0,
+  unlockedIds: new Set(ACCESSORIES.filter(a => a.unlocked).map(a => a.id)),
+  // Mixers pra animations (asas batendo, halo girando)
+  mixers: [],
+};
+
+// ========================================================================
+// SCENE SETUP
+// ========================================================================
+const sceneRoot = document.getElementById('scene');
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0a0807, 0.025);
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 0.6, 5.5);
+camera.lookAt(0, 0.4, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x000000, 0);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+sceneRoot.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 0.4, 0);
+controls.minDistance = 3;
+controls.maxDistance = 9;
+controls.maxPolarAngle = Math.PI * 0.55;
+
+// Lights — 5-point rig
+const ambient = new THREE.AmbientLight(0xfff0e0, 0.6);
+scene.add(ambient);
+const keyLight = new THREE.DirectionalLight(0xfff8ee, 1.2);
+keyLight.position.set(3, 4, 4);
+scene.add(keyLight);
+const rimWarm = new THREE.DirectionalLight(0xffb878, 0.55);
+rimWarm.position.set(-3, 3, -3);
+scene.add(rimWarm);
+const rimCool = new THREE.DirectionalLight(0x8cb4ff, 0.35);
+rimCool.position.set(3, 3, -3);
+scene.add(rimCool);
+const fill = new THREE.PointLight(0xb8d4ff, 0.5, 10);
+fill.position.set(0, -1.5, 3);
+scene.add(fill);
+
+// Shadow disc (decorativo)
+const shadowGeo = new THREE.CircleGeometry(1.6, 48);
+const shadowMat = new THREE.MeshBasicMaterial({
+  color: 0x000000, transparent: true, opacity: 0.35,
+});
+const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
+shadowMesh.rotation.x = -Math.PI / 2;
+shadowMesh.position.y = -1.2;
+scene.add(shadowMesh);
+
+// ========================================================================
+// GLB LOADER
+// ========================================================================
+const loader = new GLTFLoader();
+const cache = new Map(); // url → gltf
+
+function loadGLB(url) {
+  if (cache.has(url)) {
+    return Promise.resolve(cloneGLTF(cache.get(url)));
+  }
+  return new Promise((resolve, reject) => {
+    loader.load(
+      url,
+      (gltf) => {
+        cache.set(url, gltf);
+        resolve(cloneGLTF(gltf));
+      },
+      undefined,
+      reject,
+    );
+  });
+}
+
+function cloneGLTF(gltf) {
+  // Clone shallow — só a scene precisa de clone profundo
+  const sceneClone = gltf.scene.clone(true);
+  // Deep clone materials pra cada instância ter próprio tint
+  sceneClone.traverse(obj => {
+    if (obj.isMesh && obj.material) {
+      obj.material = obj.material.clone();
+    }
+  });
+  return { scene: sceneClone, animations: gltf.animations };
+}
+
+// ========================================================================
+// LOAD MASCOT
+// ========================================================================
+async function loadMascot(personality) {
+  if (state.mascotMesh) {
+    scene.remove(state.mascotMesh);
+  }
+  try {
+    const gltf = await loadGLB(`app/mobile/assets/mascot-3d/${personality}.glb`);
+    const mascot = gltf.scene;
+    // Posiciona no centro
+    const box = new THREE.Box3().setFromObject(mascot);
+    const center = box.getCenter(new THREE.Vector3());
+    mascot.position.sub(center);
+    mascot.position.y += 0.3;
+    state.mascotMesh = mascot;
+    scene.add(mascot);
+
+    // Re-equipa acessórios atuais (caso mude personality com items equipados)
+    const currentEquipped = Array.from(state.equipped.entries());
+    state.equipped.clear();
+    for (const [slot, info] of currentEquipped) {
+      await equipAccessory(info.accessoryId);
+    }
+    document.getElementById('loading').classList.add('hidden');
+    updateInfoPanel();
+  } catch (e) {
+    console.error('Failed to load mascot', personality, e);
+    document.getElementById('loading').textContent = 'Erro: ' + e.message;
+  }
+}
+
+// ========================================================================
+// ACCESSORY EQUIP/UNEQUIP
+// ========================================================================
+async function equipAccessory(accId) {
+  const acc = ACCESSORIES.find(a => a.id === accId);
+  if (!acc) return;
+  if (!state.unlockedIds.has(accId)) {
+    // Simula compra: tier premium/signature precisa pagar
+    if (confirm(`${acc.name} é ${acc.tier.toUpperCase()} — R$${acc.price.toFixed(2)}.\n\nComprar e equipar?`)) {
+      state.unlockedIds.add(accId);
+      state.totalSpent += acc.price;
+    } else {
+      return;
+    }
+  }
+  // Se já equipado no mesmo slot, remove
+  const existingInSlot = state.equipped.get(acc.slot);
+  if (existingInSlot) {
+    scene.remove(existingInSlot.mesh);
+    // Remove mixer
+    const mIdx = state.mixers.indexOf(existingInSlot.mixer);
+    if (mIdx >= 0) state.mixers.splice(mIdx, 1);
+    state.equipped.delete(acc.slot);
+    if (existingInSlot.accessoryId === accId) {
+      // Toggle: desequipa
+      renderAccessoryGrid();
+      updateInfoPanel();
+      return;
+    }
+  }
+
+  try {
+    const gltf = await loadGLB(`app/mobile/assets/mascot-3d/accessories/${acc.id}.glb`);
+    const accMesh = gltf.scene;
+    // SLOT POSITIONING — sem rigging real, aplicar offset por slot pra que
+    // acessório fique na posição correta do corpo (não cai no chão).
+    // Offsets calibrados pro mascote chibi do Blender (head em y=0.85).
+    const SLOT_OFFSETS = {
+      head:  { y: 0.85, z: 0 },     // topo da cabeça
+      face:  { y: 0.35, z: 0 },     // já modelado em -0.62 face, sobe um pouco
+      neck:  { y: 0.10, z: 0 },     // pescoço (já tá perto)
+      back:  { y: 0.30, z: 0.2 },   // atrás
+      aura:  { y: 0.40, z: 0 },     // ao redor todo
+      body:  { y: 0, z: 0 },
+    };
+    const offset = SLOT_OFFSETS[acc.slot] || { y: 0, z: 0 };
+    accMesh.position.y += offset.y;
+    accMesh.position.z += offset.z || 0;
+    scene.add(accMesh);
+    let mixer = null;
+    if (gltf.animations && gltf.animations.length > 0 && acc.anim) {
+      mixer = new THREE.AnimationMixer(accMesh);
+      gltf.animations.forEach(clip => {
+        const action = mixer.clipAction(clip);
+        action.setLoop(THREE.LoopRepeat);
+        action.play();
+      });
+      state.mixers.push(mixer);
+    }
+    state.equipped.set(acc.slot, { accessoryId: accId, mesh: accMesh, mixer });
+  } catch (e) {
+    console.error('Failed to load accessory', acc.id, e);
+  }
+  renderAccessoryGrid();
+  updateInfoPanel();
+}
+
+// ========================================================================
+// UI RENDERING
+// ========================================================================
+function renderAccessoryGrid() {
+  const grid = document.getElementById('acc-grid');
+  grid.innerHTML = '';
+  const filtered = state.selectedSlot === 'all'
+    ? ACCESSORIES
+    : ACCESSORIES.filter(a => a.slot === state.selectedSlot);
+  for (const acc of filtered) {
+    const card = document.createElement('div');
+    card.className = 'acc-card';
+    const equippedInSlot = state.equipped.get(acc.slot);
+    if (equippedInSlot?.accessoryId === acc.id) card.classList.add('equipped');
+    if (!state.unlockedIds.has(acc.id)) card.classList.add('locked');
+    const animBadge = acc.anim ? '<div class="acc-anim">✨</div>' : '';
+    const priceLabel = acc.price ? `R$ ${acc.price.toFixed(2)}` : 'Desbloqueado';
+    card.innerHTML = `
+      ${animBadge}
+      <div class="acc-tier ${acc.tier}">${acc.tier.toUpperCase()}</div>
+      <div class="acc-name">${acc.name}</div>
+      <div class="acc-price">${priceLabel}</div>
+    `;
+    card.addEventListener('click', () => equipAccessory(acc.id));
+    grid.appendChild(card);
+  }
+}
+
+function updateInfoPanel() {
+  document.getElementById('mascot-name').textContent =
+    state.currentPersonality.charAt(0).toUpperCase() + state.currentPersonality.slice(1);
+  document.getElementById('mascot-personality').textContent =
+    PERSONALITY_LABELS[state.currentPersonality];
+  document.getElementById('equipped-count').textContent = state.equipped.size;
+  document.getElementById('total-spent').textContent =
+    `R$ ${state.totalSpent.toFixed(2).replace('.', ',')}`;
+}
+
+// ========================================================================
+// HANDLERS
+// ========================================================================
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.currentPersonality = btn.dataset.preset;
+    loadMascot(state.currentPersonality);
+  });
+});
+
+document.querySelectorAll('.slot-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.slot-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    state.selectedSlot = tab.dataset.slot;
+    renderAccessoryGrid();
+  });
+});
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ========================================================================
+// ANIMATION LOOP
+// ========================================================================
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  controls.update();
+  // Update todos os mixers (asas batendo, halo girando, etc)
+  for (const mixer of state.mixers) {
+    mixer.update(dt);
+  }
+  renderer.render(scene, camera);
+}
+animate();
+
+// ========================================================================
+// INIT
+// ========================================================================
+renderAccessoryGrid();
+loadMascot('bipo');
+</script>
+
+</body>
+</html>
