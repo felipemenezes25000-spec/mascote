@@ -425,9 +425,6 @@ async function loadMascot(personality) {
     mascot.position.y += 0.3;
     state.mascotMesh = mascot;
     // ATTACHMENT POINTS — coleta empties nomeados como anchors.
-    // GLBs gerados pelo Blender script v3 incluem 5 empties: anchor_head,
-    // anchor_face, anchor_neck, anchor_back, anchor_aura. Accessories vão
-    // ser parented nesses anchors (vs offset manual world-space).
     state.anchors = {};
     mascot.traverse(node => {
       if (node.name && node.name.startsWith('anchor_')) {
@@ -436,6 +433,18 @@ async function loadMascot(personality) {
       }
     });
     console.log('Anchors found:', Object.keys(state.anchors));
+    // ANIMATIONS — toca idle (breath + blink) embedded no GLB
+    if (gltf.animations && gltf.animations.length > 0) {
+      const mascotMixer = new THREE.AnimationMixer(mascot);
+      gltf.animations.forEach(clip => {
+        const action = mascotMixer.clipAction(clip);
+        action.setLoop(THREE.LoopRepeat);
+        action.play();
+      });
+      state.mixers.push(mascotMixer);
+      state.mascotMixer = mascotMixer;
+      console.log('Mascot animations playing:', gltf.animations.map(c => c.name));
+    }
     scene.add(mascot);
 
     // Re-equipa acessórios atuais (caso mude personality com items equipados)
@@ -608,6 +617,9 @@ animate();
 // ========================================================================
 renderAccessoryGrid();
 loadMascot('bipo');
+
+// Debug: expor pra console
+window._debug = { state, scene, camera, THREE };
 </script>
 
 </body>

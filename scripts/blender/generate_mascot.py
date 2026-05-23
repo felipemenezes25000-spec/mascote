@@ -386,11 +386,14 @@ def add_attachment_points():
       anchor_back: atrás do corpo (wings, sword)
       anchor_aura: centro pra particles (aura_cosmic, heart_glow)
     """
+    # Anchors tunados v2 (2026-05-23): head abaixado pro topo real do cap
+    # (era 1.45 = ABOVE the head 1.42 → cap voava). Face mais perto da
+    # superfície frontal. Back atrás mas dentro do bbox do body.
     anchors = {
-        'anchor_head': (0, 0, 1.45),    # topo da cabeça (head está em y=0.85, raio 0.7→topo 1.45)
-        'anchor_face': (0, -0.65, 1.0),  # frente da face (eye_y = -0.62, mesmo nível)
-        'anchor_neck': (0, 0, 0.32),     # entre cabeça e corpo
-        'anchor_back': (0, 0.30, 0.20),  # atrás centro
+        'anchor_head': (0, 0, 1.25),    # topo da cabeça onde cap encaixa
+        'anchor_face': (0, -0.55, 0.95), # frente da face onde óculos sentam
+        'anchor_neck': (0, 0, 0.28),     # entre cabeça e corpo
+        'anchor_back': (0, 0.25, 0.25),  # atrás dentro do bbox
         'anchor_aura': (0, 0, 0.40),     # centro do mascote pra particles
     }
     for name, pos in anchors.items():
@@ -575,16 +578,44 @@ def setup_render(out_path, resolution=768):
     # Bloom via compositor (já setup separado)
 
 
-def export_glb(out_path):
+def export_glb(out_path, animated=False):
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.export_scene.gltf(
         filepath=out_path,
         export_format='GLB',
         export_yup=True,
         export_apply=True,
-        export_animations=False,
+        export_animations=animated,
         use_selection=False,
     )
+
+
+def add_idle_animation(head, body, eye_L_parts, eye_R_parts):
+    """Anim idle: breath cycle + blink periódico — toca em loop no app.
+
+    Breath: scale Y do body+head oscila 1.0→1.025→1.0 a cada 2s
+    Blink: scale Z dos olhos vai 1.0→0.1→1.0 em 6 frames (~0.25s) a cada ~4s
+    """
+    scene = bpy.context.scene
+    scene.frame_start = 1
+    scene.frame_end = 96  # 4s @ 24fps
+
+    # BREATH no head (scale Y oscilando)
+    for frame, scale_y in [(1, 1.0), (24, 1.025), (48, 1.0), (72, 1.020), (96, 1.0)]:
+        head.scale.y = scale_y
+        head.keyframe_insert(data_path='scale', frame=frame, index=1)
+    for frame, scale_y in [(1, 1.0), (24, 1.03), (48, 1.0), (72, 1.025), (96, 1.0)]:
+        body.scale.y = scale_y
+        body.keyframe_insert(data_path='scale', frame=frame, index=1)
+
+    # BLINK em ambos olhos (sclera = primeiro mesh de cada eye)
+    # eye_L_parts/R_parts retornados por build_eye = [sclera, pupil, hl]
+    for sclera in [eye_L_parts[0], eye_R_parts[0]]:
+        # Blink em frame 40-46 (rápido)
+        for frame, scale_z in [(1, 1.0), (40, 1.0), (43, 0.1), (46, 1.0),
+                                (76, 1.0), (79, 0.1), (82, 1.0), (96, 1.0)]:
+            sclera.scale.z = scale_z
+            sclera.keyframe_insert(data_path='scale', frame=frame, index=2)
 
 
 # ============================================================================
@@ -616,9 +647,10 @@ def main():
     feet = build_feet(preset)
     apply_body_materials(head, body, arms, feet, preset)
     add_attachment_points()  # empties como anchors pra accessories
+    add_idle_animation(head, body, eye_L, eye_R)  # breath + blink loop
 
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
-    export_glb(args.out)
+    export_glb(args.out, animated=True)
     print(f'GLB exported: {args.out}')
 
     if args.render:

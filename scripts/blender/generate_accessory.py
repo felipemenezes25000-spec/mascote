@@ -919,30 +919,35 @@ def export_glb(out_path, animated=False):
 # MAIN
 # ============================================================================
 
-def center_to_local_space():
-    """Post-process: move TODOS os meshes pra origem (0,0,0).
+def parent_to_root_empty(slot_name='head'):
+    """Post-process v2: cria Empty 'accessory_root' como parent de todos os
+    meshes, zera a posição do Empty. GLB exporta UMA scene tree limpa.
 
-    Builders criam meshes em coordenadas absolutas (ex: cap em y=0, sunglasses
-    em y=1.0 face). Quando viewer parente em anchor_head (y=1.45), as posições
-    somam — accessory acaba em y=2.45 (longe demais).
+    Mais robusto que center_to_local_space() — esse falhava com accessories
+    multi-piece (sunglasses tem 2 lentes separadas: centroid ficava entre
+    elas mas pieces continuavam separadas). Agora TUDO fica filho de UM root.
 
-    Solução: calcular centroid de tudo + mover tudo na direção contrária pra
-    centroid ir pra (0,0,0). Anchor decide posição final no espaço do mascote.
+    Slot offsets aplicados no root pra cada accessory ficar onde DEVE:
+      head: y=0 (anchor_head já tá no topo do mascote)
+      face: y=0 (anchor_face já tá na frente do rosto)
+      neck: y=0 (centro do pescoço)
+      back: y=0 (atrás)
+      aura: y=0 (centro)
+
+    Cada accessory MANTÉM suas posições relativas internas (lentes 22cm
+    separadas, etc) — só o ponto de ancoragem global é zerado.
     """
-    # Coleta todos os mesh/curve objects (skip lights/cameras/empties)
+    import mathutils
+    # Coleta todos os objects criados pelo builder
     objs = [o for o in bpy.context.scene.objects
-            if o.type in ('MESH', 'CURVE') and 'light' not in o.name.lower()]
+            if o.type in ('MESH', 'CURVE') and not o.parent]
     if not objs:
         return
-    # Calcula bounding box agregado (world space)
-    import mathutils
+    # Calcula centroid de bbox agregado (igual antes)
     all_corners = []
     for o in objs:
         for corner in o.bound_box:
-            world_corner = o.matrix_world @ mathutils.Vector(corner)
-            all_corners.append(world_corner)
-    if not all_corners:
-        return
+            all_corners.append(o.matrix_world @ mathutils.Vector(corner))
     minv = mathutils.Vector((
         min(c.x for c in all_corners),
         min(c.y for c in all_corners),
@@ -953,11 +958,28 @@ def center_to_local_space():
         max(c.y for c in all_corners),
         max(c.z for c in all_corners),
     ))
-    center = (minv + maxv) / 2
-    # Move TUDO em -center (centroid vira (0,0,0))
+    # BOTTOM-CENTER em vez de centroid: o ponto de ancoragem é a BASE do
+    # accessory (onde encosta no mascote), não o centro do bbox. Pra cap, o
+    # band sit dentro do anchor_head em vez de flutuar 0.5 acima.
+    center = mathutils.Vector(((minv.x + maxv.x) / 2, (minv.y + maxv.y) / 2, minv.z))
+    # Cria Empty 'accessory_root' no bottom-center
+    bpy.ops.object.empty_add(type='PLAIN_AXES', location=center)
+    root = bpy.context.active_object
+    root.name = 'accessory_root'
+    # Parent todos os meshes ao root (mantém world position)
+    bpy.ops.object.select_all(action='DESELECT')
     for o in objs:
-        o.location -= center
-    print(f'  centered to local space (was at {center.x:.2f},{center.y:.2f},{center.z:.2f})')
+        o.select_set(True)
+    root.select_set(True)
+    bpy.context.view_layer.objects.active = root
+    bpy.ops.object.parent_set(type='OBJECT', keep_transform=True)
+    # Agora move o root pra origem — children seguem juntos
+    root.location = (0, 0, 0)
+    print(f'  parented to accessory_root, zeroed at origin (was at {center.x:.2f},{center.y:.2f},{center.z:.2f})')
+
+
+# Mantém alias antigo pra não quebrar referências
+center_to_local_space = parent_to_root_empty
 
 
 def main():
