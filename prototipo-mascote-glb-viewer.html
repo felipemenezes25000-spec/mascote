@@ -424,6 +424,18 @@ async function loadMascot(personality) {
     mascot.position.sub(center);
     mascot.position.y += 0.3;
     state.mascotMesh = mascot;
+    // ATTACHMENT POINTS — coleta empties nomeados como anchors.
+    // GLBs gerados pelo Blender script v3 incluem 5 empties: anchor_head,
+    // anchor_face, anchor_neck, anchor_back, anchor_aura. Accessories vão
+    // ser parented nesses anchors (vs offset manual world-space).
+    state.anchors = {};
+    mascot.traverse(node => {
+      if (node.name && node.name.startsWith('anchor_')) {
+        const slot = node.name.replace('anchor_', '');
+        state.anchors[slot] = node;
+      }
+    });
+    console.log('Anchors found:', Object.keys(state.anchors));
     scene.add(mascot);
 
     // Re-equipa acessórios atuais (caso mude personality com items equipados)
@@ -455,16 +467,17 @@ async function equipAccessory(accId) {
       return;
     }
   }
-  // Se já equipado no mesmo slot, remove
+  // Se já equipado no mesmo slot, remove (do parent — scene ou anchor)
   const existingInSlot = state.equipped.get(acc.slot);
   if (existingInSlot) {
-    scene.remove(existingInSlot.mesh);
-    // Remove mixer
+    // mesh pode estar parented em scene ou em anchor — pegar parent real
+    if (existingInSlot.mesh.parent) {
+      existingInSlot.mesh.parent.remove(existingInSlot.mesh);
+    }
     const mIdx = state.mixers.indexOf(existingInSlot.mixer);
     if (mIdx >= 0) state.mixers.splice(mIdx, 1);
     state.equipped.delete(acc.slot);
     if (existingInSlot.accessoryId === accId) {
-      // Toggle: desequipa
       renderAccessoryGrid();
       updateInfoPanel();
       return;
@@ -474,21 +487,23 @@ async function equipAccessory(accId) {
   try {
     const gltf = await loadGLB(`app/mobile/assets/mascot-3d/accessories/${acc.id}.glb`);
     const accMesh = gltf.scene;
-    // SLOT POSITIONING — sem rigging real, aplicar offset por slot pra que
-    // acessório fique na posição correta do corpo (não cai no chão).
-    // Offsets calibrados pro mascote chibi do Blender (head em y=0.85).
-    const SLOT_OFFSETS = {
-      head:  { y: 0.85, z: 0 },     // topo da cabeça
-      face:  { y: 0.35, z: 0 },     // já modelado em -0.62 face, sobe um pouco
-      neck:  { y: 0.10, z: 0 },     // pescoço (já tá perto)
-      back:  { y: 0.30, z: 0.2 },   // atrás
-      aura:  { y: 0.40, z: 0 },     // ao redor todo
-      body:  { y: 0, z: 0 },
-    };
-    const offset = SLOT_OFFSETS[acc.slot] || { y: 0, z: 0 };
-    accMesh.position.y += offset.y;
-    accMesh.position.z += offset.z || 0;
-    scene.add(accMesh);
+    // ATTACHMENT POINT — parenta no anchor do mascote (vs world-space offset).
+    // Anchor node carrega a posição correta no espaço LOCAL do mascote.
+    // Quando mascote rotaciona/move, accessory acompanha automaticamente.
+    const anchor = state.anchors?.[acc.slot];
+    if (anchor) {
+      // Modelos de accessories foram criados com translate world em local
+      // diferente. Reseta position do accessory pra (0,0,0) e parenta no anchor.
+      accMesh.position.set(0, 0, 0);
+      anchor.add(accMesh);
+    } else {
+      // Fallback: world space + offset manual
+      const SLOT_OFFSETS = {
+        head: 0.85, face: 0.35, neck: 0.10, back: 0.30, aura: 0.40,
+      };
+      accMesh.position.y += SLOT_OFFSETS[acc.slot] || 0;
+      scene.add(accMesh);
+    }
     let mixer = null;
     if (gltf.animations && gltf.animations.length > 0 && acc.anim) {
       mixer = new THREE.AnimationMixer(accMesh);

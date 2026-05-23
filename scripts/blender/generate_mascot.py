@@ -374,6 +374,32 @@ def build_feet(preset):
     return feet
 
 
+def add_attachment_points():
+    """Empty objects nomeados como anchors pra acessórios.
+    GLB exporta empties como nodes na scene graph — viewer encontra por nome
+    e parenta accessories ali. Resolve posicionamento sem precisar rigging full.
+
+    Slots:
+      anchor_head: topo da cabeça (cap, crown, halo, flame_mane)
+      anchor_face: frente do rosto (sunglasses, monocle, mask)
+      anchor_neck: pescoço (scarf, cape, bow_tie)
+      anchor_back: atrás do corpo (wings, sword)
+      anchor_aura: centro pra particles (aura_cosmic, heart_glow)
+    """
+    anchors = {
+        'anchor_head': (0, 0, 1.45),    # topo da cabeça (head está em y=0.85, raio 0.7→topo 1.45)
+        'anchor_face': (0, -0.65, 1.0),  # frente da face (eye_y = -0.62, mesmo nível)
+        'anchor_neck': (0, 0, 0.32),     # entre cabeça e corpo
+        'anchor_back': (0, 0.30, 0.20),  # atrás centro
+        'anchor_aura': (0, 0, 0.40),     # centro do mascote pra particles
+    }
+    for name, pos in anchors.items():
+        bpy.ops.object.empty_add(type='PLAIN_AXES', location=pos)
+        empty = bpy.context.active_object
+        empty.name = name
+        empty.empty_display_size = 0.1  # pequeno, só pra visualizar no Blender
+
+
 def apply_body_materials(head, body, arms, feet, preset):
     """Aplica material PREMIUM (com SSS) nas partes principais."""
     body_mat = create_premium_material(
@@ -589,6 +615,7 @@ def main():
     arms = build_arms(preset)
     feet = build_feet(preset)
     apply_body_materials(head, body, arms, feet, preset)
+    add_attachment_points()  # empties como anchors pra accessories
 
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     export_glb(args.out)

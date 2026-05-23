@@ -919,6 +919,47 @@ def export_glb(out_path, animated=False):
 # MAIN
 # ============================================================================
 
+def center_to_local_space():
+    """Post-process: move TODOS os meshes pra origem (0,0,0).
+
+    Builders criam meshes em coordenadas absolutas (ex: cap em y=0, sunglasses
+    em y=1.0 face). Quando viewer parente em anchor_head (y=1.45), as posições
+    somam — accessory acaba em y=2.45 (longe demais).
+
+    Solução: calcular centroid de tudo + mover tudo na direção contrária pra
+    centroid ir pra (0,0,0). Anchor decide posição final no espaço do mascote.
+    """
+    # Coleta todos os mesh/curve objects (skip lights/cameras/empties)
+    objs = [o for o in bpy.context.scene.objects
+            if o.type in ('MESH', 'CURVE') and 'light' not in o.name.lower()]
+    if not objs:
+        return
+    # Calcula bounding box agregado (world space)
+    import mathutils
+    all_corners = []
+    for o in objs:
+        for corner in o.bound_box:
+            world_corner = o.matrix_world @ mathutils.Vector(corner)
+            all_corners.append(world_corner)
+    if not all_corners:
+        return
+    minv = mathutils.Vector((
+        min(c.x for c in all_corners),
+        min(c.y for c in all_corners),
+        min(c.z for c in all_corners),
+    ))
+    maxv = mathutils.Vector((
+        max(c.x for c in all_corners),
+        max(c.y for c in all_corners),
+        max(c.z for c in all_corners),
+    ))
+    center = (minv + maxv) / 2
+    # Move TUDO em -center (centroid vira (0,0,0))
+    for o in objs:
+        o.location -= center
+    print(f'  centered to local space (was at {center.x:.2f},{center.y:.2f},{center.z:.2f})')
+
+
 def main():
     argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
     parser = argparse.ArgumentParser()
@@ -934,6 +975,7 @@ def main():
     builder_name = meta['builder']
     builder_fn = globals()[builder_name]
     builder_fn()
+    center_to_local_space()  # zera origem pra anchor parenting funcionar
 
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     export_glb(args.out, animated=meta.get('animated', False))
