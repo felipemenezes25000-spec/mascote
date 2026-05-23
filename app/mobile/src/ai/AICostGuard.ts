@@ -5,7 +5,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { BillingTierId } from '@/content/billing';
-import { todayLocal, withLock } from '@/lib/db';
+import { todayLocal } from '@/lib/db';
 
 const BUDGET_KEY = (userId: string) => `mascote:ai_cost:${userId}:${todayKey()}`;
 
@@ -58,15 +58,10 @@ export async function recordAiCost(
   userId: string,
   tokens = ESTIMATED_TOKENS_PER_REPLY,
 ): Promise<void> {
-  // Lock per-user — sem isto dois taps rápidos no chat liam used=0 em paralelo
-  // e escreviam used+tokens cada um, sobrescrevendo um ao outro: usuário usaria
-  // 2x o orçamento contabilizado como 1x. Mesmo padrão de checkin/missions.
-  return withLock(`ai_cost:${userId}`, async () => {
-    const key = BUDGET_KEY(userId);
-    const raw = await AsyncStorage.getItem(key);
-    const used = raw ? Number.parseInt(raw, 10) || 0 : 0;
-    await AsyncStorage.setItem(key, String(used + tokens));
-  });
+  const key = BUDGET_KEY(userId);
+  const raw = await AsyncStorage.getItem(key);
+  const used = raw ? Number.parseInt(raw, 10) || 0 : 0;
+  await AsyncStorage.setItem(key, String(used + tokens));
 }
 
 export async function resetAiCost(userId: string): Promise<void> {

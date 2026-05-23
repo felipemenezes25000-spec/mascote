@@ -4,7 +4,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { BillingTierId } from '@/content/billing';
-import { todayLocal, withLock } from '@/lib/db';
+import { todayLocal } from '@/lib/db';
 import { entitlementService } from '@/services/subscription/EntitlementService';
 
 const KEY = (userId: string) => `mascote:ai_usage:${userId}:${todayKey()}`;
@@ -45,16 +45,10 @@ export async function checkAiRateLimit(
 }
 
 export async function recordAiUsage(userId: string): Promise<void> {
-  // Lock per-user — read-modify-write em AsyncStorage não é atômico. Duas
-  // requests paralelas (ex: usuário com 1 free message rapida tap-tap) liam
-  // used=0 ambas, ambas passavam o checkAiRateLimit, e ambas escreviam used+1,
-  // dando ao usuário 2 mensagens contadas como 1.
-  return withLock(`ai_usage:${userId}`, async () => {
-    const key = KEY(userId);
-    const raw = await AsyncStorage.getItem(key);
-    const used = raw ? Number.parseInt(raw, 10) || 0 : 0;
-    await AsyncStorage.setItem(key, String(used + 1));
-  });
+  const key = KEY(userId);
+  const raw = await AsyncStorage.getItem(key);
+  const used = raw ? Number.parseInt(raw, 10) || 0 : 0;
+  await AsyncStorage.setItem(key, String(used + 1));
 }
 
 /** Test helper — zera contador do dia. */

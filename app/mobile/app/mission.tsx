@@ -20,20 +20,15 @@ export default function MissionDetail() {
 
   useEffect(() => {
     if (!profile) return;
-    let cancelled = false;
-    (async () => {
-      // cancelled guard: se o usuário trocar de profile no meio do await,
-      // o load anterior não deve sobrescrever o estado novo (last-writer-wins
-      // pegando dados do profile antigo).
-      const list = await missionsDb.forDate(profile.id, todayLocal());
-      if (cancelled) return;
-      setMission(list[0] ?? null);
-      setLoaded(true);
-    })();
-    return () => {
-      cancelled = true;
-    };
+    void load();
   }, [profile?.id]);
+
+  async function load() {
+    if (!profile) return;
+    const list = await missionsDb.forDate(profile.id, todayLocal());
+    setMission(list[0] ?? null);
+    setLoaded(true);
+  }
 
   if (!profile) return <Redirect href="/splash" />;
 
