@@ -148,7 +148,7 @@ function validateRequest(b: unknown): { ok: true; req: ProxyRequest } | { ok: fa
 
 interface ProxyResponse {
   reply: string;
-  source: 'openai' | 'fallback' | 'cache';
+  source: 'openai' | 'fallback';
   tokens_used: number;
   remaining_quota: number;
   cached: boolean;
@@ -159,25 +159,6 @@ const responseCache = new Map<string, { reply: string; ts: number }>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const MAX_CACHE_ENTRIES = 5000; // proteção contra crescimento ilimitado em instância long-running
 
-// Idempotency: per-user → key → cached response. Permite retry sem
-// reconsumir quota. Mapa separado porque a key inclui user_id (NÃO compartilha
-// entre usuários — diferente do responseCache de saudações context-free).
-const idempotencyCache = new Map<string, { reply: string; source: 'openai' | 'fallback'; tokens_in: number; tokens_out: number; ts: number }>();
-const IDEMPOTENCY_TTL_MS = 10 * 60 * 1000; // 10min — janela suficiente pra retries de rede
-const MAX_IDEMPOTENCY_ENTRIES = 10000;
-
-/**
- * Considera o request "context-free" — mensagem genérica sem memórias/história/DNA
- * do usuário. SÓ esses requests podem usar cache global cross-user (greetings),
- * porque a resposta gerada não depende de contexto pessoal. Sem essa guarda,
- * usuário A receberia resposta gerada com memórias do usuário B.
- */
-function isContextFree(req: ProxyRequest): boolean {
-  return req.context_memories.length === 0
-    && req.history.length === 0
-    && req.dna_descriptors.length === 0;
-}
-
 function cacheKey(req: ProxyRequest): string {
   // Normaliza mensagem: lowercase + strip pontuação + trim
   const norm = req.message.toLowerCase().replace(/[^\w\s]/g, '').trim();
@@ -185,10 +166,6 @@ function cacheKey(req: ProxyRequest): string {
   // se algum campo (mood/personality) contiver um delimitador antigo (|).
   // language compõe a chave: "good morning" em PT ≠ "good morning" em EN.
   return JSON.stringify([req.language, req.personality, req.mood, norm]);
-}
-
-function idempotencyKey(userId: string, key: string): string {
-  return `${userId}::${key}`;
 }
 
 function safeNum(v: unknown): number {
@@ -209,21 +186,6 @@ function cleanCache(): void {
     for (let i = 0; i < toRemove; i++) {
       const k = keys.next().value;
       if (k !== undefined) responseCache.delete(k);
-    }
-  }
-}
-
-function cleanIdempotencyCache(): void {
-  const now = Date.now();
-  for (const [k, v] of idempotencyCache.entries()) {
-    if (now - v.ts > IDEMPOTENCY_TTL_MS) idempotencyCache.delete(k);
-  }
-  if (idempotencyCache.size > MAX_IDEMPOTENCY_ENTRIES) {
-    const toRemove = idempotencyCache.size - MAX_IDEMPOTENCY_ENTRIES;
-    const keys = idempotencyCache.keys();
-    for (let i = 0; i < toRemove; i++) {
-      const k = keys.next().value;
-      if (k !== undefined) idempotencyCache.delete(k);
     }
   }
 }
@@ -478,36 +440,6 @@ serve(async (req) => {
   const resolvedTier = authedId ? await resolveTier(supabase, authedId) : body.tier;
 
   const start = Date.now();
-
-  // Idempotency: retry de rede com mesmo idempotency_key não reconsome quota
-  // nem chama OpenAI de novo. Checado ANTES do rate-limit pra retry funcionar
-  // mesmo se o user atingiu quota entre tentativas (request original já
-  // contou; retry só retorna o resultado cacheado).
-  cleanIdempotencyCache();
-  const idemKey = body.idempotency_key
-    ? idempotencyKey(auditUserId, body.idempotency_key)
-    : null;
-  if (idemKey) {
-    const idemHit = idempotencyCache.get(idemKey);
-    if (idemHit) {
-      const out: ProxyResponse = {
-        reply: idemHit.reply,
-        source: idemHit.source,
-        tokens_used: idemHit.tokens_in + idemHit.tokens_out,
-        // Retry: remaining_quota é informativo. Devolve quota atual sem decrementar
-        // (já foi decrementada na request original — `rl` é calculado abaixo).
-        remaining_quota: 0,
-        cached: true,
-      };
-      // Atualiza remaining_quota com leitura atual antes de retornar
-      const rlNow = await checkRateLimit(supabase, auditUserId, resolvedTier);
-      out.remaining_quota = rlNow.remaining;
-      return new Response(JSON.stringify(out), {
-        headers: { 'content-type': 'application/json', ...corsHeaders() },
-      });
-    }
-  }
-
   const rl = await checkRateLimit(supabase, auditUserId, resolvedTier);
   if (!rl.allowed) {
     return new Response(
@@ -520,43 +452,31 @@ serve(async (req) => {
     );
   }
 
-  // Cache global (cross-user) só pra requests context-free — saudações
-  // ("bom dia") onde a resposta não depende de memórias/história/DNA. Sem essa
-  // guarda, a resposta gerada com contexto do user A vazaria pro user B.
+  // Cache hit?
   cleanCache();
-  const contextFree = isContextFree(body);
   const ck = cacheKey(body);
-  if (contextFree) {
-    const hit = responseCache.get(ck);
-    if (hit) {
-      await logUsage(supabase, auditUserId, resolvedTier, {
-        tokens_in: 0,
-        tokens_out: 0,
-        latency_ms: Date.now() - start,
-        cached: true,
-        source: 'cache',
-        safety_flag: body.safety_flag,
-      });
-      const out: ProxyResponse = {
-        reply: hit.reply,
-        // source='cache' (não 'openai') pra observabilidade — cliente/analytics
-        // sabem quando a resposta veio do hot path, não do modelo.
-        source: 'cache',
-        tokens_used: 0,
-        // Cache hit também conta pra quota (foi logado em ai_usage acima);
-        // remaining reflete o estado pós-consumo, igual ao caminho não-cache.
-        remaining_quota: Math.max(0, rl.remaining - 1),
-        cached: true,
-      };
-      if (idemKey) {
-        idempotencyCache.set(idemKey, {
-          reply: hit.reply, source: 'openai', tokens_in: 0, tokens_out: 0, ts: Date.now(),
-        });
-      }
-      return new Response(JSON.stringify(out), {
-        headers: { 'content-type': 'application/json', ...corsHeaders() },
-      });
-    }
+  const hit = responseCache.get(ck);
+  if (hit) {
+    await logUsage(supabase, auditUserId, resolvedTier, {
+      tokens_in: 0,
+      tokens_out: 0,
+      latency_ms: Date.now() - start,
+      cached: true,
+      source: 'cache',
+      safety_flag: body.safety_flag,
+    });
+    const out: ProxyResponse = {
+      reply: hit.reply,
+      source: 'openai',
+      tokens_used: 0,
+      // Cache hit também conta pra quota (foi logado em ai_usage acima);
+      // remaining reflete o estado pós-consumo, igual ao caminho não-cache.
+      remaining_quota: Math.max(0, rl.remaining - 1),
+      cached: true,
+    };
+    return new Response(JSON.stringify(out), {
+      headers: { 'content-type': 'application/json', ...corsHeaders() },
+    });
   }
 
   // Chama OpenAI
@@ -566,21 +486,10 @@ serve(async (req) => {
   let source: 'openai' | 'fallback' = 'openai';
   try {
     const result = await callOpenAI(body);
-    if (result.reply) {
-      reply = result.reply;
-      tokensIn = result.tokens_in;
-      tokensOut = result.tokens_out;
-      // SÓ cacheia quando origem é OpenAI E request é context-free. Sem isso,
-      // (a) cache vazaria contexto entre users e (b) fallback ficaria
-      // armazenado e servido como source='openai' em hits futuros.
-      if (contextFree) {
-        responseCache.set(ck, { reply, ts: Date.now() });
-      }
-    } else {
-      // OpenAI 200 mas content vazio — trata como fallback. Não cacheia.
-      reply = fallbackReply(body);
-      source = 'fallback';
-    }
+    reply = result.reply || fallbackReply(body);
+    tokensIn = result.tokens_in;
+    tokensOut = result.tokens_out;
+    responseCache.set(ck, { reply, ts: Date.now() });
   } catch (err) {
     console.warn('[proxy] openai_failed', (err as Error).message);
     reply = fallbackReply(body);
@@ -595,12 +504,6 @@ serve(async (req) => {
     source,
     safety_flag: body.safety_flag,
   });
-
-  if (idemKey) {
-    idempotencyCache.set(idemKey, {
-      reply, source, tokens_in: tokensIn, tokens_out: tokensOut, ts: Date.now(),
-    });
-  }
 
   const out: ProxyResponse = {
     reply,
