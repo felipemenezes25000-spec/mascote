@@ -11,6 +11,7 @@ import { habitMeta } from '@/content/missions';
 import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import { applyCheckinFully } from '@/lib/checkin';
+import { logger } from '@/lib/logger';
 import type { Theme } from '@/lib/themes';
 import type { HabitKind } from '@/types';
 
@@ -75,9 +76,20 @@ export default function CheckInResult() {
       if (!alive) return;
       setPersistedXp(totalXp);
       setCoinsGained(totalCoins);
-      await refreshMascot();
-      await refreshStreak();
-      await refreshWallet();
+      // Refresh do store: a persistência já rodou via applyCheckinFully, então
+      // se algum refresh falhar (raro: AsyncStorage corrompido, race com outro
+      // screen), a UI desta tela ainda mostra valores corretos via state local.
+      // Logamos mas não alertamos — alarme nesta tela confunde o usuário que
+      // acabou de ver "Salvando seu check-in...".
+      try {
+        await refreshMascot();
+        await refreshStreak();
+        await refreshWallet();
+      } catch (err) {
+        logger.warn('checkin-result: refresh do store falhou (UI local segura)', {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
     })();
     return () => {
       alive = false;

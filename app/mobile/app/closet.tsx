@@ -84,9 +84,16 @@ export default function Closet() {
   async function equip(id: string) {
     if (!profile) return;
     if (equippedId === id) {
-      await inventory.unequip(profile.id, id);
-      setEquippedId(null);
-      await load();
+      try {
+        await inventory.unequip(profile.id, id);
+        setEquippedId(null);
+        await load();
+      } catch {
+        // Recarrega do disco — se unequip falhou, equippedId no state pode estar
+        // dessincronizado da fonte de verdade. load() resolve.
+        await load();
+        Alert.alert('Não foi possível', 'Tenta de novo em alguns segundos.');
+      }
       return;
     }
     const meta = getAccessory(id);
@@ -97,9 +104,17 @@ export default function Closet() {
         return m ? { id: m.id, slot: m.slot as string } : null;
       })
       .filter(Boolean) as Array<{ id: string; slot: string }>;
-    await inventory.equip(profile.id, id, meta ? { current: meta.slot, allOwned } : undefined);
-    setEquippedId(id);
-    await load();
+    try {
+      await inventory.equip(profile.id, id, meta ? { current: meta.slot, allOwned } : undefined);
+      setEquippedId(id);
+      await load();
+    } catch {
+      // Sem o try, setEquippedId(id) abaixo rodava mesmo com equip falhando:
+      // UI mostrava acessório novo equipado, mas o disk ficava no estado
+      // antigo. Aqui recarregamos a fonte de verdade e avisamos.
+      await load();
+      Alert.alert('Não foi possível equipar', 'Tenta de novo em alguns segundos.');
+    }
   }
 
   async function buyAccessory(id: string, price: number) {
