@@ -142,35 +142,52 @@ function Eye({
     .getHex();
   const pupilEmissive = glowHex(palette);
 
+  // v2 (2026-05-22): sclera mais brilhante (low roughness + emissive sutil)
+  // + 2 highlights (catch-light grande superior + sparkle pequeno inferior).
+  // Resulta em "olho vivo" cartoon (Slime Rancher / Pixar / Bugsnax).
+  const pupilRadius = morph.eyeSize * morph.pupilSize;
   return (
     <group ref={groupRef} position={[side * morph.eyeSpread, morph.eyeY, morph.eyeZ]}>
       <mesh>
-        <sphereGeometry args={[morph.eyeSize, 24, 24]} />
+        <sphereGeometry args={[morph.eyeSize, 32, 32]} />
         <meshStandardMaterial
           color={sclera}
-          roughness={0.35}
-          metalness={0}
+          roughness={0.12}
+          metalness={0.15}
+          emissive={0xfff8f0}
+          emissiveIntensity={0.2}
         />
       </mesh>
-      <mesh ref={pupilRef} position={[0, 0, morph.eyeSize * 0.6]}>
-        <sphereGeometry args={[morph.eyeSize * morph.pupilSize, 18, 18]} />
+      <mesh ref={pupilRef} position={[0, 0, morph.eyeSize * 0.55]}>
+        <sphereGeometry args={[pupilRadius, 24, 24]} />
         <meshStandardMaterial
           color={pupilColor}
-          roughness={0.3}
-          metalness={0.2}
+          roughness={0.25}
+          metalness={0.15}
           emissive={pupilEmissive}
           emissiveIntensity={morph.pupilEmissive + eyeBrightness * 0.25}
         />
       </mesh>
-      {/* highlight */}
+      {/* catch-light principal — sphere branco grande superior-esquerdo */}
       <mesh
         position={[
-          morph.eyeSize * morph.pupilSize * 0.4,
-          morph.eyeSize * morph.pupilSize * 0.3,
-          morph.eyeSize * 0.85,
+          -pupilRadius * 0.32,
+          pupilRadius * 0.38,
+          morph.eyeSize * 0.92,
         ]}
       >
-        <sphereGeometry args={[morph.eyeSize * morph.pupilSize * 0.3, 10, 10]} />
+        <sphereGeometry args={[pupilRadius * 0.42, 14, 14]} />
+        <meshBasicMaterial color={0xffffff} />
+      </mesh>
+      {/* sparkle secundário — pequeno highlight inferior-direito ("vida") */}
+      <mesh
+        position={[
+          pupilRadius * 0.35,
+          -pupilRadius * 0.28,
+          morph.eyeSize * 0.88,
+        ]}
+      >
+        <sphereGeometry args={[pupilRadius * 0.18, 10, 10]} />
         <meshBasicMaterial color={0xffffff} />
       </mesh>
     </group>

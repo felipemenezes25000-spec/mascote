@@ -98,10 +98,17 @@ export function Body({
     const t = performance.now() / 1000 - tStart.current;
     const breath = 1 + Math.sin(t * morph.breathFreq * 2) * morph.breathAmp;
     const firmScale = 1 + bodyFirmness * 0.04;
+    // SQUASH-STRETCH JELLY volume-preserving — quando Y estica, XZ comprime.
+    // Frequência 1.6× do breath cycle pra criar polirritmia. Amplitude
+    // modulada por chaos + socialEnergy (DNA mais "explosivo" wobble maior).
+    const jellyAmp = 0.022 + morph.idleWobble * 0.5;
+    const jelly = Math.sin(t * morph.breathFreq * 3.2) * jellyAmp;
+    const jellyXZ = 1 - jelly * 0.55;
+    const jellyY = 1 + jelly;
     m.scale.set(
-      breath * firmScale,
-      breath * (1 + morph.breathAmp * 0.3) * firmScale,
-      breath * firmScale,
+      breath * firmScale * jellyXZ,
+      breath * (1 + morph.breathAmp * 0.3) * firmScale * jellyY,
+      breath * firmScale * jellyXZ,
     );
   });
 

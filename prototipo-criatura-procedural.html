@@ -891,18 +891,20 @@ class Creature {
     this.parts.isEgg = true;
   }
 
-  /* HALO — anel dourado horizontal acima da cabeça (fase evoluído) */
+  /* HALO — anel dourado horizontal acima da cabeça (fase evoluído).
+   * v2: raio 0.55→0.72 e y 1.05→1.55 — antes ficava ENTERRADO no topo do body
+   * (que com phase.scale 1.20 alcança y≈1.2). Agora flutua claramente acima. */
   buildHalo() {
-    const geo = new THREE.TorusGeometry(0.55, 0.045, 12, 48);
+    const geo = new THREE.TorusGeometry(0.72, 0.06, 14, 56);
     const mat = new THREE.MeshStandardMaterial({
       color: 0xffe5a0,
       emissive: 0xffd460,
-      emissiveIntensity: 1.2,
-      roughness: 0.2,
-      metalness: 0.6,
+      emissiveIntensity: 1.4,
+      roughness: 0.18,
+      metalness: 0.65,
     });
     const halo = new THREE.Mesh(geo, mat);
-    halo.position.y = 1.05;
+    halo.position.y = 1.55;
     halo.rotation.x = Math.PI / 2;
     this.parts.halo = halo;
     this.group.add(halo);
@@ -933,9 +935,11 @@ class Creature {
       }
       geo.computeVertexNormals();
       const wing = new THREE.Mesh(geo, mat);
-      wing.position.set(sign * 0.55, 0.2, -0.1);
-      wing.rotation.y = sign * 0.6;
-      wing.rotation.z = sign * 0.2;
+      // v2: z -0.1→-0.45 (mais atrás do body), x 0.55→0.78 (mais largo)
+      // pra serem visíveis com phase.scale=1.20 (body alcança z≈+/-1.20)
+      wing.position.set(sign * 0.78, 0.25, -0.45);
+      wing.rotation.y = sign * 0.55;
+      wing.rotation.z = sign * 0.18;
       wing.userData.phase = sign * 0.5;
       wingGroup.add(wing);
     }
@@ -1046,9 +1050,13 @@ class Creature {
     const userEyeMult = this.userMod?.eyeMult ?? 1;
     const eyeSize = (0.22 + this.dna.empathy * 0.10 + this.dna.intelligence * 0.04)
                   * phaseEyeBoost * userEyeMult;
-    const eyeSpread = 0.34 + (1 - this.dna.intelligence) * 0.08;
-    const eyeY = 0.38 + this.dna.intelligence * 0.22;
-    const eyeZ = 0.74;
+    // FIX (2026-05-22): position dos olhos precisa escalar com phase.scale.
+    // Body usa phase.scale (1.12-1.20 em adulto/evoluído) — sem multiplicar
+    // os olhos ficam DENTRO do body (z=0.74 < raio do body 1.0×scale).
+    const phaseS = this.phase.scale ?? 1;
+    const eyeSpread = (0.34 + (1 - this.dna.intelligence) * 0.08) * phaseS;
+    const eyeY = (0.38 + this.dna.intelligence * 0.22) * phaseS;
+    const eyeZ = 0.74 * phaseS + 0.06; // +0.06 garante que sempre fica fora do body
 
     // sclera vidro brilhante — MeshStandard com low roughness simula highlight
     const scleraGeo = new THREE.SphereGeometry(eyeSize, 32, 32);
@@ -1290,16 +1298,28 @@ class Creature {
         baseXZ * breath * jellyXZ,
       );
     }
-    // Ovo: núcleo interno pulsa com frequência mais lenta e amplitude maior
+    // Ovo: núcleo interno pulsa com frequência mais lenta e amplitude maior.
+    // Quando age > 2 dias (~1 dia antes de hatch), começa shake crescente —
+    // sinaliza "algo está prestes a sair". Pulsação acelera e ganha amplitude.
     if (this.parts.isEgg && this.parts.eggCore) {
-      const pulse = 1 + Math.sin(t * 1.6) * 0.18;
+      const ageHatchProgress = Math.max(0, (this.ageDays - 2) / 1); // 0..1 último dia
+      const pulseFreq = 1.6 + ageHatchProgress * 4;
+      const pulseAmp = 0.18 + ageHatchProgress * 0.12;
+      const pulse = 1 + Math.sin(t * pulseFreq) * pulseAmp;
       this.parts.eggCore.scale.setScalar(pulse);
-      this.parts.eggCore.material.opacity = 0.45 + Math.sin(t * 1.6) * 0.18;
+      this.parts.eggCore.material.opacity = 0.45 + Math.sin(t * pulseFreq) * 0.22;
+      // Shake do ovo inteiro nos últimos momentos
+      if (ageHatchProgress > 0 && this.parts.body) {
+        const shakeAmp = ageHatchProgress * 0.04;
+        this.parts.body.rotation.z = Math.sin(t * 38) * shakeAmp;
+        this.parts.body.position.x = Math.sin(t * 42) * shakeAmp * 0.5;
+      }
     }
-    // Halo gira lentamente (fase evoluído)
+    // Halo gira lentamente (fase evoluído). Y base 1.55 — bug v9: antes era
+    // 1.05 que enterrava o halo no topo do body (phase.scale 1.20 alcança ~1.2).
     if (this.parts.halo) {
       this.parts.halo.rotation.z = t * 0.4;
-      this.parts.halo.position.y = 1.05 + Math.sin(t * 1.2) * 0.04;
+      this.parts.halo.position.y = 1.55 + Math.sin(t * 1.2) * 0.04;
     }
     // Asas batem suavemente
     if (this.parts.wingArray) {
@@ -1504,6 +1524,72 @@ window.addEventListener('mousemove', e => {
 /* =========================================================================
    RENDER LOOP
    ========================================================================= */
+/* =========================================================================
+   HATCH BURST — partículas explodindo do ovo no momento de eclosão.
+   =========================================================================
+   30 sparks brancos/dourados em padrão esférico aleatório, com velocidade
+   inicial alta + gravidade leve. Dura ~1.4s. Adiciona "transição cerimonial"
+   entre fase egg→baby (antes era hard cut sem nenhum reconhecimento).
+   ========================================================================= */
+let hatchBurst = null;
+function triggerHatchBurst() {
+  // Limpa burst anterior se existir (não acumular meshes)
+  if (hatchBurst) { scene.remove(hatchBurst.points); hatchBurst.points.geometry.dispose(); hatchBurst.points.material.dispose(); }
+  const count = 30;
+  const positions = new Float32Array(count * 3);
+  const velocities = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    positions[i*3]   = 0;
+    positions[i*3+1] = 0.1;
+    positions[i*3+2] = 0;
+    // velocidade radial esférica + boost vertical
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const speed = 2.2 + Math.random() * 1.6;
+    velocities[i*3]   = Math.sin(phi) * Math.cos(theta) * speed;
+    velocities[i*3+1] = Math.cos(phi) * speed + 0.8;
+    velocities[i*3+2] = Math.sin(phi) * Math.sin(theta) * speed;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const mat = new THREE.PointsMaterial({
+    color: 0xfff4cc,
+    size: 0.13,
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 1,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const points = new THREE.Points(geo, mat);
+  scene.add(points);
+  hatchBurst = { points, velocities, startTime: clock.elapsedTime };
+  addMemory('✦ ovo rachou — algo nasceu');
+}
+
+function updateHatchBurst(t) {
+  if (!hatchBurst) return;
+  const elapsed = t - hatchBurst.startTime;
+  if (elapsed > 1.4) {
+    scene.remove(hatchBurst.points);
+    hatchBurst.points.geometry.dispose();
+    hatchBurst.points.material.dispose();
+    hatchBurst = null;
+    return;
+  }
+  const pos = hatchBurst.points.geometry.attributes.position.array;
+  const vel = hatchBurst.velocities;
+  const dt = clock.getDelta(); // shared clock — ok aqui pois animate roda 60fps
+  for (let i = 0; i < pos.length / 3; i++) {
+    pos[i*3]   += vel[i*3]   * dt;
+    pos[i*3+1] += vel[i*3+1] * dt - 0.9 * dt * elapsed; // gravidade
+    pos[i*3+2] += vel[i*3+2] * dt;
+  }
+  hatchBurst.points.geometry.attributes.position.needsUpdate = true;
+  // fade out na segunda metade
+  hatchBurst.points.material.opacity = elapsed < 0.7 ? 1 : Math.max(0, 1 - (elapsed - 0.7) / 0.7);
+}
+
 const clock = new THREE.Clock();
 // AUTO-AGING — tempo real progride a idade do mascote.
 // 1 segundo real = 1 dia virtual (acelera demonstração; em produção seria
@@ -1527,7 +1613,12 @@ function animate() {
     state.ageDays += dt * timeScale;
     const newPhase = phaseFromAge(state.ageDays);
     if (newPhase.key !== state.lastPhaseKey) {
+      const wasEgg = state.lastPhaseKey === 'egg';
       state.lastPhaseKey = newPhase.key;
+      // Transição egg→baby: dispara particle burst CEREMONIAL (não silent cut)
+      if (wasEgg && newPhase.key === 'baby') {
+        triggerHatchBurst();
+      }
       rebuildCreature(`✦ entrou na fase ${newPhase.label.toLowerCase()}`);
     }
     // UI tick: atualiza traits (idade, próxima fase) a cada 0.5s pra evitar
@@ -1539,6 +1630,9 @@ function animate() {
       renderLifeSection();
     }
   }
+
+  // Atualiza particle burst de hatching (se ativo)
+  updateHatchBurst(t);
 
   // mood = function of trait composition + time
   const mood = Math.sin(t * 0.2) * 0.2 + 0.5

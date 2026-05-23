@@ -74,7 +74,15 @@ export interface Morphology {
   swayAmplitude: number;
 }
 
-/** Deriva todos os parâmetros morfológicos do Genome. */
+/** Deriva todos os parâmetros morfológicos do Genome.
+ *
+ * v3 (2026-05-22): polish "slime rancher" alinhado ao prototipo v8.
+ *  - bodyFlatShading: sempre false (smooth shading) — era g.chaos > 0.88,
+ *    causava facets hostis em criaturas chaóticas.
+ *  - bodyRoughness: 0.42 (era 0.78) + emissive forte = look gel translúcido.
+ *  - pupilSize: 0.62 (era 0.36) — pupila cartoon Slime Rancher.
+ *  - limbCount: cap em 2 pares (era 5) — silhueta limpa, não porco-espinho.
+ */
 export function morphologyFromGenome(g: Genome): Morphology {
   return {
     // Corpo
@@ -83,10 +91,13 @@ export function morphologyFromGenome(g: Genome): Morphology {
     bodyBottomBias: 0.3 + g.resilience * 0.5,
     bodyChaosBumps: g.chaos * 0.1,
     bodyCreativityBumps: g.creativity * 0.07,
-    bodyEmissiveIntensity: 0.03 + g.socialEnergy * 0.08,
-    bodyRoughness: 0.78 - g.discipline * 0.22,
-    bodyMetalness: 0.02 + g.discipline * 0.08,
-    bodyFlatShading: g.chaos > 0.88,
+    // Emissive forte = "inner glow" gel. Sem isso o corpo fica opaco plástico.
+    bodyEmissiveIntensity: 0.18 + g.socialEnergy * 0.25,
+    // Roughness baixa + metalness sutil = highlight especular crisp (jelly).
+    bodyRoughness: 0.42 - g.discipline * 0.15,
+    bodyMetalness: 0.08 + g.discipline * 0.10,
+    // Smooth shading SEMPRE — facets viravam "geode quebrado" hostil.
+    bodyFlatShading: false,
     // Pattern emerge organicamente do DNA — alta creativity+chaos vira spots;
     // alta creativity sem chaos vira cells (organizado); alta disciplina+chaos
     // baixo deixa plain. Mutations/customization sobrescrevem em pipeline.
@@ -95,17 +106,17 @@ export function morphologyFromGenome(g: Genome): Morphology {
            : g.chaos > 0.75 ? 'stripes'
            : 'plain',
 
-    // Olhos
-    eyeSize: 0.2 + g.empathy * 0.14 + g.intelligence * 0.04,
+    // Olhos — cartoon Slime Rancher: pupila grande 62-78% do sclera.
+    eyeSize: 0.22 + g.empathy * 0.12 + g.intelligence * 0.04,
     eyeSpread: 0.36 + (1 - g.intelligence) * 0.08,
     eyeY: 0.42 + g.intelligence * 0.22,
     eyeZ: 0.78,
-    pupilSize: 0.36 + g.curiosity * 0.18,
-    pupilEmissive: 0.12 + g.intelligence * 0.22,
+    pupilSize: 0.62 + g.curiosity * 0.16,
+    pupilEmissive: 0.55 + g.intelligence * 0.40,
     trackingSpeed: 0.04 + g.curiosity * 0.1,
 
-    // Membros
-    limbCount: Math.floor(g.creativity * 3 + g.chaos * 2),
+    // Membros — cap em 2 pares (4 cilindros) pra silhueta limpa.
+    limbCount: Math.min(2, Math.floor(g.creativity * 1.5 + g.chaos * 1)),
     limbLength: 0.4 + g.creativity * 0.3,
     limbThickness: 0.07 + g.resilience * 0.07,
     limbSwayAmplitude: 0.15 + g.socialEnergy * 0.2,
