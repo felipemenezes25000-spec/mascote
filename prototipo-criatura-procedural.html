@@ -839,6 +839,12 @@ class Creature {
     }
     this.buildBody();
     if (this.phase.hasEyes) this.buildEyes();
+    // Cheeks + mouth + feet aparecem a partir do bebê (cara reconhecível)
+    if (this.phase.hasEyes) {
+      this.buildCheeks();
+      this.buildMouth();
+      this.buildFeet();
+    }
     if (this.phase.maxLimbs > 0) this.buildLimbs();
     if (this.phase.hasTail) this.buildTail();
     if (this.phase.allowSpikes) this.buildSpikes();
@@ -889,6 +895,76 @@ class Creature {
     this.parts.bodyBaseScale = 1;
     this.parts.bodyHeight = 1.2;
     this.parts.isEgg = true;
+  }
+
+  /* CHEEKS — 2 bochechas rosadas semi-transparentes nas laterais da cabeça.
+   * Visual instantâneo de "fofura/saúde" (Kirby + Pikachu). Mood-reactive:
+   * happy/proud aumenta opacidade, sad/exausto reduz. */
+  buildCheeks() {
+    const cheekGroup = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0xff8a98,
+      emissive: 0xff6b80,
+      emissiveIntensity: 0.65,
+      roughness: 0.42,
+      metalness: 0.08,
+    });
+    for (const sign of [-1, 1]) {
+      const cheekGeo = new THREE.SphereGeometry(0.20, 22, 18);
+      const cheek = new THREE.Mesh(cheekGeo, mat);
+      // FIX: body em y=0.36 tem raio ~0.84 (após chibi pinch+headBoost).
+      // Cheek precisa de magnitude xz > 0.84 pra ficar SOBRE a superfície.
+      // (0.32, 0.36, 0.92) → mag xz = √(0.10 + 0.846) = 0.972 ✅
+      cheek.position.set(sign * 0.32, 0.36, 0.92);
+      cheek.scale.set(1.05, 0.78, 0.45); // bochecha plana grudada na face
+      cheekGroup.add(cheek);
+    }
+    this.parts.cheeks = cheekGroup;
+    this.parts.cheekArray = cheekGroup.children;
+    this.group.add(cheekGroup);
+  }
+
+  /* MOUTH — sorriso curvo via TorusGeometry parcial. Bigger + frontal.
+   * Cor: escuro brand (não preto chato). Z mais alto pra ficar visível. */
+  buildMouth() {
+    // Sorriso maior + Z empurrado fora do body chibi (raio em y=0.18 é ~0.65)
+    const geo = new THREE.TorusGeometry(0.16, 0.025, 12, 36, Math.PI * 0.75);
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0x1f1410,
+      roughness: 0.32,
+      metalness: 0.18,
+      emissive: 0x1f1410,
+      emissiveIntensity: 0.15,
+    });
+    const mouth = new THREE.Mesh(geo, mat);
+    mouth.position.set(0, 0.15, 0.85);
+    mouth.rotation.z = Math.PI; // arc aponta pra baixo = sorriso
+    this.parts.mouth = mouth;
+    this.group.add(mouth);
+  }
+
+  /* FEET — 2 pezinhos esféricos embaixo do corpo. Ancoram a criatura
+   * visualmente ("standing on something"). Cor accent (não body). */
+  buildFeet() {
+    const feetGroup = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(this.palette.accentHex),
+      roughness: 0.35,
+      metalness: 0.12,
+      emissive: new THREE.Color(this.palette.glowHex),
+      emissiveIntensity: 0.18,
+    });
+    for (const sign of [-1, 1]) {
+      const footGeo = new THREE.SphereGeometry(0.22, 22, 16);
+      const foot = new THREE.Mesh(footGeo, mat);
+      // Pés ABAIXO do body (body alcança y=-1.0 no pole inferior após
+      // heightStretch). Pés em y=-1.08 ficam claramente visíveis abaixo.
+      foot.position.set(sign * 0.28, -1.05, 0.12);
+      foot.scale.set(1.15, 0.55, 1.5); // achata vertical, alonga z (pé)
+      feetGroup.add(foot);
+    }
+    this.parts.feet = feetGroup;
+    this.group.add(feetGroup);
   }
 
   /* HALO — anel dourado horizontal acima da cabeça (fase evoluído).
@@ -977,25 +1053,41 @@ class Creature {
     const noise = [];
     for (let i = 0; i < pos.count; i++) noise.push(rng() - 0.5);
 
-    const heightStretch = 0.7 + this.dna.intelligence * 0.7 + this.dna.empathy * 0.35;
-    const widthSquash   = 0.85 + this.dna.resilience * 0.45 - this.dna.discipline * 0.15;
-    const bottomBias    = 0.3 + this.dna.resilience * 0.5;
-    // Displacement reduzido 50% pra suavidade máxima — antes ainda dava bumps
-    // visíveis em DNAs com chaos/creativity altos. Agora a criatura tem forma
-    // orgânica suave mas ainda variada por DNA.
-    const chaosBumps    = this.dna.chaos * 0.035;
-    const creativityBumps = this.dna.creativity * 0.025;
+    // CHIBI proportions — antes era um blob ovoide único (alien).
+    // Agora: cabeça grande em cima + cintura pinch em y=0 + corpo menor embaixo.
+    // Resultado: silhueta tipo Kirby/Pokemon/Tamagotchi — "criatura normal".
+    const heightStretch = 1.05 + this.dna.intelligence * 0.35 + this.dna.empathy * 0.18;
+    const widthSquash   = 0.92 + this.dna.resilience * 0.20 - this.dna.discipline * 0.08;
+    const bottomBias    = 0.15 + this.dna.resilience * 0.25;
+    const chaosBumps    = this.dna.chaos * 0.025;
+    const creativityBumps = this.dna.creativity * 0.018;
+    // CHIBI head/body separation params
+    const headBoost     = 1.15;     // cabeça mais larga
+    const waistPinchAmp = 0.32;     // intensidade do estrangulamento
+    const waistY        = 0.10;     // altura do pinch (ligeiramente acima do centro)
+    const waistSharpness= 14;       // quão localizado é o pinch (maior = mais sharp)
 
     for (let i = 0; i < pos.count; i++) {
       let x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
       y *= heightStretch;
       x *= widthSquash;
       z *= widthSquash;
+      // Bottom bias: alarga base (efeito "boneca" estável)
       if (y < 0) {
         x *= 1 + bottomBias * 0.3;
         z *= 1 + bottomBias * 0.3;
-        y *= 1 + bottomBias * 0.2;
       }
+      // HEAD BOOST: amplia raio na metade superior (y > 0.2)
+      if (y > 0.2) {
+        const headFactor = 1 + (headBoost - 1) * Math.min(1, (y - 0.2) / 0.6);
+        x *= headFactor;
+        z *= headFactor;
+      }
+      // WAIST PINCH: gaussian reduz raio próximo a y=0.10 — cria pescoço/cintura
+      const pinchDist = (y - waistY) * (y - waistY);
+      const pinchFactor = 1 - waistPinchAmp * Math.exp(-pinchDist * waistSharpness);
+      x *= pinchFactor;
+      z *= pinchFactor;
       // Smooth low-freq bumps (não per-vertex random, mas trilinear sin/cos)
       // Resultado: ondulações suaves grandes em vez de ruído pixelado.
       const smoothLump = Math.sin(x * 2.1 + this.seed * 0.001)
@@ -1058,13 +1150,12 @@ class Creature {
     const userEyeMult = this.userMod?.eyeMult ?? 1;
     const eyeSize = (0.22 + this.dna.empathy * 0.10 + this.dna.intelligence * 0.04)
                   * phaseEyeBoost * userEyeMult;
-    // FIX (2026-05-22): position dos olhos precisa escalar com phase.scale.
-    // Body usa phase.scale (1.12-1.20 em adulto/evoluído) — sem multiplicar
-    // os olhos ficam DENTRO do body (z=0.74 < raio do body 1.0×scale).
+    // v4 CHIBI: olhos na CABEÇA (parte superior do body chibi), não no centro.
+    // Cabeça fica em y~0.5-1.0 após headBoost. eyeY deve refletir isso.
     const phaseS = this.phase.scale ?? 1;
-    const eyeSpread = (0.34 + (1 - this.dna.intelligence) * 0.08) * phaseS;
-    const eyeY = (0.38 + this.dna.intelligence * 0.22) * phaseS;
-    const eyeZ = 0.74 * phaseS + 0.06; // +0.06 garante que sempre fica fora do body
+    const eyeSpread = (0.30 + (1 - this.dna.intelligence) * 0.06) * phaseS;
+    const eyeY = (0.55 + this.dna.intelligence * 0.12) * phaseS;
+    const eyeZ = 0.72 * phaseS + 0.06;
 
     // sclera vidro brilhante — MeshStandard com low roughness simula highlight
     const scleraGeo = new THREE.SphereGeometry(eyeSize, 32, 32);
@@ -1122,40 +1213,36 @@ class Creature {
     this.group.add(eyeGroup);
   }
 
-  /* LIMBS — número derivado de chaos e creativity, capeado pela fase.
-   * v2: max 2 pares (silhueta limpa). v3: cap pela fase (criança max 1 par,
-   * adolescente+ max 2 pares). */
+  /* LIMBS — bracinhos arredondados (esferas alongadas), não cilindros.
+   * v4: substitui cilindros (que pareciam membros amputados) por blobs
+   * esféricos achatados — visual Kirby/Pokemon. Posicionados na altura
+   * do corpo (y ~ -0.3) nas laterais externas, levemente inclinados. */
   buildLimbs() {
     const phaseCap = this.phase.maxLimbs ?? 2;
     const limbCount = Math.min(phaseCap, Math.floor(this.dna.creativity * 1.5 + this.dna.chaos * 1));
     const limbGroup = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(this.palette.bodyHex).multiplyScalar(0.85),
-      roughness: 0.5, metalness: 0.05,
+      color: new THREE.Color(this.palette.bodyHex),
+      roughness: 0.42,
+      metalness: 0.08,
+      emissive: new THREE.Color(this.palette.glowHex),
+      emissiveIntensity: 0.14,
     });
     for (let i = 0; i < limbCount; i++) {
       for (const sign of [-1, 1]) {
-        const length = 0.4 + this.rng() * 0.5 + this.dna.creativity * 0.3;
-        const thick = 0.07 + this.dna.resilience * 0.07;
-        const geo = new THREE.CylinderGeometry(thick * 0.6, thick, length, 12);
-        geo.translate(0, -length / 2, 0);
+        // Bracinho = esfera achatada (não cilindro). Tamanho cresce com fase.
+        const size = 0.18 + this.dna.resilience * 0.05 + i * 0.04;
+        const geo = new THREE.SphereGeometry(size, 18, 14);
         const limb = new THREE.Mesh(geo, mat);
+        limb.scale.set(1.0, 0.95, 1.1); // levemente alongado pra parecer "braço"
 
-        const angleY = (Math.PI / 5) * (i + 1) * sign + this.rng() * 0.3;
-        const heightOffset = -0.2 + (i / (limbCount + 1)) * 0.9;
-        limb.position.set(sign * 0.55, heightOffset, 0);
-        limb.rotation.z = sign * (Math.PI / 3 + this.rng() * 0.3);
-        limb.rotation.x = -Math.PI / 6 + this.rng() * 0.3;
+        // Posição: laterais do corpo (y ~ -0.25 a 0.05), externo
+        const heightOffset = 0.1 - i * 0.35;
+        limb.position.set(sign * 0.62, heightOffset, 0.1);
         limb.userData.phase = this.rng() * Math.PI * 2;
-        limb.userData.baseRotZ = limb.rotation.z;
-        limb.userData.baseRotX = limb.rotation.x;
+        limb.userData.baseX = limb.position.x;
+        limb.userData.baseY = limb.position.y;
         limbGroup.add(limb);
-
-        // tip ball
-        const tipGeo = new THREE.SphereGeometry(thick * 1.2, 12, 12);
-        const tip = new THREE.Mesh(tipGeo, mat);
-        tip.position.y = -length;
-        limb.add(tip);
       }
     }
     this.parts.limbs = limbGroup;

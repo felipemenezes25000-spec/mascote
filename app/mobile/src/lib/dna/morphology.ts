@@ -85,10 +85,13 @@ export interface Morphology {
  */
 export function morphologyFromGenome(g: Genome): Morphology {
   return {
-    // Corpo
-    bodyHeightStretch: 0.7 + g.intelligence * 0.7 + g.empathy * 0.35,
-    bodyWidthSquash: 0.85 + g.resilience * 0.45 - g.discipline * 0.15,
-    bodyBottomBias: 0.3 + g.resilience * 0.5,
+    // Corpo — proporções CHIBI (cabeça grande + cintura + corpo menor).
+    // Antes: heightStretch 0.7→1.75 (variação enorme, criatura achatada/longa
+    // demais em extremos). Agora: 1.05→1.58 (consistente chibi com pequena
+    // variação por DNA). bottomBias menor pra não exagerar a "pera".
+    bodyHeightStretch: 1.05 + g.intelligence * 0.35 + g.empathy * 0.18,
+    bodyWidthSquash: 0.92 + g.resilience * 0.20 - g.discipline * 0.08,
+    bodyBottomBias: 0.15 + g.resilience * 0.25,
     bodyChaosBumps: g.chaos * 0.1,
     bodyCreativityBumps: g.creativity * 0.07,
     // Emissive forte = "inner glow" gel. Sem isso o corpo fica opaco plástico.

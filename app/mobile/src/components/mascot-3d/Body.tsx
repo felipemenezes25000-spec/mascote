@@ -59,6 +59,14 @@ export function Body({
     const pos = geo.attributes.position;
     const seed = (dna.empathy + dna.chaos * 100 + dna.creativity * 17) * 1000;
 
+    // CHIBI proportions — substitui blob ovoide único (alien) por silhueta
+    // tipo Kirby/Pokemon/Tamagotchi com cabeça grande + cintura + corpo menor.
+    // Gera reconhecimento instantâneo de "mascote bonito" via kawaii heuristic.
+    const headBoost = 1.15;
+    const waistPinchAmp = 0.32;
+    const waistY = 0.10;
+    const waistSharpness = 14;
+
     for (let i = 0; i < pos.count; i++) {
       let x = pos.getX(i),
         y = pos.getY(i),
@@ -71,6 +79,17 @@ export function Body({
         z *= 1 + morph.bodyBottomBias * 0.3;
         y *= 1 + morph.bodyBottomBias * 0.2;
       }
+      // HEAD BOOST: amplia raio em y altos (cabeça grande chibi)
+      if (y > 0.2) {
+        const headFactor = 1 + (headBoost - 1) * Math.min(1, (y - 0.2) / 0.6);
+        x *= headFactor;
+        z *= headFactor;
+      }
+      // WAIST PINCH: gaussian reduz raio próximo a y=0.10 — cria pescoço
+      const pinchDist = (y - waistY) * (y - waistY);
+      const pinchFactor = 1 - waistPinchAmp * Math.exp(-pinchDist * waistSharpness);
+      x *= pinchFactor;
+      z *= pinchFactor;
       // Smooth low-freq bumps via trilinear sin/cos (não per-vertex random).
       // Resulta em ondulações suaves grandes em vez de ruído pixelado per-face.
       const smoothLump =
