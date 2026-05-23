@@ -137,7 +137,7 @@ Cada item tem dono (você ou infra externa), estimativa e link pra detalhe.
 
 - [ ] Recrutar testers:
   - [ ] 10 pessoas da rede pessoal (smoke test)
-  - [ ] 10-20 do plano_mascote/parte_5_execucao (já mapeados)
+  - [ ] 10-20 do docs/plano/parte_5_execucao (já mapeados)
   - [ ] 10-20 via Slack/Discord wellness communities
 - [ ] Onboarding doc pros testers:
   - [ ] Como instalar TestFlight / Play Internal

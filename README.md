@@ -347,7 +347,7 @@ mascote/
 │   ├── LIVING_IDENTITY_DESIGN.md← manifesto do sistema visual
 │   ├── INFRA_LAUNCH_PLAYBOOK.md ← passo a passo para sair de "código" → "beta pagando"
 │   └── …                        ← 27 docs cobrindo IA, billing, sync, premium, copy
-├── plano_mascote/               ← estratégia (7 partes)
+├── docs/plano/                  ← estratégia (7 partes)
 ├── docs/design/prototypes/      ← protótipos HTML standalone (criatura procedural etc.)
 └── .github/workflows/           ← CI quality gate (typecheck + lint + coverage)
 ```

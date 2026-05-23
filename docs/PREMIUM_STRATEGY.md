@@ -21,7 +21,7 @@ e o que NÃO pode ser vendido (segurança, dignidade do usuário).
 | `plus_annual` | Mascote+ Anual | R$ 149.90 | 7 dias | 🟡 Mock |
 | `legendary` | Lendário (futuro) | R$ 49.90/mês | 7 dias | 🔴 Não criado nos stores |
 
-> Preços validados em [plano_mascote/parte_4_monetizacao_e_growth.md](../plano_mascote/parte_4_monetizacao_e_growth.md).
+> Preços validados em [docs/plano/parte_4_monetizacao_e_growth.md](./plano/parte_4_monetizacao_e_growth.md).
 
 ## O que cada tier desbloqueia
 

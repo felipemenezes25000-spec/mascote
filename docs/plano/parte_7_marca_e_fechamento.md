@@ -545,7 +545,7 @@ Ver Parte 5 §36. Resumo:
 
 ### Documentos vivos
 
-Todos esses arquivos `.md` em `plano_mascote/` devem ser atualizados quando:
+Todos esses arquivos `.md` em `docs/plano/` devem ser atualizados quando:
 - Decisão pendente é resolvida (atualizar tabela + texto)
 - Aprendizado novo importante
 - Métrica de critério bate verde ou vermelho

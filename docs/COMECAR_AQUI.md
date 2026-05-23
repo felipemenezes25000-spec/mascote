@@ -232,6 +232,6 @@ assets/
 
 ## Stack
 
-Tudo já documentado. Plano detalhado em `plano_mascote/`.
+Tudo já documentado. Plano detalhado em `docs/plano/`.
 
 Boa sorte. Cuida de você primeiro.

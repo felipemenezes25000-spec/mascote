@@ -85,7 +85,7 @@ endereça esse gap em modo de **validação acelerada paralela ao soft launch**.
 
 - **Verde:** escalar ads (orçamento R$ 30-50k/60 dias para distribuição)
 - **Amarelo:** rodar 1 ciclo de fix (onboarding/welcome pack/paywall) + revalidar em 14 dias
-- **Vermelho:** pivotar tese ou encerrar — `plano_mascote/parte_6` define gates de morte
+- **Vermelho:** pivotar tese ou encerrar — `docs/plano/parte_6` define gates de morte
 
 ---
 
@@ -110,7 +110,7 @@ A cada sexta-feira, atualizar `validation/results.md` (criar) com:
 
 ## Reconciliação com o plano original
 
-O `plano_mascote/parte_5_execucao.md` previa a sequência:
+O `docs/plano/parte_5_execucao.md` previa a sequência:
 - Dia 1-2: landing + form + 2 ads (NÃO FEITO)
 - Dia 3-7: 200 inscritos + 30 entrevistas (NÃO FEITO)
 - Dia 8-30: closed beta 50 (NÃO FEITO)

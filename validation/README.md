@@ -1,7 +1,7 @@
 # validation/ — Validação retroativa do Mascote
 
 Estrutura de validação que endereça a "validação invertida": o plano original
-(`plano_mascote/parte_5_execucao.md`) prescrevia validar antes de construir,
+(`docs/plano/parte_5_execucao.md`) prescrevia validar antes de construir,
 mas o MVP foi feito em paralelo. Esta pasta serve como ponte: rodar em 4
 semanas o que deveria ter rodado em 30 dias antes do código.
 

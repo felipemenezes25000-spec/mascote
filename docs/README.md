@@ -42,7 +42,7 @@
 |-------|-----------|
 | `../app/mobile/` | App Expo (código principal) |
 | `../app/web/` | Landing Next.js |
-| `../plano_mascote/` | Plano estratégico de negócio (7 partes) |
+| `./plano/` | Plano estratégico de negócio (7 partes) |
 | `../scripts/` | Smoke Android + Maestro auxiliar |
 | `../validation/` | Validação de mercado (landing estática + survey) |
 

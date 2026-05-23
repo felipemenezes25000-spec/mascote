@@ -79,4 +79,4 @@ app/mobile/
 - Proxy de IA em produção
 - Push nativo completo
 
-Landing de marketing: `../web/`. Plano de negócio: `../../plano_mascote/`.
+Landing de marketing: `../web/`. Plano de negócio: `../../docs/plano/`.
