@@ -35,53 +35,57 @@ from mathutils import Vector
 # ============================================================================
 
 PRESETS = {
-    'bipo': {  # Calmo
-        'body_color': (0.96, 0.78, 0.58, 1.0),
-        'accent_color': (0.92, 0.62, 0.45, 1.0),
-        'glow_color': (1.0, 0.88, 0.68, 1.0),
-        'cheek_color': (1.0, 0.55, 0.62, 1.0),
-        'sss_color': (1.0, 0.72, 0.50, 1.0),  # sangue/luz interna pêssego
+    'bipo': {  # Calmo — PÊSSEGO VIBRANTE com toque coral
+        'body_color': (1.0, 0.72, 0.45, 1.0),  # mais saturado
+        'accent_color': (0.95, 0.50, 0.32, 1.0),  # coral marcado
+        'glow_color': (1.0, 0.78, 0.50, 1.0),
+        'cheek_color': (1.0, 0.40, 0.50, 1.0),  # rosa coral marcado
+        'pupil_color': (0.20, 0.10, 0.32, 1.0),  # roxo escuro (não preto)
+        'sss_color': (1.0, 0.55, 0.30, 1.0),
         'sss_radius': (0.4, 0.25, 0.15),
         'head_scale': 1.0,
         'body_scale': 0.7,
         'eye_scale': 1.0,
-        'cheek_intensity': 0.78,
+        'cheek_intensity': 1.0,
     },
-    'zip': {  # Motivador
-        'body_color': (0.98, 0.65, 0.45, 1.0),
-        'accent_color': (0.86, 0.48, 0.32, 1.0),
-        'glow_color': (1.0, 0.78, 0.55, 1.0),
-        'cheek_color': (1.0, 0.55, 0.55, 1.0),
-        'sss_color': (1.0, 0.55, 0.35, 1.0),
+    'zip': {  # Motivador — CORAL DOURADO energético
+        'body_color': (1.0, 0.55, 0.35, 1.0),
+        'accent_color': (0.90, 0.35, 0.20, 1.0),
+        'glow_color': (1.0, 0.72, 0.42, 1.0),
+        'cheek_color': (1.0, 0.45, 0.45, 1.0),
+        'pupil_color': (0.35, 0.08, 0.08, 1.0),  # vermelho escuro
+        'sss_color': (1.0, 0.42, 0.22, 1.0),
         'sss_radius': (0.45, 0.22, 0.12),
         'head_scale': 0.95,
         'body_scale': 0.75,
         'eye_scale': 1.05,
-        'cheek_intensity': 0.65,
+        'cheek_intensity': 0.85,
     },
-    'lulu': {  # Fofo
-        'body_color': (1.0, 0.82, 0.86, 1.0),
-        'accent_color': (1.0, 0.68, 0.74, 1.0),
-        'glow_color': (1.0, 0.90, 0.92, 1.0),
-        'cheek_color': (1.0, 0.50, 0.60, 1.0),
-        'sss_color': (1.0, 0.72, 0.78, 1.0),
+    'lulu': {  # Fofo — ROSA VIBRANTE
+        'body_color': (1.0, 0.70, 0.78, 1.0),
+        'accent_color': (1.0, 0.50, 0.62, 1.0),
+        'glow_color': (1.0, 0.85, 0.90, 1.0),
+        'cheek_color': (1.0, 0.30, 0.50, 1.0),  # rosa hot
+        'pupil_color': (0.32, 0.10, 0.22, 1.0),  # vinho escuro
+        'sss_color': (1.0, 0.62, 0.70, 1.0),
         'sss_radius': (0.5, 0.3, 0.28),
         'head_scale': 1.12,
         'body_scale': 0.65,
         'eye_scale': 1.10,
-        'cheek_intensity': 0.92,
+        'cheek_intensity': 1.1,
     },
-    'aro': {  # Sábio
-        'body_color': (0.84, 0.78, 0.96, 1.0),
-        'accent_color': (0.72, 0.64, 0.92, 1.0),
-        'glow_color': (0.92, 0.86, 1.0, 1.0),
-        'cheek_color': (0.95, 0.65, 0.78, 1.0),
-        'sss_color': (0.75, 0.70, 0.95, 1.0),
+    'aro': {  # Sábio — LILÁS CONTEMPLATIVO
+        'body_color': (0.70, 0.62, 0.95, 1.0),
+        'accent_color': (0.55, 0.45, 0.88, 1.0),
+        'glow_color': (0.85, 0.75, 1.0, 1.0),
+        'cheek_color': (0.95, 0.50, 0.65, 1.0),
+        'pupil_color': (0.10, 0.12, 0.32, 1.0),  # azul marinho
+        'sss_color': (0.65, 0.58, 0.92, 1.0),
         'sss_radius': (0.35, 0.30, 0.45),
         'head_scale': 1.02,
         'body_scale': 0.7,
         'eye_scale': 1.18,
-        'cheek_intensity': 0.55,
+        'cheek_intensity': 0.75,
     },
 }
 
@@ -180,6 +184,31 @@ def add_subdiv_surface(obj, levels=2):
     return mod
 
 
+def add_cel_outline(obj, thickness=0.012):
+    """Cel-shading outline via Solidify modifier invertido.
+    Duplica geometry, expande pra fora levemente, vira material preto.
+    Resultado: contorno escuro (estilo Borderlands/Genshin/Cult of the Lamb).
+    """
+    mod = obj.modifiers.new(name='Outline', type='SOLIDIFY')
+    mod.thickness = thickness
+    mod.offset = 1.0  # pra fora
+    mod.use_flip_normals = True  # vira inside-out (mostra só backface = silhueta)
+    mod.use_rim = False
+    # Material slot 1 pro outline (será preto)
+    mod.material_offset = 1
+    # Ensure object has 2 material slots — primeiro = body, segundo = outline
+    if len(obj.data.materials) < 2:
+        outline_mat = create_simple_material(
+            f'{obj.name}_outline_mat',
+            color=(0.05, 0.04, 0.06, 1.0),
+            roughness=1.0,
+            metalness=0.0,
+        )
+        # Use_backface_culling pra outline aparecer atrás do mesh principal
+        obj.data.materials.append(outline_mat)
+    return mod
+
+
 def add_bevel(obj, width=0.02, segments=3):
     """Bevel modifier suaviza arestas. Faz tudo parecer 'modelado' não 'colado'."""
     mod = obj.modifiers.new(name='Bevel', type='BEVEL')
@@ -243,16 +272,19 @@ def build_eye(name, x_offset, preset):
     sclera.data.materials.append(sclera_mat)
     shade_smooth(sclera)
 
-    # Pupila preta (cartoon definida)
+    # Pupila com cor DNA-related (não preto puro) — dá "alma colorida"
     pupil_radius = eye_size * 0.62
     pupil = create_uv_sphere(f'{name}_pupil',
                             (x_offset, eye_y - eye_size * 0.6, 1.0),
                             radius=pupil_radius, segments=24, rings=18)
+    pupil_color = preset.get('pupil_color', (0.05, 0.05, 0.05, 1.0))
     pupil_mat = create_simple_material(
         f'{name}_pupil_mat',
-        color=(0.05, 0.05, 0.05, 1.0),
+        color=pupil_color,
         roughness=0.2,
         metalness=0.4,
+        emissive_color=preset['glow_color'],
+        emissive_strength=0.2,
     )
     pupil.data.materials.append(pupil_mat)
     shade_smooth(pupil)
@@ -440,42 +472,41 @@ def apply_body_materials(head, body, arms, feet, preset):
 # ============================================================================
 
 def setup_lighting():
-    """5-point lighting rig profissional."""
-    # KEY light (frontal-direita)
+    """5-point lighting rig profissional — rim boost 2× pra silhueta destacar."""
     bpy.ops.object.light_add(type='AREA', location=(2.5, -2.5, 3.5))
     key = bpy.context.active_object
-    key.data.energy = 700
+    key.data.energy = 1000
     key.data.size = 2.0
     key.data.color = (1.0, 0.97, 0.93)
     key.rotation_euler = (math.radians(55), 0, math.radians(40))
 
-    # RIM warm (atrás-esquerda) — destaca silhueta com tom coral
+    # RIM warm BOOSTED — pra silhueta brilhar contra background escuro
     bpy.ops.object.light_add(type='AREA', location=(-2.0, 2.5, 2.5))
     rim1 = bpy.context.active_object
-    rim1.data.energy = 500
+    rim1.data.energy = 1100  # 2× anterior (500)
     rim1.data.size = 1.5
-    rim1.data.color = (1.0, 0.75, 0.6)
+    rim1.data.color = (1.0, 0.65, 0.45)  # coral mais intenso
     rim1.rotation_euler = (math.radians(110), 0, math.radians(-30))
 
-    # RIM cool (atrás-direita) — tom azulado pra contrast
+    # RIM cool BOOSTED — tom azulado intenso
     bpy.ops.object.light_add(type='AREA', location=(2.0, 2.5, 2.0))
     rim2 = bpy.context.active_object
-    rim2.data.energy = 250
+    rim2.data.energy = 550  # 2× anterior (250)
     rim2.data.size = 1.5
-    rim2.data.color = (0.65, 0.78, 1.0)
+    rim2.data.color = (0.55, 0.72, 1.0)
     rim2.rotation_euler = (math.radians(115), 0, math.radians(30))
 
-    # FILL (frontal-baixo) — atenua sombras embaixo
+    # FILL
     bpy.ops.object.light_add(type='AREA', location=(0, -2, -0.5))
     fill = bpy.context.active_object
-    fill.data.energy = 200
+    fill.data.energy = 250
     fill.data.size = 2.0
     fill.data.color = (0.85, 0.92, 1.0)
 
-    # AMBIENT (topo) — luz suave de cima
+    # AMBIENT
     bpy.ops.object.light_add(type='AREA', location=(0, 0, 5))
     ambient = bpy.context.active_object
-    ambient.data.energy = 200
+    ambient.data.energy = 220
     ambient.data.size = 5.0
     ambient.data.color = (1.0, 0.95, 0.88)
 
@@ -557,12 +588,12 @@ def setup_compositor_bloom():
         print(f'  Compositor bloom falhou (não-crítico): {e}')
 
 
-def setup_render(out_path, resolution=768):
-    """Cycles renderer com 256 samples + denoising — qualidade premium."""
+def setup_render(out_path, resolution=1024):
+    """Cycles renderer 512 samples + denoising HD 1024² — qualidade hero."""
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     scene.cycles.device = 'GPU' if bpy.context.preferences.addons.get('cycles') else 'CPU'
-    scene.cycles.samples = 256
+    scene.cycles.samples = 512  # premium
     scene.cycles.use_denoising = True
     if hasattr(scene.cycles, 'denoiser'):
         scene.cycles.denoiser = 'OPENIMAGEDENOISE'
@@ -571,11 +602,9 @@ def setup_render(out_path, resolution=768):
     scene.render.filepath = out_path
     scene.render.image_settings.file_format = 'PNG'
     scene.render.film_transparent = True
-    # Tone mapping — Standard pra cores fiéis ao DNA
     scene.view_settings.view_transform = 'Standard'
-    scene.view_settings.look = 'None'
-    scene.view_settings.exposure = 0.3
-    # Bloom via compositor (já setup separado)
+    scene.view_settings.look = 'Medium High Contrast'
+    scene.view_settings.exposure = 0.4
 
 
 def export_glb(out_path, animated=False):
@@ -646,8 +675,11 @@ def main():
     arms = build_arms(preset)
     feet = build_feet(preset)
     apply_body_materials(head, body, arms, feet, preset)
-    add_attachment_points()  # empties como anchors pra accessories
-    add_idle_animation(head, body, eye_L, eye_R)  # breath + blink loop
+    # Nota: cel-shading via Solidify invertido testado em v3 mas inverte
+    # normals visualmente (body fica preto). Cycles + smooth + saturação
+    # forte + rim light boost dão look cartoon definido sem outline manual.
+    add_attachment_points()
+    add_idle_animation(head, body, eye_L, eye_R)
 
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     export_glb(args.out, animated=True)
