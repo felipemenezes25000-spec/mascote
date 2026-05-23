@@ -114,7 +114,3 @@ tsc-output.txt
 # Status notes pessoais (contexto privado: saÃºde, prazos, stakeholders)
 STATUS_NOITE.md
 STATUS_*.md
-
-# Dependências locais do gerador de vídeo
-scripts/video-gen/node_modules/
-
