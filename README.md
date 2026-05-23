@@ -1,699 +1,426 @@
 <div align="center">
 
 <a href="https://github.com/felipemenezes25000-spec/mascote">
-  <img src="app/mobile/assets/logo-mascote.svg" alt="Mascote" width="160" height="160" />
+  <img src="app/mobile/assets/logo-mascote.png" alt="Mascote" width="148" height="148"/>
 </a>
 
+# Mascote
+
+**Uma criatura digital procedural, única, que evolui com seus hábitos.**
+
+<sub>Não é Tamagotchi. Não é chatbot. É <strong>identidade viva digital</strong> — em português, para quem quer cuidar de si com leveza.</sub>
+
 <br/>
 
-<!-- Banner animado -->
-<img alt="Mascote — Digital Living Identity" src="https://capsule-render.vercel.app/api?type=waving&color=0:7C3AED,40:EC4899,70:10B981,100:0EA5E9&height=180&section=header&text=Mascote&fontSize=78&fontColor=ffffff&fontAlignY=42&animation=fadeIn&desc=Digital%20Living%20Identity%20em%20PT-BR&descSize=18&descAlignY=68"/>
-
-<br/>
-
-<h3>
-  <em>Uma criatura digital procedural, única e viva — que evolui com seus hábitos.</em>
-</h3>
-
 <p>
-  <strong>Sem culpa. Sem promessa médica. Com uma criatura que é só sua.</strong>
-</p>
-
-<sub>Não é Tamagotchi. Não é chatbot. É <strong>identidade digital biológica</strong> — em português, para quem quer cuidar de si com leveza.</sub>
-
-<br/><br/>
-
-<!-- Badges principais -->
-<p>
-  <a href="app/mobile/tests/"><img alt="Tests" src="https://img.shields.io/badge/tests-1848%20passing-22c55e?style=for-the-badge&logo=vitest&logoColor=white"/></a>
-  <a href="app/mobile/vitest.config.ts"><img alt="Coverage" src="https://img.shields.io/badge/coverage-72.9%25-eab308?style=for-the-badge&logo=codecov&logoColor=white"/></a>
-  <a href=".github/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/badge/CI-quality%20gate-3b82f6?style=for-the-badge&logo=githubactions&logoColor=white"/></a>
-  <a href="app/mobile/tsconfig.json"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178c6?style=for-the-badge&logo=typescript&logoColor=white"/></a>
-</p>
-
-<p>
-  <a href="app/mobile/app.json"><img alt="Expo" src="https://img.shields.io/badge/Expo%20SDK-51-000020?style=flat-square&logo=expo&logoColor=white"/></a>
-  <img alt="React Native" src="https://img.shields.io/badge/React%20Native-0.74-61dafb?style=flat-square&logo=react&logoColor=black"/>
-  <a href="app/mobile/src/components/Mascot3D.tsx"><img alt="React Three Fiber" src="https://img.shields.io/badge/R3F-procedural%203D-000000?style=flat-square&logo=threedotjs&logoColor=white"/></a>
-  <img alt="License" src="https://img.shields.io/badge/license-private-6b7280?style=flat-square"/>
-  <img alt="Made in Brazil" src="https://img.shields.io/badge/feito%20no-Brasil-009c3b?style=flat-square&labelColor=ffdf00"/>
+  <a href="app/mobile/app.json"><img alt="Expo SDK 51" src="https://img.shields.io/badge/Expo%20SDK-51-000020?style=flat-square&logo=expo&logoColor=white"/></a>
+  <a href="app/mobile/package.json"><img alt="React Native 0.74" src="https://img.shields.io/badge/React%20Native-0.74-61dafb?style=flat-square&logo=react&logoColor=black"/></a>
+  <a href="app/mobile/tsconfig.json"><img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white"/></a>
+  <a href="app/mobile/src/components/Mascot3D.tsx"><img alt="R3F + three.js" src="https://img.shields.io/badge/R3F-procedural%203D-000000?style=flat-square&logo=threedotjs&logoColor=white"/></a>
+  <a href="app/mobile/tests/guarantees/"><img alt="Garantias 4/4" src="https://img.shields.io/badge/garantias-4%2F4-22c55e?style=flat-square"/></a>
+  <img alt="Feito no Brasil" src="https://img.shields.io/badge/feito%20no-Brasil-009c3b?style=flat-square&labelColor=ffdf00"/>
 </p>
 
 <br/>
 
-<h4>
-  <a href="#-quick-start">Começar</a> ·
-  <a href="#-genoma--evolução">DNA</a> ·
-  <a href="#-arquitetura">Arquitetura</a> ·
-  <a href="#-mascote-plus">Plus</a> ·
-  <a href="#-analytics--beta">Beta</a> ·
-  <a href="#-documentação">Docs</a>
-</h4>
+<table>
+<tr>
+<td align="center" width="25%">
+  <img src="docs/design/creature-evolution/v2-01-bebe-calmo.png" width="160" alt="Bebê"/><br/>
+  <sub><strong>Bebê</strong><br/>recém-eclodido</sub>
+</td>
+<td align="center" width="25%">
+  <img src="docs/design/creature-evolution/v2-02-crianca-calmo.png" width="160" alt="Criança"/><br/>
+  <sub><strong>Criança</strong><br/>primeiros hábitos</sub>
+</td>
+<td align="center" width="25%">
+  <img src="docs/design/creature-evolution/v2-03-adolescente-calmo.png" width="160" alt="Adolescente"/><br/>
+  <sub><strong>Adolescente</strong><br/>identidade emergindo</sub>
+</td>
+<td align="center" width="25%">
+  <img src="docs/design/creature-evolution/v2-04-evoluido-calmo.png" width="160" alt="Evoluído"/><br/>
+  <sub><strong>Evoluído</strong><br/>seu reflexo vivo</sub>
+</td>
+</tr>
+</table>
+
+<sub>Quatro fases. <strong>Infinitas criaturas.</strong> Cada usuário recebe uma morfologia, paleta e voz determinadas pelo próprio <code>user_id</code> — nunca há duas iguais.</sub>
 
 </div>
 
 ---
 
-<table>
-<tr>
-<td width="50%" valign="top">
+## Sumário
 
-### Produto
-- [O que é](#-o-que-é-o-mascote)
-- [Por que é diferente](#-por-que-é-diferente)
-- [Personalidades base](#-personalidades-base)
-- [Genoma & evolução](#-genoma--evolução)
-- [Loop diário](#-loop-diário-60-segundos)
-- [Mascote Plus](#-mascote-plus)
-
-</td>
-<td width="50%" valign="top">
-
-### Engenharia
-- [Arquitetura](#-arquitetura)
-- [Safety & IA](#-safety--ia)
-- [Analytics & beta](#-analytics--beta)
-- [Quick Start](#-quick-start)
-- [Qualidade](#-qualidade)
-- [Roadmap](#-roadmap)
-- [Documentação](#-documentação)
-
-</td>
-</tr>
-</table>
+- [O que é](#o-que-é)
+- [Por que existe](#por-que-existe)
+- [Como funciona](#como-funciona)
+- [A jornada do usuário (60 segundos por dia)](#a-jornada-do-usuário-60-segundos-por-dia)
+- [As quatro promessas, travadas em código](#as-quatro-promessas-travadas-em-código)
+- [Stack](#stack)
+- [Quickstart](#quickstart)
+- [Testes & Maestro E2E](#testes--maestro-e2e)
+- [Estrutura do monorepo](#estrutura-do-monorepo)
+- [Filosofia: identidade viva](#filosofia-identidade-viva)
+- [Documentação rica](#documentação-rica)
+- [Contribuir](#contribuir)
 
 ---
 
-## 🌱 O que é o Mascote
+## O que é
 
-O **Mascote** é um app de bem-estar onde cada pessoa recebe uma **criatura procedural irrepetível**. Seu genoma de 11 traços molda aparência 3D, comportamento autônomo, tom de voz e respostas — enquanto **hábitos reais** (água, sono, movimento, pausa) esculpem a biologia da criatura ao longo do tempo.
+Mascote é um app de **bem-estar gentil** em português brasileiro onde cada pessoa recebe uma **criatura procedural irrepetível**. Um genoma de **11 traços** molda:
+
+- a **morfologia 3D** (corpo, olhos, antenas, postura, cauda),
+- a **paleta** (HSL derivada do DNA),
+- a **voz** (descritores PT-BR seguros, nunca o gene cru),
+- o **comportamento autônomo** (idle, gestos, reações).
+
+Hábitos reais — água, sono, exercício, meditação, leitura, respiração, journaling, outdoor, sol — **esculpem a biologia** da criatura ao longo do tempo. A evolução é **contínua e visível**, não cosmética.
+
+> O app não tem mascote dentro dele. **O app _é_ o habitat do mascote.**
+
+---
+
+## Por que existe
+
+| Apps tradicionais de bem-estar | Mascote |
+|---|---|
+| Avatar genérico ou skin estática | **DNA procedural** — morfologia, paleta e animação derivam do genoma |
+| Fases lineares (ovo → adulto) | Evolução **contínua** por drift de hábitos, com mutações persistentes |
+| Streak que culpa quem falha | **Sem culpa** — ausência nunca pune; decay não cruza o neutro |
+| Chat solto com IA genérica | IA com **descritores PT-BR**; gene bruto **nunca** sai do device |
+| Pet idêntico ao do amigo | Seed por `user_id` → criaturas **demonstravelmente distintas** |
+| Gamificação punitiva | Check-in como **cuidado gentil** (~60s), não dever |
+
+**Posicionamento honesto:** wellness e companhia. **Nunca** terapia, diagnóstico, cura. Em momentos de crise o app sempre entrega **CVV 188** / **SAMU 192** — imediato, sem IA, sem paywall.
+
+---
+
+## Como funciona
 
 ```mermaid
 flowchart LR
-  subgraph Você["🧑 Você"]
+  subgraph Você["Você"]
     H[Hábitos diários]
     C[Chat & presença]
   end
-  subgraph Criatura["🧬 Criatura"]
-    G[(Genoma<br/>11 traits)]
-    V[Mascot 3D/2D]
-    B[Behavior<br/>Engine]
+  subgraph DNA["Núcleo: DNA"]
+    G[(Genoma<br/>11 traços)]
+    DR[applyHabitDrift<br/>não-negativo]
+    MUT[Catálogo<br/>de mutações]
   end
-  subgraph Ética["🛡️ Ética"]
-    S[Safety<br/>CVV 188]
-    P[Sem culpa]
+  subgraph Render["Render & voz"]
+    M3D[Mascot 3D<br/>R3F + three.js]
+    M2D[Mascot 2D<br/>fallback automático]
+    DESC[Descritores PT-BR<br/>safe-by-design]
   end
-  H -->|drift não-negativo| G
-  G --> V
-  G --> B
-  C -->|descritores PT-BR| G
-  S -.->|sempre| C
-  P -.->|sempre| H
+  subgraph IA["IA"]
+    L1{Safety<br/>classifier}
+    LOCAL[Fallback local rico]
+    BYOK[OpenAI BYOK]
+    PROXY[Proxy Plus]
+  end
+  subgraph Infra["Infra"]
+    AS[(AsyncStorage<br/>local-first)]
+    SS[(SecureStore<br/>chaves)]
+    SB[(Supabase<br/>schema pronto)]
+    RC[RevenueCat<br/>adapter pronto]
+  end
 
-  classDef voce fill:#FEF3C7,stroke:#D97706,color:#92400E
-  classDef criatura fill:#DDD6FE,stroke:#7C3AED,color:#5B21B6
-  classDef etica fill:#FEE2E2,stroke:#DC2626,color:#991B1B
-  class H,C voce
-  class G,V,B criatura
-  class S,P etica
+  H --> DR --> G
+  C --> L1
+  G --> MUT --> M3D
+  G --> M3D
+  G --> M2D
+  G --> DESC --> L1
+  L1 -->|safe| LOCAL & BYOK & PROXY
+  L1 -->|crise| CRISE[CVV 188 · SAMU 192]
+  AS <-.-> G
+  SS <-.-> BYOK
+  SB -.-> AS
+  RC -.-> PROXY
+
+  classDef you fill:#FEF3C7,stroke:#D97706,color:#92400E
+  classDef dna fill:#DDD6FE,stroke:#7C3AED,color:#5B21B6
+  classDef render fill:#D1FAE5,stroke:#059669,color:#065F46
+  classDef ai fill:#DBEAFE,stroke:#2563EB,color:#1E3A8A
+  classDef crisis fill:#FEE2E2,stroke:#DC2626,color:#991B1B
+  class H,C you
+  class G,DR,MUT dna
+  class M3D,M2D,DESC render
+  class L1,LOCAL,BYOK,PROXY ai
+  class CRISE crisis
 ```
 
-> **Posicionamento honesto:** wellness e companhia. **Nunca** terapia, diagnóstico ou cura. Em momentos de crise, o app sempre entrega CVV 188 / SAMU 192 — instantâneo, sem IA, sem paywall.
-
----
-
-## ✨ Por que é diferente
-
-<table>
-<tr>
-<th width="50%">😐 Apps tradicionais</th>
-<th width="50%">🌱 Mascote</th>
-</tr>
-<tr>
-<td>Avatar / skin estática</td>
-<td><strong>DNA procedural</strong> — morfologia, paleta e animação derivadas do genoma</td>
-</tr>
-<tr>
-<td>Fases lineares (ovo → adulto)</td>
-<td>Evolução <strong>contínua</strong> por drift de hábitos, com mutações persistentes</td>
-</tr>
-<tr>
-<td>Streak que culpa quem falha</td>
-<td><strong>Sem culpa</strong> — ausência nunca pune; decay não cruza o neutro</td>
-</tr>
-<tr>
-<td>Chat solto com IA genérica</td>
-<td>IA com <strong>descritores PT-BR</strong> seguros; gene bruto <strong>nunca</strong> sai do device</td>
-</tr>
-<tr>
-<td>Pet idêntico ao do amigo</td>
-<td>Seed por <code>user_id</code> → criaturas <strong>demonstravelmente distintas</strong></td>
-</tr>
-<tr>
-<td>Gamificação punitiva</td>
-<td>Check-in como <strong>cuidado gentil</strong> (~60s), não dever</td>
-</tr>
-</table>
-
----
-
-## 🎭 Personalidades base
-
-Cada nova conta começa com **uma das 4 personalidades**, depois evolui livremente por hábitos. Mesmo dentro de uma personalidade, **dois usuários nunca recebem a mesma criatura** — `genomeFromPreset(seed, preset, variance=0.1)`.
-
-<table>
-<tr>
-<td align="center" width="25%">
-
-<img alt="Calmo" src="https://img.shields.io/badge/-Calmo-7BAE7A?style=for-the-badge"/>
-
-🌙 **Bipo**
-
-`empathy 0.82`  
-`discipline 0.70`
-
-<sub>pausa · sono · respiração</sub>
-
-</td>
-<td align="center" width="25%">
-
-<img alt="Motivador" src="https://img.shields.io/badge/-Motivador-F59E0B?style=for-the-badge"/>
-
-⚡ **Zip**
-
-`curiosity 0.85`  
-`intelligence 0.65`
-
-<sub>rotina · foco · movimento</sub>
-
-</td>
-<td align="center" width="25%">
-
-<img alt="Fofo" src="https://img.shields.io/badge/-Fofo-EC4899?style=for-the-badge"/>
-
-💛 **Lulu**
-
-`empathy 0.95`  
-`emotionalDepth 0.85`
-
-<sub>presença · carinho · leveza</sub>
-
-</td>
-<td align="center" width="25%">
-
-<img alt="Sabio" src="https://img.shields.io/badge/-S%C3%A1bio-6366F1?style=for-the-badge"/>
-
-📚 **Aro**
-
-`intelligence 0.95`  
-`discipline 0.82`
-
-<sub>reflexão · leitura · pausa</sub>
-
-</td>
-</tr>
-</table>
-
----
-
-## 🧬 Genoma & evolução
-
-### 11 genes, um organismo
-
-Cada traço é um `float` em `[0.02, 0.98]`, determinístico via `mulberry32(seed)` + hash FNV-1a do `user_id`.
+### Os 11 genes
 
 | Gene | Influência visual / comportamental |
-|------|------------------------------------|
-| `empathy` | Olhos, inclinação, calor da paleta |
-| `curiosity` | Antenas reativas, dilatação da pupila |
-| `creativity` | Padrões corporais, cauda, caos visual |
-| `discipline` | Simetria, postura ereta, refinamento |
-| `chaos` | Assimetria, deformações, membros extras |
-| `aggression` | Espinhos, contorno defensivo |
-| `resilience` | Base densa, corpo robusto |
-| `emotionalDepth` | Expressividade, mudanças de cor |
-| `socialEnergy` | Aura, abertura, paleta quente |
-| `adaptability` | Fluidez de movimento |
-| `intelligence` | Proporção do crânio, brilho ocular |
+|---|---|
+| `empathy` | olhos, inclinação, calor da paleta |
+| `curiosity` | antenas reativas, dilatação da pupila |
+| `creativity` | padrões corporais, cauda, caos visual |
+| `discipline` | simetria, postura ereta, refinamento |
+| `chaos` | assimetria, deformações, membros extras |
+| `aggression` | espinhos, contorno defensivo |
+| `resilience` | base densa, corpo robusto |
+| `emotionalDepth` | expressividade, mudanças de cor |
+| `socialEnergy` | aura, abertura, paleta quente |
+| `adaptability` | fluidez de movimento |
+| `intelligence` | proporção do crânio, brilho ocular |
 
-<details>
-<summary><strong>📐 Pipeline Genome → Mundo</strong></summary>
+Cada traço é um `float` em `[0.02, 0.98]`, determinístico via `mulberry32(seed)` + hash FNV-1a do `user_id`. Veja [`src/lib/dna/`](app/mobile/src/lib/dna/).
 
-```mermaid
-flowchart TB
-  GEN[/"🧬 Genoma<br/>11 floats"/]
-  GEN --> PAL["🎨 Paleta HSL"]
-  GEN --> MOR["📐 Morfologia<br/>33 params"]
-  GEN --> MOO["💭 Mood score"]
-  GEN --> ST["📖 Stories & drift"]
-  GEN --> AI["💬 Descritores<br/>PT-BR seguros"]
-  PAL --> R3F["🎮 Mascot3D<br/>React Three Fiber"]
-  MOR --> R3F
-  MOO --> R3F
-  AI --> CHAT["🗨️ Chat & missões"]
-  ST --> MUT["🌀 Mutações<br/>50+ no catálogo"]
-  MUT --> R3F
+### As quatro personalidades-semente
 
-  style GEN fill:#7C3AED,color:#fff,stroke:#5B21B6
-  style R3F fill:#10B981,color:#fff,stroke:#059669
-  style CHAT fill:#0EA5E9,color:#fff,stroke:#0284C7
-  style MUT fill:#EC4899,color:#fff,stroke:#BE185D
-```
+Toda conta começa com **uma das quatro**, depois evolui livremente. Mesmo dentro de uma personalidade, dois usuários nunca recebem a mesma criatura — `genomeFromPreset(seed, preset, variance=0.1)`.
 
-**Princípio inviolável:** `applyHabitDrift` é **sempre não-negativo**. Garantido por property tests com `fast-check` (300 runs em decay).
-
-</details>
-
-### Hábitos esculpem biologia
-
-| Hábito | Genes reforçados |
-|--------|------------------|
-| 💧 Água | resilience · adaptability |
-| 😴 Sono | discipline · resilience · emotionalDepth |
-| 🏋️ Exercício | resilience · adaptability · socialEnergy |
-| 🧘 Meditação | empathy · emotionalDepth · discipline |
-| 📖 Leitura | intelligence · curiosity · creativity |
-| ✍️ Journaling | emotionalDepth · empathy · intelligence |
-| 🌬️ Respiração | empathy · emotionalDepth · discipline |
-| 🌳 Outdoor | socialEnergy · adaptability · curiosity |
-| ☀️ Sol | resilience · socialEnergy · emotionalDepth |
-
-### Mutações persistentes
-
-50+ no catálogo, 4 raridades, condições compostas. Cada mutação é **overlay visual** — o DNA bruto **nunca** muta.
-
-| Raridade | Exemplo | Condição |
-|----------|---------|----------|
-| 🟢 Comum | 📡 Antenas reativas | curiosity > 0.7 + 15× outdoor |
-| 🔵 Rara | 🧱 Estrutura firme | resilience > 0.7 + discipline > 0.65 + 25× exercise |
-| 🟣 Épica | 🌀 Padrões emergentes | creativity > 0.75 + chaos > 0.5 + 21 dias |
-| 🟡 Lendária | 🌌 Forma bioluminescente | 4 genes > 0.7 + streak 30 + 60 dias |
+<table>
+<tr>
+<td align="center" width="25%"><strong>Bipo</strong><br/><sub>Calmo</sub><br/><code>empathy 0.82</code><br/><code>discipline 0.70</code></td>
+<td align="center" width="25%"><strong>Zip</strong><br/><sub>Motivador</sub><br/><code>curiosity 0.85</code><br/><code>intelligence 0.65</code></td>
+<td align="center" width="25%"><strong>Lulu</strong><br/><sub>Fofo</sub><br/><code>empathy 0.95</code><br/><code>emotionalDepth 0.85</code></td>
+<td align="center" width="25%"><strong>Aro</strong><br/><sub>Sábio</sub><br/><code>intelligence 0.95</code><br/><code>discipline 0.82</code></td>
+</tr>
+</table>
 
 ---
 
-## 🌀 Loop diário (60 segundos)
+## A jornada do usuário (60 segundos por dia)
 
 ```mermaid
 sequenceDiagram
   autonumber
-  participant 👤 as Você
-  participant 🏠 as Home
-  participant 🧬 as DNA
-  participant 🌱 as Mascote 3D
+  participant U as Você
+  participant ON as Onboarding
+  participant DNA as DNA
+  participant H as Home
+  participant C as Criatura
 
-  👤->>🏠: Check-in gentil (water/sleep/...)
-  🏠->>🧬: applyHabitDrift (não-negativo)
-  🧬->>🌱: Microevolução / mutação?
-  🌱-->>👤: Reação visual + voz + gesto
+  U->>ON: idade · personalidade · quiz · nome
+  ON->>DNA: gera genoma irrepetível (seed = user_id)
+  DNA-->>C: revela morfologia + paleta + voz
+  C-->>U: "Oi, eu sou Bipo. Você me deu esse formato."
 
-  opt Chat com o mascote
-    👤->>🏠: Mensagem
-    🏠->>🏠: Safety classifier + memory recall
-    🏠-->>👤: Resposta + rating (Útil/Repetiu?)
+  loop Loop diário
+    U->>H: check-in gentil (água / sono / pausa / respirar)
+    H->>DNA: applyHabitDrift (não-negativo)
+    DNA-->>C: microevolução / mutação possível
+    C-->>U: reação visual + voz + gesto
+    opt Chat
+      U->>C: mensagem
+      C->>C: safety classifier + memory recall
+      C-->>U: resposta + rating (Útil / Repetiu?)
+    end
   end
+
+  Note over U,C: Semanal → Relatório narrativo<br/>Mensal → Mutação rara possível<br/>Streak quebra? Acolhida, não cobrança.
 ```
 
 ---
 
-## ✨ Mascote Plus
+## As quatro promessas, travadas em código
 
-Monetização **honesta**: free é completo, Plus aprofunda. Billing **arquiteturalmente pronto** — cobrança real após RevenueCat + lojas. Detalhes: [`docs/PREMIUM_STRATEGY.md`](docs/PREMIUM_STRATEGY.md).
+Testes de produto não são UX manual — são **promessas em código**. Se um destes testes falhar, o app deixou de cumprir o que prometemos. Rodar tudo: `npm run test:guarantees`.
 
-<table>
-<tr>
-<th></th>
-<th align="center">🆓 Free</th>
-<th align="center">✨ Plus</th>
-</tr>
-<tr>
-<td>Criatura viva, evolução, drift contínuo</td>
-<td align="center">✅</td>
-<td align="center">✅</td>
-</tr>
-<tr>
-<td>Missões, streak, XP (sem culpa)</td>
-<td align="center">✅</td>
-<td align="center">✅</td>
-</tr>
-<tr>
-<td>Safety completo (CVV/CAPS/SAMU)</td>
-<td align="center">✅</td>
-<td align="center">✅</td>
-</tr>
-<tr>
-<td>Chat</td>
-<td align="center">Local + BYOK</td>
-<td align="center">Proxy 50/dia¹</td>
-</tr>
-<tr>
-<td>Mutações raras / épicas / lendárias</td>
-<td align="center">—</td>
-<td align="center">✅</td>
-</tr>
-<tr>
-<td>Relatório semanal</td>
-<td align="center">Prévia</td>
-<td align="center">Narrativa completa</td>
-</tr>
-<tr>
-<td>Memória</td>
-<td align="center">50 itens</td>
-<td align="center">200 + graph rerank</td>
-</tr>
-<tr>
-<td>Sync multi-device</td>
-<td align="center">—</td>
-<td align="center">Supabase opt-in¹</td>
-</tr>
-</table>
+| # | Promessa | O que travamos | Arquivo |
+|---|---|---|---|
+| **G1** | _"Essa criatura é minha, não um avatar genérico"_ | 200 user_ids → ≥ 90% paletas distintas · drift visível em 20 dias · drift **nunca regride** (300 runs `fast-check`) · decay nunca cruza 0.5 | [`g1-creature-is-mine.test.ts`](app/mobile/tests/guarantees/g1-creature-is-mine.test.ts) |
+| **G2** | _"Check-in é gentil, não pune"_ | `replies.ts` proibido de conter "deveria", "fracassou", "vergonha"… · `reactToReturn(30d)` é sempre acolhedor · intensity=0 não penaliza | [`g2-checkin-gentle.test.ts`](app/mobile/tests/guarantees/g2-checkin-gentle.test.ts) |
+| **G3** | _"Chat Plus é útil, não repetitivo, rápido"_ | ≥ 3 openers por personalidade · timeout ≤ 30s com `AbortController` · validator rejeita URL/`<script>`/markdown · cost guard honesto | [`g3-chat-plus.test.ts`](app/mobile/tests/guarantees/g3-chat-plus.test.ts) |
+| **G4** | _"Potencial de assinar pós-beta preservado"_ | check-in nunca gateia · cancel **não apaga DNA** · paywall não dispara em `phase=ovo` · copy proibida de "agora ou nunca" / "última chance" | [`g4-subscription-potential.test.ts`](app/mobile/tests/guarantees/g4-subscription-potential.test.ts) |
 
-<sub>¹ Após deploy de infra externa (proxy IA + backend Supabase).</sub>
+Detalhe completo: [`docs/GUARANTEES.md`](docs/GUARANTEES.md).
 
-**Preços alvo:** R$ 19,90/mês · R$ 149,90/ano · trial 7 dias.  
-**Cancelamento na loja, sem perder DNA** → validado em [`tests/subscription/pillar5-cancel-dna.test.ts`](app/mobile/tests/subscription/pillar5-cancel-dna.test.ts).
+> **Em crise:** 📞 **188 CVV** · 💬 cvv.org.br · 🏥 CAPS · 🚨 **192 SAMU** — instantâneo, sem IA, sem cobrança.
 
 ---
 
-## 📐 Arquitetura
+## Stack
 
-### Monorepo
-
-```
-mascote/
-├── app/
-│   ├── mobile/                  ← 🎯 Expo 51 · RN 0.74 · ~48 rotas (coração do produto)
-│   │   ├── app/                 ← Expo Router (telas)
-│   │   ├── src/
-│   │   │   ├── lib/dna/         ← genoma, mutações, drift sem culpa
-│   │   │   ├── ai/              ← safety, proxy, rate limit, fallback local
-│   │   │   ├── analytics/       ← eventos tipados + consent gating
-│   │   │   ├── components/      ← Mascot3D (split em 12), MascotInteractive, ChatReplyRating
-│   │   │   ├── data/sync/       ← SyncEngine, OfflineMutationQueue (prep Supabase)
-│   │   │   ├── game/            ← evolution, memory, behavior engine
-│   │   │   └── services/        ← subscription, billing provider
-│   │   └── tests/               ← 120 arquivos · 1848 testes Vitest + Maestro E2E
-│   └── web/                     ← Landing Next.js 14 (pt/en)
-├── docs/                        ← CURRENT_STATE + GO/NO-GO + roadmap
-├── plano_mascote/               ← Estratégia (7 partes)
-└── .github/workflows/           ← CI quality gate (typecheck + lint + coverage)
-```
-
-### Stack
-
-<table>
-<tr>
-<td align="center" width="20%">
-
-**UI**
-
-React Native 0.74  
-Expo Router 3.5  
-Reanimated 3
-
-</td>
-<td align="center" width="20%">
-
-**3D**
-
-React Three Fiber 8  
-three.js 0.166  
-Fallback 2D auto
-
-</td>
-<td align="center" width="20%">
-
-**IA**
-
-OpenAI BYOK  
-Proxy preparado  
-Fallback local
-
-</td>
-<td align="center" width="20%">
-
-**ML on-device**
-
-TF-IDF · BM25  
-Sentiment  
-Memory graph
-
-</td>
-<td align="center" width="20%">
-
-**Persistência**
-
-AsyncStorage  
-SecureStore (BYOK)  
-Supabase schema
-
-</td>
-</tr>
-</table>
+| Camada | Escolhas |
+|---|---|
+| **UI** | React Native 0.74.5 · Expo SDK 51 · Expo Router 3.5 · Reanimated 3 · Gesture Handler · expo-haptics |
+| **3D procedural** | React Three Fiber 8 · three.js 0.166 · expo-gl · fallback 2D automático com `ErrorBoundary` |
+| **Tipografia** | Plus Jakarta Sans · Instrument Serif · JetBrains Mono · Quicksand (via `@expo-google-fonts`) |
+| **Estado** | Zustand · AsyncStorage (local-first) · SecureStore (chaves BYOK) |
+| **IA** | OpenAI BYOK opt-in · proxy Plus pronto (`EXPO_PUBLIC_AI_PROXY_URL`) · fallback local rico (TF-IDF + BM25 + sentiment + memory graph) |
+| **Safety** | Ensemble classifier (regex + sentiment + Bayes) · output filter anti-clínico · CVV/SAMU imediato sem IA |
+| **Billing** | Adapter RevenueCat pronto · demo guard (`isDemoBilling`, `isMockInProductionBuild`) · paywall ético testado |
+| **Backend (preparado)** | Supabase schema completo: 12 tabelas + RLS + indexes + triggers (`docs/SUPABASE_SCHEMA.sql`) |
+| **Testes** | Vitest (pool threads) · `fast-check` property-based (300 runs em decay) · Maestro 11 flows E2E |
+| **Qualidade** | TypeScript strict · ESLint flat config · `npm run quality` = typecheck + lint + suíte completa |
+| **Landing** | Next.js 14 (Tailwind), pt/en — `app/web/` |
 
 ---
 
-## 🛡️ Safety & IA
-
-```mermaid
-flowchart TD
-  IN([📥 Mensagem do usuário])
-  IN --> L1{Classifier ensemble<br/>regex + sentiment + Bayes}
-  L1 -->|critical / high| CR([🆘 CRISIS_REPLY<br/>CVV 188 · SAMU 192])
-  L1 -->|watch| WR([💛 Redirect ético<br/>sem juízo clínico])
-  L1 -->|safe| MEM[🧠 Memory recall top-k<br/>TF-IDF + graph]
-  MEM --> ROUTE{Roteamento}
-  ROUTE -->|Plus + proxy| API1[☁️ Proxy IA]
-  ROUTE -->|BYOK| API2[🔑 OpenAI direto]
-  ROUTE -->|offline| API3[🪶 Fallback local rico]
-  API1 --> OUT
-  API2 --> OUT
-  API3 --> OUT
-  OUT[🔒 Output filter<br/>bloqueia vocabulário clínico] --> R([💬 Resposta mascote])
-
-  style CR fill:#FEE2E2,stroke:#DC2626,color:#991B1B
-  style WR fill:#FEF3C7,stroke:#D97706,color:#92400E
-  style OUT fill:#D1FAE5,stroke:#059669,color:#065F46
-  style R fill:#DDD6FE,stroke:#7C3AED,color:#5B21B6
-```
-
-### Garantias provadas com testes
-
-| Garantia | Onde |
-|----------|------|
-| DNA bruto **nunca** no payload OpenAI | [`tests/security/dna-privacy-ai.test.ts`](app/mobile/tests/security/dna-privacy-ai.test.ts) |
-| Dois usuários ≠ mesma criatura | fast-check 200 runs |
-| Ausência **nunca** pune | property test decay 300 runs |
-| Cancel **não** apaga DNA / histórico | [`tests/subscription/pillar5-cancel-dna.test.ts`](app/mobile/tests/subscription/pillar5-cancel-dna.test.ts) |
-| Mutação **não** muta genoma | integração DNA |
-| API key **nunca** em log | pentest de redaction |
-
-**Em crise:** 📞 **188 CVV** · 💬 cvv.org.br · 🏥 CAPS · 🚨 **192 SAMU** — imediato, sem IA, sem cobrança.
-
----
-
-## 📊 Analytics & beta
-
-Camada de produto instrumentada para **decidir com dados** quando cobrar — não com feeling.
-
-| Evento | Para que serve |
-|--------|----------------|
-| `checkin_completed` | Duração (Pilar 2: <60s gentil) · path · hábito |
-| `mascot_gesture` | Vínculo (Pilar 1: criatura "minha") |
-| `ai_reply_requested` / `succeeded` / `failed` | Latência · proxy vs local (Pilar 3) |
-| `ai_reply_rated` | Útil ou repetiu? (UI no chat) |
-| `weekly_report_viewed` | Valor do Plus (Pilar 4) |
-| `subscription_cancelled` / `restored` | Confiança no cancel (Pilar 5) |
-| `mutation_unlocked` · `first_microevolution_seen` | Engajamento estrutural |
-
-📋 **Checklist completo de cobrança:** [`docs/GO_NO_GO_CHECKLIST.md`](docs/GO_NO_GO_CHECKLIST.md)  
-**Critérios:** retenção D1/D7/D14 · 5 pilares de assinatura · polish em 4 tiers de device.
-
-### Estado dos gates
-
-| Gate | Status |
-|------|:------:|
-| ✅ Quality gate (typecheck + lint + 1848 testes) | 🟢 |
-| 🚧 EAS build + TestFlight / Play Internal | 🟡 |
-| 💳 Cobrança real (RevenueCat SDK + lojas) | 🔴 |
-| ☁️ Proxy IA deployado (Plus inclui chat cloud) | 🔴 |
-| 🔄 Supabase sync live | 🔴 |
-| 🌐 Loja pública | 🔴 |
-
----
-
-## 🚀 Quick Start
-
-### Monorepo (recomendado)
+## Quickstart
 
 ```bash
 git clone https://github.com/felipemenezes25000-spec/mascote.git
 cd mascote
 npm install --prefix app/mobile
 
-npm run web          # → http://localhost:8081
-npm test             # 1848 testes em ~10s
-npm run typecheck    # 0 errors
-npm run quality      # typecheck + lint + coverage gated
+npm run web          # web preview em http://localhost:8081
+npm test             # ~1.8k testes (~10s)
+npm run typecheck    # 0 erros, strict mode
+npm run quality      # typecheck + lint + suíte
 ```
 
-### Mobile (nativo via Expo)
+### Rodar no celular (Expo Go)
 
 ```bash
 cd app/mobile
-cp .env.example .env      # NÃO commitar
-npx expo start            # Expo Go → escaneie o QR
+cp .env.example .env       # configure variáveis (NÃO commitar)
+npx expo start             # escaneie o QR no Expo Go
 ```
 
-### OpenAI (opcional, BYOK)
+### OpenAI opcional (BYOK)
 
-1. Gere uma key em [platform.openai.com/api-keys](https://platform.openai.com/api-keys) com **spending limit baixo** (R$ 5).
+1. Gere uma chave em [platform.openai.com/api-keys](https://platform.openai.com/api-keys) com **spending limit baixo** (R$ 5 já basta para semanas).
 2. App → **Settings** → **API Key**.
-3. Chat fica online com system prompt anti-clínico.
+3. Chat fica online com system prompt anti-clínico — o gene **bruto nunca** sai do device.
 
-> 💡 **Sem chave:** fallback local 100% funcional — toda a experiência roda offline.
+> Sem chave? O fallback local roda 100% da experiência **offline**.
 
 ---
 
-## ✅ Qualidade
+## Testes & Maestro E2E
 
-<div align="center">
-
-<table>
-<tr>
-<td align="center"><strong>🧪 Testes</strong><br/><sub>1.848 passing</sub></td>
-<td align="center"><strong>📁 Suites</strong><br/><sub>120 arquivos</sub></td>
-<td align="center"><strong>📊 Coverage</strong><br/><sub>72.9% (≥70 enforced)</sub></td>
-<td align="center"><strong>🔷 TypeScript</strong><br/><sub>0 errors strict</sub></td>
-<td align="center"><strong>🎭 Maestro</strong><br/><sub>8 flows E2E</sub></td>
-<td align="center"><strong>⚡ Suite</strong><br/><sub>~10s</sub></td>
-</tr>
-</table>
-
-</div>
-
-**Scripts granulares:** `test:unit` · `test:security` · `test:ai` · `test:subscription` · `test:game` · `test:integration`
-
-**Antes de qualquer PR:**
+### Vitest (unit + integration + property-based)
 
 ```bash
-npm run quality
+npm test                  # tudo (~10s, threads pool)
+npm run test:unit         # lib, content, store, properties
+npm run test:integration  # services, components, hooks, repositories
+npm run test:security     # pentest + safety + DNA privacy
+npm run test:ai           # safety classifier + providers + guards
+npm run test:game         # evolution, memory, behavior engine
+npm run test:subscription # paywall, triggers, cancel-preserva-DNA
+npm run test:guarantees   # as 4 promessas (G1–G4)
+npm run test:coverage     # gates: 70 lines / 66 branches
+```
+
+### Maestro (Android, Windows ou macOS)
+
+```bash
+# Setup automático no Windows (JDK 17 + SDK + AVD + Maestro)
+npm run setup:e2e:win
+
+# Subir emulador e rodar suíte crítica
+npm run emulator:start
+npm run test:e2e:critical   # onboarding + checkin + chat crise
+npm run test:e2e            # 11 flows: onboarding, checkin, paywall, chat-safe, chat-crisis, settings-export, premium-reports, dynamic-text, dismiss-tour, setup-home…
+```
+
+Guia completo: [`app/mobile/docs/E2E_WINDOWS.md`](app/mobile/docs/E2E_WINDOWS.md).
+
+---
+
+## Estrutura do monorepo
+
+```
+mascote/
+├── app/
+│   ├── mobile/                  ← Expo 51 · RN 0.74 · ~57 telas (coração do produto)
+│   │   ├── app/                 ← rotas Expo Router (onboarding, tabs, checkin, paywall…)
+│   │   ├── src/
+│   │   │   ├── lib/dna/         ← genoma, paleta, morfologia, drift sem culpa, mutações
+│   │   │   ├── ai/              ← safety ensemble, providers (local/BYOK/proxy), guards
+│   │   │   ├── analytics/       ← eventos tipados + consent gating + provider plugável
+│   │   │   ├── components/      ← Mascot3D (split em 12), Mascot2D, MascotInteractive…
+│   │   │   ├── components/ui/   ← Typography, LivingCard, ProgressPulse, CreatureHero…
+│   │   │   ├── data/sync/       ← SyncEngine + OfflineMutationQueue (Supabase-ready)
+│   │   │   ├── game/            ← evolution engine, behavior engine, memory graph
+│   │   │   ├── lib/moments/     ← creatureMoments — bus pub/sub semântico
+│   │   │   └── services/        ← subscription + billing provider + RevenueCat adapter
+│   │   ├── tests/               ← ~1.8k testes Vitest + property-based
+│   │   ├── tests/guarantees/    ← G1–G4: as 4 promessas testadas
+│   │   ├── .maestro/            ← 11 fluxos E2E (paywall, crisis, onboarding…)
+│   │   └── scripts/             ← audit-visual, coverage-gaps, setup-e2e-windows.ps1
+│   └── web/                     ← landing Next.js 14 (pt/en)
+├── docs/
+│   ├── design/creature-evolution/  ← arte conceitual (v2-* atual, legacy/ histórico)
+│   ├── screenshots/             ← capturas com valor permanente (YYYY-MM-DD/)
+│   ├── CURRENT_STATE.md         ← verdade operacional
+│   ├── GUARANTEES.md            ← as 4 promessas em detalhe
+│   ├── LIVING_IDENTITY_DESIGN.md← manifesto do sistema visual
+│   ├── INFRA_LAUNCH_PLAYBOOK.md ← passo a passo para sair de "código" → "beta pagando"
+│   └── …                        ← 27 docs cobrindo IA, billing, sync, premium, copy
+├── plano_mascote/               ← estratégia (7 partes)
+├── prototipo-criatura-procedural.html ← protótipo HTML standalone da criatura viva
+└── .github/workflows/           ← CI quality gate (typecheck + lint + coverage)
 ```
 
 ---
 
-## 🗺️ Roadmap
+## Filosofia: identidade viva
 
-| Entrega | Estado |
-|---------|:------:|
-| DNA procedural + Mascot3D + 50+ mutações | ✅ |
-| Behavior engine + gestos + voz procedural | ✅ |
-| Home mascote-centrada + memórias + arquétipos | ✅ |
-| Safety ensemble + 3 camadas IA | ✅ |
-| Analytics tipado + ChatReplyRating + guards IA | ✅ |
-| Subscription scaffold + Pilar 5 testado | ✅ |
-| Proxy IA deployado (Supabase Edge / Cloudflare) | 🔜 |
-| RevenueCat SDK + products nas lojas | 🔜 |
-| Supabase sync multi-device | 🔜 |
-| Push notifications nativos | 🔜 |
-| Expo SDK 51 → 53 (resolve 25 vulns) | 🔜 |
+> _"O app não tem mascote dentro dele. O app **é** o habitat do mascote."_  
+> — [`docs/LIVING_IDENTITY_DESIGN.md`](docs/LIVING_IDENTITY_DESIGN.md)
 
-Detalhe completo: [`docs/ROADMAP_DIGITAL_LIVING_IDENTITY.md`](docs/ROADMAP_DIGITAL_LIVING_IDENTITY.md)
+Sete princípios invioláveis que guiam cada PR:
 
----
+1. **Mascote é protagonista visual.** Toda tela central abre com `CreatureHero`. Nunca dashboard antes da criatura.
+2. **Orgânico, não fintech.** Cantos `radius.lg` (22px), nunca `0`. Bordas em cor de palette, nunca cinza neutro.
+3. **Paleta DNA-driven.** Cores derivam de `paletteFromGenome(dna)` quando faz sentido contextual.
+4. **Tokens, sempre.** Sem hex inventado em telas. Sem `padding: 12`. Tudo via `theme.spacing.*` / `theme.colors.*`.
+5. **Tipografia via `<Typography variant>`.** `<Text>` cru em telas é débito visual.
+6. **Reação, não notificação.** Algo importante? A criatura **reage** (animation + `CreatureReactionToast`) via `creatureMoments.emit(...)` — não toast genérico do sistema.
+7. **Sem culpa, sem cobrança.** Travado pela G2 — copy nunca acusa nem pune. Reativo, gentil, paciente.
 
-## 📚 Documentação
+E uma promessa técnica que vale repetir:
 
-| Doc | Quando ler |
-|-----|------------|
-| 📌 [**CURRENT_STATE.md**](docs/CURRENT_STATE.md) | **Sempre primeiro** — verdade operacional |
-| 🚦 [**GO_NO_GO_CHECKLIST.md**](docs/GO_NO_GO_CHECKLIST.md) | Decidir cobrar · 5 pilares · métricas beta |
-| 🚀 [**BETA_RELEASE_CHECKLIST.md**](docs/BETA_RELEASE_CHECKLIST.md) | Preparar TestFlight / Play Internal |
-| 💎 [**PREMIUM_STRATEGY.md**](docs/PREMIUM_STRATEGY.md) | Plus honesto · RevenueCat |
-| 🤖 [**AI_PRODUCTION_PLAN.md**](docs/AI_PRODUCTION_PLAN.md) | Proxy · rate limit · custo |
-| 🛡️ [**SECURITY_AUDIT.md**](docs/SECURITY_AUDIT.md) | npm audit · Expo SDK 53 |
-| 🗣️ [**COMMERCIAL_COPY.md**](docs/COMMERCIAL_COPY.md) | Textos App Store · paywall · onboarding |
-| 🔄 [**SYNC_ARCHITECTURE.md**](docs/SYNC_ARCHITECTURE.md) | Supabase schema · sync engine |
-| 📖 [**docs/README.md**](docs/README.md) | Índice completo |
+> **O genoma bruto nunca sai do device.** Para o OpenAI vão apenas descritores PT-BR seguros (`"olhar atento, postura suave"`). Travado em [`tests/security/dna-privacy-ai.test.ts`](app/mobile/tests/security/dna-privacy-ai.test.ts).
 
 ---
 
-## 🤝 Contribuir
+## Documentação rica
 
-Projeto em desenvolvimento ativo. Antes de qualquer PR, leia [`CONTRIBUTING.md`](CONTRIBUTING.md) e rode:
+| Quando ler | Doc |
+|---|---|
+| **Sempre primeiro** — verdade operacional | [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) |
+| Entender as 4 promessas testadas | [`docs/GUARANTEES.md`](docs/GUARANTEES.md) |
+| Manifesto do sistema visual | [`docs/LIVING_IDENTITY_DESIGN.md`](docs/LIVING_IDENTITY_DESIGN.md) |
+| Decidir cobrar · 5 pilares de assinatura | [`docs/GO_NO_GO_CHECKLIST.md`](docs/GO_NO_GO_CHECKLIST.md) |
+| Preparar TestFlight / Play Internal | [`docs/BETA_RELEASE_CHECKLIST.md`](docs/BETA_RELEASE_CHECKLIST.md) |
+| De "código pronto" a "beta pagando" | [`docs/INFRA_LAUNCH_PLAYBOOK.md`](docs/INFRA_LAUNCH_PLAYBOOK.md) |
+| Plus honesto · RevenueCat · trial | [`docs/PREMIUM_STRATEGY.md`](docs/PREMIUM_STRATEGY.md) |
+| Proxy IA · rate limit · custo | [`docs/AI_PRODUCTION_PLAN.md`](docs/AI_PRODUCTION_PLAN.md) |
+| Sync multi-device | [`docs/SYNC_ARCHITECTURE.md`](docs/SYNC_ARCHITECTURE.md) |
+| Auditoria de débito visual | [`docs/VISUAL_DEBT.md`](docs/VISUAL_DEBT.md) |
+| Textos App Store · paywall · onboarding | [`docs/COMMERCIAL_COPY.md`](docs/COMMERCIAL_COPY.md) |
+| E2E no Windows com Maestro | [`app/mobile/docs/E2E_WINDOWS.md`](app/mobile/docs/E2E_WINDOWS.md) |
+| Índice completo | [`docs/README.md`](docs/README.md) |
+
+---
+
+## Contribuir
 
 ```bash
-npm run quality
+npm install --prefix app/mobile
+npm run quality                # antes de qualquer PR
+npm --prefix app/mobile run test:guarantees   # ao tocar em DNA / copy / paywall
 ```
 
----
-
-## 👥 Time
-
-<table>
-<tr>
-<td align="center">
-  <a href="https://github.com/felipemenezes25000-spec">
-    <img src="https://github.com/felipemenezes25000-spec.png" width="80" alt="Felipe Menezes" style="border-radius:50%"/><br/>
-    <strong>Felipe Menezes</strong>
-  </a>
-  <br/>
-  <sub>Founder · Engineering</sub>
-</td>
-<td align="center">
-  <img src="https://avatars.githubusercontent.com/u/9919?s=200" width="80" alt="Renato" style="border-radius:50%; opacity:0.5"/><br/>
-  <strong>Renato</strong>
-  <br/>
-  <sub>Co-fundador</sub>
-</td>
-</tr>
-</table>
-
----
-
-## ⭐ Star history
-
-<div align="center">
-
-<a href="https://star-history.com/#felipemenezes25000-spec/mascote&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=felipemenezes25000-spec/mascote&type=Date&theme=dark"/>
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=felipemenezes25000-spec/mascote&type=Date"/>
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=felipemenezes25000-spec/mascote&type=Date"/>
-  </picture>
-</a>
-
-</div>
+Detalhes e convenções em [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---
 
 <div align="center">
 
-<br/>
-
-<img src="app/mobile/assets/logo-mascote.svg" alt="Mascote" width="64"/>
+<img src="app/mobile/assets/logo-mascote.png" alt="Mascote" width="56"/>
 
 ### Cuide de você. Seu Mascote evolui junto.
 
-*30 segundos por dia. Sem cobrança moral. Sem promessa médica. Com uma criatura que é só sua.*
-
-<br/>
-
-<a href="https://github.com/felipemenezes25000-spec/mascote/stargazers">
-  <img alt="Stars" src="https://img.shields.io/github/stars/felipemenezes25000-spec/mascote?style=social"/>
-</a>
-<a href="https://github.com/felipemenezes25000-spec/mascote/network/members">
-  <img alt="Forks" src="https://img.shields.io/github/forks/felipemenezes25000-spec/mascote?style=social"/>
-</a>
+<sub>30 segundos por dia. Sem cobrança moral. Sem promessa médica.<br/>
+Com uma criatura que é <strong>só sua</strong>.</sub>
 
 <br/><br/>
 
 <sub>
-  <strong>Digital Living Identity</strong> · feito com 💜 no Brasil · 2026<br/>
+  <strong>Digital Living Identity</strong> · feito no Brasil · 2026<br/>
   Wellness, não terapia. Em crise: <strong>CVV 188</strong> · <strong>SAMU 192</strong>.
 </sub>
-
-<br/>
-
-<img alt="Footer" src="https://capsule-render.vercel.app/api?type=waving&color=0:7C3AED,40:EC4899,70:10B981,100:0EA5E9&height=80&section=footer"/>
 
 </div>
