@@ -272,30 +272,32 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // ========================================================================
 // REGISTRY — espelha scripts/blender/generate_accessory.py
 // ========================================================================
+// SCALE per-accessory (relativo ao mascote ~1.0 high) — tunado visualmente.
+// Aplicado em runtime no viewer/app, GLBs ficam neutros (escala 1.0 local).
 const ACCESSORIES = [
   // FREE
-  { id: 'cap_classic',     tier: 'free', slot: 'head', name: 'Boné Clássico', unlocked: true, anim: false },
-  { id: 'beanie',          tier: 'free', slot: 'head', name: 'Gorro Bordô',   unlocked: true, anim: false },
-  { id: 'flower_daisy',    tier: 'free', slot: 'head', name: 'Margarida',     unlocked: true, anim: false },
-  { id: 'sunglasses',      tier: 'free', slot: 'face', name: 'Óculos Escuros',unlocked: true, anim: false },
-  { id: 'glasses_round',   tier: 'free', slot: 'face', name: 'Óculos Redondos',unlocked: true, anim: false },
-  { id: 'scarf_cozy',      tier: 'free', slot: 'neck', name: 'Cachecol',      unlocked: true, anim: false },
-  { id: 'bow_tie',         tier: 'free', slot: 'neck', name: 'Gravata Borb.', unlocked: true, anim: false },
+  { id: 'cap_classic',     tier: 'free', slot: 'head', name: 'Boné Clássico', unlocked: true, anim: false, scale: 1.7 },
+  { id: 'beanie',          tier: 'free', slot: 'head', name: 'Gorro Bordô',   unlocked: true, anim: false, scale: 1.7 },
+  { id: 'flower_daisy',    tier: 'free', slot: 'head', name: 'Margarida',     unlocked: true, anim: false, scale: 2.0 },
+  { id: 'sunglasses',      tier: 'free', slot: 'face', name: 'Óculos Escuros',unlocked: true, anim: false, scale: 1.6 },
+  { id: 'glasses_round',   tier: 'free', slot: 'face', name: 'Óculos Redondos',unlocked: true, anim: false, scale: 1.6 },
+  { id: 'scarf_cozy',      tier: 'free', slot: 'neck', name: 'Cachecol',      unlocked: true, anim: false, scale: 1.4 },
+  { id: 'bow_tie',         tier: 'free', slot: 'neck', name: 'Gravata Borb.', unlocked: true, anim: false, scale: 1.8 },
   // PREMIUM ESTÁTICO
-  { id: 'crown_royal',     tier: 'premium', slot: 'head', name: 'Coroa Real',     price: 9.90,  unlocked: false, anim: false },
-  { id: 'crown_flowers',   tier: 'premium', slot: 'head', name: 'Coroa Flores',   price: 7.90,  unlocked: false, anim: false },
-  { id: 'monocle_gold',    tier: 'premium', slot: 'face', name: 'Monóculo',       price: 5.90,  unlocked: false, anim: false },
-  { id: 'cape_velvet',     tier: 'premium', slot: 'neck', name: 'Capa Veludo',    price: 12.90, unlocked: false, anim: false },
+  { id: 'crown_royal',     tier: 'premium', slot: 'head', name: 'Coroa Real',     price: 9.90,  unlocked: false, anim: false, scale: 1.8 },
+  { id: 'crown_flowers',   tier: 'premium', slot: 'head', name: 'Coroa Flores',   price: 7.90,  unlocked: false, anim: false, scale: 1.8 },
+  { id: 'monocle_gold',    tier: 'premium', slot: 'face', name: 'Monóculo',       price: 5.90,  unlocked: false, anim: false, scale: 1.4 },
+  { id: 'cape_velvet',     tier: 'premium', slot: 'neck', name: 'Capa Veludo',    price: 12.90, unlocked: false, anim: false, scale: 1.5 },
   // PREMIUM ANIMATED
-  { id: 'wings_angel',     tier: 'premium', slot: 'back', name: 'Asas Anjo',      price: 14.90, unlocked: false, anim: true },
-  { id: 'wings_dragon',    tier: 'premium', slot: 'back', name: 'Asas Dragão',    price: 14.90, unlocked: false, anim: true },
-  { id: 'wings_butterfly', tier: 'premium', slot: 'back', name: 'Asas Borboleta', price: 12.90, unlocked: false, anim: true },
-  { id: 'halo_radiant',    tier: 'premium', slot: 'head', name: 'Halo Radiante',  price: 9.90,  unlocked: false, anim: true },
+  { id: 'wings_angel',     tier: 'premium', slot: 'back', name: 'Asas Anjo',      price: 14.90, unlocked: false, anim: true,  scale: 1.6 },
+  { id: 'wings_dragon',    tier: 'premium', slot: 'back', name: 'Asas Dragão',    price: 14.90, unlocked: false, anim: true,  scale: 1.6 },
+  { id: 'wings_butterfly', tier: 'premium', slot: 'back', name: 'Asas Borboleta', price: 12.90, unlocked: false, anim: true,  scale: 1.7 },
+  { id: 'halo_radiant',    tier: 'premium', slot: 'head', name: 'Halo Radiante',  price: 9.90,  unlocked: false, anim: true,  scale: 1.5 },
   // SIGNATURE
-  { id: 'flame_mane',      tier: 'signature', slot: 'head', name: 'Juba de Fogo',    price: 24.90, unlocked: false, anim: true },
-  { id: 'aura_cosmic',     tier: 'signature', slot: 'aura', name: 'Aura Cósmica',    price: 29.90, unlocked: false, anim: true },
-  { id: 'heart_glow',      tier: 'signature', slot: 'aura', name: 'Corações Brilho', price: 19.90, unlocked: false, anim: true },
-  { id: 'sword_floating',  tier: 'signature', slot: 'back', name: 'Espada Lendária', price: 22.90, unlocked: false, anim: true },
+  { id: 'flame_mane',      tier: 'signature', slot: 'head', name: 'Juba de Fogo',    price: 24.90, unlocked: false, anim: true,  scale: 1.8 },
+  { id: 'aura_cosmic',     tier: 'signature', slot: 'aura', name: 'Aura Cósmica',    price: 29.90, unlocked: false, anim: true,  scale: 1.4 },
+  { id: 'heart_glow',      tier: 'signature', slot: 'aura', name: 'Corações Brilho', price: 19.90, unlocked: false, anim: true,  scale: 1.3 },
+  { id: 'sword_floating',  tier: 'signature', slot: 'back', name: 'Espada Lendária', price: 22.90, unlocked: false, anim: true,  scale: 1.4 },
 ];
 
 const PERSONALITY_LABELS = {
@@ -501,9 +503,10 @@ async function equipAccessory(accId) {
     // Quando mascote rotaciona/move, accessory acompanha automaticamente.
     const anchor = state.anchors?.[acc.slot];
     if (anchor) {
-      // Modelos de accessories foram criados com translate world em local
-      // diferente. Reseta position do accessory pra (0,0,0) e parenta no anchor.
       accMesh.position.set(0, 0, 0);
+      // Aplica scale relativo do registry — accessories ficam proporcionais
+      const s = acc.scale ?? 1.0;
+      accMesh.scale.setScalar(s);
       anchor.add(accMesh);
     } else {
       // Fallback: world space + offset manual
