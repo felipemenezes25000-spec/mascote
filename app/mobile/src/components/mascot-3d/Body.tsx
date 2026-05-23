@@ -49,15 +49,15 @@ export function Body({
   const tStart = useRef<number>(performance.now() / 1000);
 
   const geometry = useMemo(() => {
-    const geo = new THREE.IcosahedronGeometry(1, 5);
+    // v3 (2026-05-22): SphereGeometry 64×48 em vez de IcosahedronGeometry(1, 5).
+    // Por quê: icosa subdivide em triângulos com normais distintas por face —
+    // mesmo com smooth shading, displacement procedural cria pequenas diferenças
+    // de altura entre faces adjacentes que ambient occlusion natural sombreia,
+    // gerando aparência "laminada/geode". Sphere usa subdivisão lat/long
+    // uniforme com vértices densos: 3072 quads pequenos com inclinações suaves.
+    const geo = new THREE.SphereGeometry(1, 64, 48);
     const pos = geo.attributes.position;
-    let seedAccum = (dna.empathy + dna.chaos * 100 + dna.creativity * 17) * 1000;
-    const pseudoRng = () => {
-      seedAccum = (seedAccum * 9301 + 49297) % 233280;
-      return seedAccum / 233280;
-    };
-    const offsets: number[] = [];
-    for (let i = 0; i < pos.count; i++) offsets.push(pseudoRng() - 0.5);
+    const seed = (dna.empathy + dna.chaos * 100 + dna.creativity * 17) * 1000;
 
     for (let i = 0; i < pos.count; i++) {
       let x = pos.getX(i),
@@ -71,11 +71,17 @@ export function Body({
         z *= 1 + morph.bodyBottomBias * 0.3;
         y *= 1 + morph.bodyBottomBias * 0.2;
       }
-      const lump = offsets[i] * morph.bodyChaosBumps;
-      x += x * lump * 0.18;
-      z += z * lump * 0.18;
+      // Smooth low-freq bumps via trilinear sin/cos (não per-vertex random).
+      // Resulta em ondulações suaves grandes em vez de ruído pixelado per-face.
+      const smoothLump =
+        Math.sin(x * 2.1 + seed * 0.001) *
+        Math.cos(y * 1.7 + seed * 0.0017) *
+        Math.sin(z * 2.3 - seed * 0.0011) *
+        morph.bodyChaosBumps;
+      x += x * smoothLump * 0.5;
+      z += z * smoothLump * 0.5;
       const protrude =
-        Math.sin(x * 3 + offsets[i]) * Math.cos(z * 2.8 - offsets[i]) * morph.bodyCreativityBumps * 0.55;
+        Math.sin(x * 3.2 + seed) * Math.cos(z * 2.8 - seed) * morph.bodyCreativityBumps * 0.45;
       const len = Math.sqrt(x * x + y * y + z * z);
       if (len > 0) {
         x += (x / len) * protrude;
@@ -84,6 +90,7 @@ export function Body({
       }
       pos.setXYZ(i, x, y, z);
     }
+    pos.needsUpdate = true;
     geo.computeVertexNormals();
     return geo;
   }, [dna, morph]);

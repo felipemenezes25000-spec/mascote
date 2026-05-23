@@ -963,8 +963,13 @@ class Creature {
    *    + sheen 0.5 + ior 1.4 (gel jelly look)
    */
   buildBody() {
-    const detail = 5;
-    const geo = new THREE.IcosahedronGeometry(1, detail);
+    // v3 (2026-05-22): SphereGeometry (64×48 segments = 3072 quads) em vez de
+    // IcosahedronGeometry. Por quê: icosa subdivide em triângulos com normais
+    // distintas por face — mesmo com smooth shading, displacement cria pequenas
+    // diferenças de altura que viram "linhas escuras" entre faces (ambient
+    // occlusion natural). Sphere usa subdivisão lat/long com vértices uniformes
+    // que ficam genuinamente smooth.
+    const geo = new THREE.SphereGeometry(1, 64, 48);
     const pos = geo.attributes.position;
     const rng = mulberry32(this.seed);
 
@@ -975,29 +980,31 @@ class Creature {
     const heightStretch = 0.7 + this.dna.intelligence * 0.7 + this.dna.empathy * 0.35;
     const widthSquash   = 0.85 + this.dna.resilience * 0.45 - this.dna.discipline * 0.15;
     const bottomBias    = 0.3 + this.dna.resilience * 0.5;
-    const chaosBumps    = this.dna.chaos * 0.08;
-    const creativityBumps = this.dna.creativity * 0.06;
+    // Displacement reduzido 50% pra suavidade máxima — antes ainda dava bumps
+    // visíveis em DNAs com chaos/creativity altos. Agora a criatura tem forma
+    // orgânica suave mas ainda variada por DNA.
+    const chaosBumps    = this.dna.chaos * 0.035;
+    const creativityBumps = this.dna.creativity * 0.025;
 
     for (let i = 0; i < pos.count; i++) {
       let x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-      // stretch vertically
       y *= heightStretch;
-      // squash horizontally based on resilience
       x *= widthSquash;
       z *= widthSquash;
-      // bottom bias: heavier bottom for resilient creatures
       if (y < 0) {
         x *= 1 + bottomBias * 0.3;
         z *= 1 + bottomBias * 0.3;
         y *= 1 + bottomBias * 0.2;
       }
-      // chaos lumps sutis (per-vertex random displacement) — multiplicador
-      // 0.12 dá organicidade sem quebrar a silhueta de "criatura viva".
-      const lump = noise[i] * chaosBumps;
-      x += x * lump * 0.12;
-      z += z * lump * 0.12;
-      // creative protrusions (sinusoidal patterns) — agora 0.3× do valor antigo
-      const protrude = Math.sin(x * 4 + this.seed) * Math.cos(z * 3.5 - this.seed)
+      // Smooth low-freq bumps (não per-vertex random, mas trilinear sin/cos)
+      // Resultado: ondulações suaves grandes em vez de ruído pixelado.
+      const smoothLump = Math.sin(x * 2.1 + this.seed * 0.001)
+                       * Math.cos(y * 1.7 + this.seed * 0.0017)
+                       * Math.sin(z * 2.3 - this.seed * 0.0011)
+                       * chaosBumps;
+      x += x * smoothLump * 0.5;
+      z += z * smoothLump * 0.5;
+      const protrude = Math.sin(x * 3.2 + this.seed) * Math.cos(z * 2.8 - this.seed)
                      * creativityBumps;
       const len = Math.sqrt(x*x + y*y + z*z);
       if (len > 0) {
@@ -1007,6 +1014,7 @@ class Creature {
       }
       pos.setXYZ(i, x, y, z);
     }
+    pos.needsUpdate = true;
     geo.computeVertexNormals();
 
     // MeshStandard ajustado pra parecer gel (Three r128 não tem transmission
