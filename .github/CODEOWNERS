@@ -1,0 +1,29 @@
+# CODEOWNERS — quem é tagueado automaticamente em PRs por área.
+# Sintaxe: <pattern> <owner1> <owner2> ...
+# Docs: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default: tudo recai no owner do repo enquanto for projeto solo.
+*                                       @felipemenezes25000-spec
+
+# App mobile (Expo / React Native)
+/app/mobile/                            @felipemenezes25000-spec
+
+# Landing web (Next.js)
+/app/web/                               @felipemenezes25000-spec
+
+# Backend (Supabase: edge functions, migrations, RLS)
+/supabase/                              @felipemenezes25000-spec
+
+# Núcleo 3D / DNA / criatura procedural
+/app/mobile/src/components/mascot-3d/   @felipemenezes25000-spec
+/app/mobile/src/lib/dna/                @felipemenezes25000-spec
+/prototipo-criatura-procedural.html     @felipemenezes25000-spec
+
+# Documentação
+/docs/                                  @felipemenezes25000-spec
+/README.md                              @felipemenezes25000-spec
+/CONTRIBUTING.md                        @felipemenezes25000-spec
+
+# Infra / meta
+/.github/                               @felipemenezes25000-spec
+/scripts/                               @felipemenezes25000-spec
