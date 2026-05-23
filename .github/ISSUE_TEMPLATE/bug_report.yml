@@ -1,0 +1,75 @@
+name: Reportar bug
+description: Algo no app ou no monorepo não funciona como esperado.
+title: "[bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar! Quanto mais detalhes, mais rápido conseguimos reproduzir e corrigir.
+
+        Antes de abrir, dê uma busca rápida em [issues abertas](https://github.com/felipemenezes25000-spec/mascote/issues) para evitar duplicatas.
+
+  - type: textarea
+    id: descricao
+    attributes:
+      label: O que aconteceu?
+      description: Descreva o comportamento observado. O que você esperava que acontecesse?
+      placeholder: |
+        Quando faço X, o app mostra Y, mas eu esperava Z.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproducao
+    attributes:
+      label: Passos para reproduzir
+      description: Liste em ordem. Quanto mais determinístico, melhor.
+      placeholder: |
+        1. Abrir o app na tela de Diário
+        2. Tocar em "Novo registro"
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área afetada
+      description: Onde o bug aparece?
+      options:
+        - app/mobile (Expo / React Native)
+        - app/web (Next.js landing)
+        - supabase (edge functions / DB / migrations)
+        - 3D / DNA / criatura procedural
+        - testes / CI
+        - docs
+        - outro
+    validations:
+      required: true
+
+  - type: input
+    id: ambiente
+    attributes:
+      label: Ambiente
+      description: SO, versão do app, dispositivo, navegador (o que for relevante).
+      placeholder: "iOS 17.4 / iPhone 13 / Expo Go SDK 51"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs, stack trace ou screenshots
+      description: Cole logs em bloco de código. Anexe imagens/vídeos arrastando aqui.
+      render: shell
+
+  - type: checkboxes
+    id: confirmacoes
+    attributes:
+      label: Antes de enviar
+      options:
+        - label: Busquei issues existentes e este bug ainda não foi reportado.
+          required: true
+        - label: Consegui reproduzir de forma consistente (ou descrevi por que é intermitente).
+          required: true

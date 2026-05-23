@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Comece por aqui (visão do produto)
+    url: https://github.com/felipemenezes25000-spec/mascote/blob/main/README.md
+    about: Entenda o que é Mascote antes de abrir uma issue.
+  - name: Estado atual & roadmap
+    url: https://github.com/felipemenezes25000-spec/mascote/blob/main/docs/CURRENT_STATE.md
+    about: O que já está pronto, o que falta, o que vem a seguir.
+  - name: Filosofia de identidade viva
+    url: https://github.com/felipemenezes25000-spec/mascote/blob/main/docs/LIVING_IDENTITY_DESIGN.md
+    about: Como pensamos a criatura procedural, evolução por hábitos e voz pt-BR.
+  - name: Reportar vulnerabilidade de segurança
+    url: https://github.com/felipemenezes25000-spec/mascote/security/advisories/new
+    about: Use o Security Advisories para divulgação responsável (não abra issue pública).

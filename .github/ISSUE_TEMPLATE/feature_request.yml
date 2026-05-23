@@ -1,0 +1,61 @@
+name: Sugerir feature ou melhoria
+description: Uma ideia nova, ou um ajuste em algo que já existe.
+title: "[feat] "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Mascote tem uma identidade forte (companheiro emocional, sem culpa, em pt-BR).
+        Antes de propor, vale ler [`docs/LIVING_IDENTITY_DESIGN.md`](../blob/main/docs/LIVING_IDENTITY_DESIGN.md)
+        e o [`README.md`](../blob/main/README.md) para alinhar a proposta com a visão.
+
+  - type: textarea
+    id: problema
+    attributes:
+      label: Qual problema isso resolve?
+      description: Para quem é, em que momento, e o que muda na vida da pessoa.
+      placeholder: |
+        Hoje quando o usuário X tenta Y, ele precisa Z, o que é frustrante porque...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposta
+    attributes:
+      label: Proposta
+      description: Como você imagina a solução? Mockups, fluxos, exemplos são bem-vindos.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área principal
+      options:
+        - app/mobile (Expo / React Native)
+        - app/web (Next.js landing)
+        - supabase (edge functions / DB / migrations)
+        - 3D / DNA / criatura procedural
+        - onboarding / UX
+        - IA / chat
+        - docs / comunidade
+        - outro
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas consideradas
+      description: O que mais você pensou? Por que essa proposta é melhor?
+
+  - type: checkboxes
+    id: confirmacoes
+    attributes:
+      label: Antes de enviar
+      options:
+        - label: Busquei issues e discussões existentes e esta proposta ainda não foi feita.
+          required: true
+        - label: A proposta respeita o posicionamento do app (wellness gentil, sem promessa terapêutica, em pt-BR).
+          required: true
