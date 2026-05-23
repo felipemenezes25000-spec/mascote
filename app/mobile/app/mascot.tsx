@@ -22,7 +22,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/Icon';
-import { Mascot } from '@/components/Mascot';
+import { MascotRenderer } from '@/components/MascotRenderer';
 import { Typography } from '@/components/ui';
 import { archetypeAffinities } from '@/game/evolution/archetypeAffinity';
 import { sanitizeGenome } from '@/lib/dna';
@@ -136,13 +136,24 @@ export default function MascotIdentity() {
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.avatarWrap}>
-          <Mascot
+          <MascotRenderer
             personality={mascot.personality}
             phase={mascot.phase}
             mood={mascot.mood}
             size={180}
             reduceMotion
+            mutationIds={unlocked.map(u => u.mutation_id)}
           />
+          <Pressable
+            onPress={() => router.push('/mascot-room')}
+            accessibilityRole="button"
+            accessibilityLabel="Abrir quarto do mascote"
+            style={({ pressed }) => [styles.roomCta, pressed && { opacity: 0.7 }]}
+          >
+            <Typography variant="mono" style={styles.roomCtaText}>
+              Visitar o quarto →
+            </Typography>
+          </Pressable>
         </View>
 
         {arch ? (
@@ -370,6 +381,19 @@ function makeStyles(theme: Theme) {
     avatarWrap: {
       alignItems: 'center',
       paddingVertical: theme.spacing.md,
+    },
+    roomCta: {
+      marginTop: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: 8,
+      borderRadius: theme.radius.pill,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+    },
+    roomCtaText: {
+      fontSize: 12,
+      letterSpacing: 0.4,
     },
     archHero: {
       alignItems: 'center',

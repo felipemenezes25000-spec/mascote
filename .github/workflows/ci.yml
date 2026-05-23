@@ -41,3 +41,8 @@ jobs:
 
       - name: Tests with coverage (enforces thresholds)
         run: npm run test:coverage
+
+  # Validação Unity — ver também .github/workflows/unity-ci.yml
+  unity-structure:
+    name: Unity — estrutura
+    uses: ./.github/workflows/unity-ci.yml

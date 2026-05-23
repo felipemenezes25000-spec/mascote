@@ -10,6 +10,7 @@
 
 import { describe, expect, it } from 'vitest';
 import {
+  dnaToAnimationState,
   dnaToMaterialBindings,
   dnaToBoneScales,
   moodToAnimation,
@@ -114,6 +115,20 @@ describe('dnaToBoneScales', () => {
     const dumbScales = dnaToBoneScales(dumb, 'adulto');
     const smartScales = dnaToBoneScales(smart, 'adulto');
     expect(smartScales.head).toBeGreaterThan(dumbScales.head);
+  });
+});
+
+describe('dnaToAnimationState', () => {
+  it('action celebrate sobrescreve mood idle', () => {
+    const a = dnaToAnimationState(baseDna, 'ok', { kind: 'celebrate', key: 1 });
+    expect(a.primary).toBe('celebrate');
+  });
+
+  it('alta adaptability aumenta speed vs mood base', () => {
+    const adaptive = { ...baseDna, adaptability: 0.95 };
+    const base = moodToAnimation('ok');
+    const a = dnaToAnimationState(adaptive, 'ok');
+    expect(a.speed).toBeGreaterThan(base.speed);
   });
 });
 

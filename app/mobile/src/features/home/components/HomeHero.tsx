@@ -15,7 +15,7 @@ import { View, StyleSheet } from 'react-native';
 import { useTheme, useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import { HeroSwipeable } from '@/components/HeroSwipeable';
-import { Mascot, type AccessoryId } from '@/components/Mascot';
+import { MascotRenderer, type AccessoryId } from '@/components/MascotRenderer';
 import { MascotAmbient } from '@/components/MascotAmbient';
 import { MascotInteractive, type MascotGestureKind } from '@/components/MascotInteractive';
 import { PressableScale } from '@/components/PressableScale';
@@ -99,7 +99,7 @@ export function HomeHero({
             accessibilityLabel={`Carinho no ${mascot.name}`}
           >
             <MascotAmbient size={mascotSize} reduceMotion={reduceMotion}>
-              <Mascot
+              <MascotRenderer
                 personality={mascot.personality}
                 phase={mascot.phase}
                 mood={reflectiveMood ?? mascot.mood}
@@ -111,6 +111,10 @@ export function HomeHero({
                 customization={customState}
                 mutationIds={mutationIds}
                 evolutionVisuals={evolutionVisuals}
+                unityContext={{
+                  sceneId: (scene as { id?: string }).id ?? 'room',
+                  equippedAccessoryIds: equippedAccId !== 'none' ? [equippedAccId] : [],
+                }}
               />
             </MascotAmbient>
           </MascotInteractive>

@@ -171,7 +171,13 @@ const TRIGGERS: TriggerDef[] = [
       const created = new Date(ctx.profile.created_at).getTime();
       const days = (Date.now() - created) / 86_400_000;
       if (days < 7) return { fire: false };
-      const daysWithCheckin = new Set(ctx.recentCheckins.map(c => c.occurred_on)).size;
+      // recentCheckins cobre 14 dias (ver buildProactiveContext); a copy abaixo
+      // promete "dos últimos 7", então re-filtramos aqui pra evitar mostrar
+      // "9 dos últimos 7 dias" quando o usuário faz check-ins consistentes.
+      const cutoff7 = addDays(todayLocal(), -6);
+      const daysWithCheckin = new Set(
+        ctx.recentCheckins.filter(c => c.occurred_on >= cutoff7).map(c => c.occurred_on),
+      ).size;
       if (daysWithCheckin < 5) return { fire: false };
       return {
         fire: true,

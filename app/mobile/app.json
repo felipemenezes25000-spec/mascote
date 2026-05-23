@@ -53,7 +53,9 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      "./plugins/withUnityAndroid",
+      "./plugins/withUnityIOS"
     ],
     "experiments": {
       "typedRoutes": false

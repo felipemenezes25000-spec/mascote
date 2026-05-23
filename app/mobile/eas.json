@@ -1,0 +1,71 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_ENV": "development",
+        "EXPO_PUBLIC_BILLING_PROVIDER": "mock",
+        "EXPO_PUBLIC_MASCOT_RENDERER": "three",
+        "EXPO_PUBLIC_UNITY_ENABLED": "false"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "android": { "buildType": "apk" },
+      "env": {
+        "EXPO_PUBLIC_ENV": "preview",
+        "EXPO_PUBLIC_BILLING_PROVIDER": "mock",
+        "EXPO_PUBLIC_MASCOT_RENDERER": "three",
+        "EXPO_PUBLIC_UNITY_ENABLED": "false"
+      }
+    },
+    "preview-unity": {
+      "extends": "preview",
+      "env": {
+        "EXPO_PUBLIC_MASCOT_RENDERER": "unity",
+        "EXPO_PUBLIC_UNITY_ENABLED": "true",
+        "EXPO_PUBLIC_UNITY_QUALITY": "auto",
+        "EXPO_PUBLIC_UNITY_DEBUG_PANEL": "true"
+      }
+    },
+    "preview-rc": {
+      "extends": "preview",
+      "env": {
+        "EXPO_PUBLIC_ENV": "preview",
+        "EXPO_PUBLIC_BILLING_PROVIDER": "revenuecat",
+        "EXPO_PUBLIC_RC_ENABLED": "true"
+      }
+    },
+    "production": {
+      "channel": "production",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_ENV": "production",
+        "EXPO_PUBLIC_BILLING_PROVIDER": "revenuecat",
+        "EXPO_PUBLIC_RC_ENABLED": "true",
+        "EXPO_PUBLIC_MASCOT_RENDERER": "three",
+        "EXPO_PUBLIC_UNITY_ENABLED": "false"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "YOUR_APPLE_ID@example.com",
+        "ascAppId": "1234567890",
+        "appleTeamId": "ABCDE12345"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-key.json",
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
+  }
+}

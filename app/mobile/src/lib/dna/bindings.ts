@@ -23,6 +23,7 @@
 import { paletteFromGenome } from './palette';
 import { morphologyFromGenome, type Morphology } from './morphology';
 import { moodScore } from './mood';
+import type { MascotAnimationKind } from '@/lib/animation-triggers';
 import type { Genome } from './genome';
 import type { MascotMood, MascotPhase, Personality } from '@/types';
 
@@ -196,6 +197,51 @@ export function moodToAnimation(mood: MascotMood): AnimationState {
   }
 }
 
+const ACTION_TO_ANIMATION: Partial<Record<MascotAnimationKind, AnimationName>> = {
+  bounce: 'excited',
+  celebrate: 'celebrate',
+  wander: 'observe',
+  rest: 'rest',
+  observe: 'observe',
+  stretch: 'stretch',
+  pulse: 'blink',
+};
+
+/**
+ * DNA + mood (+ action opcional) → estado de animação para o renderer.
+ * Action externo (Behavior Engine) tem prioridade sobre o mood base.
+ */
+export function dnaToAnimationState(
+  dna: Genome,
+  mood: MascotMood,
+  action?: { kind: MascotAnimationKind; key: number },
+): AnimationState {
+  const base = moodToAnimation(mood);
+  let { primary, blend, speed } = base;
+
+  if (action?.kind) {
+    const mapped = ACTION_TO_ANIMATION[action.kind];
+    if (mapped) {
+      primary = mapped;
+      if (action.kind === 'celebrate') {
+        blend = { name: 'smile', weight: 0.35 };
+      }
+    }
+  }
+
+  if (dna.adaptability > 0.72) {
+    speed *= 1 + (dna.adaptability - 0.72) * 0.2;
+  }
+  if (mood === 'triste' && dna.emotionalDepth > 0.7) {
+    speed *= 0.88;
+  }
+  if (mood === 'empolgado' && dna.socialEnergy > 0.75) {
+    speed *= 1 + (dna.socialEnergy - 0.75) * 0.15;
+  }
+
+  return { primary, blend, speed };
+}
+
 /**
  * DNA → MaterialBindings. Substitui o que o Body.tsx procedural fazia em
  * useFrame (tint cor, ajustar roughness por pattern). Pure function.
@@ -317,31 +363,60 @@ export function unlockedAccessories(
 ): AccessoryAttachment[] {
   // unlockedIds vem do estado do app (achievements). Equipped é o subset
   // que o user escolheu equipar. Aqui só converte equipped em attachments.
-  const ACCESSORY_BONES: Record<string, { bone: string; scale?: number }> = {
-    cap: { bone: 'head', scale: 1.0 },
-    bow: { bone: 'head', scale: 0.8 },
-    glasses: { bone: 'head', scale: 1.1 },
-    crown: { bone: 'head', scale: 1.0 },
-    flower: { bone: 'head', scale: 0.7 },
-    headphones: { bone: 'head', scale: 1.05 },
+  //
+  // Aceita IDs curtos legados (cap, bow, glasses…) E GLB keys longos
+  // (cap_classic, wings_angel, aura_cosmic…). IDs longos resolvem para
+  // o filename real; IDs curtos resolvem via tabela legacy → filename.
+  const ACCESSORY_BONES: Record<string, { bone: string; scale?: number; glb?: string }> = {
+    // IDs curtos legados — mantidos pra retro-compat dos consumers atuais.
+    cap: { bone: 'head', scale: 1.0, glb: 'cap_classic' },
+    bow: { bone: 'head', scale: 0.8, glb: 'bow_tie' },
+    glasses: { bone: 'head', scale: 1.1, glb: 'glasses_round' },
+    crown: { bone: 'head', scale: 1.0, glb: 'crown_royal' },
+    flower: { bone: 'head', scale: 0.7, glb: 'flower_daisy' },
+    headphones: { bone: 'head', scale: 1.05, glb: 'beanie' },
     halo: { bone: 'head', scale: 1.0 },
-    horn: { bone: 'head', scale: 0.6 },
-    monocle: { bone: 'head', scale: 0.5 },
-    mask: { bone: 'head', scale: 1.0 },
-    scarf: { bone: 'neck', scale: 1.0 },
-    cape: { bone: 'neck', scale: 1.2 },
-    leaf: { bone: 'body', scale: 0.6 },
-    cookie: { bone: 'body', scale: 0.5 },
-    star: { bone: 'body', scale: 0.4 },
+    horn: { bone: 'head', scale: 0.6, glb: 'sword_floating' },
+    monocle: { bone: 'head', scale: 0.5, glb: 'monocle_gold' },
+    mask: { bone: 'head', scale: 1.0, glb: 'sunglasses' },
+    scarf: { bone: 'neck', scale: 1.0, glb: 'scarf_cozy' },
+    cape: { bone: 'neck', scale: 1.2, glb: 'cape_velvet' },
+    leaf: { bone: 'body', scale: 0.6, glb: 'flame_mane' },
+    cookie: { bone: 'body', scale: 0.5, glb: 'heart_glow' },
+    star: { bone: 'body', scale: 0.4, glb: 'heart_glow' },
+
+    // GLB keys reais — 18 filenames presentes em assets/mascot-3d/accessories/.
+    cap_classic: { bone: 'head', scale: 1.0 },
+    beanie: { bone: 'head', scale: 1.0 },
+    bow_tie: { bone: 'head', scale: 0.8 },
+    cape_velvet: { bone: 'neck', scale: 1.2 },
+    crown_flowers: { bone: 'head', scale: 0.95 },
+    crown_royal: { bone: 'head', scale: 1.0 },
+    flame_mane: { bone: 'head', scale: 1.1 },
+    flower_daisy: { bone: 'head', scale: 0.7 },
+    glasses_round: { bone: 'head', scale: 1.1 },
+    heart_glow: { bone: 'body', scale: 0.5 },
+    monocle_gold: { bone: 'head', scale: 0.5 },
+    scarf_cozy: { bone: 'neck', scale: 1.0 },
+    sunglasses: { bone: 'head', scale: 1.0 },
+    sword_floating: { bone: 'hand_R', scale: 0.9 },
+    wings_angel: { bone: 'body', scale: 1.0 },
+    wings_butterfly: { bone: 'body', scale: 1.0 },
+    wings_dragon: { bone: 'body', scale: 1.05 },
+    aura_cosmic: { bone: 'body', scale: 1.3 },
   };
   return equippedIds
     .filter(id => unlockedIds.includes(id))
     .filter(id => ACCESSORY_BONES[id])
-    .map(id => ({
-      bone: ACCESSORY_BONES[id].bone,
-      glbPath: `assets/mascot-3d/accessories/${id}.glb`,
-      scale: ACCESSORY_BONES[id].scale,
-    }));
+    .map(id => {
+      const entry = ACCESSORY_BONES[id];
+      const filename = entry.glb ?? id;
+      return {
+        bone: entry.bone,
+        glbPath: `assets/mascot-3d/accessories/${filename}.glb`,
+        scale: entry.scale,
+      };
+    });
 }
 
 // ----------------------------------------------------------------------------

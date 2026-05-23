@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
-import { Mascot } from '@/components/Mascot';
+import { MascotRenderer } from '@/components/MascotRenderer';
 import { PressableScale } from '@/components/PressableScale';
 import { SceneBackground } from '@/components/SceneBackground';
 import { getPersonality, personalities } from '@/content/personalities';
@@ -241,7 +241,7 @@ export default function PersonalizationSettings() {
             ) : evolutionLoading ? (
               <ActivityIndicator style={{ marginVertical: 48 }} accessibilityLabel="Carregando prévia do mascote" />
             ) : (
-              <Mascot
+              <MascotRenderer
                 personality={draft.personality}
                 phase={mascot.phase}
                 mood={mascot.mood}

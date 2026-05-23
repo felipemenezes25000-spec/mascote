@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
-import { Mascot } from '@/components/Mascot';
+import { MascotRenderer, type AccessoryId } from '@/components/MascotRenderer';
 import { MascotAmbient } from '@/components/MascotAmbient';
 import { PressableScale } from '@/components/PressableScale';
 import { SceneBackground } from '@/components/SceneBackground';
@@ -201,12 +201,13 @@ export default function Closet() {
       <View style={styles.preview}>
         <SceneBackground sceneId={activeSceneId} height={220}>
           <MascotAmbient size={170}>
-            <Mascot
+            <MascotRenderer
               personality={mascot.personality}
               phase={mascot.phase}
               mood="feliz"
               size={170}
-              accessory={equipped ? { emoji: equipped.emoji, slot: equipped.slot } : null}
+              accessory={(equippedId as AccessoryId | null) ?? null}
+              unityContext={{ sceneId: activeSceneId, equippedAccessoryIds: equippedId ? [equippedId] : [] }}
             />
           </MascotAmbient>
         </SceneBackground>

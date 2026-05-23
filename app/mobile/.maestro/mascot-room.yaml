@@ -1,0 +1,60 @@
+# Fluxo: abrir o quarto do mascote (rota /mascot-room) e exercitar os botões
+# de teste — gestos, hábitos, eventos. Valida que a rota carrega mesmo sem
+# Unity nativo (fallback Three/2D ou placeholder do bridge).
+appId: app.meumascote.dev
+tags: [unity, mascot-room]
+---
+- runFlow:
+    file: setup-home.yaml
+
+# Abre a tela de identidade (/mascot) — tem o CTA "Visitar o quarto →".
+- tapOn:
+    text: ".*Identidade.*"
+    optional: true
+
+# Se chegou em /mascot, há o botão pra /mascot-room.
+- runFlow:
+    when:
+      visible: "Visitar o quarto →"
+    commands:
+      - tapOn: "Visitar o quarto →"
+
+# Cai aqui também se navegou direto via deeplink.
+- assertVisible: "Quarto do mascote"
+
+- takeScreenshot: mascot-room-loaded
+
+# Testar gestos
+- tapOn: "Tap"
+- assertVisible: "gesture tap"
+- tapOn: "Pet"
+- tapOn: "Poke"
+
+# Testar reactions por hábito
+- tapOn: "water"
+- assertVisible: "habit:water"
+- tapOn: "sleep"
+- tapOn: "exercise"
+- tapOn: "meditation"
+- tapOn: "reading"
+
+# Testar evento de progressão
+- tapOn: "Phase advance"
+- assertVisible: "phase.advanced"
+
+# Toggle reduce motion
+- tapOn:
+    text: "Reduce motion OFF"
+    optional: true
+- tapOn:
+    text: "Reduce motion ON"
+    optional: true
+
+- takeScreenshot: mascot-room-interacted
+
+# Voltar pra home
+- back
+- assertVisible: "Identidade"
+
+# Voltar de novo (mascot → home)
+- back

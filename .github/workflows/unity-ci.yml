@@ -1,0 +1,55 @@
+name: Unity CI
+
+# Valida estrutura do projeto Unity (sem Unity Editor no runner).
+# EditMode tests rodam localmente ou em self-hosted com Unity instalado.
+
+on:
+  workflow_call:
+  pull_request:
+    paths:
+      - 'unity/**'
+      - '.github/workflows/unity-ci.yml'
+  push:
+    branches: [main, master]
+    paths:
+      - 'unity/**'
+
+jobs:
+  unity-structure:
+    name: Unity — estrutura e grep tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verificar arquivos obrigatórios
+        run: |
+          set -e
+          BASE=unity/MascotUnityCore
+          test -f "$BASE/ProjectSettings/ProjectVersion.txt"
+          test -f "$BASE/Assets/Mascote/Scripts/Core/MascotDirector.cs"
+          test -f "$BASE/Assets/Mascote/Scripts/Bridge/ReactNativeBridge.cs"
+          test -f "$BASE/Assets/Mascote/Scripts/Data/AccessoryRegistry.cs"
+          test -f "$BASE/Tests/EditMode/JsonParsingTests.cs"
+          test -f "$BASE/Assets/Mascote/Scenes/MascotRoom.unity"
+          echo "✓ estrutura Unity OK"
+
+      - name: Grep — controllers Sprint 3
+        run: |
+          grep -r "IdleBehaviorController" unity/MascotUnityCore/Assets/Mascote/Scripts/
+          grep -r "LookAtTouchController" unity/MascotUnityCore/Assets/Mascote/Scripts/
+          grep -r "AnimationStateMap" unity/MascotUnityCore/Assets/Mascote/Scripts/
+          grep -r "AccessoryRegistry" unity/MascotUnityCore/Assets/Mascote/Scripts/
+          echo "✓ controllers presentes"
+
+      - name: Contar GLBs fonte (RN)
+        run: |
+          COUNT=$(find app/mobile/assets/mascot-3d -name '*.glb' | wc -l)
+          test "$COUNT" -ge 22
+          echo "✓ $COUNT GLBs em app/mobile/assets/mascot-3d"
+
+      - name: Validar manifest Unity
+        run: |
+          grep -q "com.unity.nuget.newtonsoft-json" unity/MascotUnityCore/Packages/manifest.json
+          grep -q "com.unity.test-framework" unity/MascotUnityCore/Packages/manifest.json

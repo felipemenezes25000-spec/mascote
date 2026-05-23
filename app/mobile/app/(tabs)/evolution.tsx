@@ -16,7 +16,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/Icon';
-import { Mascot } from '@/components/Mascot';
+import { MascotRenderer } from '@/components/MascotRenderer';
 import { MascotAmbient } from '@/components/MascotAmbient';
 import { PressableScale } from '@/components/PressableScale';
 import { SceneBackground } from '@/components/SceneBackground';
@@ -269,7 +269,7 @@ export default function EvolutionTab() {
                   <ActivityIndicator style={{ marginVertical: 120 }} accessibilityLabel="Carregando evolução" />
                 ) : (
                   <MascotAmbient size={220} reduceMotion={settings?.reduce_motion}>
-                    <Mascot
+                    <MascotRenderer
                       personality={mascot.personality}
                       phase={mascot.phase}
                       mood={mascot.mood}
@@ -279,6 +279,7 @@ export default function EvolutionTab() {
                       customization={customState}
                       mutationIds={unlockedMutations.map(u => u.mutation_id)}
                       evolutionVisuals={evolutionVisuals}
+                      unityContext={{ sceneId: activeSceneId }}
                     />
                   </MascotAmbient>
                 )}
