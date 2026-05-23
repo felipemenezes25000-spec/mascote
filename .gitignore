@@ -84,6 +84,7 @@ ux-*.png
 /diary.png
 /dna.png
 /v2-*.png
+/3d-*.png
 
 # Outputs do `takeScreenshot` do Maestro (gerados em app/mobile/ ao rodar e2e)
 # Assets legítimos do app vivem em app/mobile/assets/, não diretamente em app/mobile/.
