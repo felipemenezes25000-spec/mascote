@@ -348,7 +348,7 @@ mascote/
 │   ├── INFRA_LAUNCH_PLAYBOOK.md ← passo a passo para sair de "código" → "beta pagando"
 │   └── …                        ← 27 docs cobrindo IA, billing, sync, premium, copy
 ├── plano_mascote/               ← estratégia (7 partes)
-├── prototipo-criatura-procedural.html ← protótipo HTML standalone da criatura viva
+├── docs/design/prototypes/      ← protótipos HTML standalone (criatura procedural etc.)
 └── .github/workflows/           ← CI quality gate (typecheck + lint + coverage)
 ```
 

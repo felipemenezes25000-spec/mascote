@@ -17,7 +17,7 @@
 # Núcleo 3D / DNA / criatura procedural
 /app/mobile/src/components/mascot-3d/   @felipemenezes25000-spec
 /app/mobile/src/lib/dna/                @felipemenezes25000-spec
-/prototipo-criatura-procedural.html     @felipemenezes25000-spec
+/docs/design/prototypes/                @felipemenezes25000-spec
 
 # Documentação
 /docs/                                  @felipemenezes25000-spec

@@ -6,7 +6,8 @@
 ## Princípio
 
 1. Componentes consomem tokens via `useTheme()`. Hex bruto vive APENAS em
-   `themes.ts` e `prototipo-criatura-procedural.html` (artefato de design).
+   `themes.ts` e `docs/design/prototypes/prototipo-criatura-procedural.html`
+   (artefato de design).
 2. Tokens são organizados por **categoria semântica**, não por aparência.
    `theme.tokens.emotion.happy.fg` é correto; `theme.colors.gold` para
    "feliz" é errado (porque o significado some).
