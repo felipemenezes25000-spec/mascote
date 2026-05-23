@@ -75,6 +75,20 @@ resp-*.png
 resp-fix-*.png
 ux-*.png
 
+# Screenshots ad-hoc na raiz do repo (capturas soltas de QA/debug que poluem)
+# Use docs/screenshots/<data>/ para capturas que tenham valor permanente.
+/qa-*.png
+/app-running.png
+/boot-violation.png
+/home.png
+/diary.png
+/dna.png
+/v2-*.png
+
+# Outputs do `takeScreenshot` do Maestro (gerados em app/mobile/ ao rodar e2e)
+# Assets legítimos do app vivem em app/mobile/assets/, não diretamente em app/mobile/.
+/app/mobile/*.png
+
 # Expo logs específicos
 expo-build*.log
 expo-log.txt
