@@ -173,6 +173,11 @@ async function generateReplyInternal(
       memories,
       dna,
       recentReplies,
+      // Passa flag classificado pelo cliente — backend usa pra audit log e
+      // bloqueia se for high/critical (defesa em profundidade; já filtramos
+      // acima, mas o backend confere de novo).
+      safetyFlag: inputFlag,
+      language: 'pt',
     });
     if (proxied) {
       if (userId) await rememberReply(userId, personality, proxied.reply);
