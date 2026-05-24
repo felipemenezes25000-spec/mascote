@@ -43,7 +43,8 @@ Transform:
 MonoBehaviour:
   m_GameObject: {fileID: 3000}
   m_Enabled: 1
-  m_EditorClassIdentifier: Mascote.Unity.Core.MascotDirector, MascotUnityCore
+  m_Script: {fileID: 11500000, guid: 2efbc98d192ae3442a6feed678b9c446, type: 3}
+  m_EditorClassIdentifier:
 --- !u!1 &4000
 GameObject:
   m_ObjectHideFlags: 0
@@ -56,4 +57,5 @@ Transform:
 MonoBehaviour:
   m_GameObject: {fileID: 4000}
   m_Enabled: 1
-  m_EditorClassIdentifier: Mascote.Unity.Core.MascotRoomTestHarness, MascotUnityCore
+  m_Script: {fileID: 11500000, guid: 70525ad411cb811469a684db86ec8b79, type: 3}
+  m_EditorClassIdentifier:

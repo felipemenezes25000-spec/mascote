@@ -62,5 +62,5 @@ Transform:
 MonoBehaviour:
   m_GameObject: {fileID: 3000}
   m_Enabled: 1
-  m_Script: {fileID: 11500000, guid: 00000000000000000000000000000000, type: 3}
-  m_EditorClassIdentifier: Mascote.Unity.Bridge.ReactNativeBridge, MascotUnityCore
+  m_Script: {fileID: 11500000, guid: 4ea9579d82f292f49aaf46db95ef3039, type: 3}
+  m_EditorClassIdentifier:
