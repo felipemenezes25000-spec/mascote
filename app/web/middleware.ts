@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { locales, defaultLocale, type Locale } from "@/lib/locales";
 
-const locales = ["pt", "en", "es"];
-const defaultLocale = "pt";
-
-function pickLocale(req: NextRequest): string {
+function pickLocale(req: NextRequest): Locale {
   const accept = req.headers.get("accept-language") || "";
   const top = accept.split(",")[0]?.toLowerCase() ?? "";
   if (top.startsWith("pt")) return "pt";
@@ -27,5 +25,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|api|favicon.svg|robots.txt|sitemap.xml|manifest.webmanifest|og|.*\\..*).*)"],
+  matcher: ["/((?!_next|_vercel|api|favicon.svg|robots.txt|sitemap.xml|manifest.webmanifest|og|.*\\..*).*)"],
 };

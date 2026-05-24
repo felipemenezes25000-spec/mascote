@@ -5,6 +5,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+// Runtime explícito + budget de execução. Hobby ignora maxDuration (10s teto);
+// Pro/Enterprise respeita até 300s. Mantemos 25 para dar headroom acima do
+// OPENAI_TIMEOUT_MS sem encostar no teto do plano.
+export const runtime = 'nodejs';
+export const maxDuration = 25;
+export const dynamic = 'force-dynamic';
+
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX = 30;
 // Capped: o Map vivia para sempre num processo long-running e era um vetor
@@ -35,54 +42,104 @@ function rateLimit(ip: string): boolean {
 const OPENAI_TIMEOUT_MS = 20_000;
 const MAX_HISTORY_ITEMS = 16;
 const MAX_MESSAGE_CHARS = 4_000;
+// Caps defensivos contra abuso de tokens (custo OpenAI = $$$). Mobile envia
+// system_prompt construído com DNA + memórias; ~8KB cobre o cenário real com
+// folga. personality_flavor é uma frase curta — 200 chars é generoso.
+const MAX_SYSTEM_CHARS = 8_000;
+const MAX_FLAVOR_CHARS = 200;
+
 type SafetyFlag = 'safe' | 'watch' | 'high' | 'critical';
 
 interface ReplyBody {
-  personality?: string;
-  message?: string;
-  history?: Array<{ role: string; content: string }>;
-  system_prompt?: string;
-  personality_flavor?: string;
-  recent_replies?: string[];
+  personality?: unknown;
+  message?: unknown;
+  history?: unknown;
+  system_prompt?: unknown;
+  personality_flavor?: unknown;
+  recent_replies?: unknown;
+}
+
+// Coerção segura: aceita string, retorna string trim. Qualquer outro tipo
+// (number/object/array/null) → string vazia. Evita TypeError ao chamar
+// `.trim()` em valores que o caller jurou que seriam string.
+function asStr(v: unknown, maxLen = MAX_MESSAGE_CHARS): string {
+  if (typeof v !== 'string') return '';
+  const trimmed = v.trim();
+  return trimmed.length > maxLen ? trimmed.slice(0, maxLen) : trimmed;
+}
+
+function pickClientIp(req: NextRequest): string {
+  // Vercel/Cloudflare convention. XFF é confiável apenas atrás de proxy
+  // confiável — em produção atrás de Vercel, o leftmost é o cliente real.
+  const xff = req.headers.get('x-forwarded-for');
+  if (xff) {
+    const first = xff.split(',')[0]?.trim();
+    if (first) return first;
+  }
+  const real = req.headers.get('x-real-ip')?.trim();
+  if (real) return real;
+  const cf = req.headers.get('cf-connecting-ip')?.trim();
+  if (cf) return cf;
+  return 'unknown';
+}
+
+const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' } as const;
+
+function json<T>(body: T, status = 200): NextResponse {
+  return NextResponse.json(body, { status, headers: NO_STORE_HEADERS });
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+  const ip = pickClientIp(req);
   if (!rateLimit(ip)) {
-    return NextResponse.json({ error: 'rate_limit' }, { status: 429 });
+    return json({ error: 'rate_limit' }, 429);
   }
 
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) {
-    return NextResponse.json({ error: 'proxy_not_configured' }, { status: 503 });
+    return json({ error: 'proxy_not_configured' }, 503);
   }
 
   let body: ReplyBody;
   try {
     body = (await req.json()) as ReplyBody;
   } catch {
-    return NextResponse.json({ error: 'invalid_json' }, { status: 400 });
+    return json({ error: 'invalid_json' }, 400);
+  }
+  if (!body || typeof body !== 'object') {
+    return json({ error: 'invalid_body' }, 400);
   }
 
-  const userMessage = body.message?.trim();
+  const userMessage = asStr(body.message, MAX_MESSAGE_CHARS);
   if (!userMessage) {
-    return NextResponse.json({ error: 'message_required' }, { status: 400 });
+    return json({ error: 'message_required' }, 400);
   }
-  if (userMessage.length > MAX_MESSAGE_CHARS) {
-    return NextResponse.json({ error: 'message_too_long' }, { status: 400 });
+  // Mantemos a checagem explícita de tamanho original (mensagens > MAX são
+  // truncadas por asStr, mas queremos sinalizar pra mobile com 400).
+  if (typeof body.message === 'string' && body.message.trim().length > MAX_MESSAGE_CHARS) {
+    return json({ error: 'message_too_long' }, 400);
   }
 
+  const flavor = asStr(body.personality_flavor, MAX_FLAVOR_CHARS) || 'caloroso e leve';
+  const customSystem = asStr(body.system_prompt, MAX_SYSTEM_CHARS);
   const system =
-    body.system_prompt?.trim() ??
-    `Você é um mascote digital de bem-estar. Tom: ${body.personality_flavor ?? 'caloroso e leve'}. Não diagnostique. Não prometa cura.`;
+    customSystem ||
+    `Você é um mascote digital de bem-estar. Tom: ${flavor}. Não diagnostique. Não prometá cura.`;
 
-  const history = Array.isArray(body.history) ? body.history : [];
+  const rawHistory = Array.isArray(body.history) ? body.history : [];
+  const history = rawHistory
+    .slice(-MAX_HISTORY_ITEMS)
+    .map(h => {
+      const item = h as { role?: unknown; content?: unknown } | null;
+      const role: 'user' | 'assistant' = item?.role === 'assistant' ? 'assistant' : 'user';
+      const content = asStr(item?.content, MAX_MESSAGE_CHARS);
+      return { role, content };
+    })
+    .filter(m => m.content.length > 0);
+
   const messages = [
     { role: 'system' as const, content: system },
-    ...history.slice(-MAX_HISTORY_ITEMS).map(h => ({
-      role: (h?.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
-      content: String(h?.content ?? '').slice(0, MAX_MESSAGE_CHARS),
-    })),
+    ...history,
     { role: 'user' as const, content: userMessage },
   ];
 
@@ -107,31 +164,70 @@ export async function POST(req: NextRequest) {
     });
 
     if (!res.ok) {
-      return NextResponse.json({ error: 'upstream_error' }, { status: 502 });
+      // Log mínimo (sem PII / sem header de auth) pra observabilidade. Em
+      // serverless, console.warn vai parar nos logs da plataforma (Vercel).
+      console.warn('[mascot/reply] upstream non-ok', { status: res.status });
+      // Pass-through de 429 ajuda o mobile a backoff específico.
+      if (res.status === 429) return json({ error: 'upstream_rate_limit' }, 429);
+      return json({ error: 'upstream_error' }, 502);
     }
 
-    const data = (await res.json()) as {
+    let data: {
       choices?: Array<{ message?: { content?: string } }>;
       usage?: { total_tokens?: number };
     };
+    try {
+      data = await res.json();
+    } catch {
+      console.warn('[mascot/reply] upstream returned non-json');
+      return json({ error: 'upstream_invalid_json' }, 502);
+    }
+
     const reply = data.choices?.[0]?.message?.content?.trim() ?? '';
+    if (!reply) {
+      // Antes retornávamos 200 com reply vazio — mobile cai pro fallback mas
+      // server log marca como sucesso, mascarando o problema. 502 expõe.
+      console.warn('[mascot/reply] upstream returned empty completion');
+      return json({ error: 'upstream_empty' }, 502);
+    }
     // Contrato com mobile (AIResponseValidator) exige flag = 'safe' | 'watch'
     // | 'high' | 'critical'. Antes retornávamos 'none', que cai no fallback
     // mas ainda assim sujava a telemetria. O mobile vai recomputar via
     // classifyInput pra reforçar, então 'safe' aqui é só o default neutro.
     const safetyFlag: SafetyFlag = 'safe';
-    return NextResponse.json({
+    return json({
       reply,
       safety_flag: safetyFlag,
       usage: data.usage,
     });
   } catch (err) {
     const isAbort = err instanceof Error && err.name === 'AbortError';
-    return NextResponse.json(
+    if (isAbort) {
+      console.warn('[mascot/reply] upstream timeout');
+    } else {
+      console.warn('[mascot/reply] proxy failure', {
+        reason: err instanceof Error ? err.message : 'unknown',
+      });
+    }
+    return json(
       { error: isAbort ? 'upstream_timeout' : 'proxy_failure' },
-      { status: isAbort ? 504 : 502 },
+      isAbort ? 504 : 502,
     );
   } finally {
     clearTimeout(timer);
   }
+}
+
+// Handlers explícitos pra métodos não-POST e preflight. Sem isso, Next.js
+// devolve 405 mas sem Cache-Control e sem CORS — alguns CDNs cacheiam o 405
+// e o método correto começa a retornar stale.
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: { ...NO_STORE_HEADERS, Allow: 'POST, OPTIONS' },
+  });
+}
+
+export async function GET() {
+  return json({ error: 'method_not_allowed' }, 405);
 }

@@ -1,10 +1,10 @@
 import pt from "@/messages/pt.json";
 import en from "@/messages/en.json";
 import es from "@/messages/es.json";
+import { locales, defaultLocale, isLocale, type Locale } from "@/lib/locales";
 
-export const locales = ["pt", "en", "es"] as const;
-export type Locale = (typeof locales)[number];
-export const defaultLocale: Locale = "pt";
+export { locales, defaultLocale, isLocale };
+export type { Locale };
 
 const dictionaries = { pt, en, es } as const;
 
@@ -12,10 +12,6 @@ export type Dictionary = typeof pt;
 
 export function getDictionary(locale: Locale): Dictionary {
   return dictionaries[locale] ?? dictionaries[defaultLocale];
-}
-
-export function isLocale(value: string): value is Locale {
-  return (locales as readonly string[]).includes(value);
 }
 
 export const localeMeta: Record<Locale, { label: string; flag: string; htmlLang: string }> = {
