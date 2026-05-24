@@ -30,6 +30,7 @@ export { achievements } from './achievements';
 export { dnaMutations } from './dna-mutations';
 export { customization } from './customization';
 export { wallet } from './wallet';
+export { mascotLife } from './mascot-life';
 export { dailyReward, predictNextDailyRewardDay } from './daily-rewards';
 export { mysteryBox } from './mystery-box';
 export { combo, comboXpBonus } from './combo';

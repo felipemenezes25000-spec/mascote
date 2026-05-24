@@ -30,7 +30,26 @@ export {
   eveningCalm,
   gentleReturn,
   moodRecoveryCheer,
+  yawnIdle,
+  lookAround,
+  exploreIdle,
+  restIdle,
+  sleepAtNight,
+  wakeMorning,
+  observeUser,
   DEFAULT_BEHAVIORS,
 } from './behaviors';
 
 export { useBehaviorTick, type UseBehaviorTickOptions } from './useBehaviorTick';
+export { useBehaviorMoments } from './useBehaviorMoments';
+export {
+  reactivePet,
+  reactivePostCheckin,
+  reactiveMissionComplete,
+  reactiveReturnAfterAbsence,
+  reactiveHabitMissed,
+  reactiveStreakRisk,
+  MOMENT_REACTIVE_BEHAVIORS,
+  flagsFromMoment,
+  type ReactiveFlags,
+} from './reactiveBehaviors';

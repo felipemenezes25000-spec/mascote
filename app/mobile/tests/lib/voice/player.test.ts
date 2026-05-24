@@ -90,12 +90,7 @@ describe('playVoiceLine — robustez', () => {
     expect(count).toBe(3);
   });
 
-  it('backend que lança erro → playVoiceLine não propaga (no-op gracioso)', () => {
-    // O contract atual é: backend.play retorna handle. Se backend lança,
-    // o caller pega — mas como em produção isso seria silenciado pelo
-    // wrapper, validamos que mock CAN lançar e nosso wrapper protege.
-    // (atual implementação não wraps em try/catch — então este teste
-    // documenta o limite atual: caller responsable se usar mock ruim.)
+  it('backend que lança erro → playVoiceLine retorna no-op gracioso', () => {
     const mock: AudioBackend = {
       play: () => {
         throw new Error('audio context invalido');
@@ -103,12 +98,11 @@ describe('playVoiceLine — robustez', () => {
       dispose: () => undefined,
     };
     __setBackend(mock);
-    expect(() =>
-      playVoiceLine(voiceProfileFromGenome(generateGenome(1)), {
-        kind: 'greet',
-        emotion: 0.5,
-      }),
-    ).toThrow(); // documenta comportamento atual
+    const handle = playVoiceLine(voiceProfileFromGenome(generateGenome(1)), {
+      kind: 'greet',
+      emotion: 0.5,
+    });
+    expect(handle.id).toMatch(/^voice-err-/);
   });
 });
 

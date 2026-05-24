@@ -253,13 +253,15 @@ Detalhe completo: [`docs/GUARANTEES.md`](docs/GUARANTEES.md).
 
 ## Quickstart
 
+**Estado verificado em 2026-05-24:** `npm run typecheck` ✅ e `npm test` ✅ (**5549 testes / 168 arquivos** em `app/mobile`).
+
 ```bash
 git clone https://github.com/felipemenezes25000-spec/mascote.git
 cd mascote
 npm install --prefix app/mobile
 
 npm run web          # web preview em http://localhost:8081
-npm test             # ~1.8k testes (~10s)
+npm test             # executa a suíte Vitest atual
 npm run typecheck    # 0 erros, strict mode
 npm run quality      # typecheck + lint + suíte
 ```
@@ -319,7 +321,7 @@ Guia completo: [`app/mobile/docs/E2E_WINDOWS.md`](app/mobile/docs/E2E_WINDOWS.md
 ```
 mascote/
 ├── app/
-│   ├── mobile/                  ← Expo 51 · RN 0.74 · ~57 telas (coração do produto)
+│   ├── mobile/                  ← Expo 51 · RN 0.74 · app principal
 │   │   ├── app/                 ← rotas Expo Router (onboarding, tabs, checkin, paywall…)
 │   │   ├── src/
 │   │   │   ├── lib/dna/         ← genoma, paleta, morfologia, drift sem culpa, mutações
@@ -331,7 +333,7 @@ mascote/
 │   │   │   ├── game/            ← evolution engine, behavior engine, memory graph
 │   │   │   ├── lib/moments/     ← creatureMoments — bus pub/sub semântico
 │   │   │   └── services/        ← subscription + billing provider + RevenueCat adapter
-│   │   ├── tests/               ← ~1.8k testes Vitest + property-based
+│   │   ├── tests/               ← testes Vitest (unit, integration, guarantees)
 │   │   ├── tests/guarantees/    ← G1–G4: as 4 promessas testadas
 │   │   ├── .maestro/            ← 11 fluxos E2E (paywall, crisis, onboarding…)
 │   │   └── scripts/             ← audit-visual, coverage-gaps, setup-e2e-windows.ps1
@@ -340,10 +342,12 @@ mascote/
 │   ├── design/creature-evolution/  ← arte conceitual (v2-* atual, legacy/ histórico)
 │   ├── screenshots/             ← capturas com valor permanente (YYYY-MM-DD/)
 │   ├── CURRENT_STATE.md         ← verdade operacional
+│   ├── AUDIT_REAL_ATUAL.md      ← auditoria técnica recente
+│   ├── RELEASE_READINESS.md     ← snapshot de prontidão de release
 │   ├── GUARANTEES.md            ← as 4 promessas em detalhe
 │   ├── LIVING_IDENTITY_DESIGN.md← manifesto do sistema visual
 │   ├── INFRA_LAUNCH_PLAYBOOK.md ← passo a passo para sair de "código" → "beta pagando"
-│   └── …                        ← 27 docs cobrindo IA, billing, sync, premium, copy
+│   └── archive/                 ← docs históricos/obsoletos consolidados
 ├── docs/plano/                  ← estratégia (7 partes)
 ├── docs/design/prototypes/      ← protótipos HTML standalone (criatura procedural etc.)
 └── .github/workflows/           ← CI quality gate (typecheck + lint + coverage)
@@ -377,6 +381,9 @@ E uma promessa técnica que vale repetir:
 | Quando ler | Doc |
 |---|---|
 | **Sempre primeiro** — verdade operacional | [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) |
+| Auditoria técnica recente (estado real) | [`docs/AUDIT_REAL_ATUAL.md`](docs/AUDIT_REAL_ATUAL.md) |
+| Prontidão de release (go/no-go) | [`docs/RELEASE_READINESS.md`](docs/RELEASE_READINESS.md) |
+| Limites conhecidos e pendências reais | [`docs/KNOWN_LIMITATIONS.md`](docs/KNOWN_LIMITATIONS.md) |
 | Entender as 4 promessas testadas | [`docs/GUARANTEES.md`](docs/GUARANTEES.md) |
 | Manifesto do sistema visual | [`docs/LIVING_IDENTITY_DESIGN.md`](docs/LIVING_IDENTITY_DESIGN.md) |
 | Decidir cobrar · 5 pilares de assinatura | [`docs/GO_NO_GO_CHECKLIST.md`](docs/GO_NO_GO_CHECKLIST.md) |
@@ -384,6 +391,8 @@ E uma promessa técnica que vale repetir:
 | De "código pronto" a "beta pagando" | [`docs/INFRA_LAUNCH_PLAYBOOK.md`](docs/INFRA_LAUNCH_PLAYBOOK.md) |
 | Plus honesto · RevenueCat · trial | [`docs/PREMIUM_STRATEGY.md`](docs/PREMIUM_STRATEGY.md) |
 | Proxy IA · rate limit · custo | [`docs/AI_PRODUCTION_PLAN.md`](docs/AI_PRODUCTION_PLAN.md) |
+| Contrato do proxy IA | [`docs/AI_PROXY_CONTRACT.md`](docs/AI_PROXY_CONTRACT.md) |
+| Estado atual da integração Unity | [`docs/UNITY_STATUS.md`](docs/UNITY_STATUS.md) |
 | Sync multi-device | [`docs/SYNC_ARCHITECTURE.md`](docs/SYNC_ARCHITECTURE.md) |
 | Auditoria de débito visual | [`docs/VISUAL_DEBT.md`](docs/VISUAL_DEBT.md) |
 | Textos App Store · paywall · onboarding | [`docs/COMMERCIAL_COPY.md`](docs/COMMERCIAL_COPY.md) |

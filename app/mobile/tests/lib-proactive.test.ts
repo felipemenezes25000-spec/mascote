@@ -64,7 +64,7 @@ describe('runProactiveScan', () => {
     // Forçar hora "produtiva" - não estamos em quiet (08:00-22:00)
     const ctx = await buildProactiveContext(PROFILE, 'Bipo');
     // Aceitamos qualquer trigger que dispare (a janela quiet_chat depende do horário)
-    const fired = await runProactiveScan(ctx);
+    const { fired } = await runProactiveScan(ctx);
     // pelo menos um deveria disparar (quiet_chat_7d ou first_week_complete)
     expect(Array.isArray(fired)).toBe(true);
   });
@@ -110,15 +110,15 @@ describe('runProactiveScan', () => {
       ])
     );
     const ctx = await buildProactiveContext(PROFILE, 'Bipo');
-    const fired1 = await runProactiveScan(ctx);
-    const fired2 = await runProactiveScan(ctx);
+    const { fired: fired1 } = await runProactiveScan(ctx);
+    const { fired: fired2 } = await runProactiveScan(ctx);
     // O 2o scan não deve disparar os MESMOS triggers
     for (const t of fired1) {
       expect(fired2).not.toContain(t);
     }
   });
 
-  it('não dispara se push_enabled = false (exceto safety)', async () => {
+  it('dispara triggers para bubble mesmo com push_enabled = false', async () => {
     await AsyncStorage.setItem(
       'mascote:messages',
       JSON.stringify([
@@ -154,7 +154,8 @@ describe('runProactiveScan', () => {
       ])
     );
     const ctx = await buildProactiveContext(PROFILE, 'Bipo');
-    const fired = await runProactiveScan(ctx);
-    expect(fired).toEqual([]);
+    const { fired, bubbleLine } = await runProactiveScan(ctx);
+    expect(fired.length).toBeGreaterThan(0);
+    expect(bubbleLine).toBeTruthy();
   });
 });

@@ -16,7 +16,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/Icon';
 import { MascotRenderer } from '@/components/MascotRenderer';
 import { Typography } from '@/components/ui';
-import { buildUnityMascotState } from '@/core/mascot-render-contract';
+import {
+  buildUnityMascotState,
+  isUnityEnabled,
+  resolveRendererMode,
+} from '@/core/mascot-render-contract';
 import type { UnityHabitKind, UnityMascotState } from '@/core/mascot-render-contract';
 import { unityMascotBridge } from '@/components/unity/UnityMascotBridge';
 import { sendEventPlay, sendGesture } from '@/components/unity/unityMessageMapper';
@@ -34,6 +38,7 @@ export default function MascotRoom() {
   const settings = useStore(s => s.settings);
   const [debugLog, setDebugLog] = useState<string[]>([]);
   const [reduceMotion, setReduceMotion] = useState<boolean>(settings?.reduce_motion ?? false);
+  const [ackTick, setAckTick] = useState(0);
 
   const appendLog = useCallback((line: string) => {
     setDebugLog(prev => [...prev.slice(-7), `${new Date().toLocaleTimeString()} ${line}`]);
@@ -41,10 +46,19 @@ export default function MascotRoom() {
 
   useEffect(() => {
     const unsub = unityMascotBridge.subscribe(msg => {
+      if (msg.type === 'ack') setAckTick(v => v + 1);
       appendLog(`← ${msg.type}${'message' in msg ? ` (${msg.message})` : ''}`);
     });
     return unsub;
   }, [appendLog]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setAckTick(v => v + 1), 600);
+    return () => clearInterval(timer);
+  }, []);
+
+  const rendererMode = resolveRendererMode({ preferUnity: true });
+  const ackStats = useMemo(() => unityMascotBridge.getAckStats(), [ackTick]);
 
   const unityState: UnityMascotState | null = useMemo(() => {
     if (!mascot) return null;
@@ -97,6 +111,7 @@ export default function MascotRoom() {
             size={260}
             reduceMotion={reduceMotion}
             unityState={unityState}
+            preferUnity
           />
         </View>
 
@@ -135,7 +150,10 @@ export default function MascotRoom() {
         <View style={styles.section}>
           <Typography variant="title" style={styles.sectionTitle}>Debug</Typography>
           <Typography variant="mono" tone="secondary" style={styles.debugStatus}>
-            renderer: unity · nativeAvailable: {String(unityMascotBridge.isNativeAvailable())} · mascot: {mascot.name} · phase: {mascot.phase}
+            renderer: {rendererMode} · unityFlag: {String(isUnityEnabled())} · nativeEmbedded: {String(unityMascotBridge.isNativeEmbedded())} · mascot: {mascot.name} · phase: {mascot.phase}
+          </Typography>
+          <Typography variant="mono" tone="secondary" style={styles.debugStatus}>
+            ack ms: {ackStats.lastAckLatencyMs ?? '-'} · retry: {ackStats.retryCount} · ack seq: {ackStats.lastAckSeq ?? '-'} · timeout: {ackStats.timeoutCount}
           </Typography>
           <View style={styles.debugBox}>
             {debugLog.length === 0 ? (

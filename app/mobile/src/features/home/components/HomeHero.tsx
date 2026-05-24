@@ -13,9 +13,11 @@
  */
 import { View, StyleSheet } from 'react-native';
 import { useTheme, useStyles } from '@/lib/useTheme';
+import { color } from '@/design-system/tokens';
 import type { Theme } from '@/lib/themes';
 import { HeroSwipeable } from '@/components/HeroSwipeable';
 import { MascotRenderer, type AccessoryId } from '@/components/MascotRenderer';
+import { isUnityHomeEnabled } from '@/core/mascot-render-contract';
 import { MascotAmbient } from '@/components/MascotAmbient';
 import { MascotInteractive, type MascotGestureKind } from '@/components/MascotInteractive';
 import { PressableScale } from '@/components/PressableScale';
@@ -56,6 +58,10 @@ interface Props {
   statusLine: string;
   /** Mood dominante para o tone do bubble. */
   emotionKey: import('@/lib/themes').EmotionKey;
+  /** Hora local para tint do cenário. */
+  sceneHour?: number;
+  /** Celebração de retorno (simulação). */
+  celebrationActive?: boolean;
 }
 
 export function HomeHero({
@@ -80,13 +86,24 @@ export function HomeHero({
   flash,
   statusLine,
   emotionKey,
+  sceneHour,
+  celebrationActive,
 }: Props) {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
+  const displayMood = reflectiveMood ?? mascot.mood;
+  const hour = sceneHour ?? new Date().getHours();
+  const preferUnity = isUnityHomeEnabled();
   return (
     <View style={styles.sceneWrap}>
       <HeroSwipeable onPrev={onPrev} onNext={onNext}>
-        <SceneBackground sceneId={(scene as { id?: string }).id ?? 'room'} height={sceneHeight}>
+        <SceneBackground
+          sceneId={(scene as { id?: string }).id ?? 'room'}
+          height={sceneHeight}
+          hour={hour}
+          mood={displayMood}
+          celebrationActive={celebrationActive}
+        >
           {statusLine ? (
             <View style={[styles.bubbleWrap, { pointerEvents: 'none' }]}>
               <MascotStatusBubble text={statusLine} emotion={emotionKey} />
@@ -98,7 +115,12 @@ export function HomeHero({
             reduceMotion={reduceMotion}
             accessibilityLabel={`Carinho no ${mascot.name}`}
           >
-            <MascotAmbient size={mascotSize} reduceMotion={reduceMotion}>
+            <MascotAmbient
+              size={mascotSize}
+              reduceMotion={reduceMotion}
+              celebrationActive={celebrationActive}
+              mood={displayMood}
+            >
               <MascotRenderer
                 personality={mascot.personality}
                 phase={mascot.phase}
@@ -111,6 +133,7 @@ export function HomeHero({
                 customization={customState}
                 mutationIds={mutationIds}
                 evolutionVisuals={evolutionVisuals}
+                preferUnity={preferUnity}
                 unityContext={{
                   sceneId: (scene as { id?: string }).id ?? 'room',
                   equippedAccessoryIds: equippedAccId !== 'none' ? [equippedAccId] : [],
@@ -186,7 +209,7 @@ function makeStyles(theme: Theme) {
       paddingVertical: 7,
       borderRadius: theme.radius.pill,
       borderWidth: 1,
-      borderColor: theme.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.5)',
+      borderColor: theme.mode === 'dark' ? color.glassBorderDark : color.glassBorderLight,
       ...theme.shadow.sm,
     },
     sceneEmoji: { fontSize: 13 },
@@ -205,7 +228,7 @@ function makeStyles(theme: Theme) {
       paddingVertical: 8,
       borderRadius: theme.radius.pill,
       borderWidth: 1,
-      borderColor: theme.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.5)',
+      borderColor: theme.mode === 'dark' ? color.glassBorderDark : color.glassBorderLight,
       ...theme.shadow.sm,
     },
     mascotNameStrong: {

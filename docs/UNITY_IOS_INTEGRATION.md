@@ -19,7 +19,7 @@ Interface de mensagens idêntica à Android — ver `UNITY_BRIDGE_CONTRACT.md`.
 
 ### 1. Export Unity iOS
 
-1. Unity **2022.3.62f1**
+1. Unity **6000.4.8f1** (Unity 6) — mesma versão do `ProjectVersion.txt`
 2. **File  Build Settings → iOS**
 3. Export para pasta fora do repo ou `ios/UnityExport/`
 4. Gera `UnityFramework.framework`

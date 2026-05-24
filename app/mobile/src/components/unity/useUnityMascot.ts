@@ -100,6 +100,7 @@ export function useUnityMascot(options: UseUnityMascotOptions): UseUnityMascotRe
 
     return () => {
       unsub();
+      unityMascotBridge.flushPendingAcks();
       if (throttleTimer.current) clearTimeout(throttleTimer.current);
     };
   }, [handleMessage, simulateFailure]);

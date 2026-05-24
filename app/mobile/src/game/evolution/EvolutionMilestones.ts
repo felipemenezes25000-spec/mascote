@@ -48,6 +48,7 @@ export function macroPhaseFromXp(xp: number): MacroPhaseId {
 export function eligibleMicroEvolutions(
   habitCounts: Partial<Record<HabitKind, number>>,
   alreadyUnlocked: readonly string[],
+  currentStreak: number = 0,
 ): MicroEvolution[] {
   const unlocked = new Set(alreadyUnlocked);
   const result: MicroEvolution[] = [];
@@ -57,7 +58,9 @@ export function eligibleMicroEvolutions(
     if (unlocked.has(entry.id)) continue;
     const count = entry.habitAffinity
       ? (habitCounts[entry.habitAffinity] ?? 0)
-      : Object.values(habitCounts).reduce((a, b) => a + (b ?? 0), 0);
+      : entry.id === 'micro-recovery-bloom'
+        ? currentStreak
+        : Object.values(habitCounts).reduce((a, b) => a + (b ?? 0), 0);
     if (count >= entry.requiredCheckins) {
       result.push({
         id: entry.id,
@@ -69,4 +72,15 @@ export function eligibleMicroEvolutions(
     }
   }
   return result;
+}
+
+/**
+ * Trigger de "forma rara" baseado no catálogo de microevoluções.
+ *
+ * Regra mínima: qualquer micro recém-desbloqueada com magnitude alta (>= 0.26)
+ * é tratada como gatilho raro. Hoje isso cobre marcos finais como
+ * `micro-streak-crown` sem criar uma tabela paralela de raridade.
+ */
+export function hasRareFormTrigger(newMicro: readonly MicroEvolution[]): boolean {
+  return newMicro.some(m => m.magnitude >= 0.26);
 }

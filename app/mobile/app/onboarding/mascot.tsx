@@ -133,6 +133,11 @@ export default function MascotBirth() {
         <Text style={styles.title}>
           {phase === 'hatch' ? 'Algo está nascendo...' : 'Olha quem chegou!'}
         </Text>
+        {phase === 'birth' ? (
+          <Text style={styles.birthHook}>
+            Esse foi o primeiro momento de vida de vocês dois.
+          </Text>
+        ) : null}
         <View style={styles.sceneWrap}>
           <SceneBackground sceneId="room" height={260}>
             {phase === 'hatch' && (
@@ -213,6 +218,13 @@ function makeStyles(theme: Theme) {
     dnaSeed: { ...theme.text.xs, color: theme.colors.textSecondary, fontFamily: 'JetBrainsMono_500Medium' },
     dnaArchetype: { ...theme.text.sm, color: theme.colors.textSecondary, fontStyle: 'italic' },
     hint: { ...theme.text.body, color: theme.colors.textSecondary, textAlign: 'center' },
+    birthHook: {
+      ...theme.text.body,
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      marginTop: -4,
+      marginBottom: 2,
+    },
     sceneWrap: {},
     egg: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
     eggEmoji: { fontSize: 100 },

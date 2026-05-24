@@ -1,66 +1,59 @@
 # Test Report — Mascote Mobile
 
-**Data:** 2026-05-20  
-**Escopo:** Suite completa pós-transformação premium (AI guards, billing modules, sync engine)
+**Data:** 2026-05-24  
+**Escopo:** Continuação v8 AAA (fases 8-10 + lote de memória/evolução/maestro) com validação real de quality gates.
 
-## Comandos
+## Comandos executados nesta rodada
 
 ```powershell
 cd app\mobile
-npm ci
-npm run typecheck
-npm run lint
 npm test
-npm run test:ci
-npm run test:unit
-npm run test:integration
-npm run test:security
-npm run test:ai
-npm run test:game
-npm run test:subscription
-npm audit
+npm run typecheck
+npm run test:coverage
 ```
 
-## Resultados
+## Resultados reais desta rodada
 
-| Comando | Status | Detalhe |
-|---------|--------|---------|
-| `npm ci` | ✅ | exit 0 |
+| Comando | Status final | Detalhe |
+|---------|--------------|---------|
+| `npm test` | ✅ | **5549 testes**, 168 arquivos |
 | `npm run typecheck` | ✅ | 0 erros TS strict |
-| `npm run lint` | ✅ | 0 erros ESLint |
-| `npm test` | ✅ | **1839 testes**, 117 arquivos, ~9s |
-| `npm run test:ci` | ✅ | coverage lines **72.85%** (threshold 70%) |
-| `npm run test:unit` | ✅ | subset lib/content/store |
-| `npm run test:integration` | ✅ | services/components/hooks |
-| `npm run test:security` | ✅ | ~1530 testes — core 262 + mass 1269 + matriz 31/31 |
-| `npm run test:ai` | ✅ | ai + lib-ai + production-guards |
-| `npm run test:game` | ✅ | evolution engine |
-| `npm run test:subscription` | ✅ | billing + entitlements |
-| `npm audit` | ➖ | Fora do gate — informativo (Expo SDK 51; ver SECURITY_AUDIT.md) |
-| Maestro E2E | ⏭ | Requer emulador/device — não roda em CI unit |
+| `npm run test:coverage` | ✅ | thresholds do CI respeitados |
 
-## Novos testes (sessão 2026-05-20)
+### Cobertura real desta rodada (Vitest + v8)
 
-| Arquivo | Testes | Área |
-|---------|--------|------|
-| `tests/ai/production-guards.test.ts` | 9 | AIRateLimiter, AICostGuard, AIResponseValidator, PersonalityVoice |
-| `tests/services/subscription/billing-modules.test.ts` | 8 | PaywallRules, PurchaseErrorMapper, SubscriptionTypes |
-| `tests/data/sync-engine.test.ts` | 4 | SyncEngine, SyncQueue, ConflictResolution |
+- Statements: **73.37%**
+- Branches: **67.66%**
+- Functions: **75.84%**
+- Lines: **73.61%**
 
-## Hangs / flakes
+## Cobertura de mudanças novas
 
-Nenhum hang detectado. Suite completa finaliza em <15s com `pool=threads`.
+- ✅ Fase 8-10 remanescente validada sem duplicação:
+  - `UnityDebugPanel` com métricas ACK
+  - integração `proxyMascotReply` (payload/fetch)
+  - sync/export com `life_state`
+  - guard de billing em produção
+  - des-enfase de chat na Home
+- ✅ Memória emocional (Phase 2.4):
+  - gravação de eventos de simulação em memória leve
+  - recall usado em linhas proativas de retorno/momento/hábito
+- ✅ Microevolução rara (Phase 3):
+  - trigger raro conectado ao fluxo Home
+  - teste de gatilho de streak para `micro-recovery-bloom`
+- ✅ Maestro smoke:
+  - fluxo `app/mobile/.maestro/home-return-sim.yaml` adicionado
 
-## E2E separado
+## Observações honestas
 
-Maestro em `.maestro/` — scripts `test:e2e` e `test:e2e:critical`. **Não** incluído em `npm test`.
+- Fluxos Maestro foram atualizados, mas **não executados em device/emulador nesta rodada**.
 
-## Pendências externas
+## Pendências externas ainda válidas
 
-- [ ] Maestro em CI com emulador
-- [ ] RevenueCat sandbox E2E
-- [ ] Proxy IA integration test (requer URL deployada)
+- [ ] Executar Maestro em emulador/device real (smoke atualizado)
+- [ ] RevenueCat sandbox E2E completo
+- [ ] Proxy IA server-side deployado para integração ponta a ponta
 
 ---
 
-*Gerado após quality gates verificados em 2026-05-20.*
+*Atualizado com execução real de test/typecheck/coverage em 2026-05-24.*

@@ -6,7 +6,7 @@ O app Expo/RN embute Unity via **Unity as a Library** exportado para `android/un
 
 ## Pré-requisitos
 
-- Unity **2022.3.62f1** + Android Build Support
+- Unity **6000.4.8f1** (Unity 6) + Android Build Support + NDK 26.1.10909125
 - Android Studio / JDK 17
 - Expo dev client ou build nativo (`npx expo run:android`)
 
@@ -31,7 +31,14 @@ Detalhes: `android/unityLibrary/README.md`
 
 ### 3. Gradle
 
-Descomente em `android/settings.gradle` (via plugin `withUnityAndroid.js` após prebuild):
+Após export, rode o script de wiring:
+
+```powershell
+cd app/mobile
+powershell -ExecutionPolicy Bypass -File scripts/wire-unity-android.ps1
+```
+
+Ou descomente manualmente em `android/settings.gradle`:
 
 ```gradle
 include ':unityLibrary'
@@ -67,6 +74,15 @@ npx expo prebuild --platform android --clean
 
 ### 6. Variáveis de ambiente
 
+Crie `app/mobile/.env.local` para dev local (home Three.js, quarto Unity):
+
+```env
+EXPO_PUBLIC_UNITY_ENABLED=true
+EXPO_PUBLIC_UNITY_DEBUG_PANEL=true
+```
+
+Unity em todo o app:
+
 ```env
 EXPO_PUBLIC_MASCOT_RENDERER=unity
 EXPO_PUBLIC_UNITY_ENABLED=true
@@ -74,6 +90,8 @@ EXPO_PUBLIC_UNITY_QUALITY=auto
 EXPO_PUBLIC_UNITY_DEBUG_PANEL=true
 EXPO_PUBLIC_UNITY_SIMULATE_FAILURE=false
 ```
+
+A rota `/mascot-room` usa `preferUnity` — basta `EXPO_PUBLIC_UNITY_ENABLED=true` mesmo com renderer global `three`.
 
 ### 7. Testar fallback
 
@@ -89,9 +107,21 @@ Com `EXPO_PUBLIC_UNITY_SIMULATE_FAILURE=true`, `MascotRenderer` cai para Three.j
 ## Limitações atuais
 
 - CI **não** compila AAR Unity (sem Editor no runner)
-- `UnityMascotModule.isAvailable()` retorna `false` até embed real
-- View Unity ainda é placeholder visual; runtime 3D exige export
+- `UnityMascotModule.isAvailable()` retorna `false` até embed real (`embedded=false` no stub)
+- View Unity ainda é placeholder visual; runtime 3D exige export + UnityView nativa
 - APK com Unity: +80–150 MB estimados
+
+## Sprint 3 — o que funciona sem Unity Editor
+
+| Camada | Sem AAR | Com AAR (após passo 8 runbook) |
+|--------|---------|--------------------------------|
+| Contrato `UnityMascotState` v1 | ✅ testes Vitest | ✅ |
+| `UnityMascotBridge` + stub `ready` | ✅ | ✅ mensagens reais |
+| `UnityMascotModule.kt` | ✅ stub log | ✅ `UnitySendMessage` |
+| `/mascot-room` + debug panel | ✅ | ✅ |
+| `MascotRenderer` fallback Three.js | ✅ | ✅ |
+| Gradle `:unityLibrary` | ❌ (intencional) | ✅ via `wire-unity-android.ps1` |
+| Render 3D Unity na tela | ❌ | ⚠️ placeholder RN (próximo sprint) |
 
 ## Troubleshooting
 

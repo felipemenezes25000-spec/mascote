@@ -21,6 +21,11 @@ beforeEach(async () => {
     openAiKey: null,
     toastQueue: [],
     currentToast: null,
+    lifeState: null,
+    lifeEvents: [],
+    lifeSummaryLine: null,
+    proactiveBubbleLine: null,
+    lifeReturnCelebration: false,
   });
 });
 

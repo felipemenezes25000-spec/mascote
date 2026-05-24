@@ -44,7 +44,9 @@ export const mascots = {
         health: m.health ?? existing?.health ?? 100,
         dna,
         dna_seed,
-        last_seen_at: new Date().toISOString(),
+        // Respeita last_seen_at explícito (testes/sync/simulação) e evita
+        // "tocar" presença ao fazer upsert genérico.
+        last_seen_at: m.last_seen_at ?? existing?.last_seen_at ?? new Date().toISOString(),
         created_at: existing?.created_at ?? new Date().toISOString(),
       };
       /* v8 ignore next 3 */
@@ -55,17 +57,41 @@ export const mascots = {
       return next;
     });
   },
-  async updateDna(user_id: string, dna: Mascot['dna']): Promise<Mascot | null> {
+  async updateDna(
+    user_id: string,
+    dna: Mascot['dna'],
+    opts?: { touchLastSeen?: boolean },
+  ): Promise<Mascot | null> {
     return withLock('mascots', async () => {
       const rows = await read<Mascot>('mascots');
       const idx = rows.findIndex(r => r.user_id === user_id);
       if (idx === -1) return null;
       const { sanitizeGenome } = await import('@/lib/dna/genome');
       const safeDna = dna ? sanitizeGenome(dna) : undefined;
+      const touchLastSeen = opts?.touchLastSeen !== false;
       const next: Mascot = {
         ...rows[idx],
         dna: safeDna,
-        last_seen_at: new Date().toISOString(),
+        ...(touchLastSeen ? { last_seen_at: new Date().toISOString() } : {}),
+      };
+      const updated = rows.map(r => (r.id === next.id ? next : r));
+      await write<Mascot>('mascots', updated);
+      return next;
+    });
+  },
+  /** Atualiza energy/mood sem tocar last_seen_at (simulação offline). */
+  async updateVitals(
+    user_id: string,
+    vitals: Pick<Mascot, 'energy' | 'mood'>,
+  ): Promise<Mascot | null> {
+    return withLock('mascots', async () => {
+      const rows = await read<Mascot>('mascots');
+      const idx = rows.findIndex(r => r.user_id === user_id);
+      if (idx === -1) return null;
+      const next: Mascot = {
+        ...rows[idx],
+        energy: vitals.energy,
+        mood: vitals.mood,
       };
       const updated = rows.map(r => (r.id === next.id ? next : r));
       await write<Mascot>('mascots', updated);

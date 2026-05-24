@@ -26,6 +26,14 @@ Campos principais:
 | `gesture` | `{ gesture: pet\|tap\|poke }` |
 | `quality.set` | `{ quality }` |
 
+Regras de robustez RN→Unity:
+
+- `seq` é **monotônico crescente** para `state.update` e `event.play`.
+- Mensagens com `seq` inválido ou não monotônico são rejeitadas no bridge.
+- RN mantém pendência por `seq` e aguarda `ack`; sem ACK aplica retry com backoff linear e limite de tentativas.
+- Em timeout final de ACK, o bridge emite `error` recoverable (`UNITY_ACK_TIMEOUT`) para fallback.
+- Em falha de `postMessage` nativo, o bridge emite `error` recoverable para fallback.
+
 Implementação stub: `src/components/unity/UnityMascotBridge.ts`
 
 ## Mensagens Unity → RN
@@ -36,6 +44,7 @@ Implementação stub: `src/components/unity/UnityMascotBridge.ts`
 | `error` | Falha (`recoverable` → fallback three) |
 | `animation.complete` | Fim de clip |
 | `gesture.received` | Tap no mascote 3D |
+| `ack` | Confirma processamento de `state.update`/`event.play` por `seq` |
 
 ## Mapeamentos PT → EN
 

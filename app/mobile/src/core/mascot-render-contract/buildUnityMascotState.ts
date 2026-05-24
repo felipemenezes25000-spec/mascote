@@ -221,6 +221,8 @@ export function buildUnityMascotState(
             postureBias: evo.postureBias,
             eyeBrightness: evo.eyeBrightness,
             bodyFirmness: evo.bodyFirmness,
+            calmAura: evo.calmAura,
+            zenParticles: evo.zenParticles,
             environmentTint: evo.environmentTint,
             idleAnimation: evo.idleAnimation,
             bodyScaleMultiplier: evo.bodyScaleMultiplier,

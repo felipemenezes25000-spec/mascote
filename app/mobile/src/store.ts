@@ -6,6 +6,9 @@ import { mascots, profiles, runMigrations, settings, streaks, wallet as walletDb
 import { logger } from '@/lib/logger';
 import { SECURE_KEYS, secureGet, secureRemove, secureSet } from '@/lib/secureStore';
 import type { UnlockToastData } from '@/components/UnlockToast';
+import type { LifeState, SimulationEvent } from '@/sim/types';
+import { orchestrateLifeSimulation } from '@/sim/orchestrate';
+import { hasReturnCelebration } from '@/sim';
 
 interface AppState {
   hydrated: boolean;
@@ -17,6 +20,16 @@ interface AppState {
   openAiKey: string | null;
   toastQueue: UnlockToastData[];
   currentToast: UnlockToastData | null;
+  /** Estado de vida simulada (LifeSimulator). */
+  lifeState: LifeState | null;
+  /** Eventos do último tick — consumidos por behavior/rendering. */
+  lifeEvents: SimulationEvent[];
+  /** Micro-copy da simulação para status bubble. */
+  lifeSummaryLine: string | null;
+  /** Micro-copy proativa (triggers contextuais) para status bubble. */
+  proactiveBubbleLine: string | null;
+  /** Flag visual: retorno após ausência longa. */
+  lifeReturnCelebration: boolean;
   hydrate: () => Promise<void>;
   setProfile: (p: Profile | null) => void;
   setMascot: (m: Mascot | null) => void;
@@ -36,6 +49,9 @@ interface AppState {
   setDna: (dna: MascotDNA) => Promise<void>;
   /** Limpa estado em memória após reset/exclusão de conta. */
   reset: () => void;
+  /** Roda tick de simulação offline/online e atualiza mascot + life state. */
+  runLifeSimulation: () => Promise<void>;
+  clearLifeEvents: () => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -48,6 +64,11 @@ export const useStore = create<AppState>((set, get) => ({
   openAiKey: null,
   toastQueue: [],
   currentToast: null,
+  lifeState: null,
+  lifeEvents: [],
+  lifeSummaryLine: null,
+  proactiveBubbleLine: null,
+  lifeReturnCelebration: false,
 
   async hydrate() {
     // Migrations PRIMEIRO. Se schema mudou, queremos transformar antes de
@@ -98,7 +119,38 @@ export const useStore = create<AppState>((set, get) => ({
       }
     }
     /* v8 ignore stop */
-    set({ profile, mascot, streak, settings: resolvedSettings, wallet: w, openAiKey, hydrated: true });
+    let resolvedMascot = mascot;
+    let lifeState: LifeState | null = null;
+    let lifeEvents: SimulationEvent[] = [];
+    let lifeSummaryLine: string | null = null;
+    let lifeReturnCelebration = false;
+    if (mascot) {
+      try {
+        const sim = await orchestrateLifeSimulation(mascot);
+        resolvedMascot = sim.mascot;
+        lifeState = sim.lifeState;
+        lifeEvents = sim.events;
+        lifeSummaryLine = sim.summaryLine ?? null;
+        lifeReturnCelebration = hasReturnCelebration(sim.events);
+      } catch (err) {
+        logger.warn('[store] life simulation failed on hydrate', {
+          reason: err instanceof Error ? err.message : 'unknown',
+        });
+      }
+    }
+    set({
+      profile,
+      mascot: resolvedMascot,
+      streak,
+      settings: resolvedSettings,
+      wallet: w,
+      openAiKey,
+      hydrated: true,
+      lifeState,
+      lifeEvents,
+      lifeSummaryLine,
+      lifeReturnCelebration,
+    });
   },
 
   setProfile(p) {
@@ -215,6 +267,34 @@ export const useStore = create<AppState>((set, get) => ({
       openAiKey: null,
       toastQueue: [],
       currentToast: null,
+      lifeState: null,
+      lifeEvents: [],
+      lifeSummaryLine: null,
+      proactiveBubbleLine: null,
+      lifeReturnCelebration: false,
     });
+  },
+
+  async runLifeSimulation() {
+    const m = get().mascot;
+    if (!m) return;
+    try {
+      const sim = await orchestrateLifeSimulation(m);
+      set({
+        mascot: sim.mascot,
+        lifeState: sim.lifeState,
+        lifeEvents: sim.events,
+        lifeSummaryLine: sim.summaryLine ?? null,
+        lifeReturnCelebration: hasReturnCelebration(sim.events),
+      });
+    } catch (err) {
+      logger.warn('[store] runLifeSimulation failed', {
+        reason: err instanceof Error ? err.message : 'unknown',
+      });
+    }
+  },
+
+  clearLifeEvents() {
+    set({ lifeEvents: [], lifeReturnCelebration: false });
   },
 }));

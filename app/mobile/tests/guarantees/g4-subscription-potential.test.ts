@@ -71,6 +71,17 @@ describe('Guarantee #4 — vontade de assinar não morre antes da hora', () => {
       // Adulto+ é Plus — esperado
       expect(entitlementService.canEvolveToPhase('free', 'adulto')).toBe(false);
     });
+
+    it('free mantém acesso explícito ao suporte de crise (188) fora do paywall', async () => {
+      const { copyFor } = await import('@/lib/paywall-triggers');
+      const content = JSON.stringify(copyFor('premium_feature', 'Bipo')).toLowerCase();
+      expect(content).not.toContain('188');
+      const { readFile } = await import('node:fs/promises');
+      const { resolve } = await import('node:path');
+      const paywallSource = await readFile(resolve(__dirname, '../../app/paywall.tsx'), 'utf8');
+      expect(paywallSource).toMatch(/188/);
+      expect(paywallSource).toMatch(/versão grátis/i);
+    });
   });
 
   describe('4.2 trial mock end-to-end (subscribe → premium → cancel → free)', () => {

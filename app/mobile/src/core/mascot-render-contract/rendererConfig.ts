@@ -42,6 +42,11 @@ export function isUnityEnabled(): boolean {
   return parseBool(readEnv('EXPO_PUBLIC_UNITY_ENABLED'), false);
 }
 
+/** Unity na Home tab — opt-in separado de /mascot-room; exige EXPO_PUBLIC_UNITY_ENABLED. */
+export function isUnityHomeEnabled(): boolean {
+  return isUnityEnabled() && parseBool(readEnv('EXPO_PUBLIC_UNITY_HOME'), false);
+}
+
 export function getUnityQuality(): UnityQualityPreset {
   const raw = readEnv('EXPO_PUBLIC_UNITY_QUALITY');
   if (raw && (VALID_QUALITY as readonly string[]).includes(raw)) {
@@ -72,4 +77,17 @@ export function resolveEffectiveRendererMode(): MascotRendererMode {
   if (cfg.mode === 'unity' && cfg.unityEnabled) return 'unity';
   if (cfg.mode === 'fallback2d') return 'fallback2d';
   return 'three';
+}
+
+export interface ResolveRendererModeOptions {
+  /** Rotas dedicadas (ex.: /mascot-room) tentam Unity quando a flag está ativa. */
+  preferUnity?: boolean;
+}
+
+/**
+ * Modo efetivo do renderer — home usa env global; rotas premium podem preferir Unity.
+ */
+export function resolveRendererMode(options: ResolveRendererModeOptions = {}): MascotRendererMode {
+  if (options.preferUnity && isUnityEnabled()) return 'unity';
+  return resolveEffectiveRendererMode();
 }

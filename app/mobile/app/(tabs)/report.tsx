@@ -20,6 +20,7 @@ import { Button } from '@/components/Button';
 import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
 import { buildWeeklyInsightLite } from '@/lib/weekly-insight-lite';
 import { useStyles, useTheme } from '@/lib/useTheme';
+import { color as dsColor } from '@/design-system/tokens';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 import type { Checkin, HabitKind } from '@/types';
@@ -96,6 +97,18 @@ export default function ReportTab() {
             <Stat icon="flame" label="streak" value={`${streak?.current_streak ?? 0}d`} sub="atual" />
           </View>
         </StaggeredView>
+
+        {weekCount === 0 && (
+          <StaggeredView index={2}>
+            <Card variant="elevated" padding="md" style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>Sem check-ins nesta semana</Text>
+              <Text style={styles.emptyBody}>
+                Quando quiser retomar, um check-in curto já começa a preencher seu mapa.
+              </Text>
+              <Button variant="secondary" label="Fazer check-in" onPress={() => router.push('/checkin')} />
+            </Card>
+          </StaggeredView>
+        )}
 
         <StaggeredView index={2}>
           <Card variant="elevated" padding="md" style={styles.insightCard}>
@@ -314,7 +327,7 @@ function makeStyles(theme: Theme) {
       gap: theme.spacing.sm,
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: theme.colors.primary + '33',
+      borderColor: theme.colors.primary + dsColor.alpha20,
     },
     shareBtnText: {
       ...theme.text.bodyBold,
@@ -380,6 +393,19 @@ function makeStyles(theme: Theme) {
       ...theme.text.sm,
       color: theme.colors.primary,
       fontWeight: '700',
+    },
+    emptyCard: {
+      marginHorizontal: theme.spacing.lg,
+      gap: theme.spacing.sm,
+    },
+    emptyTitle: {
+      ...theme.text.bodyBold,
+      color: theme.colors.text,
+    },
+    emptyBody: {
+      ...theme.text.sm,
+      color: theme.colors.textSecondary,
+      lineHeight: 19,
     },
   });
 }

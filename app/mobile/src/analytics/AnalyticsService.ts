@@ -15,6 +15,7 @@
 
 import type { AnalyticsProvider } from './AnalyticsProvider';
 import type { AnalyticsEventName, AnalyticsEventPayload } from './AnalyticsEvents';
+import { MockAnalyticsProvider } from './MockAnalyticsProvider';
 import { mockAnalyticsProvider } from './MockAnalyticsProvider';
 
 interface ConsentSource {
@@ -25,6 +26,15 @@ class AnalyticsService {
   private provider: AnalyticsProvider = mockAnalyticsProvider;
   private consent: ConsentSource = { isConsented: () => true };
   private userIdHash: string | null = null;
+
+  private isProductionBuild(): boolean {
+    const env = (process.env.EXPO_PUBLIC_ENV ?? process.env.NODE_ENV ?? 'development').toLowerCase();
+    return env === 'production';
+  }
+
+  private isMockForbiddenInProduction(): boolean {
+    return this.isProductionBuild() && this.provider instanceof MockAnalyticsProvider;
+  }
 
   setProvider(provider: AnalyticsProvider): void {
     this.provider = provider;
@@ -40,6 +50,7 @@ class AnalyticsService {
   identify(userIdHash: string): void {
     this.userIdHash = userIdHash;
     if (!this.consent.isConsented()) return;
+    if (this.isMockForbiddenInProduction()) return;
     this.provider.identify?.(userIdHash);
   }
 
@@ -48,6 +59,7 @@ class AnalyticsService {
     props: AnalyticsEventPayload[K],
   ): void {
     if (!this.consent.isConsented()) return;
+    if (this.isMockForbiddenInProduction()) return;
     this.provider.track(event, {
       ...props,
       user_id_hash: this.userIdHash ?? undefined,

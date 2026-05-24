@@ -52,6 +52,7 @@ import { useStyles, useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import { useEvolutionState } from '@/hooks/useEvolutionState';
 import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
+import { color } from '@/design-system/tokens';
 import { EmptyState } from '@/components/EmptyState';
 import { PremiumFeatureGuard } from '@/components/PremiumFeatureGuard';
 import { mascotMemoryService } from '@/game/memory';
@@ -120,6 +121,7 @@ export default function EvolutionTab() {
   } = useEvolutionState();
   const { tier } = useSubscriptionTier();
   const [memorySnippets, setMemorySnippets] = useState<string[]>([]);
+  const [showGeneDetails, setShowGeneDetails] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -412,7 +414,7 @@ export default function EvolutionTab() {
                         <View style={styles.timelineLine} />
                       )}
                     </View>
-                    <View style={[styles.timelineCard, { borderColor: color + '55' }]}>
+                    <View style={[styles.timelineCard, { borderColor: color + colorToken.alpha33 }]}>
                       <View style={styles.timelineHeader}>
                         <Text style={[styles.timelineRarity, { color }]}>
                           {rarityLabel(u.mutation.rarity)}
@@ -477,6 +479,23 @@ export default function EvolutionTab() {
                 {evolutionState.microEvolutions.length} microevoluções ·{' '}
                 {evolutionState.phenotype.displayModifiers.activeEnergy ? 'energia ativa' : 'calma presente'}
               </Text>
+              <View style={styles.traitsRow}>
+                {evolutionState.phenotype.displayModifiers.calmAura ? (
+                  <View style={styles.traitChip}>
+                    <Text style={styles.traitChipText}>calm aura ativa</Text>
+                  </View>
+                ) : null}
+                {evolutionState.phenotype.displayModifiers.zenParticles ? (
+                  <View style={styles.traitChip}>
+                    <Text style={styles.traitChipText}>zen particles visíveis</Text>
+                  </View>
+                ) : null}
+                {evolutionState.phenotype.displayModifiers.activeEnergy ? (
+                  <View style={styles.traitChip}>
+                    <Text style={styles.traitChipText}>energia ativa</Text>
+                  </View>
+                ) : null}
+              </View>
             </View>
           </StaggeredView>
         )}
@@ -488,12 +507,25 @@ export default function EvolutionTab() {
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>Traços do corpo dela</Text>
               <PressableScale
-                onPress={() => setGenomeExpanded(v => !v)}
+                onPress={() => {
+                  if (!genomeExpanded) {
+                    setGenomeExpanded(true);
+                    setShowGeneDetails(true);
+                    return;
+                  }
+                  setShowGeneDetails(v => !v);
+                }}
                 accessibilityRole="button"
-                accessibilityLabel={genomeExpanded ? 'Ver menos traços' : 'Ver todos os traços'}
+                accessibilityLabel={
+                  !genomeExpanded
+                    ? 'Ver todos os traços'
+                    : showGeneDetails
+                      ? 'Ocultar detalhes dos genes'
+                      : 'Ver detalhes dos genes'
+                }
               >
                 <Text style={styles.sectionLink}>
-                  {genomeExpanded ? 'ver menos' : 'ver todos'}
+                  {!genomeExpanded ? 'ver todos' : showGeneDetails ? 'ocultar detalhes' : 'ver detalhes'}
                 </Text>
               </PressableScale>
             </View>
@@ -518,10 +550,26 @@ export default function EvolutionTab() {
                         ]}
                       />
                     </View>
+                    {showGeneDetails ? (
+                      <Text style={styles.genomePct}>{Math.round(value * 100)}%</Text>
+                    ) : null}
                   </View>
                 ));
               })()}
             </View>
+            {genomeExpanded ? (
+              <PressableScale
+                onPress={() => {
+                  setGenomeExpanded(false);
+                  setShowGeneDetails(false);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Ver menos traços"
+                style={styles.collapseWrap}
+              >
+                <Text style={styles.sectionLink}>ver menos</Text>
+              </PressableScale>
+            ) : null}
           </StaggeredView>
         )}
 
@@ -602,7 +650,7 @@ function makeStyles(theme: Theme) {
       borderRadius: theme.radius.lg,
       backgroundColor: theme.colors.primaryTint,
       borderWidth: 1,
-      borderColor: theme.colors.primary + '33',
+      borderColor: theme.colors.primary + colorToken.alpha20,
       gap: theme.spacing.sm,
     },
     identityHeader: {
@@ -714,7 +762,7 @@ function makeStyles(theme: Theme) {
       letterSpacing: 0.8,
       fontFamily: 'JetBrainsMono_500Medium',
       borderWidth: 1,
-      borderColor: theme.colors.primary + '40',
+      borderColor: theme.colors.primary + colorToken.alpha25,
     },
     // ---- novos styles SPEC-1 (timeline procedural, viewer de genoma) ----
     sectionHeaderRow: {
@@ -818,7 +866,7 @@ function makeStyles(theme: Theme) {
       backgroundColor: theme.colors.primaryTint,
       borderRadius: theme.radius.lg,
       borderWidth: 1,
-      borderColor: theme.colors.primary + '33',
+      borderColor: theme.colors.primary + colorToken.alpha20,
       borderStyle: 'dashed',
       gap: 6,
     },
@@ -890,6 +938,11 @@ function makeStyles(theme: Theme) {
       fontFamily: 'JetBrainsMono_500Medium',
       fontSize: 11,
     },
+    collapseWrap: {
+      alignItems: 'flex-end',
+      paddingHorizontal: theme.spacing.lg,
+      marginTop: theme.spacing.xs,
+    },
     linksRow: {
       flexDirection: 'row',
       gap: theme.spacing.sm,
@@ -924,3 +977,5 @@ function makeStyles(theme: Theme) {
     },
   });
 }
+
+const colorToken = color;

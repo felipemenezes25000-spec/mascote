@@ -11,9 +11,11 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { addDays, checkins as checkinsDb, messages as messagesDb, todayLocal } from '@/lib/db';
+import { recallSimulationMemoryHint } from '@/lib/memory/simulation';
 import { notify } from '@/lib/notify';
 import { classifyIntent } from '@/content/replies';
 import type { Checkin, Profile } from '@/types';
+import type { LifeState, SimulationEvent } from '@/sim/types';
 
 export type ProactiveTrigger =
   | 'no_water_3d'
@@ -21,7 +23,16 @@ export type ProactiveTrigger =
   | 'quiet_chat_7d'
   | 'recent_sad_streak'
   | 'first_week_complete'
-  | 'monthly_recap_ready';
+  | 'monthly_recap_ready'
+  | 'sim_low_energy'
+  | 'sim_return_absence'
+  | 'sim_low_mood'
+  | 'sim_habit_missed'
+  | 'sim_streak_risk'
+  | 'sim_living_moment'
+  | 'evening_checkin_nudge'
+  | 'habit_rhythm_positive'
+  | 'weekend_gentle_nudge';
 
 interface TriggerDef {
   id: ProactiveTrigger;
@@ -41,6 +52,10 @@ export interface ProactiveContext {
   lastChatAt: string | null;
   /** Mascot name pra interpolar. */
   mascotName: string;
+  /** Estado de vida da simulação (quando disponível). */
+  lifeState?: LifeState | null;
+  /** Eventos do último tick de simulação (hábitos, streak, retorno). */
+  simulationEvents?: readonly SimulationEvent[];
 }
 
 const COOLDOWN_KEY = (uid: string, trigger: ProactiveTrigger) =>
@@ -186,15 +201,173 @@ const TRIGGERS: TriggerDef[] = [
       };
     },
   },
+  // Simulação: energy baixa após tick offline
+  {
+    id: 'sim_low_energy',
+    cooldownHours: 36,
+    async test(ctx) {
+      const energy = ctx.lifeState?.energy;
+      if (energy === undefined || energy >= 35) return { fire: false };
+      return {
+        fire: true,
+        title: `${ctx.mascotName} tá mais quieto`,
+        body: 'Descansou enquanto você estava fora. Um check-in leve hoje?',
+      };
+    },
+  },
+  // Simulação: retorno após ausência longa
+  {
+    id: 'sim_return_absence',
+    cooldownHours: 72,
+    async test(ctx) {
+      const hours = ctx.lifeState?.absence_hours ?? 0;
+      if (hours < 48) return { fire: false };
+      const days = Math.floor(hours / 24);
+      const hint = await recallSimulationMemoryHint(
+        ctx.profile.id,
+        'retorno ausência mascote voltou',
+      );
+      return {
+        fire: true,
+        title: `${ctx.mascotName} te esperava`,
+        body:
+          hint ??
+          (days >= 3
+            ? `Faz ${days} dias. Sem cobrança — só feliz que voltou.`
+            : 'Enquanto você estava fora, cuidei do meu ritmo.'),
+      };
+    },
+  },
+  // Simulação: humor baixo persistente
+  {
+    id: 'sim_low_mood',
+    cooldownHours: 48,
+    async test(ctx) {
+      const mood = ctx.lifeState?.mood;
+      if (mood !== 'triste' && mood !== 'exausto') return { fire: false };
+      return {
+        fire: true,
+        title: `${ctx.mascotName} quer te ouvir`,
+        body: 'Tô um pouco quieto. Como você tá hoje?',
+      };
+    },
+  },
+  // Simulação: hábito regular perdido durante ausência
+  {
+    id: 'sim_habit_missed',
+    cooldownHours: 36,
+    async test(ctx) {
+      const ev = ctx.simulationEvents?.find(e => e.kind === 'while_away_habit_missed');
+      if (!ev?.message) return { fire: false };
+      return {
+        fire: true,
+        title: `${ctx.mascotName} notou seu ritmo`,
+        body: ev.message,
+      };
+    },
+  },
+  // Simulação: streak em risco após ausência
+  {
+    id: 'sim_streak_risk',
+    cooldownHours: 48,
+    async test(ctx) {
+      const ev = ctx.simulationEvents?.find(e => e.kind === 'while_away_streak_risk');
+      if (!ev?.message) return { fire: false };
+      return {
+        fire: true,
+        title: `${ctx.mascotName} lembrou do seu ritmo`,
+        body: ev.message,
+      };
+    },
+  },
+  // Simulação: pequeno momento autônomo enquanto usuário estava fora
+  {
+    id: 'sim_living_moment',
+    cooldownHours: 24,
+    async test(ctx) {
+      const ev = ctx.simulationEvents?.find(e => e.kind === 'while_away_living_moment');
+      if (!ev?.message) return { fire: false };
+      const hint = await recallSimulationMemoryHint(
+        ctx.profile.id,
+        'momento vivido enquanto fora',
+      );
+      return {
+        fire: true,
+        title: `${ctx.mascotName} ficou por aqui`,
+        body: hint ?? ev.message,
+      };
+    },
+  },
+  // Noite (18–22h) sem check-in hoje — lembrete leve
+  {
+    id: 'evening_checkin_nudge',
+    cooldownHours: 20,
+    async test(ctx) {
+      const hour = new Date().getHours();
+      if (hour < 18 || hour > 22) return { fire: false };
+      const today = todayLocal();
+      const checkedToday = ctx.recentCheckins.some(c => c.occurred_on === today);
+      if (checkedToday) return { fire: false };
+      if ((ctx.lifeState?.absence_hours ?? 0) < 12) return { fire: false };
+      return {
+        fire: true,
+        title: `${ctx.mascotName} tá acordado`,
+        body: 'Noite boa. Um check-in leve antes de descansar?',
+      };
+    },
+  },
+  // Ritmo forte: 5+ dias com check-in nos últimos 7
+  {
+    id: 'habit_rhythm_positive',
+    cooldownHours: 72,
+    async test(ctx) {
+      const cutoff7 = addDays(todayLocal(), -6);
+      const daysWithCheckin = new Set(
+        ctx.recentCheckins.filter(c => c.occurred_on >= cutoff7).map(c => c.occurred_on),
+      ).size;
+      if (daysWithCheckin < 5) return { fire: false };
+      return {
+        fire: true,
+        title: `${ctx.mascotName} notou seu ritmo`,
+        body: `${daysWithCheckin} dias nos últimos 7. Isso vira hábito.`,
+      };
+    },
+  },
+  // Fim de semana sem check-in, mas semana ativa
+  {
+    id: 'weekend_gentle_nudge',
+    cooldownHours: 36,
+    async test(ctx) {
+      const dow = new Date().getDay();
+      if (dow !== 0 && dow !== 6) return { fire: false };
+      const today = todayLocal();
+      if (ctx.recentCheckins.some(c => c.occurred_on === today)) return { fire: false };
+      const weekdayCutoff = addDays(today, -5);
+      const weekdayDays = new Set(
+        ctx.recentCheckins
+          .filter(c => c.occurred_on >= weekdayCutoff && c.occurred_on < today)
+          .map(c => c.occurred_on),
+      ).size;
+      if (weekdayDays < 3) return { fire: false };
+      return {
+        fire: true,
+        title: `${ctx.mascotName} relaxou com você`,
+        body: 'Fim de semana. Um check-in leve se der vontade.',
+      };
+    },
+  },
 ];
 
 /**
  * Avalia todos os triggers, dispara os que passam cooldown + test,
- * marca como fired e cria notificações. Retorna lista de triggers disparados
- * (útil pra debug).
+ * marca como fired e cria notificações. Retorna triggers disparados
+ * e micro-copy para status bubble na Home.
  */
-export async function runProactiveScan(ctx: ProactiveContext): Promise<ProactiveTrigger[]> {
+export async function runProactiveScan(
+  ctx: ProactiveContext,
+): Promise<{ fired: ProactiveTrigger[]; bubbleLine: string | null }> {
   const fired: ProactiveTrigger[] = [];
+  let bubbleLine: string | null = null;
   for (const def of TRIGGERS) {
     // Serializa read-cooldown → test → notify → markFired por (user, trigger)
     // pra evitar dois scans concorrentes dispararem o mesmo trigger.
@@ -213,24 +386,25 @@ export async function runProactiveScan(ctx: ProactiveContext): Promise<Proactive
       // markFired ANTES de notify: se o app for morto entre os dois, é
       // melhor perder uma notificação do que disparar duplicada no próximo scan.
       await markFired(ctx.profile.id, def.id);
-      const created = await notify(
+      const body = trigger.body ?? 'Como você tá hoje?';
+      await notify(
         ctx.profile,
         'reminder',
         /* v8 ignore start — todos os triggers atuais setam title e body
            explicitamente; os fallbacks `??` são guards para extensões futuras. */
         trigger.title ?? `${ctx.mascotName} passou aqui`,
-        trigger.body ?? 'Como você tá hoje?',
+        body,
         /* v8 ignore stop */
         { proactive: def.id }
       );
-      /* v8 ignore next — notify retorna null sob push_enabled=false / pause /
-         quiet hours; testado mas o branch específico marca aqui. */
-      if (!created) return null;
-      return def.id;
+      return { id: def.id, body };
     });
-    if (result) fired.push(result);
+    if (result) {
+      fired.push(result.id);
+      if (result.body && !bubbleLine) bubbleLine = result.body;
+    }
   }
-  return fired;
+  return { fired, bubbleLine };
 }
 
 /**
@@ -239,7 +413,9 @@ export async function runProactiveScan(ctx: ProactiveContext): Promise<Proactive
  */
 export async function buildProactiveContext(
   profile: Profile,
-  mascotName: string
+  mascotName: string,
+  lifeState?: LifeState | null,
+  simulationEvents?: readonly SimulationEvent[],
 ): Promise<ProactiveContext> {
   const allCheckins = await checkinsDb.listAll(profile.id);
   const today = todayLocal();
@@ -262,5 +438,7 @@ export async function buildProactiveContext(
     recentUserMessages,
     lastChatAt,
     mascotName,
+    lifeState: lifeState ?? null,
+    simulationEvents: simulationEvents ?? [],
   };
 }

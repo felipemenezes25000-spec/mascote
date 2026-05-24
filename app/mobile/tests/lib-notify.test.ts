@@ -224,6 +224,7 @@ describe('maybeNotifyStreakAtRisk', () => {
     await maybeNotifyStreakAtRisk(p, 3, '2026-05-17');
     const list = await notifications.list(p.id);
     expect(list.some(n => n.kind === 'streak_at_risk')).toBe(true);
+    expect(list[0]?.title).toContain('ritmo');
     vi.useRealTimers();
   });
 

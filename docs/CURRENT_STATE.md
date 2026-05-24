@@ -2,7 +2,7 @@
 
 Documento único de verdade operacional. Auditorias antigas (`AUDIT_AAA_COMPLETO.md`, `VEREDITO-FINAL.md`) são históricas — consulte este arquivo primeiro.
 
-**Última verificação:** 2026-05-20 — `npm run test:coverage` rodando 1785 testes, coverage real 72.3% lines.
+**Última verificação:** 2026-05-24 — `npm test` (**5549 testes / 168 arquivos**), `npm run typecheck` e `npm run test:coverage` reexecutados nesta sessão.
 
 ## Monorepo
 
@@ -18,11 +18,11 @@ Comandos na **raiz**: `npm run quality`, `npm test`, `npm run typecheck`, `npm r
 
 | Área | Estado | Notas |
 |------|--------|-------|
-| Quality gate | ✅ `npm run quality` (typecheck + ESLint + 1808 testes / 113 arquivos / ~7-9s) | Reusado pelo CI |
-| Coverage | 🟡 72.9% lines / 69.4% branches (medido 2026-05-20). Threshold enforçado: 70/66/72/70 | Maestro E2E cobre fluxos nativos faltantes; ver task "noUncheckedIndexedAccess" |
+| Quality gate | ✅ `npm run quality` (typecheck + ESLint + suíte completa / ~12-18s) | Reusado pelo CI |
+| Coverage | ✅ 73.61% lines / 67.66% branches (medido 2026-05-24). Threshold enforçado: 70/66/72/70 | Statements 73.37% · Functions 75.84% |
 | Test scripts | ✅ test:unit (1211), test:integration (233), test:security (262, matriz 100%), test:ai (208), test:game (21), test:subscription (44), test:ci (full + coverage) | Permite gating granular em CI/pre-commit |
 | Mutations | 12 marcos (7 individuais + 5 combo) — não 50+ como dito em iterações anteriores | [src/lib/dna/mutations.ts](../app/mobile/src/lib/dna/mutations.ts) e [mutations-extended.ts](../app/mobile/src/lib/dna/mutations-extended.ts) |
-| Analytics layer | ✅ Interface + MockProvider + 16 eventos tipados + consent gating | [src/analytics/](../app/mobile/src/analytics/) — provider real (Firebase/PostHog) plugável |
+| Analytics layer | ✅ Interface + MockProvider + 16 eventos tipados + consent gating + guard de mock em build de produção | [src/analytics/](../app/mobile/src/analytics/) — provider real (Firebase/PostHog) plugável |
 | Billing demo guard | ✅ `isDemoBilling()` + `isMockInProductionBuild()` + warning estruturado | [billing-provider.ts](../app/mobile/src/services/subscription/billing-provider.ts) |
 | npm audit | 🟡 25 vulns (15 high, 9 mod, 1 low) — todas tied a Expo SDK 51 chain | [SECURITY_AUDIT.md](SECURITY_AUDIT.md) — fix exige upgrade SDK 51→53 |
 | ESLint | ✅ Flat config (`eslint.config.js`) — RN + TS + react-hooks | Migrado de `.eslintrc.cjs` |
@@ -38,7 +38,7 @@ Comandos na **raiz**: `npm run quality`, `npm test`, `npm run typecheck`, `npm r
 | IA chat | 🟡 Fallback local rico; OpenAI BYOK opt-in; proxy URL preparado (`EXPO_PUBLIC_AI_PROXY_URL`) | Sem proxy deployado |
 | Billing | 🟡 Demo mock padrão; RevenueCat adapter sem SDK nativo | `EXPO_PUBLIC_BILLING_PROVIDER` |
 | Sync | ✅ Local completo via `exportAll` / `localSyncRepo` / `SyncEngine` (`local_only`) | Sem backend remoto |
-| Mutações DNA | ✅ 50+ no catálogo | `lib/dna/mutations*.ts` |
+| Mutações DNA | ✅ catálogo ativo com 12 marcos (7 individuais + 5 combo) | `lib/dna/mutations*.ts` |
 | Maestro CI | 🟡 Workflow gatado por `vars.CI_E2E=1` | `.github/workflows/maestro.yml` |
 | EAS / loja | 🔴 Sem `eas.json` commitado; `eas.json.example` | Ver `BETA_RELEASE_CHECKLIST.md` |
 | A11y | ✅ Helpers + testes; `accessibilityLabel`/`Role` em telas críticas | `src/lib/accessibility.ts` |
@@ -63,7 +63,7 @@ Comandos na **raiz**: `npm run quality`, `npm test`, `npm run typecheck`, `npm r
 
 ```powershell
 # na raiz (recomendado)
-npm run quality          # typecheck + lint + 1785 testes
+npm run quality          # typecheck + lint + suíte completa
 npm test                 # apenas testes (sem coverage)
 npm run test:coverage    # testes + coverage (enforça threshold do CI)
 npm run typecheck
@@ -84,3 +84,9 @@ npm run quality
 - **RevenueCat SDK não vinculado** — `RevenueCatBillingProvider` retorna erro honesto até integração nativa. Ver [PREMIUM_STRATEGY.md](PREMIUM_STRATEGY.md).
 - **Sync remoto não implementado** — app é 100% local-first. Ver [SYNC_ARCHITECTURE.md](SYNC_ARCHITECTURE.md).
 - **Analytics provider real** — só mock por ora. Plugar Firebase/PostHog quando decisão tomada. Ver [src/analytics/](../app/mobile/src/analytics/).
+
+## Beta blockers (snapshot honesto)
+
+- **RevenueCat nativo real** ainda não integrado em produção.
+- **Proxy IA server-side** ainda não deployado (cliente pronto com fallback/BYOK).
+- **Smoke real de release em device/loja** ainda pendente no gate padrão.

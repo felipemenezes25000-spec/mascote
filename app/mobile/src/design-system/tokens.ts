@@ -123,6 +123,17 @@ export const hitSlop = {
 } as const;
 
 // ============================================================================
+// Cores utilitárias compartilhadas para evitar hardcode de rgba em telas.
+// ============================================================================
+export const color = {
+  glassBorderDark: 'rgba(255,255,255,0.08)',
+  glassBorderLight: 'rgba(255,255,255,0.5)',
+  alpha20: '33',
+  alpha25: '40',
+  alpha33: '55',
+} as const;
+
+// ============================================================================
 // Re-export único — componentes podem fazer:
 //   import { space, radius, motion } from '@/design-system/tokens';
 // ============================================================================
@@ -132,6 +143,7 @@ export const tokens = {
   z,
   motion,
   elevation,
+  color,
   font,
   hitSlop,
 } as const;

@@ -31,6 +31,7 @@ const EXPORT_EXTENDED_TABLES = [
   'memory_tfidf',
   'subscription_state',
   'personalization_prefs',
+  'life_state',
 ] as const;
 
 const EVOLUTION_EXPORT_KEY = (uid: string) => `mascote:evolution:${uid}`;
@@ -38,6 +39,7 @@ const MEMORY_EXPORT_KEY = (uid: string) => `mascote:memory:${uid}`;
 const MEMORY_TFIDF_EXPORT_KEY = (uid: string) => `mascote:memory_tfidf:${uid}`;
 const SUB_EXPORT_KEY = (uid: string) => `mascote:subscription:${uid}`;
 const PERSONALIZATION_EXPORT_KEY = (uid: string) => `mascote:personalization:${uid}`;
+const LIFE_STATE_EXPORT_KEY = (uid: string) => `mascote:life_state:${uid}`;
 
 export async function resetAll(): Promise<void> {
   const allKeys = await AsyncStorage.getAllKeys();
@@ -127,6 +129,17 @@ export async function exportAll(user_id: string): Promise<Record<string, any[]>>
     out.personalization_prefs = [];
   }
 
+  const lifeStateRaw = await AsyncStorage.getItem(LIFE_STATE_EXPORT_KEY(user_id));
+  if (lifeStateRaw) {
+    try {
+      out.life_state = [JSON.parse(lifeStateRaw)];
+    } catch {
+      out.life_state = [];
+    }
+  } else {
+    out.life_state = [];
+  }
+
   return out;
 }
 
@@ -176,6 +189,15 @@ export async function importAll(data: Record<string, any[]>): Promise<ImportResu
         await AsyncStorage.setItem(SUB_EXPORT_KEY(uid), JSON.stringify(row));
       } else if (t === 'personalization_prefs') {
         await AsyncStorage.setItem(PERSONALIZATION_EXPORT_KEY(uid), JSON.stringify(row));
+      } else if (t === 'life_state') {
+        await AsyncStorage.setItem(LIFE_STATE_EXPORT_KEY(uid), JSON.stringify(row));
+        await withLock('mascot_life', async () => {
+          const all = await readRaw('mascot_life');
+          const filtered = (all as Array<Record<string, unknown>>).filter(
+            r => r.user_id !== uid,
+          );
+          await write('mascot_life', [...filtered, row]);
+        });
       }
       imported.push(t);
       continue;

@@ -18,16 +18,39 @@ import Svg, { Circle, Defs, Ellipse, G, LinearGradient as SvgLinearGradient, Pat
 import { makeShadow } from '@/lib/themes';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
+import type { MascotMood } from '@/types';
+import { sceneAmbientTint } from '@/content/scenes';
 
 interface Props {
   sceneId: string;
   height?: number;
   children?: React.ReactNode;
+  /** Hora local 0–23 para tint de time-of-day. */
+  hour?: number;
+  /** Mood do mascote para hue shift. */
+  mood?: MascotMood;
+  /** Celebração de retorno (simulação). */
+  celebrationActive?: boolean;
 }
 
-function SceneBackgroundImpl({ sceneId, height = 240, children }: Props) {
+function SceneBackgroundImpl({
+  sceneId,
+  height = 240,
+  children,
+  hour = new Date().getHours(),
+  mood = 'ok',
+  celebrationActive = false,
+}: Props) {
   const theme = useTheme();
   const isDark = theme.mode === 'dark';
+  const ambient = sceneAmbientTint(hour, mood, celebrationActive);
+  const moodOpacity = ambient.moodShift < 1 ? 0.12 : ambient.moodShift > 1 ? 0.08 : 0;
+  const moodColor =
+    mood === 'triste' || mood === 'exausto'
+      ? 'rgba(80,90,120,'
+      : mood === 'feliz' || mood === 'empolgado'
+        ? 'rgba(255,200,100,'
+        : 'rgba(255,255,255,';
   return (
     <View
       style={[
@@ -47,7 +70,16 @@ function SceneBackgroundImpl({ sceneId, height = 240, children }: Props) {
         {renderScene(sceneId, theme)}
       </Svg>
 
-      {/* Layer 2: Vignette — escurece bordas pra dar foco central */}
+      {/* Layer 2: Time-of-day + mood tint */}
+      <LinearGradient
+        colors={[ambient.timeOverlay, ambient.timeOverlay, `${moodColor}${moodOpacity})`]}
+        locations={[0, 0.55, 1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}
+      />
+
+      {/* Layer 3: Vignette — escurece bordas pra dar foco central */}
       <LinearGradient
         colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.18)']}
         locations={[0, 0.5, 1]}
@@ -56,7 +88,7 @@ function SceneBackgroundImpl({ sceneId, height = 240, children }: Props) {
         style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}
       />
 
-      {/* Layer 3: Inner highlight — top, simula key light */}
+      {/* Layer 4: Inner highlight — top, simula key light */}
       <LinearGradient
         colors={['rgba(255,255,255,0.22)', 'rgba(255,255,255,0)']}
         locations={[0, 0.35]}
@@ -65,7 +97,7 @@ function SceneBackgroundImpl({ sceneId, height = 240, children }: Props) {
         style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}
       />
 
-      {/* Layer 4: Border luminosa (hairline) */}
+      {/* Layer 5: Border luminosa (hairline) */}
       <View
         style={[
           StyleSheet.absoluteFill,
@@ -78,7 +110,7 @@ function SceneBackgroundImpl({ sceneId, height = 240, children }: Props) {
         ]}
       />
 
-      {/* Layer 5: Conteúdo (mascote + UI) */}
+      {/* Layer 6: Conteúdo (mascote + UI) */}
       <View style={styles.contentLayer}>{children}</View>
     </View>
   );

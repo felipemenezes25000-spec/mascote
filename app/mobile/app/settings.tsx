@@ -35,6 +35,7 @@ export default function SettingsScreen() {
   const [showKey, setShowKey] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [importDraft, setImportDraft] = useState('');
+  const [exportingData, setExportingData] = useState(false);
 
   if (!profile || !mascot || !settings) return <Redirect href="/splash" />;
 
@@ -91,24 +92,27 @@ export default function SettingsScreen() {
   }
 
   async function exportData() {
-    if (!profile) return;
-    const data = await exportAll(profile.id);
-    const json = JSON.stringify(data, null, 2);
-    // Copia pro clipboard. NUNCA usar console.log: vaza no Logcat/Flipper.
+    if (!profile || exportingData) return;
+    setExportingData(true);
     try {
+      const data = await exportAll(profile.id);
+      const json = JSON.stringify(data, null, 2);
+      // Copia pro clipboard. NUNCA usar console.log: vaza no Logcat/Flipper.
       const Clipboard = await import('expo-clipboard');
       await Clipboard.setStringAsync(json);
       Alert.alert(
         'Dados copiados',
-        `${Object.keys(data).length} tabelas (${json.length} caracteres) copiadas pro clipboard. Cola num bloco de notas ou e-mail seguro.`,
+        `${Object.keys(data).length} tabelas (${json.length} caracteres) copiadas. Guarde em local seguro.`,
         [{ text: 'OK' }]
       );
     } catch {
       Alert.alert(
-        'Falha ao copiar',
-        'Não consegui acessar o clipboard. Use a opção de importar/exportar via JSON manualmente.',
+        'Falha ao exportar',
+        'Não consegui copiar agora. Tente de novo em alguns instantes.',
         [{ text: 'OK' }]
       );
+    } finally {
+      setExportingData(false);
     }
   }
 
@@ -404,6 +408,9 @@ export default function SettingsScreen() {
 
         {/* Privacidade */}
         <Section title="Privacidade e dados">
+          <Text style={styles.hintSmall}>
+            Seus dados ficam no aparelho. Você pode exportar backup em JSON ou excluir tudo quando quiser.
+          </Text>
           <ToggleRow
             label="Permitir analytics anônimo"
             value={settings.consent_analytics}
@@ -412,8 +419,13 @@ export default function SettingsScreen() {
           <Pressable onPress={() => router.push('/feedback')} style={styles.linkRow}>
             <Text style={styles.linkText}>Enviar feedback</Text>
           </Pressable>
-          <Pressable onPress={exportData} style={styles.linkRow}>
-            <Text style={styles.linkText}>Exportar meus dados (JSON)</Text>
+          <Pressable
+            onPress={exportData}
+            style={styles.linkRow}
+            accessibilityRole="button"
+            accessibilityLabel="Exportar meus dados em JSON"
+          >
+            <Text style={styles.linkText}>{exportingData ? 'Exportando dados...' : 'Exportar meus dados (JSON)'}</Text>
           </Pressable>
           <Pressable onPress={() => setShowImport(s => !s)} style={styles.linkRow}>
             <Text style={styles.linkText}>{showImport ? 'Cancelar importação' : 'Importar dados (JSON)'}</Text>
@@ -459,6 +471,9 @@ export default function SettingsScreen() {
 
         {/* Conta */}
         <Section title="Zona de perigo">
+          <Text style={styles.hintSmall}>
+            Excluir conta remove todos os dados locais deste dispositivo e não pode ser desfeito.
+          </Text>
           <Button variant="ghost" label="Excluir conta" onPress={confirmDelete} />
         </Section>
 

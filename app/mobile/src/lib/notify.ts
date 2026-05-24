@@ -95,8 +95,8 @@ export async function maybeNotifyStreakAtRisk(profile: Profile, streakDays: numb
   await notify(
     profile,
     'streak_at_risk',
-    'Sequência em construção',
-    `Você tem ${streakDays} dia${streakDays > 1 ? 's' : ''}. Um check-in mantém — sem culpa se passar.`,
+    'Seu ritmo está vivo',
+    `Você construiu ${streakDays} dia${streakDays > 1 ? 's' : ''} de cuidado. Se quiser hoje, um check-in curtinho mantém o ritmo.`,
     { streakDays }
   );
 }
@@ -106,7 +106,7 @@ export async function notifyWeeklyReportReady(profile: Profile): Promise<void> {
     profile,
     'weekly_report',
     'Seu resumo da semana',
-    'Já dá pra ver como você cuidou de você nos últimos 7 dias.'
+    'Quando quiser, seu resumo já está pronto com os últimos 7 dias.'
   );
 }
 
@@ -135,7 +135,7 @@ async function tryNotifyBirthday(
 }
 
 export async function notifyMascotBirthday(profile: Profile, daysOld: number): Promise<void> {
-  await tryNotifyBirthday(profile, daysOld, 30, 'Um mês juntos', 'Faz cerca de 30 dias que vocês se conheceram.');
-  await tryNotifyBirthday(profile, daysOld, 100, '100 dias juntos', 'Marco bonito. Tá vendo o quanto andou?');
-  await tryNotifyBirthday(profile, daysOld, 365, '1 ano juntos!', 'Faz cerca de 365 dias desde o primeiro check-in.');
+  await tryNotifyBirthday(profile, daysOld, 30, 'Um mês juntos', 'Já faz cerca de 30 dias de parceria leve entre vocês.');
+  await tryNotifyBirthday(profile, daysOld, 100, '100 dias juntos', 'Um marco bonito, no ritmo de vocês dois.');
+  await tryNotifyBirthday(profile, daysOld, 365, '1 ano juntos!', 'Cerca de 365 dias desde o primeiro check-in. Que jornada.');
 }

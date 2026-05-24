@@ -109,6 +109,8 @@ export interface UnityEvolutionVisuals {
   postureBias: number;
   eyeBrightness: number;
   bodyFirmness: number;
+  calmAura: boolean;
+  zenParticles: boolean;
   environmentTint: string;
   idleAnimation: string;
   bodyScaleMultiplier: number;
@@ -286,8 +288,15 @@ export interface UnityGestureReceivedMessage {
   gesture: string;
 }
 
+export interface UnityAckMessage {
+  type: 'ack';
+  seq: number;
+  originalType: 'state.update' | 'event.play';
+}
+
 export type UnityToRNMessage =
   | UnityReadyMessage
   | UnityErrorMessage
   | UnityAnimationCompleteMessage
-  | UnityGestureReceivedMessage;
+  | UnityGestureReceivedMessage
+  | UnityAckMessage;

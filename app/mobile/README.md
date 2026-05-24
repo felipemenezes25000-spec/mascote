@@ -2,6 +2,8 @@
 
 App principal: criatura procedural, hábitos, evolução, chat com IA (mock ou BYOK), gamificação e premium demo — **offline-first** com persistência local.
 
+Estado validado em 2026-05-24: `npm run typecheck` ✅ e `npm test` ✅ (**5549 testes / 168 arquivos**).
+
 ## Rodar
 
 Na **raiz do monorepo** (recomendado):
@@ -36,7 +38,9 @@ npm run test:coverage
 npm run test:e2e:critical   # Maestro (emulador)
 ```
 
-CI na raiz: `.github/workflows/ci.yml`. E2E Maestro: `.github/workflows/maestro.yml` (nesta pasta).
+CI principal na raiz: `.github/workflows/ci.yml`.
+Validação Unity estrutural: `.github/workflows/unity-ci.yml`.
+E2E Maestro: `.github/workflows/maestro.yml` (nesta pasta).
 
 ## Arquitetura
 
@@ -80,6 +84,9 @@ app/mobile/
 ## Docs relacionados
 
 - [docs/CURRENT_STATE.md](../../docs/CURRENT_STATE.md) — estado real e gaps
+- [docs/AUDIT_REAL_ATUAL.md](../../docs/AUDIT_REAL_ATUAL.md) — auditoria técnica recente
+- [docs/RELEASE_READINESS.md](../../docs/RELEASE_READINESS.md) — go/no-go de release
+- [docs/KNOWN_LIMITATIONS.md](../../docs/KNOWN_LIMITATIONS.md) — limites atuais
 - [docs/PREMIUM_STRATEGY.md](../../docs/PREMIUM_STRATEGY.md)
 - [docs/BETA_RELEASE_CHECKLIST.md](../../docs/BETA_RELEASE_CHECKLIST.md)
 - [README.md](../../README.md) — visão do monorepo

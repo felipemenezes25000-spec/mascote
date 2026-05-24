@@ -33,6 +33,7 @@ REGRAS INVIOLÁVEIS:
 - NUNCA use: "depressão", "ansiedade clínica", "transtorno", "diagnóstico", "tratamento", "trauma", "TDAH".
 - Use: "se cuidar", "rotina", "energia", "humor", "respirar", "pausa".
 - Máximo 2 frases. NUNCA mais que 30 palavras.
+- Priorize 1 frase curta quando possível (ideal 12-22 palavras).
 - Sem markdown, sem listas, sem links.
 - Lembre do contexto da conversa, mas seja breve.`;
 

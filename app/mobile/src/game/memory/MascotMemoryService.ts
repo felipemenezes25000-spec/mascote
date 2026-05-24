@@ -3,6 +3,7 @@
  */
 
 import { recall, rememberExplicit, rememberFromMessage, type MemoryItem } from '@/lib/memory';
+import type { SimulationEventKind } from '@/sim/types';
 import type { MascotMemoryEntry, MemorySnapshot } from './MemoryTypes';
 import { buildMemoryTimeline } from './MemoryTimeline';
 
@@ -39,6 +40,12 @@ const MILESTONE_COPY: Record<LifecycleMilestone, (ctx: { name?: string; detail?:
   user_goal: ({ detail }) => `Seu foco principal${detail ? `: ${detail}` : ''}. Vou lembrar disso.`,
 };
 
+const SIM_EVENT_COPY: Partial<Record<SimulationEventKind, (message?: string) => string | null>> = {
+  return_summary: (message) => message ? `Momento de retorno: ${message}` : null,
+  while_away_living_moment: (message) => message ? `Momento vivido enquanto estava fora: ${message}` : null,
+  while_away_habit_missed: (message) => message ? `Ritmo percebido na sua ausência: ${message}` : null,
+};
+
 export class MascotMemoryService {
   /** Grava marco de vida do mascote (sem API key). */
   async recordMilestone(
@@ -47,6 +54,20 @@ export class MascotMemoryService {
     ctx: { name?: string; detail?: string } = {},
   ): Promise<MascotMemoryEntry | null> {
     const summary = MILESTONE_COPY[milestone](ctx);
+    const item = await rememberExplicit(userId, summary, 'event', new Date());
+    return toEntry(item);
+  }
+
+  /** Grava lembranças leves geradas pela simulação offline. */
+  async recordSimulationEvent(
+    userId: string,
+    eventKind: SimulationEventKind,
+    message?: string,
+  ): Promise<MascotMemoryEntry | null> {
+    const formatter = SIM_EVENT_COPY[eventKind];
+    if (!formatter) return null;
+    const summary = formatter(message);
+    if (!summary) return null;
     const item = await rememberExplicit(userId, summary, 'event', new Date());
     return toEntry(item);
   }

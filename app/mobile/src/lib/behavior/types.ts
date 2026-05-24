@@ -17,7 +17,9 @@
  */
 
 import type { Genome } from '@/lib/dna/genome';
+import type { LifeState, SimulationEvent } from '@/sim/types';
 import type { Mascot, MascotMood } from '@/types';
+import type { ReactiveFlags } from './reactiveBehaviors';
 
 /**
  * Contexto que o engine passa pra cada behavior pra computar score.
@@ -35,6 +37,8 @@ export interface BehaviorContext {
   streakCurrent: number;
   /** Hora local 0..23. Pra behaviors temporais (noite, manhã). */
   hour: number;
+  /** Reduce motion efetivo da sessão (acessibilidade). */
+  reduceMotion?: boolean;
   /**
    * IDs de behaviors já executados em cooldown. Engine filtra antes de
    * computar score — behavior em cooldown não compete.
@@ -45,6 +49,12 @@ export interface BehaviorContext {
    * que querem "freshness check" mais granular que cooldown booleano.
    */
   lastRanAt: ReadonlyMap<string, number>;
+  /** Estado de vida da simulação (quando disponível). */
+  lifeState?: LifeState | null;
+  /** Eventos pendentes do último tick de simulação. */
+  simulationEvents?: readonly SimulationEvent[];
+  /** Flags de moments/gestos para behaviors reativos imediatos. */
+  reactiveFlags?: ReactiveFlags;
 }
 
 /**

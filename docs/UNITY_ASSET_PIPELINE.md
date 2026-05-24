@@ -28,7 +28,7 @@ Destino: `unity/MascotUnityCore/Assets/Mascote/StreamingAssets/mascot-3d/`
 
 ## Import no Editor (manual)
 
-1. Abra `unity/MascotUnityCore` no Unity 2022.3.
+1. Abra `unity/MascotUnityCore` no Unity 6000.4.8f1 (Unity 6, versão pinada no projeto).
 2. Arraste os GLBs para `Assets/Mascote/Models/` **ou** use o link em StreamingAssets e importe com **GLTFast** (Sprint 3).
 3. Configure materiais nos slots `body_material`, `accent_material`, `glow_material`.
 4. Crie **Animator Controller** com estados: `idle`, `blink`, `smile`, `sad`, `excited`, `sleep`, `wave`.

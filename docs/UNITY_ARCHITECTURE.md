@@ -83,7 +83,6 @@ EXPO_PUBLIC_UNITY_SIMULATE_FAILURE=true              # testa fallback
 | Workflow | Escopo |
 |----------|--------|
 | `.github/workflows/ci.yml` | Mobile typecheck + lint + tests + unity structure |
-| `.github/workflows/mobile-ci.yml` | Alias mobile pipeline |
 | `.github/workflows/unity-ci.yml` | Estrutura Unity + grep (sem Editor) |
 
 ## O que exige Unity Editor manualmente

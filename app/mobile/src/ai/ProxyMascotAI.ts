@@ -15,6 +15,46 @@ import { buildMascotSystemPrompt, PERSONALITY_FLAVOR } from './MascotPrompt';
 
 const PROXY_TIMEOUT_MS = 20_000;
 
+export interface MascotReplyContractRequest {
+  personality: Personality;
+  message: string;
+  history: HistoryMsg[];
+  mascotName?: string;
+  userId?: string;
+  system_prompt: string;
+  personality_flavor: string;
+  recent_replies: string[];
+}
+
+interface MascotReplyContractResponse {
+  reply?: string;
+  safety_flag?: SafetyFlag;
+  usage?: { total_tokens?: number };
+}
+
+export function buildMascotReplyContractRequest(
+  personality: Personality,
+  userMessage: string,
+  options: ProxyOptions = {},
+): MascotReplyContractRequest {
+  const systemPrompt = buildMascotSystemPrompt({
+    personality,
+    memories: options.memories,
+    mascotName: options.mascotName,
+    dna: options.dna,
+  });
+  return {
+    personality,
+    message: userMessage,
+    history: options.history ?? [],
+    mascotName: options.mascotName,
+    userId: options.userId,
+    system_prompt: systemPrompt,
+    personality_flavor: PERSONALITY_FLAVOR[personality],
+    recent_replies: options.recentReplies ?? [],
+  };
+}
+
 export function getAiProxyUrl(): string | undefined {
   const url = process.env.EXPO_PUBLIC_AI_PROXY_URL?.trim();
   return url && url.length > 0 ? url : undefined;
@@ -38,13 +78,7 @@ export async function proxyMascotReply(
 ): Promise<AiResponse | null> {
   const base = getAiProxyUrl();
   if (!base) return null;
-
-  const systemPrompt = buildMascotSystemPrompt({
-    personality,
-    memories: options.memories,
-    mascotName: options.mascotName,
-    dna: options.dna,
-  });
+  const payload = buildMascotReplyContractRequest(personality, userMessage, options);
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), PROXY_TIMEOUT_MS);
@@ -53,27 +87,13 @@ export async function proxyMascotReply(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
-      body: JSON.stringify({
-        personality,
-        message: userMessage,
-        history: options.history ?? [],
-        mascotName: options.mascotName,
-        userId: options.userId,
-        // Campos novos — opt-in pro backend. Se ignorar, comportamento atual.
-        system_prompt: systemPrompt,
-        personality_flavor: PERSONALITY_FLAVOR[personality],
-        recent_replies: options.recentReplies ?? [],
-      }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       logger.warn('[ai] proxy HTTP error', { status: res.status });
       return null;
     }
-    const data = (await res.json()) as {
-      reply?: string;
-      safety_flag?: SafetyFlag;
-      usage?: { total_tokens?: number };
-    };
+    const data = (await res.json()) as MascotReplyContractResponse;
     if (!data.reply) return null;
     const totalTokens = Number(data.usage?.total_tokens) || 0;
     const response = toAiResponse(data, 'openai');

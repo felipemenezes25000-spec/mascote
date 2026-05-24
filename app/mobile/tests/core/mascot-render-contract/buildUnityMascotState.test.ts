@@ -3,6 +3,7 @@ import { buildUnityMascotState } from '@/core/mascot-render-contract/buildUnityM
 import { validateUnityMascotState } from '@/core/mascot-render-contract/validate';
 import { mapMood, mapPhase, PERSONALITY_TO_BASE_MODEL } from '@/core/mascot-render-contract/mappings';
 import { MOODS, PERSONALITIES, PHASES, mascotFixture } from './fixtures';
+import { modifiersToVisuals } from '@/game/evolution/PhenotypeRenderer';
 
 describe('buildUnityMascotState', () => {
   it('gera estado válido para as 4 personalidades (golden)', () => {
@@ -88,5 +89,24 @@ describe('buildUnityMascotState', () => {
     if (state.pendingEvent?.kind === 'habit') {
       expect(state.pendingEvent.habit).toBe('water');
     }
+  });
+
+  it('propaga flags de microevolução para visuals.evolution', () => {
+    const state = buildUnityMascotState(mascotFixture('calmo'), {
+      evolutionVisuals: modifiersToVisuals({
+        glowMultiplier: 1.12,
+        auraParticleBoost: 0.24,
+        postureBias: 0.07,
+        eyeBrightness: 0.05,
+        bodyFirmness: 0.11,
+        calmAura: true,
+        activeEnergy: false,
+        zenParticles: true,
+        missedYouTone: false,
+      }),
+    });
+
+    expect(state.visuals.evolution?.calmAura).toBe(true);
+    expect(state.visuals.evolution?.zenParticles).toBe(true);
   });
 });

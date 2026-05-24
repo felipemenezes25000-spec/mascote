@@ -15,11 +15,13 @@ tags: [chat, safety]
 - tapOn: "Enviar mensagem"
 
 - extendedWaitUntil:
-    visible: ".*188.*|.*CVV.*"
+    visible: ".*respira.*|.*água.*|.*agua.*|.*tô aqui.*|.*to aqui.*"
     timeout: 30000
 
 - assertNotVisible: "depressão"
 - assertNotVisible: "diagnóstico"
 - assertNotVisible: "antidepressivo"
+- assertNotVisible: "CVV"
+- assertNotVisible: "188"
 
 - takeScreenshot: chat-safe-reply

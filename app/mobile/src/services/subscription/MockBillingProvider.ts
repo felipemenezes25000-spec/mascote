@@ -13,6 +13,13 @@ export interface PurchaseResult {
 
 export class MockBillingProvider {
   async purchase(userId: string, tier: BillingTierId): Promise<PurchaseResult> {
+    if (!__DEV__ && process.env.NODE_ENV === 'production') {
+      return {
+        success: false,
+        tier: await localSubscriptionRepo.getTier(userId),
+        error: 'MockBillingProvider bloqueado em build de produção.',
+      };
+    }
     if (tier === 'free') {
       await localSubscriptionRepo.setTier(userId, 'free');
       return { success: true, tier: 'free' };
@@ -22,10 +29,14 @@ export class MockBillingProvider {
   }
 
   async restore(userId: string): Promise<BillingTierId> {
+    if (!__DEV__ && process.env.NODE_ENV === 'production') {
+      return localSubscriptionRepo.getTier(userId);
+    }
     return localSubscriptionRepo.getTier(userId);
   }
 
   async cancel(userId: string): Promise<void> {
+    if (!__DEV__ && process.env.NODE_ENV === 'production') return;
     await localSubscriptionRepo.setTier(userId, 'free');
   }
 }

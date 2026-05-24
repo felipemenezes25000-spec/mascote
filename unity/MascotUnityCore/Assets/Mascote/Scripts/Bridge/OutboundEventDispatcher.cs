@@ -40,6 +40,15 @@ namespace Mascote.Unity.Bridge
             Send(new UnityGestureReceivedMessage { gesture = gesture });
         }
 
+        public void SendAck(int seq, string originalType)
+        {
+            Send(new UnityAckMessage
+            {
+                seq = seq,
+                originalType = originalType,
+            });
+        }
+
         void Send(object message)
         {
             if (_sendJson == null)

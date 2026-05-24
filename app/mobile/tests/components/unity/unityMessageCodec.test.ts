@@ -16,6 +16,14 @@ describe('unityMessageCodec', () => {
     expect(parseUnityToRN('not-json')).toBeNull();
   });
 
+  it('parseUnityToRN rejeita payload ready sem version', () => {
+    expect(parseUnityToRN(JSON.stringify({ type: 'ready' }))).toBeNull();
+  });
+
+  it('parseUnityToRN rejeita tipo desconhecido', () => {
+    expect(parseUnityToRN(JSON.stringify({ type: 'something.else' }))).toBeNull();
+  });
+
   it('habit reactions cobrem hábitos principais', () => {
     expect(HABIT_REACTION_ANIM.water).toBe('observe');
     expect(HABIT_REACTION_ANIM.exercise).toBe('stretch');

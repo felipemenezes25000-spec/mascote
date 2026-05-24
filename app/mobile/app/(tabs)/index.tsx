@@ -32,6 +32,7 @@ import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import { incrementBond } from '@/lib/bond';
 import { xpToNextLevel } from '@/lib/xp';
 import { buildProactiveContext, runProactiveScan } from '@/lib/proactive';
+import { creatureMoments } from '@/lib/moments';
 import type { EvolutionStory } from '@/lib/evolution-stories';
 import { useStore } from '@/store';
 import { sanitizeGenome } from '@/lib/dna';
@@ -64,6 +65,9 @@ import { mascotMemoryService } from '@/game/memory/MascotMemoryService';
 import { useHomeActions, createAnimationAction } from '@/features/home/hooks/useHomeActions';
 import { useHomeBootstrap } from '@/features/home/hooks/useHomeBootstrap';
 import { useHomeBehavior } from '@/features/home/hooks/useHomeBehavior';
+import { isUnityDebugPanelEnabled } from '@/core/mascot-render-contract/rendererConfig';
+import { unityMascotBridge } from '@/components/unity/UnityMascotBridge';
+import { UnityDebugPanel } from '@/components/unity/UnityDebugPanel';
 import {
   HOME_HABITS,
   buildMascotStatusFallback,
@@ -87,6 +91,12 @@ export default function Home() {
   const wallet = useStore(s => s.wallet);
   const enqueueToast = useStore(s => s.enqueueToast);
   const apiKey = useStore(s => s.openAiKey);
+  const lifeSummaryLine = useStore(s => s.lifeSummaryLine);
+  const proactiveBubbleLine = useStore(s => s.proactiveBubbleLine);
+  const lifeReturnCelebration = useStore(s => s.lifeReturnCelebration);
+  const runLifeSimulation = useStore(s => s.runLifeSimulation);
+  const lifeState = useStore(s => s.lifeState);
+  const lifeEvents = useStore(s => s.lifeEvents);
   const welcomeParam = useLocalSearchParams<{ welcome?: string }>().welcome;
   const welcomeFiredRef = useRef(false);
 
@@ -114,6 +124,11 @@ export default function Home() {
     | undefined
   >(undefined);
   const [memoryRefreshKey, setMemoryRefreshKey] = useState(0);
+  const [unityReady, setUnityReady] = useState(false);
+  const [unityVersion, setUnityVersion] = useState<string | null>(null);
+  const [unityLastError, setUnityLastError] = useState<string | null>(null);
+  const [unityLastMessage, setUnityLastMessage] = useState<string | null>(null);
+  const [ackTick, setAckTick] = useState(0);
 
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -138,7 +153,33 @@ export default function Home() {
     if (confettiTimerRef.current) clearTimeout(confettiTimerRef.current);
   }, []);
 
-  useHomeBehavior({ profile, mascot, streak, paused: showTour, setBehaviorAction });
+  useEffect(() => {
+    if (!isUnityDebugPanelEnabled()) return;
+    const unsub = unityMascotBridge.subscribe(msg => {
+      setUnityLastMessage(msg.type);
+      if (msg.type === 'ready') {
+        setUnityReady(true);
+        setUnityVersion(msg.version);
+      } else if (msg.type === 'error') {
+        setUnityLastError(msg.message);
+      } else if (msg.type === 'ack') {
+        setAckTick(v => v + 1);
+      }
+    });
+    const timer = setInterval(() => setAckTick(v => v + 1), 600);
+    return () => {
+      unsub();
+      clearInterval(timer);
+    };
+  }, []);
+
+  useHomeBehavior({
+    profile,
+    mascot,
+    streak,
+    paused: showTour,
+    setBehaviorAction,
+  });
 
   async function loadMascotContextLine() {
     if (!profile || !mascot) return;
@@ -154,12 +195,19 @@ export default function Home() {
     if (kind === 'none') return;
     returnToastFiredRef.current = true;
     setBehaviorAction(createAnimationAction(kind === 'retorno' ? 'retorno' : 'saudade'));
-    const line = await buildMascotContextLine(
-      profile.id,
-      mascot,
-      kind === 'retorno' ? 'return' : 'saudade',
-      apiKey,
-    );
+    const daysAway = Math.floor(hoursAway(mascot.last_seen_at) / 24);
+    creatureMoments.emit('user.returned', {
+      daysAway,
+      mood: lifeState?.mood ?? mascot.mood,
+    });
+    const line =
+      lifeSummaryLine ??
+      (await buildMascotContextLine(
+        profile.id,
+        mascot,
+        kind === 'retorno' ? 'return' : 'saudade',
+        apiKey,
+      ));
     enqueueToast({
       kind: 'info',
       emoji: kind === 'retorno' ? '🌿' : '💛',
@@ -179,9 +227,26 @@ export default function Home() {
   async function maybeRunProactiveScan() {
     if (!profile || !mascot) return;
     try {
-      const ctx = await buildProactiveContext(profile, mascot.name);
-      await runProactiveScan(ctx);
-      setNotifKey(k => k + 1);
+      const eventToRemember = lifeEvents.find(
+        e =>
+          e.kind === 'return_summary' ||
+          e.kind === 'while_away_living_moment' ||
+          e.kind === 'while_away_habit_missed',
+      );
+      if (eventToRemember) {
+        await mascotMemoryService.recordSimulationEvent(
+          profile.id,
+          eventToRemember.kind,
+          eventToRemember.message,
+        );
+        setMemoryRefreshKey(k => k + 1);
+      }
+      const ctx = await buildProactiveContext(profile, mascot.name, lifeState, lifeEvents);
+      const { fired, bubbleLine } = await runProactiveScan(ctx);
+      if (bubbleLine) {
+        useStore.setState({ proactiveBubbleLine: bubbleLine });
+      }
+      if (fired.length > 0) setNotifKey(k => k + 1);
     } catch {
       /* não bloqueia UI */
     }
@@ -276,9 +341,11 @@ export default function Home() {
     useCallback(() => {
       if (!profile) return;
       void reload();
+      void runLifeSimulation();
       void ensureTodayMission();
       void loadMascotContextLine();
       void maybeReturnLoop();
+      void maybeRunProactiveScan();
       // V2: respeita cooldown de 8h após dismissal — não vira nag.
       void (async () => {
         if (!isLateNight()) {
@@ -288,7 +355,7 @@ export default function Home() {
         const onCooldown = await isNightBannerOnCooldown();
         setShowNightWarning(!onCooldown);
       })();
-    }, [profile?.id, reload])
+    }, [profile?.id, reload, runLifeSimulation])
   );
 
   const actions = useHomeActions({
@@ -362,12 +429,17 @@ export default function Home() {
   const greet = greetingFor(new Date().getHours());
   const reflective = snapshot.reflectiveMood;
   const emotion = moodToEmotionKey(reflective ?? mascot.mood);
-  const displayLine = mascotLine
-    ?? buildMascotStatusFallback(
+  const displayLine =
+    proactiveBubbleLine ??
+    lifeSummaryLine ??
+    buildMascotStatusFallback(
       reflective,
       !!evolutionVisuals?.activeEnergy,
       !!evolutionVisuals?.calmAura,
-    );
+    ) ??
+    mascotLine;
+  const sceneHour = new Date().getHours();
+  const unityAckStats = useMemo(() => unityMascotBridge.getAckStats(), [ackTick]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -424,6 +496,8 @@ export default function Home() {
             unlockedSceneCount={snapshot.unlockedSceneIds.length}
             statusLine={displayLine}
             emotionKey={emotion}
+            sceneHour={sceneHour}
+            celebrationActive={lifeReturnCelebration}
             onPrev={() => void cycleScene(-1)}
             onNext={() => void cycleScene(1)}
             onSceneBadge={() => router.push('/closet')}
@@ -437,6 +511,8 @@ export default function Home() {
                 pet: 'touch',
               } as const;
               setBehaviorAction(createAnimationAction(reasonMap[kind]));
+              if (kind === 'pet') creatureMoments.emit('gesture.pet', { intensity: 1 });
+              if (kind === 'double') creatureMoments.emit('gesture.double', {});
               if (mascot.dna) {
                 const profileVoice = voiceProfileFromGenome(sanitizeGenome(mascot.dna));
                 const voiceKind = kind === 'double' ? 'celebrate' : kind === 'long' ? 'sleepy' : 'react';
@@ -474,7 +550,7 @@ export default function Home() {
             ) : (
               <PrimaryActionCard
                 title="Check-in de 2 min"
-                subtitle="Anote como você está e o mascote responde."
+                subtitle="Anote como você está em 2 minutos."
                 ctaLabel="Começar"
                 icon="sparkles"
                 onPress={() => router.push('/checkin')}
@@ -608,6 +684,19 @@ export default function Home() {
       />
 
       <Tour visible={showTour} onDone={finishTour} />
+      {isUnityDebugPanelEnabled() ? (
+        <UnityDebugPanel
+          version={unityVersion}
+          ready={unityReady}
+          lastError={unityLastError}
+          lastMessage={unityLastMessage}
+          native={unityMascotBridge.isNativeAvailable()}
+          ackLatencyMs={unityAckStats.lastAckLatencyMs}
+          ackRetryCount={unityAckStats.retryCount}
+          ackLastSeq={unityAckStats.lastAckSeq}
+          ackTimeoutCount={unityAckStats.timeoutCount}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }

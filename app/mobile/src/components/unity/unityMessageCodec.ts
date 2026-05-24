@@ -8,11 +8,42 @@ import type {
   UnityToRNMessage,
 } from '@/core/mascot-render-contract';
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object';
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isBoolean(value: unknown): value is boolean {
+  return typeof value === 'boolean';
+}
+
+function isKnownUnityToRNMessage(value: unknown): value is UnityToRNMessage {
+  if (!isRecord(value) || !isNonEmptyString(value.type)) return false;
+  switch (value.type) {
+    case 'ready':
+      return isNonEmptyString(value.version);
+    case 'error':
+      return (
+        isNonEmptyString(value.code) &&
+        isNonEmptyString(value.message) &&
+        isBoolean(value.recoverable)
+      );
+    case 'animation.complete':
+      return isNonEmptyString(value.name);
+    case 'gesture.received':
+      return isNonEmptyString(value.gesture);
+    default:
+      return false;
+  }
+}
+
 export function parseUnityToRN(raw: string): UnityToRNMessage | null {
   try {
-    const parsed = JSON.parse(raw) as UnityToRNMessage;
-    if (!parsed || typeof parsed !== 'object' || !('type' in parsed)) return null;
-    return parsed;
+    const parsed = JSON.parse(raw) as unknown;
+    return isKnownUnityToRNMessage(parsed) ? parsed : null;
   } catch {
     return null;
   }

@@ -88,7 +88,11 @@ export function generateUserMascotEvolutionPath(
         [habit]: (behaviorHistory.habitCounts[habit as keyof typeof behaviorHistory.habitCounts] ?? 0) + day + 1,
       },
     };
-    const newMicro = eligibleMicroEvolutions(simHistory.habitCounts, unlockedMicro);
+    const newMicro = eligibleMicroEvolutions(
+      simHistory.habitCounts,
+      unlockedMicro,
+      simHistory.currentStreak,
+    );
     let microEvolution: MicroEvolution | undefined;
     if (newMicro.length > 0) {
       microEvolution = newMicro[0];
@@ -176,7 +180,11 @@ export async function processEvolutionAfterCheckin(
 ): Promise<{ state: EvolutionState; newMicro: MicroEvolution[] }> {
   const persisted = await loadEvolutionState(userId);
   const already = persisted?.microEvolutions.map(m => m.id) ?? [];
-  const newMicro = eligibleMicroEvolutions(state.behaviorHistory.habitCounts, already);
+  const newMicro = eligibleMicroEvolutions(
+    state.behaviorHistory.habitCounts,
+    already,
+    state.behaviorHistory.currentStreak,
+  );
 
   const allMicro = [...(persisted?.microEvolutions ?? []), ...newMicro];
   const microLevel = allMicro.length;

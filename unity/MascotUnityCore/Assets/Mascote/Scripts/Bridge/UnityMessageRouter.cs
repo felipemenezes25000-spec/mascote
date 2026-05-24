@@ -37,12 +37,16 @@ namespace Mascote.Unity.Bridge
             {
                 case BridgeMessageTypes.StateUpdate:
                     var stateMsg = (RNStateUpdateMessage)payload;
-                    director?.ApplyState(stateMsg.state, stateMsg.seq);
+                    if (director?.ApplyState(stateMsg.state, stateMsg.seq) == true)
+                    {
+                        outbound?.SendAck(stateMsg.seq, BridgeMessageTypes.StateUpdate);
+                    }
                     break;
 
                 case BridgeMessageTypes.EventPlay:
                     var eventMsg = (RNEventPlayMessage)payload;
                     director?.PlayEvent(eventMsg.@event, eventMsg.seq);
+                    outbound?.SendAck(eventMsg.seq, BridgeMessageTypes.EventPlay);
                     break;
 
                 case BridgeMessageTypes.Gesture:

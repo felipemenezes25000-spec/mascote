@@ -67,7 +67,7 @@ export function HomeQuickActions({ habits, todayCheckins, onPress, onLongPress }
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Typography variant="title" style={styles.sectionH2}>Cuide de você</Typography>
-        <Typography variant="mono" tone="dim" style={styles.sectionHint}>toque · segure</Typography>
+        <Typography variant="mono" tone="dim" style={styles.sectionHint}>toque · segure · sem chat agora</Typography>
       </View>
       <View style={styles.grid}>
         {visible.map(h => (

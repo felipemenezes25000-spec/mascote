@@ -105,6 +105,8 @@ namespace Mascote.Unity.State
         public float postureBias;
         public float eyeBrightness;
         public float bodyFirmness;
+        public bool calmAura;
+        public bool zenParticles;
         public string environmentTint;
         public string idleAnimation;
         public float bodyScaleMultiplier;

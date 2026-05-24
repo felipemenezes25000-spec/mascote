@@ -1,22 +1,15 @@
 /**
- * Voice player — Web Audio API em web, no-op em nativo.
+ * Voice player — Web Audio em web, expo-av WAV sintetizado em nativo.
  *
  * Estratégia cross-platform:
- *  - **Web (RN-Web)**: usa `AudioContext` direto + OscillatorNode pra
- *    sintetizar tons em real-time. Sem assets pre-gerados.
- *  - **Native (iOS/Android)**: stub silencioso por padrão. Wire-up via
- *    `expo-av` é deferred (precisa testar em device + lidar com áudio
- *    permissions). Caller continua chamando o mesmo `playVoiceLine`;
- *    em native vira no-op gracioso.
- *
- * **Princípios**:
- *  - NUNCA crasha — qualquer falha em audio context vira no-op silencioso
- *  - Volume cap em 0.2 — voz é ambient
- *  - Auto-resume se context suspended (autoplay policy do browser)
- *  - Determinístico no test env — `setBackend(null)` força no-op
+ *  - **Web (RN-Web)**: AudioContext + OscillatorNode em real-time.
+ *  - **Native (iOS/Android)**: WAV procedural via synthesizeWav + expo-av.
+ *  - **Fallback**: no-op silencioso (simulador sem áudio, testes).
  */
 
+import { Platform } from 'react-native';
 import { modifiersForKind } from './profile';
+import { synthesizePhraseWavBase64 } from './synthesizeWav';
 import type { VoiceHandle, VoiceLine, VoiceProfile } from './types';
 
 const VOLUME_CAP = 0.2;
@@ -54,7 +47,10 @@ function ensureBackend(): AudioBackend | null {
     }
   }
   /* v8 ignore stop */
-  // Native ou env sem audio — backend null = no-op
+  if (Platform.OS === 'ios' || Platform.OS === 'android') {
+    backend = createNativeBackend();
+    return backend;
+  }
   return null;
 }
 
@@ -80,16 +76,78 @@ export function __resetBackend(): void {
  * Caller pode aguardar `handle.done` se precisa sincronizar (raramente).
  */
 export function playVoiceLine(profile: VoiceProfile, line: VoiceLine): VoiceHandle {
-  const b = ensureBackend();
-  if (!b) {
-    // No-op handle — resolve imediatamente
+  try {
+    const b = ensureBackend();
+    if (!b) {
+      return {
+        id: `voice-noop-${Date.now()}`,
+        done: Promise.resolve(),
+      };
+    }
+    return b.play(profile, line);
+  } catch {
     return {
-      id: `voice-noop-${Date.now()}`,
+      id: `voice-err-${Date.now()}`,
       done: Promise.resolve(),
     };
   }
-  return b.play(profile, line);
 }
+
+// ============================================================================
+// Native backend (expo-av + WAV sintetizado)
+// ============================================================================
+/* v8 ignore start — requer runtime nativo + expo-av */
+
+function createNativeBackend(): AudioBackend {
+  return {
+    play(profile, line) {
+      const id = `voice-native-${Date.now()}`;
+      const done = playNativePhrase(profile, line, id).catch(() => undefined);
+      return { id, done };
+    },
+    dispose() {
+      /* stateless */
+    },
+  };
+}
+
+async function playNativePhrase(
+  profile: VoiceProfile,
+  line: VoiceLine,
+  id: string,
+): Promise<void> {
+  const { Audio } = await import('expo-av');
+  const FileSystem = await import('expo-file-system');
+  await Audio.setAudioModeAsync({
+    playsInSilentModeIOS: true,
+    shouldDuckAndroid: true,
+    staysActiveInBackground: false,
+  });
+  const b64 = synthesizePhraseWavBase64(profile, line);
+  const path = `${FileSystem.cacheDirectory ?? ''}voice-${id}.wav`;
+  await FileSystem.writeAsStringAsync(path, b64, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+  const { sound } = await Audio.Sound.createAsync({ uri: path }, { volume: 0.2 });
+  await sound.playAsync();
+  await new Promise<void>(resolve => {
+    const timeout = setTimeout(() => {
+      void sound.unloadAsync().catch(() => undefined);
+      void FileSystem.deleteAsync(path, { idempotent: true }).catch(() => undefined);
+      resolve();
+    }, 3000);
+    sound.setOnPlaybackStatusUpdate(status => {
+      if (status.isLoaded && status.didJustFinish) {
+        clearTimeout(timeout);
+        void sound.unloadAsync().catch(() => undefined);
+        void FileSystem.deleteAsync(path, { idempotent: true }).catch(() => undefined);
+        resolve();
+      }
+    });
+  });
+}
+
+/* v8 ignore stop */
 
 // ============================================================================
 // Web Audio backend

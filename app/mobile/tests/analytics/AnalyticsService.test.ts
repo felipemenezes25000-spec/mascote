@@ -118,3 +118,30 @@ describe('analytics — ring buffer cap (256)', () => {
     expect(mock.__getBuffer().length).toBeLessThanOrEqual(256);
   });
 });
+
+describe('analytics — guard de mock em produção', () => {
+  const originalEnv = process.env.EXPO_PUBLIC_ENV;
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  afterEach(() => {
+    process.env.EXPO_PUBLIC_ENV = originalEnv;
+    process.env.NODE_ENV = originalNodeEnv;
+    analytics.setProvider(mock);
+    analytics.setConsentSource({ isConsented: () => true });
+    analytics.reset();
+  });
+
+  it('bloqueia track quando EXPO_PUBLIC_ENV=production com provider mock', () => {
+    process.env.EXPO_PUBLIC_ENV = 'production';
+    process.env.NODE_ENV = 'development';
+    analytics.track('app_opened', { cold_start: true });
+    expect(mock.__getBuffer()).toHaveLength(0);
+  });
+
+  it('bloqueia identify quando EXPO_PUBLIC_ENV=production com provider mock', () => {
+    process.env.EXPO_PUBLIC_ENV = 'production';
+    process.env.NODE_ENV = 'development';
+    analytics.identify('hash-prod');
+    expect(mock.__getUserIdHash()).toBeNull();
+  });
+});

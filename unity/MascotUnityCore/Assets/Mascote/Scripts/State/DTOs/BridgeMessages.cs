@@ -22,6 +22,7 @@ namespace Mascote.Unity.State
         public const string Error = "error";
         public const string AnimationComplete = "animation.complete";
         public const string GestureReceived = "gesture.received";
+        public const string Ack = "ack";
     }
 
     [Serializable]
@@ -93,5 +94,13 @@ namespace Mascote.Unity.State
     {
         public string type = OutboundMessageTypes.GestureReceived;
         public string gesture;
+    }
+
+    [Serializable]
+    public class UnityAckMessage
+    {
+        public string type = OutboundMessageTypes.Ack;
+        public int seq;
+        public string originalType;
     }
 }

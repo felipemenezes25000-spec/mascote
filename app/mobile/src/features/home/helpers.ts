@@ -35,11 +35,11 @@ export function buildMascotStatusFallback(
   hasActiveEnergy: boolean,
   hasCalmAura: boolean,
 ): string {
+  if (hasActiveEnergy) return 'Com energia — seus hábitos ativos brilham nele.';
+  if (hasCalmAura) return 'Calmo e presente — respira com você.';
   if (reflective === 'empolgado') return 'Radiante — sentiu sua energia hoje!';
   if (reflective === 'triste') return 'Um pouco quieto... mas aqui por você.';
   if (reflective === 'exausto') return 'Precisando de descanso — sem pressa.';
-  if (hasActiveEnergy) return 'Com energia — seus hábitos ativos brilham nele.';
-  if (hasCalmAura) return 'Calmo e presente — respira com você.';
   return 'Aqui, no seu ritmo.';
 }
 

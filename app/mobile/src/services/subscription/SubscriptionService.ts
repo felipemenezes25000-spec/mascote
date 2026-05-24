@@ -12,15 +12,21 @@ import { restorePurchasesService } from './RestorePurchasesService';
 export class SubscriptionService {
   private billing = getBillingProvider();
 
+  private ensureProvider(): void {
+    this.billing = getBillingProvider();
+  }
+
   async getCurrentTier(userId: string): Promise<BillingTierId> {
     return localSubscriptionRepo.getTier(userId);
   }
 
   async subscribe(userId: string, tier: BillingTierId) {
+    this.ensureProvider();
     return this.billing.purchase(userId, tier);
   }
 
   async cancel(userId: string) {
+    this.ensureProvider();
     const previous = await localSubscriptionRepo.getTier(userId);
     await this.billing.cancel(userId);
     trackSubscriptionCancelled(previous);

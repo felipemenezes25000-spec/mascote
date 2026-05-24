@@ -104,7 +104,7 @@ export default function NotificationsScreen() {
             </View>
             <Text style={styles.emptyText}>Sem avisos por aqui</Text>
             <Text style={styles.emptySub}>
-              Eu te aviso quando rolar evolução, conquista ou se a streak ficar em risco.
+              Se você ativar avisos, eu te chamo com carinho para novidades e lembretes leves.
             </Text>
           </View>
         ) : (

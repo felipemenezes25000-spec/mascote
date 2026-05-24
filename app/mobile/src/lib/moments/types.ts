@@ -50,6 +50,10 @@ export const MOMENT_NAMES = {
 
   // Retorno
   'user.returned': 'user.returned',
+
+  // Gestos na Home (pet, double-tap)
+  'gesture.pet': 'gesture.pet',
+  'gesture.double': 'gesture.double',
 } as const;
 
 export type MomentName = keyof typeof MOMENT_NAMES;
@@ -83,6 +87,9 @@ export interface MomentPayloads {
   'accessory.equipped': { accessoryId: string };
 
   'user.returned': { daysAway: number; mood?: MascotMood };
+
+  'gesture.pet': { intensity?: number };
+  'gesture.double': Record<string, never>;
 }
 
 /** Helper: combina nome + payload tipado em uma união discriminada. */

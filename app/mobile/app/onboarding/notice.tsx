@@ -85,7 +85,7 @@ export default function Notice() {
             <View style={{ flex: 1 }}>
               <Text style={styles.pushTitle}>Posso te avisar?</Text>
               <Text style={styles.pushBody}>
-                No máximo 2 vezes por dia. Nunca com culpa. Desliga quando quiser.
+                Se ativar, avisamos com cuidado (sem insistir e sem culpa). Você desliga quando quiser.
               </Text>
             </View>
             <Switch

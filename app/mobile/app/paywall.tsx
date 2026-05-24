@@ -166,6 +166,12 @@ export default function Paywall() {
         <Text style={styles.kicker}>BIPO PLUS</Text>
         <Text style={styles.title}>{triggerCopy.title}</Text>
         <Text style={styles.sub}>{triggerCopy.body}</Text>
+        <View style={styles.honestyBox}>
+          <Text style={styles.honestyTitle}>Transparência</Text>
+          <Text style={styles.honestyBody}>
+            Recursos de segurança e crise continuam disponíveis na versão grátis (CVV 188, SAMU 192 e modo noite difícil).
+          </Text>
+        </View>
 
         {/* PaywallCard emocional alinhado a arquétipo da personalidade —
             mostra "antes/depois" em duas colunas com CTA destacado. */}
@@ -318,5 +324,15 @@ function makeStyles(theme: Theme) {
   },
   disclosureLabel: { ...theme.text.bodyBold, color: theme.colors.text, textAlign: 'center' },
   disclosureDetail: { ...theme.text.xs, color: theme.colors.textSecondary, textAlign: 'center', lineHeight: 16 },
+  honestyBox: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.md,
+    gap: 4,
+  },
+  honestyTitle: { ...theme.text.bodyBold, color: theme.colors.text, textAlign: 'center' },
+  honestyBody: { ...theme.text.xs, color: theme.colors.textSecondary, textAlign: 'center', lineHeight: 16 },
 });
 }

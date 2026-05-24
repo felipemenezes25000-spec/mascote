@@ -26,9 +26,10 @@ import Svg, { Path } from 'react-native-svg';
 import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 
-type Mode = 'sleep' | 'morning' | 'idle';
+type Mode = 'sleep' | 'morning' | 'idle' | 'celebration';
 
-function modeFromHour(h: number): Mode {
+function modeFromHour(h: number, celebration?: boolean): Mode {
+  if (celebration) return 'celebration';
   if (h >= 22 || h < 6) return 'sleep';
   if (h >= 6 && h < 10) return 'morning';
   return 'idle';
@@ -40,14 +41,25 @@ interface Props {
   reduceMotion?: boolean;
   /** Force override (pra testes). */
   modeOverride?: Mode;
+  /** Simulação reportou retorno — sparkles extras. */
+  celebrationActive?: boolean;
+  /** Mood para ajuste sutil de partículas. */
+  mood?: import('@/types').MascotMood;
 }
 
-function MascotAmbientImpl({ size, children, reduceMotion, modeOverride }: Props) {
+function MascotAmbientImpl({
+  size,
+  children,
+  reduceMotion,
+  modeOverride,
+  celebrationActive,
+  mood = 'ok',
+}: Props) {
   const theme = useTheme();
   const reduceMotionStore = useStore(s => s.settings?.reduce_motion);
   const shouldAnimate = !(reduceMotion ?? reduceMotionStore);
   const [hour, setHour] = useState(() => new Date().getHours());
-  const mode: Mode = modeOverride ?? modeFromHour(hour);
+  const mode: Mode = modeOverride ?? modeFromHour(hour, celebrationActive);
 
   // Re-checa hora a cada 60s (caso o user fique muito tempo na tela)
   useEffect(() => {
@@ -89,6 +101,12 @@ function MascotAmbientImpl({ size, children, reduceMotion, modeOverride }: Props
       )}
       {mode === 'morning' && shouldAnimate && (
         <MorningSparkles size={size} color={theme.colors.gold} />
+      )}
+      {mode === 'celebration' && shouldAnimate && (
+        <MorningSparkles size={size} color={theme.colors.primary} />
+      )}
+      {(mood === 'triste' || mood === 'exausto') && mode === 'idle' && shouldAnimate && (
+        <SleepZs size={size} color={theme.colors.textSecondary} />
       )}
     </View>
   );

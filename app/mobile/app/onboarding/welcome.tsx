@@ -157,7 +157,10 @@ export default function Welcome() {
               Seu Mascote evolui junto.
             </Animated.Text>
             <Animated.Text style={[styles.subtitle, subtitleStyle]}>
-              Em 30 segundos por dia, você cuida de você e ele cresce. Sem cobrança, sem culpa.
+              Em 30 segundos por dia, você cuida de você e ele cresce no seu ritmo. Sem cobrança, sem culpa.
+            </Animated.Text>
+            <Animated.Text style={[styles.promise, subtitleStyle]}>
+              Quando o dia pesar, ele não te julga: lembra de respirar, descansar e recomeçar com gentileza.
             </Animated.Text>
           </View>
           <Animated.View style={[styles.footer, footerStyle]}>
@@ -228,6 +231,13 @@ function makeStyles(theme: Theme) {
       textAlign: 'center',
       marginTop: theme.spacing.md,
       paddingHorizontal: theme.spacing.md,
+    },
+    promise: {
+      ...theme.text.sm,
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      paddingHorizontal: theme.spacing.lg,
+      lineHeight: 20,
     },
     footer: { gap: theme.spacing.md },
     linkText: { color: theme.colors.primary, textAlign: 'center', fontWeight: '600', paddingVertical: 6 },

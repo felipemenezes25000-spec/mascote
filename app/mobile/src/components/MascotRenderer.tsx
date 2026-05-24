@@ -11,7 +11,7 @@ import { Mascot2D, type AccessoryId } from '@/components/Mascot2D';
 import { UnityMascotView } from '@/components/unity/UnityMascotView';
 import {
   buildUnityMascotState,
-  resolveEffectiveRendererMode,
+  resolveRendererMode,
   type BuildUnityMascotStateContext,
 } from '@/core/mascot-render-contract';
 import type { UnityMascotState } from '@/core/mascot-render-contract';
@@ -46,6 +46,8 @@ export interface MascotRendererProps {
   unityState?: UnityMascotState | null;
   /** Contexto extra pro builder quando unityState não é passado. */
   unityContext?: BuildUnityMascotStateContext;
+  /** Rotas premium (/mascot-room): Unity quando EXPO_PUBLIC_UNITY_ENABLED=true. */
+  preferUnity?: boolean;
 }
 
 function readSimulateUnityFailure(): boolean {
@@ -54,8 +56,8 @@ function readSimulateUnityFailure(): boolean {
 }
 
 function MascotRendererImpl(props: MascotRendererProps) {
-  const { unityState: unityStateProp, unityContext, size = 220 } = props;
-  const mode = resolveEffectiveRendererMode();
+  const { unityState: unityStateProp, unityContext, preferUnity, size = 220 } = props;
+  const mode = resolveRendererMode({ preferUnity });
   const mascot = useStore(s => s.mascot);
   const profile = useStore(s => s.profile);
   const settings = useStore(s => s.settings);

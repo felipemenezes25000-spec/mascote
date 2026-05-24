@@ -1,0 +1,28 @@
+# Smoke: home + retorno/simulação após voltar ao app.
+appId: app.meumascote.dev
+tags: [critical, home, simulation]
+---
+- runFlow:
+    file: setup-home.yaml
+
+- extendedWaitUntil:
+    visible: "Cuide de você|Bebi 1 copo"
+    timeout: 60000
+
+- takeScreenshot: home-before-background
+
+# Simula saída/retorno para acionar ciclo de foco que roda runLifeSimulation.
+- pressKey: Home
+- launchApp:
+    stopApp: false
+
+- extendedWaitUntil:
+    visible: "Conversar|Cuide de você|Bebi 1 copo"
+    timeout: 60000
+
+# Bubble/hero costuma refletir microcopy de retorno/simulação.
+- assertVisible:
+    text: ".*(fora|volto|ritmo|quieto|respira|te esperava).*"
+    optional: true
+
+- takeScreenshot: home-after-return

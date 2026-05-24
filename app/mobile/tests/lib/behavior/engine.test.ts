@@ -19,6 +19,10 @@ import {
   reactToReturn,
   streakMilestone,
   quietObservation,
+  sleepAtNight,
+  wakeMorning,
+  yawnIdle,
+  observeUser,
   type Behavior,
   type BehaviorContext,
 } from '@/lib/behavior';
@@ -47,6 +51,7 @@ function makeCtx(partial: Partial<BehaviorContext> = {}): BehaviorContext {
     hoursSinceLastInteraction: 0,
     streakCurrent: 0,
     hour: 12,
+    reduceMotion: false,
     cooldownActive: new Set(),
     lastRanAt: new Map(),
     ...partial,
@@ -90,6 +95,36 @@ describe('selectBehavior — utility AI scoring', () => {
     const ctx = makeCtx({ hour: 14 });
     const sel = selectBehavior([quietObservation, idleBreath], ctx);
     expect(sel.behavior?.id).toBe(idleBreath.id);
+  });
+
+  it('sleep_at_night dispara de madrugada com energia baixa', () => {
+    const ctx = makeCtx({ hour: 1, mascot: { ...makeCtx().mascot, energy: 22 }, mood: 'exausto' });
+    const sel = selectBehavior([sleepAtNight, idleBreath], ctx);
+    expect(sel.behavior?.id).toBe(sleepAtNight.id);
+  });
+
+  it('wake_morning dispara na manhã', () => {
+    const ctx = makeCtx({ hour: 8 });
+    const sel = selectBehavior([wakeMorning, idleBreath], ctx);
+    expect(sel.behavior?.id).toBe(wakeMorning.id);
+  });
+
+  it('yawn idle respeita reduce motion fallback', () => {
+    const ctx = makeCtx({
+      hour: 23,
+      mascot: { ...makeCtx().mascot, energy: 20 },
+      reduceMotion: true,
+    });
+    const eff = executeBehavior(yawnIdle, ctx);
+    expect(eff.animation).toBe('breath_deep');
+  });
+
+  it('observe_user ganha prioridade com pet recente', () => {
+    const sel = selectBehavior(
+      [observeUser, idleBreath],
+      makeCtx({ hoursSinceLastInteraction: 1, reactiveFlags: { pet: true } }),
+    );
+    expect(sel.behavior?.id).toBe(observeUser.id);
   });
 
   it('cooldown filtra behavior — não compete', () => {

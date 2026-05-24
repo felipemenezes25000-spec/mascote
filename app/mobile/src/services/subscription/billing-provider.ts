@@ -14,20 +14,21 @@ import { revenueCatBillingProvider } from './RevenueCatBillingProvider';
 
 export type BillingProviderKind = 'mock' | 'revenuecat';
 
-const PROVIDER: BillingProviderKind =
+const REQUESTED_PROVIDER: BillingProviderKind =
   (process.env.EXPO_PUBLIC_BILLING_PROVIDER as BillingProviderKind | undefined) ?? 'mock';
 
 const ENV = (process.env.EXPO_PUBLIC_ENV ?? process.env.NODE_ENV ?? 'development').toLowerCase();
 const IS_PRODUCTION_BUILD = ENV === 'production';
+const PROVIDER: BillingProviderKind = IS_PRODUCTION_BUILD ? 'revenuecat' : REQUESTED_PROVIDER;
 
 let warned = false;
 function warnOnceIfMockInProd(): void {
   if (warned) return;
-  if (PROVIDER === 'mock' && IS_PRODUCTION_BUILD) {
+  if (REQUESTED_PROVIDER === 'mock' && IS_PRODUCTION_BUILD) {
     warned = true;
     logger.warn(
-      '[billing] Mock provider active in production build — paywall will render in demo mode (no real charges).',
-      { provider: PROVIDER, env: ENV },
+      '[billing] Mock provider requested in production build — forcing RevenueCat provider.',
+      { requestedProvider: REQUESTED_PROVIDER, effectiveProvider: PROVIDER, env: ENV },
     );
   }
 }
@@ -54,5 +55,5 @@ export function isDemoBilling(): boolean {
  * Não bloqueamos o app (dev iteration), mas a UI deve banner amarelo.
  */
 export function isMockInProductionBuild(): boolean {
-  return PROVIDER === 'mock' && IS_PRODUCTION_BUILD;
+  return REQUESTED_PROVIDER === 'mock' && IS_PRODUCTION_BUILD;
 }

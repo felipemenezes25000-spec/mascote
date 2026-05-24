@@ -15,7 +15,7 @@ import {
 import { generateGenotype, seedFromUserId } from '@/game/evolution/GenotypeGenerator';
 import { generatePhenotype } from '@/game/evolution/PhenotypeGenerator';
 import { emptyBehaviorHistory, buildBehaviorHistory } from '@/game/evolution/BehaviorEngine';
-import { eligibleMicroEvolutions } from '@/game/evolution/EvolutionMilestones';
+import { eligibleMicroEvolutions, hasRareFormTrigger } from '@/game/evolution/EvolutionMilestones';
 import { applyHabitVisualBias } from '@/game/evolution/EvolutionRules';
 import type { Mascot, Checkin, Streak } from '@/types';
 
@@ -118,6 +118,16 @@ describe('EvolutionEngine — hábitos mudam evolução', () => {
   it('microevolução desbloqueia no primeiro check-in de água', () => {
     const micro = eligibleMicroEvolutions({ water: 1 }, []);
     expect(micro.some(m => m.id === 'micro-water-shimmer')).toBe(true);
+  });
+
+  it('trigger raro ativa para micro de alta magnitude', () => {
+    const micro = eligibleMicroEvolutions({ water: 60, sleep: 60, exercise: 60 }, []);
+    expect(hasRareFormTrigger(micro)).toBe(true);
+  });
+
+  it('micro-recovery-bloom desbloqueia com streak 3', () => {
+    const micro = eligibleMicroEvolutions({}, [], 3);
+    expect(micro.some(m => m.id === 'micro-recovery-bloom')).toBe(true);
   });
 });
 

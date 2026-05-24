@@ -30,6 +30,7 @@
       "env": {
         "EXPO_PUBLIC_MASCOT_RENDERER": "unity",
         "EXPO_PUBLIC_UNITY_ENABLED": "true",
+        "EXPO_PUBLIC_UNITY_HOME": "true",
         "EXPO_PUBLIC_UNITY_QUALITY": "auto",
         "EXPO_PUBLIC_UNITY_DEBUG_PANEL": "true"
       }

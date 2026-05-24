@@ -11,6 +11,10 @@ export interface UnityDebugPanelProps {
   lastError: string | null;
   lastMessage: string | null;
   native: boolean;
+  ackLatencyMs: number | null;
+  ackRetryCount: number;
+  ackLastSeq: number | null;
+  ackTimeoutCount: number;
 }
 
 export function UnityDebugPanel({
@@ -19,6 +23,10 @@ export function UnityDebugPanel({
   lastError,
   lastMessage,
   native,
+  ackLatencyMs,
+  ackRetryCount,
+  ackLastSeq,
+  ackTimeoutCount,
 }: UnityDebugPanelProps) {
   return (
     <View style={styles.panel} accessibilityLabel="Painel debug Unity">
@@ -35,6 +43,12 @@ export function UnityDebugPanel({
           último: {lastMessage}
         </Typography>
       ) : null}
+      <Typography variant="mono" tone="secondary" style={styles.line}>
+        ack ms: {ackLatencyMs ?? '-'} · retry: {ackRetryCount}
+      </Typography>
+      <Typography variant="mono" tone="secondary" style={styles.line}>
+        ack seq: {ackLastSeq ?? '-'} · timeout: {ackTimeoutCount}
+      </Typography>
       {lastError ? (
         <Typography variant="mono" tone="secondary" style={styles.error}>
           {lastError}

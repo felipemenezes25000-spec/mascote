@@ -213,7 +213,7 @@ describe('proactive cooldown', () => {
       new Date().toISOString()
     );
     const { runProactiveScan } = await import('@/lib/proactive');
-    const fired = await runProactiveScan({
+    const { fired } = await runProactiveScan({
       profile: p,
       recentCheckins: [],
       recentUserMessages: [],

@@ -28,6 +28,8 @@ import { sanitizeGenome } from '@/lib/dna';
 import { playVoiceLine, voiceProfileFromGenome } from '@/lib/voice';
 import { getEvolutionStory, type EvolutionStory } from '@/lib/evolution-stories';
 import { creatureMoments } from '@/lib/moments';
+import { mascotMemoryService } from '@/game/memory/MascotMemoryService';
+import { hasRareFormTrigger } from '@/game/evolution/EvolutionMilestones';
 import type { HabitKind, Mascot, MascotPhase, Profile, Settings, Streak } from '@/types';
 import { useStore } from '@/store';
 
@@ -195,6 +197,18 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
           kind: (first as { kind?: string } | undefined)?.kind ?? 'unknown',
           description: first?.label ?? 'Seu mascote mudou sutilmente',
         });
+        if (hasRareFormTrigger(out.newMicroEvolutions)) {
+          void mascotMemoryService.recordMilestone(profile.id, 'rare_form', {
+            detail: first?.label,
+          });
+          enqueueToast({
+            kind: 'mutation',
+            emoji: '🌟',
+            title: 'Forma rara',
+            subtitle: first?.label ?? 'Um traço raro apareceu no mascote.',
+            rarity: 'rare',
+          });
+        }
       }
 
       for (const a of out.unlocks.achievements) enqueueToast({ kind: 'achievement', emoji: a.emoji, title: a.title, subtitle: a.description });

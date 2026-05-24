@@ -10,6 +10,14 @@
  */
 
 import type { Behavior, BehaviorContext, BehaviorEffect } from './types';
+import {
+  reactiveReturnAfterAbsence,
+  reactivePet,
+  reactivePostCheckin,
+  reactiveMissionComplete,
+  reactiveHabitMissed,
+  reactiveStreakRisk,
+} from './reactiveBehaviors';
 
 // ============================================================================
 // idle_breath — sempre roda quando nada melhor está acontecendo
@@ -101,6 +109,137 @@ export const quietObservation: Behavior = {
   },
   execute: (): BehaviorEffect => ({
     animation: 'rest',
+  }),
+};
+
+function isNightHour(hour: number): boolean {
+  return hour >= 22 || hour < 6;
+}
+
+function isMorningHour(hour: number): boolean {
+  return hour >= 6 && hour < 10;
+}
+
+/**
+ * yawn — bocejo leve quando energia baixa e sem reduce motion.
+ */
+export const yawnIdle: Behavior = {
+  id: 'idle.yawn',
+  kind: 'idle',
+  cooldownSeconds: 5 * 60,
+  score: (ctx: BehaviorContext) => {
+    if (ctx.reduceMotion) return 0.12;
+    if (ctx.mascot.energy > 45) return 0;
+    return isNightHour(ctx.hour) ? 0.58 : 0.42;
+  },
+  execute: (ctx: BehaviorContext): BehaviorEffect => ({
+    animation: ctx.reduceMotion ? 'breath_deep' : 'rest',
+    message: 'Deu um bocejo por aqui.',
+  }),
+};
+
+/**
+ * look_around — observação autônoma em períodos neutros.
+ */
+export const lookAround: Behavior = {
+  id: 'idle.look_around',
+  kind: 'idle',
+  cooldownSeconds: 4 * 60,
+  score: (ctx: BehaviorContext) => {
+    if (isNightHour(ctx.hour)) return 0.2;
+    return ctx.mascot.energy >= 35 ? 0.34 : 0.18;
+  },
+  execute: (ctx: BehaviorContext): BehaviorEffect => ({
+    animation: ctx.reduceMotion ? 'breath_deep' : 'observe',
+  }),
+};
+
+/**
+ * explore — deslocamento leve quando energia está ok.
+ */
+export const exploreIdle: Behavior = {
+  id: 'idle.explore',
+  kind: 'idle',
+  cooldownSeconds: 6 * 60,
+  score: (ctx: BehaviorContext) => {
+    if (isNightHour(ctx.hour)) return 0;
+    if (ctx.mascot.energy < 55) return 0;
+    if (ctx.mood === 'triste' || ctx.mood === 'exausto') return 0;
+    return 0.46;
+  },
+  execute: (ctx: BehaviorContext): BehaviorEffect => ({
+    animation: ctx.reduceMotion ? 'observe' : 'wander',
+  }),
+};
+
+/**
+ * rest — desacelera no fim do dia ou energia mais baixa.
+ */
+export const restIdle: Behavior = {
+  id: 'idle.rest',
+  kind: 'idle',
+  cooldownSeconds: 7 * 60,
+  score: (ctx: BehaviorContext) => {
+    if (ctx.mascot.energy <= 35) return 0.62;
+    if (ctx.hour >= 19 || ctx.hour < 7) return 0.44;
+    return 0.18;
+  },
+  execute: (): BehaviorEffect => ({
+    animation: 'rest',
+  }),
+};
+
+/**
+ * sleep_at_night — prioridade alta durante madrugada em baixa energia.
+ */
+export const sleepAtNight: Behavior = {
+  id: 'temporal.sleep_at_night',
+  kind: 'temporal',
+  cooldownSeconds: 2 * 60 * 60,
+  score: (ctx: BehaviorContext) => {
+    if (!isNightHour(ctx.hour)) return 0;
+    if (ctx.mascot.energy > 60 && ctx.mood !== 'exausto') return 0.2;
+    return 0.74;
+  },
+  execute: (): BehaviorEffect => ({
+    animation: 'rest',
+    message: 'Entrei no modo descanso.',
+  }),
+};
+
+/**
+ * wake_morning — despertar suave nas primeiras horas do dia.
+ */
+export const wakeMorning: Behavior = {
+  id: 'temporal.wake_morning',
+  kind: 'temporal',
+  cooldownSeconds: 8 * 60 * 60,
+  score: (ctx: BehaviorContext) => {
+    if (!isMorningHour(ctx.hour)) return 0;
+    if (ctx.mood === 'exausto') return 0.28;
+    return 0.52;
+  },
+  execute: (): BehaviorEffect => ({
+    animation: 'observe',
+    message: 'Acordei devagar por aqui.',
+  }),
+};
+
+/**
+ * observe_user — reforça presença após retorno recente do usuário.
+ */
+export const observeUser: Behavior = {
+  id: 'reactive.observe_user',
+  kind: 'reactive',
+  cooldownSeconds: 20 * 60,
+  score: (ctx: BehaviorContext) => {
+    if (ctx.hoursSinceLastInteraction > 3) return 0;
+    if (ctx.reactiveFlags?.pet || ctx.reactiveFlags?.postCheckin) return 0.68;
+    return 0.36;
+  },
+  execute: (ctx: BehaviorContext): BehaviorEffect => ({
+    animation: ctx.reduceMotion ? 'breath_deep' : 'observe',
+    message: 'Tô te observando com carinho.',
   }),
 };
 
@@ -244,12 +383,25 @@ export const moodRecoveryCheer: Behavior = {
  * Ordem importa em caso de tie (first wins): milestones > reactive > temporal > idle.
  */
 export const DEFAULT_BEHAVIORS: readonly Behavior[] = [
+  reactivePet,            // 0.95 moment/gesture pet
+  reactivePostCheckin,    // 0.9 pós check-in
+  reactiveMissionComplete,// 0.92 missão/gesture double
+  reactiveReturnAfterAbsence, // 0.85+ retorno simulação
+  reactiveHabitMissed,    // 0.82 hábito perdido offline
   streakMilestone,        // 1.0 must-fire
   reactToReturn,          // 0.7-1.0 ausência longa (>24h)
+  reactiveStreakRisk,     // 0.78 streak em risco
+  observeUser,            // 0.36-0.68 presença reativa curta
   moodRecoveryCheer,      // 0.6 humor positivo + depth
+  sleepAtNight,           // 0.2-0.74 madrugada/energia
+  wakeMorning,            // 0.28-0.52 despertar manhã
   gentleReturn,           // 0.55 ausência curta (4-24h)
   expressSocialBurst,     // 0-0.5 DNA-driven
   quietContemplation,     // 0-0.45 DNA-driven
+  yawnIdle,               // 0.12-0.58 bocejo autônomo
+  exploreIdle,            // 0-0.46 exploração leve
+  lookAround,             // 0.18-0.34 observação neutra
+  restIdle,               // 0.18-0.62 desacelera
   morningGreeting,        // 0.4 manhã (6-10h)
   eveningCalm,            // 0.35 noite cedo (19-22h)
   quietObservation,       // 0.5 madrugada (22-5h)

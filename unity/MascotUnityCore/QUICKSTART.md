@@ -52,7 +52,7 @@ Aperta **▶** (top center). Vai aparecer:
 
 ## Documentação completa
 
-`docs/UNITY_RUNBOOK_v3.md` — snapshot pós-sessão com arquitetura, roadmap, troubleshooting expandido.
+`docs/UNITY_RUNBOOK_v3.md` — runbook canônico e atualizado do fluxo Unity.
 
 ## Commits da sessão (rollback fácil)
 

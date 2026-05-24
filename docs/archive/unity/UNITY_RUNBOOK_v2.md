@@ -293,6 +293,47 @@ Done.
 
 ---
 
+## Sprint 3 — integração RN/Android (sem Unity Editor)
+
+> Aplicado pelo agente em 2026-05-24. Complementa o snapshot pré-Editor acima.
+
+| Item | Status |
+|---|---|
+| `UnityMascotModule.kt` embed path (reflexão) | ✅ |
+| `UnityMascotPackage` + `MainApplication.kt` | ✅ já estava |
+| `EXPO_PUBLIC_UNITY_ENABLED` + `resolveRendererMode({ preferUnity })` | ✅ |
+| `/mascot-room` com `preferUnity` | ✅ |
+| Plugin `withUnityAndroid.js` (condicional se `build.gradle` existe) | ✅ |
+| Script `app/mobile/scripts/wire-unity-android.ps1` | ✅ |
+| `.env.example` flags Unity | ✅ |
+| `unityLibrary/` AAR real | ❌ **bloqueado** — Unity Editor passo 8 |
+| `settings.gradle` include ativo | ❌ até export (script/plugin aplicam depois) |
+
+### Dev local sem AAR
+
+```powershell
+# app/mobile/.env.local
+EXPO_PUBLIC_UNITY_ENABLED=true
+EXPO_PUBLIC_UNITY_DEBUG_PANEL=true
+
+cd app/mobile
+npx expo run:android
+# Abrir /mascot → "Visitar o quarto" → debug mostra renderer: unity, nativeEmbedded: false
+```
+
+Stub simula `ready (version=stub-0.2.0)`. Botões Test disparam JSON via bridge (log Logcat `[UnityMascotModule]`).
+
+### Após export Unity
+
+```powershell
+# Copiar export (passo 8) e wire Gradle
+powershell -ExecutionPolicy Bypass -File app/mobile/scripts/wire-unity-android.ps1
+cd app/mobile && npx expo run:android
+# nativeEmbedded: true no painel /mascot-room
+```
+
+---
+
 ## Troubleshooting expandido
 
 | Sintoma | Causa provável | Fix |

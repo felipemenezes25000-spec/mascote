@@ -29,6 +29,7 @@ import { entitlementService } from '@/services/subscription/EntitlementService';
 import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
+import { color as dsColor } from '@/design-system/tokens';
 import type { Theme } from '@/lib/themes';
 import type { Message } from '@/types';
 
@@ -286,6 +287,14 @@ export default function ChatTab() {
           data={items}
           keyExtractor={i => i.id}
           contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            !sending ? (
+              <View style={styles.emptyWrap}>
+                <Text style={styles.emptyTitle}>Conversa vazia por enquanto</Text>
+                <Text style={styles.emptyBody}>Escolha uma sugestão ou escreva como você está agora.</Text>
+              </View>
+            ) : null
+          }
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
           ListFooterComponent={sending ? <TypingIndicator mascotColor={meta.primaryColor} /> : null}
           renderItem={({ item }) => {
@@ -391,6 +400,7 @@ export default function ChatTab() {
             disabled={!input.trim() || sending}
             style={[styles.sendBtn, (!input.trim() || sending) && { opacity: 0.4 }]}
             accessibilityLabel="Enviar mensagem"
+            hitSlop={8}
           >
             {sending ? (
               <Text style={styles.sendText}>…</Text>
@@ -458,13 +468,13 @@ function makeStyles(theme: Theme) {
       borderWidth: 1,
       borderColor: theme.colors.border,
     },
-    iconBtnDanger: { backgroundColor: theme.colors.error + '12', borderColor: theme.colors.error + '30' },
+    iconBtnDanger: { backgroundColor: theme.colors.error + dsColor.alpha20, borderColor: theme.colors.error + dsColor.alpha25 },
     cvvBanner: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#FFF1E8',
+      backgroundColor: theme.colors.primaryTint,
       borderBottomWidth: 1,
-      borderBottomColor: theme.colors.warning + '55',
+      borderBottomColor: theme.colors.warning + dsColor.alpha33,
       paddingHorizontal: theme.spacing.md,
       paddingVertical: 10,
       gap: theme.spacing.sm,
@@ -477,6 +487,19 @@ function makeStyles(theme: Theme) {
     },
     cvvText: { flex: 1, ...theme.text.xs, color: '#8C4F1F', fontWeight: '600' },
     listContent: { paddingVertical: theme.spacing.md, gap: 4 },
+    emptyWrap: {
+      marginHorizontal: theme.spacing.md,
+      marginTop: theme.spacing.md,
+      marginBottom: theme.spacing.sm,
+      padding: theme.spacing.md,
+      borderRadius: theme.radius.lg,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+      gap: 4,
+    },
+    emptyTitle: { ...theme.text.bodyBold, color: theme.colors.text },
+    emptyBody: { ...theme.text.sm, color: theme.colors.textSecondary, lineHeight: 18 },
     dateSep: {
       flexDirection: 'row',
       alignItems: 'center',

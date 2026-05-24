@@ -34,6 +34,7 @@ function UnityMascotViewImpl({
     onReady,
     onFallback,
   });
+  const ackStats = unityMascotBridge.getAckStats();
 
   return (
     <View
@@ -60,6 +61,10 @@ function UnityMascotViewImpl({
           lastError={lastError}
           lastMessage={lastMessage}
           native={native}
+          ackLatencyMs={ackStats.lastAckLatencyMs}
+          ackRetryCount={ackStats.retryCount}
+          ackLastSeq={ackStats.lastAckSeq}
+          ackTimeoutCount={ackStats.timeoutCount}
         />
       ) : lastError ? (
         <Typography variant="mono" tone="secondary" style={styles.debug}>

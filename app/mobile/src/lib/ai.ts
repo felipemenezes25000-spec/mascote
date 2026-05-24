@@ -253,7 +253,7 @@ async function callOpenAI(
           { role: 'user', content: userMessage },
         ],
         temperature: 0.7,
-        max_tokens: 100,
+        max_tokens: 70,
       }),
       signal: controller.signal,
     });
