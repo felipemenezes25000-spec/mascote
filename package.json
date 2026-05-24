@@ -11,6 +11,7 @@
     "test:coverage": "npm --prefix app/mobile run test:coverage",
     "lint": "npm --prefix app/mobile run lint",
     "quality": "npm --prefix app/mobile run quality",
+    "quality:ci": "npm --prefix app/mobile run quality:ci",
     "landing:dev": "npm --prefix app/web run dev",
     "landing:build": "npm --prefix app/web run build"
   }

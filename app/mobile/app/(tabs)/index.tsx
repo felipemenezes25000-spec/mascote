@@ -61,6 +61,7 @@ import { HomeStatsBars } from '@/features/home/components/HomeStatsBars';
 import { HomeQuickActions } from '@/features/home/components/HomeQuickActions';
 import { HomeMissionCard } from '@/features/home/components/HomeMissionCard';
 import { HomeMemoriesStrip } from '@/features/home/components/HomeMemoriesStrip';
+import { HomeAwayStrip } from '@/features/home/components/HomeAwayStrip';
 import { mascotMemoryService } from '@/game/memory/MascotMemoryService';
 import { useHomeActions, createAnimationAction } from '@/features/home/hooks/useHomeActions';
 import { useHomeBootstrap } from '@/features/home/hooks/useHomeBootstrap';
@@ -423,6 +424,7 @@ export default function Home() {
     () => (mascot ? xpToNextLevel(mascot.xp) : { current: 0, needed: 50, progress: 0 }),
     [mascot]
   );
+  const unityAckStats = useMemo(() => unityMascotBridge.getAckStats(), [ackTick]);
 
   if (!profile || !mascot) return <Redirect href="/splash" />;
   const scene = getScene(snapshot.activeSceneId);
@@ -439,7 +441,6 @@ export default function Home() {
     ) ??
     mascotLine;
   const sceneHour = new Date().getHours();
-  const unityAckStats = useMemo(() => unityMascotBridge.getAckStats(), [ackTick]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -526,6 +527,8 @@ export default function Home() {
             flash={flash}
           />
         </StaggeredView>
+
+        <HomeAwayStrip events={lifeEvents} summaryLine={lifeSummaryLine} />
 
         <StaggeredView index={3} initialDelay={30}>
           <View style={{ paddingHorizontal: theme.spacing.lg }}>

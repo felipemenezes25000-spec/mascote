@@ -64,6 +64,12 @@ export interface BuildUnityMascotStateContext {
   sceneId?: string;
   reduceMotion?: boolean;
   quality?: UnityQualityPreset;
+  /** Hora local para tint do cenário (habitat vivo). */
+  sceneHour?: number;
+  /** Energia da simulação (0–100) — override visual quando disponível. */
+  simEnergy?: number;
+  /** Mood da simulação — override emocional quando disponível. */
+  simMood?: import('@/types').MascotMood;
   streakDays?: number;
   userBand?: UserAgeBand;
 }
@@ -156,12 +162,14 @@ export function buildUnityMascotState(
   const dna = sanitizeGenome(mascot.dna ?? {});
   const userBand = context.userBand ?? ageBandFromProfile(context.profile);
   const phase = mascot.phase;
+  const effectiveMood = context.simMood ?? mascot.mood;
+  const effectiveEnergy = context.simEnergy ?? mascot.energy;
   const phasePreset = mapPhase(phase);
   const glowMult = phase === 'evoluido' ? 1.5 : phase === 'ovo' ? 0.4 : 1.0;
   const materials = dnaToMaterialBindings(dna, userBand, glowMult);
   const bones = dnaToBoneScales(dna, phase, userBand);
   const morph = morphologyFromGenome(dna);
-  const animation = dnaToAnimationState(dna, mascot.mood);
+  const animation = dnaToAnimationState(dna, effectiveMood);
 
   const equipped = context.equippedAccessoryIds ?? [];
   const unlocked = context.unlockedAccessoryIds ?? equipped;
@@ -187,12 +195,12 @@ export function buildUnityMascotState(
       phase: phasePreset,
       level: mascot.level,
       xp: mascot.xp,
-      energy: mascot.energy,
+      energy: effectiveEnergy,
       health: mascot.health,
       streakDays: context.streakDays,
     },
     state: {
-      mood: mapMood(mascot.mood),
+      mood: mapMood(effectiveMood),
       animation: {
         primary: animation.primary,
         blend: animation.blend

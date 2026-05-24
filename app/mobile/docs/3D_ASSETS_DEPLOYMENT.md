@@ -99,8 +99,8 @@ python -m http.server 8083
 - Restart Metro: `npx expo start --clear`
 
 ### "Cannot find module '@react-three/drei'"
-- `npm install @react-three/drei --legacy-peer-deps` (peer dep conflict
-  com three@0.166 — flag necessária)
+- Instale na pasta `app/mobile`: `npm install @react-three/drei@^9.88.0`
+- Use versão **9.x** com `@react-three/fiber@8.x` e React 18 (Expo 51). Não use `--legacy-peer-deps`.
 
 ### Mascote aparece como bola branca
 - DNA não foi passado pra `Mascot3DAsset`. Check `mascot.dna` no store.

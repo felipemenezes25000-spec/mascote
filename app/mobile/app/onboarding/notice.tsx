@@ -29,8 +29,14 @@ export default function Notice() {
 
   // default: push ON (opt-out). Se vem com ?push=no de uma rota legacy, respeita.
   const [pushEnabled, setPushEnabled] = useState<boolean>(params.push !== 'no');
+  const [finishing, setFinishing] = useState(false);
 
   async function finish() {
+    // Guard de re-entrada: double-tap entregava welcome pack 2x (100 XP, 50
+    // moedas, unlock+equip do boné rodando concorrente). A leitura+escrita do
+    // flag não era atômica, então ambos os tap viam `alreadyDelivered=false`.
+    if (finishing) return;
+    setFinishing(true);
     if (profile) {
       const updated = await settingsDb.update(profile.id, { push_enabled: pushEnabled });
       setSettings(updated);
@@ -123,6 +129,7 @@ export default function Notice() {
         <Button
           label="Entendi e quero começar"
           onPress={finish}
+          disabled={finishing}
         />
       </View>
     </SafeAreaView>

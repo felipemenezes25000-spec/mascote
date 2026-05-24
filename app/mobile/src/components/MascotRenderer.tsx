@@ -60,6 +60,7 @@ function MascotRendererImpl(props: MascotRendererProps) {
   const mode = resolveRendererMode({ preferUnity });
   const mascot = useStore(s => s.mascot);
   const profile = useStore(s => s.profile);
+  const lifeState = useStore(s => s.lifeState);
   const settings = useStore(s => s.settings);
   const [unityFailed, setUnityFailed] = useState(false);
 
@@ -84,6 +85,9 @@ function MascotRendererImpl(props: MascotRendererProps) {
       evolutionVisuals: props.evolutionVisuals,
       equippedAccessoryIds: equipped,
       unlockedAccessoryIds: equipped,
+      simEnergy: lifeState?.energy,
+      simMood: lifeState?.mood,
+      sceneHour: new Date().getHours(),
       ...unityContext,
     });
   }, [
@@ -97,6 +101,8 @@ function MascotRendererImpl(props: MascotRendererProps) {
     props.evolutionVisuals,
     props.reduceMotion,
     unityContext,
+    lifeState?.energy,
+    lifeState?.mood,
   ]);
 
   if (mode === 'fallback2d') {

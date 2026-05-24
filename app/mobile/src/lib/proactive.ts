@@ -88,7 +88,12 @@ async function lastFiredAt(uid: string, trigger: ProactiveTrigger): Promise<Date
   const d = new Date(raw);
   /* v8 ignore next — `isNaN(d.getTime())` guarda contra ISO inválido salvo
      no AsyncStorage (corrupção); markFired sempre escreve ISO válido. */
-  return isNaN(d.getTime()) ? null : d;
+  if (isNaN(d.getTime())) return null;
+  // Clock skew: se o timestamp gravado está no futuro (usuário rolou o
+  // relógio pra trás), o cooldown nunca expira. Trata como se nunca tivesse
+  // disparado pra desbloquear triggers.
+  if (d.getTime() > Date.now()) return null;
+  return d;
 }
 
 async function markFired(uid: string, trigger: ProactiveTrigger): Promise<void> {
@@ -304,7 +309,8 @@ const TRIGGERS: TriggerDef[] = [
     cooldownHours: 20,
     async test(ctx) {
       const hour = new Date().getHours();
-      if (hour < 18 || hour > 22) return { fire: false };
+      // 18–21h (22h em diante já cai em quiet hours em notify.ts).
+      if (hour < 18 || hour >= 22) return { fire: false };
       const today = todayLocal();
       const checkedToday = ctx.recentCheckins.some(c => c.occurred_on === today);
       if (checkedToday) return { fire: false };

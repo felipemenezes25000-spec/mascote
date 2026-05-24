@@ -36,6 +36,7 @@ import { logger } from '@/lib/logger';
 import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import { warmReplyCache } from '@/content/replies';
+import { initRevenueCatSdk } from '@/services/subscription/RevenueCatBillingProvider';
 
 // Fail-fast em build de produção mal-configurado. Em dev/test, sempre []
 // (a função respeita isProduction). Capturado abaixo num estado para
@@ -61,6 +62,7 @@ installTelemetry({
 export default function RootLayout() {
   const hydrated = useStore(s => s.hydrated);
   const hydrate = useStore(s => s.hydrate);
+  const profile = useStore(s => s.profile);
   const currentToast = useStore(s => s.currentToast);
   const shiftToast = useStore(s => s.shiftToast);
   const theme = useTheme();
@@ -96,6 +98,11 @@ export default function RootLayout() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    void initRevenueCatSdk(profile.id);
+  }, [profile?.id]);
 
   // Unity bridge — só registra subscriber se renderer ativo for Unity.
   // No-op em three/2D pra evitar overhead em produção.

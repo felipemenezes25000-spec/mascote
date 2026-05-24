@@ -13,6 +13,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { embed, detectMode, type EmbedConfig } from '@/lib/ml/embedding';
+import { logger } from '@/lib/logger';
 import { addDocument, deserializeStats, emptyStats, serializeStats, type TfIdfStats } from '@/lib/ml/text/tfidf';
 import { VectorStore } from '@/lib/ml/store/vector-store';
 import { buildGraph, rerankByGraph, type RerankItem } from '@/lib/memory/graph';
@@ -134,9 +135,12 @@ async function read(uid: string): Promise<MemoryItem[]> {
     /* v8 ignore next — `Array.isArray(parsed) ? parsed : []` é guard
        contra storage corrompido. JSON parse → array sempre em runtime normal. */
     return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    /* v8 ignore next — AsyncStorage falha no read é raro;
-       fallback retorna lista vazia para não bloquear UI. */
+  } catch (err) {
+    // Antes era silencioso — corrupção apagava todas as memórias sem
+    // sinal. Loga a causa (sem o blob bruto, pra não vazar conteúdo) e
+    // segue retornando vazio: o write seguinte sobrescreve.
+    const safe = err instanceof Error ? err.message : 'unknown';
+    logger.warn('[memory] read failed', { reason: safe });
     return [];
   }
 }

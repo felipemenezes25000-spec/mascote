@@ -172,8 +172,14 @@ export function habitMissedMessage(habit: HabitKind): string {
     case 'meditation':
     case 'breath':
       return 'Faltou um respiro no dia. Tô aqui, sem pressa.';
-    default:
-      return `${habitMeta[habit].emoji} ${habitMeta[habit].label} ficou quieto. Sem pressa.`;
+    default: {
+      // Guard contra HabitKind sem entrada no habitMeta (Record parcial,
+      // hábito recém-adicionado ao tipo). Sem o guard, .emoji crashava o
+      // tick inteiro do simulador e zerava drift de energy/mood.
+      const meta = habitMeta[habit];
+      if (!meta) return 'Faltou um hábito hoje. Sem pressa.';
+      return `${meta.emoji} ${meta.label} ficou quieto. Sem pressa.`;
+    }
   }
 }
 

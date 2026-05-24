@@ -6,30 +6,30 @@ import type { BillingTierId } from '@/content/billing';
 import { getTier } from '@/content/billing';
 import { localSubscriptionRepo } from '@/repositories/local';
 import { trackSubscriptionCancelled } from '@/analytics/trackSubscription';
+import { withLock } from '@/lib/db';
 import { getBillingProvider } from './billing-provider';
 import { restorePurchasesService } from './RestorePurchasesService';
 
 export class SubscriptionService {
-  private billing = getBillingProvider();
-
-  private ensureProvider(): void {
-    this.billing = getBillingProvider();
-  }
-
   async getCurrentTier(userId: string): Promise<BillingTierId> {
     return localSubscriptionRepo.getTier(userId);
   }
 
   async subscribe(userId: string, tier: BillingTierId) {
-    this.ensureProvider();
-    return this.billing.purchase(userId, tier);
+    // withLock evita double-purchase quando o user toca em paywall em dois
+    // pontos do app ao mesmo tempo (deep-link + tab). Também resolve env
+    // change durante reload: getBillingProvider() é chamado a cada call.
+    return withLock(`subscribe:${userId}`, () =>
+      getBillingProvider().purchase(userId, tier),
+    );
   }
 
   async cancel(userId: string) {
-    this.ensureProvider();
-    const previous = await localSubscriptionRepo.getTier(userId);
-    await this.billing.cancel(userId);
-    trackSubscriptionCancelled(previous);
+    return withLock(`subscribe:${userId}`, async () => {
+      const previous = await localSubscriptionRepo.getTier(userId);
+      await getBillingProvider().cancel(userId);
+      trackSubscriptionCancelled(previous);
+    });
   }
 
   async restore(userId: string) {

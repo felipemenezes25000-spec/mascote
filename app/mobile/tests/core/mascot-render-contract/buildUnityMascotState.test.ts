@@ -68,6 +68,15 @@ describe('buildUnityMascotState', () => {
     expect(state.accessories[0]?.assetKey).toBe('cap_classic');
   });
 
+  it('usa simEnergy e simMood quando passados no contexto', () => {
+    const state = buildUnityMascotState(mascotFixture('fofo', { mood: 'feliz', energy: 80 }), {
+      simEnergy: 42,
+      simMood: 'exausto',
+    });
+    expect(state.progression.energy).toBe(42);
+    expect(state.state.mood).toBe(mapMood('exausto'));
+  });
+
   it('inclui pendingEvent de check-in recente', () => {
     const state = buildUnityMascotState(mascotFixture('motivador'), {
       recentCheckins: [

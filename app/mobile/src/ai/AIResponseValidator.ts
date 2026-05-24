@@ -3,8 +3,7 @@
  */
 
 import type { SafetyFlag } from '@/types';
-import { classifyOutput } from '@/content/safety';
-import { SAFE_FALLBACK } from '@/content/safety';
+import { classifyInput, classifyOutput, CRISIS_REPLY, SAFE_FALLBACK } from '@/content/safety';
 import type { AiResponse } from '@/lib/ai';
 
 const MAX_WORDS = 35;
@@ -37,6 +36,21 @@ export function validateAiResponse(
   const words = reply.split(/\s+/).filter(Boolean);
   if (words.length > MAX_WORDS) issues.push('too_many_words');
 
+  // Defense-in-depth: if the upstream model emitted crisis-style content
+  // (e.g., echoed back self-harm phrasing), surface CRISIS_REPLY — never let
+  // the original payload reach the user. classifyInput's critical/high
+  // patterns are appropriate here because content semantics are the same
+  // whether the text came from user or assistant.
+  const inputSideFlag = classifyInput(reply);
+  if (inputSideFlag === 'critical' || inputSideFlag === 'high') {
+    return {
+      valid: false,
+      reply: CRISIS_REPLY,
+      safety_flag: 'critical',
+      issues: [...issues, 'safety_output_crisis'],
+    };
+  }
+
   const outputFlag = classifyOutput(reply);
   if (outputFlag !== 'safe') {
     return {
@@ -56,12 +70,22 @@ export function validateAiResponse(
     };
   }
 
+  // Nunca confiar em safety_flag entregue pelo proxy/OpenAI — recomputa
+  // localmente. moreSevere(inputFlag, outputFlag-on-input-side) garante
+  // que o flag exportado é, no mínimo, tão severo quanto o do input.
+  const finalFlag: SafetyFlag = severer(inputFlag, inputSideFlag);
+
   return {
     valid: issues.length === 0,
     reply,
-    safety_flag: raw.safety_flag ?? inputFlag,
+    safety_flag: finalFlag,
     issues,
   };
+}
+
+const ORDER: Record<SafetyFlag, number> = { safe: 0, watch: 1, high: 2, critical: 3 };
+function severer(a: SafetyFlag, b: SafetyFlag): SafetyFlag {
+  return ORDER[a] >= ORDER[b] ? a : b;
 }
 
 export function toAiResponse(

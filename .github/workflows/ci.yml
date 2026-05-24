@@ -42,6 +42,10 @@ jobs:
       - name: Tests with coverage (enforces thresholds)
         run: npm run test:coverage
 
+      - name: npm audit (informacional)
+        run: npm audit --omit=dev || true
+        continue-on-error: true
+
   # Validação Unity — ver também .github/workflows/unity-ci.yml
   unity-structure:
     name: Unity — estrutura

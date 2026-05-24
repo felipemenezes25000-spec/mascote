@@ -12,7 +12,7 @@
  * Não chama backends — só dispara callbacks para o pai decidir efeitos
  * persistentes (ex.: incrementar bond_xp ou voice line).
  */
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Platform, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { analytics } from '@/analytics';
@@ -47,6 +47,17 @@ export function MascotInteractive({
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFiredRef = useRef(false);
   const lastPetAtRef = useRef(0);
+
+  // Garante que o timer de long-press não dispara após unmount — senão
+  // emite `mascot_gesture` analítico e chama `onGesture` em callback stale.
+  useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const haptic = useCallback(
     (kind: 'light' | 'medium' = 'light') => {

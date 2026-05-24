@@ -406,6 +406,20 @@ vi.mock('@/components/Mascot3D', () => ({
   Mascot3D: makeHostComponent('mascot-3d'),
 }));
 
+vi.mock('react-native-purchases', () => ({
+  default: {
+    configure: vi.fn(),
+    logIn: vi.fn(async () => ({ customerInfo: { entitlements: { active: {} } } })),
+    getOfferings: vi.fn(async () => ({ current: { availablePackages: [] } })),
+    purchasePackage: vi.fn(async () => ({
+      customerInfo: { entitlements: { active: { plus: { isActive: true } } } },
+    })),
+    restorePurchases: vi.fn(async () => ({
+      entitlements: { active: {} },
+    })),
+  },
+}));
+
 // expose helpers pra tests
 (globalThis as any).__asyncStorageReset = () => store.clear();
 (globalThis as any).__secureStoreReset = () => secureStoreMock.clear();

@@ -5,7 +5,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { BillingTierId } from '@/content/billing';
-import { todayLocal } from '@/lib/db';
+import { todayLocal, withLock } from '@/lib/db';
 
 const BUDGET_KEY = (userId: string) => `mascote:ai_cost:${userId}:${todayKey()}`;
 
@@ -58,10 +58,15 @@ export async function recordAiCost(
   userId: string,
   tokens = ESTIMATED_TOKENS_PER_REPLY,
 ): Promise<void> {
-  const key = BUDGET_KEY(userId);
-  const raw = await AsyncStorage.getItem(key);
-  const used = raw ? Number.parseInt(raw, 10) || 0 : 0;
-  await AsyncStorage.setItem(key, String(used + tokens));
+  // Serializa read-modify-write — sem o lock, dois replies paralelos do mesmo
+  // user lêem o mesmo `used` e gravam `used+tokens` cada um, perdendo um
+  // incremento e permitindo extrapolar o budget diário.
+  await withLock(`ai_cost:${userId}`, async () => {
+    const key = BUDGET_KEY(userId);
+    const raw = await AsyncStorage.getItem(key);
+    const used = raw ? Number.parseInt(raw, 10) || 0 : 0;
+    await AsyncStorage.setItem(key, String(used + tokens));
+  });
 }
 
 export async function resetAiCost(userId: string): Promise<void> {

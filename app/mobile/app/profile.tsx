@@ -187,12 +187,16 @@ export default function You() {
             ) : (
               habitsList.slice(0, 6).map(([kind, count]) => {
                 const m = habitMeta[kind as HabitKind];
+                const icon = HABIT_ICONS[kind as HabitKind];
+                // Defensive: dados migrados / debug podem trazer habit_kind
+                // fora do enum atual — sem o guard, .label crasha a tela toda.
+                if (!m || !icon) return null;
                 const pct = ((count as number) / max) * 100;
                 return (
                   <View key={kind} style={styles.habitRow}>
                     <View style={styles.habitIconWrap}>
                       <Icon
-                        name={HABIT_ICONS[kind as HabitKind]}
+                        name={icon}
                         size={14}
                         color={theme.colors.primary}
                         strokeWidth={2.2}

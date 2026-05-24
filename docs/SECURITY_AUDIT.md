@@ -46,7 +46,7 @@ Estes itens **não entram** na matriz de pentest e **não devem** impedir beta/m
 
 | Item | Motivo |
 |------|--------|
-| `npm audit` (25 vulns Expo SDK 51) | Toolchain de **build/dev** (`tar`, `xmldom`, `@expo/cli`) — não é runtime do APK/IPA. Fix = upgrade SDK 53+ (projeto separado). |
+| `npm audit` (43 vulns Expo SDK 51) | Toolchain de **build/dev** — fix = upgrade SDK 53+ (projeto separado). Medido 2026-05-24. |
 | Proxy IA deployado | Infra/ops — coberto por testes de **cliente** (`ProxyMascotAI` sem `Authorization` no device). |
 | Smoke manual em device | GO/NO-GO Fase 0 — fora de Vitest. |
 | `grep sk-` / `console.log` no repo | Higiene pontual; pentest 3 já valida redaction em runtime. |
@@ -56,7 +56,7 @@ Estes itens **não entram** na matriz de pentest e **não devem** impedir beta/m
 ### npm audit (só informativo)
 
 ```
-25 vulnerabilities (1 low, 9 moderate, 15 high) — 2026-05-20
+43 vulnerabilities (1 low, 27 moderate, 15 high) — 2026-05-24
 ```
 
 `npm audit fix` sem `--force` não altera o número. `--force` quebraria Expo 51. **Aceito** até migração SDK 53+.

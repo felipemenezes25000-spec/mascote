@@ -10,8 +10,8 @@ Documento vivo dos limites conhecidos no estado atual.
 
 ## Backend / serviços externos
 
-- Proxy IA de produção ainda não está deployado.
-- RevenueCat real ainda não está integrado ponta-a-ponta no app nativo.
+- Proxy IA: **código** em `app/web/app/api/v1/mascot/reply/route.ts` — deploy + env `OPENAI_API_KEY` pendente.
+- RevenueCat: SDK `react-native-purchases` no package; compra real requer dev client/EAS + produtos na loja.
 - Sync remoto multi-device ainda não existe (arquitetura local-first).
 
 ## Qualidade técnica

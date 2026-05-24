@@ -61,13 +61,20 @@ export default function Breathe() {
   const scale = useSharedValue(0.7);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Evita setState após unmount em `completeSession` (await pipeline longa).
+  const mountedRef = useRef(true);
 
   function cleanup() {
     if (timerRef.current) clearTimeout(timerRef.current);
     if (intervalRef.current) clearInterval(intervalRef.current);
   }
 
-  useEffect(() => cleanup, []);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+      cleanup();
+    };
+  }, []);
 
   function hapticBeat() {
     if (Platform.OS === 'web') return;
@@ -121,6 +128,7 @@ export default function Breathe() {
   async function completeSession() {
     cleanup();
     if (!profile || !mascot) {
+      if (!mountedRef.current) return;
       Alert.alert('Ops', 'Não encontrei seu mascote. Volta pra Home e tenta de novo.');
       setPhase('idle');
       setRewardOk(false);
@@ -142,6 +150,7 @@ export default function Breathe() {
         refreshStreak().catch(() => {}),
         refreshWallet().catch(() => {}),
       ]);
+      if (!mountedRef.current) return;
       for (const a of out.unlocks.achievements)
         enqueueToast({ kind: 'achievement', emoji: a.emoji, title: a.title, subtitle: a.description });
       for (const acc of out.unlocks.accessories)
@@ -154,6 +163,7 @@ export default function Breathe() {
       logger.warn('[breathe] applyCheckinFully failed', {
         reason: err instanceof Error ? err.message : 'unknown',
       });
+      if (!mountedRef.current) return;
       Alert.alert(
         'Não salvei o check-in',
         'A respiração terminou, mas não consegui registrar. Tenta de novo.',

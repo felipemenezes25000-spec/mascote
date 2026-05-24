@@ -4,7 +4,7 @@
  * Mantém a Home (`app/(tabs)/index.tsx`) focada em rendering. O hook sabe
  * coordenar refresh do store + toast queue + side-effects (paywall trigger).
  */
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { router } from 'expo-router';
 import { Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -57,6 +57,18 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
   const refreshWallet = useStore(s => s.refreshWallet);
   const enqueueToast = useStore(s => s.enqueueToast);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sem cleanup, o setTimeout de 15s (que limpa `undoOutcome` no parent)
+  // disparava após o user navegar pra fora — call em opts.onUndoSet rodava
+  // contra um componente desmontado e captava callback stale.
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) {
+        clearTimeout(undoTimerRef.current);
+        undoTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const haptic = useCallback(
     (type: 'light' | 'medium' | 'success' = 'light') => {

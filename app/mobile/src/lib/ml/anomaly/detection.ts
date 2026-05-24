@@ -20,6 +20,23 @@ export interface SeriesStats {
   n: number;
 }
 
+/**
+ * Quantil linear-interpolado (estilo numpy "linear"). Para n par, mediana é
+ * a média dos dois centrais — `Math.floor(n/2)` sozinho dava o índice errado
+ * e enviesava IQR/MAD em amostras pequenas (que é o caso típico aqui).
+ */
+function quantileSorted(sorted: number[], p: number): number {
+  const n = sorted.length;
+  if (n === 0) return 0;
+  if (n === 1) return sorted[0];
+  const idx = (n - 1) * p;
+  const lo = Math.floor(idx);
+  const hi = Math.ceil(idx);
+  if (lo === hi) return sorted[lo];
+  const frac = idx - lo;
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * frac;
+}
+
 export function summarize(series: number[]): SeriesStats {
   if (series.length === 0) {
     return { mean: 0, std: 0, median: 0, mad: 0, q1: 0, q3: 0, iqr: 0, n: 0 };
@@ -29,11 +46,13 @@ export function summarize(series: number[]): SeriesStats {
   const mean = series.reduce((s, x) => s + x, 0) / n;
   const variance = series.reduce((s, x) => s + (x - mean) ** 2, 0) / n;
   const std = Math.sqrt(variance);
-  const median = sorted[Math.floor(n / 2)];
+  const median = quantileSorted(sorted, 0.5);
   const absDev = series.map(x => Math.abs(x - median)).sort((a, b) => a - b);
-  const mad = absDev[Math.floor(n / 2)] || 1e-6;
-  const q1 = sorted[Math.floor(n * 0.25)];
-  const q3 = sorted[Math.floor(n * 0.75)];
+  // `|| 1e-6` mantido pra evitar divisão por zero em robustZScore quando a
+  // amostra é constante.
+  const mad = quantileSorted(absDev, 0.5) || 1e-6;
+  const q1 = quantileSorted(sorted, 0.25);
+  const q3 = quantileSorted(sorted, 0.75);
   return { mean, std, median, mad, q1, q3, iqr: q3 - q1, n };
 }
 

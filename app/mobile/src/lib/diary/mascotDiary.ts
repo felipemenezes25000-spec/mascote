@@ -128,9 +128,10 @@ export function detectReturnAfterAbsence(
   );
   const out: DiaryEntry[] = [];
   for (let i = 1; i < sorted.length; i++) {
-    const prev = new Date(sorted[i - 1].occurred_at).getTime();
-    const cur = new Date(sorted[i].occurred_at).getTime();
-    const gapDays = Math.floor((cur - prev) / 86_400_000);
+    // Conta gap em dias de CALENDÁRIO (occurred_on), não em horas. Usar
+    // occurred_at + Math.floor dava off-by-one em pares como
+    // (00:01 dia N → 23:59 dia N+1) que viravam gap=1 mas sem absenteísmo.
+    const gapDays = calendarDayDiff(sorted[i - 1].occurred_on, sorted[i].occurred_on);
     if (gapDays >= ABSENCE_THRESHOLD_DAYS) {
       const user = displayName ?? 'você';
       out.push({
@@ -202,8 +203,15 @@ function buildStreakBody(days: number, user: string): string {
 }
 
 function isConsecutiveDay(prevIso: string, currIso: string): boolean {
-  const prev = new Date(prevIso).getTime();
-  const cur = new Date(currIso).getTime();
-  const diff = Math.round((cur - prev) / 86_400_000);
-  return diff === 1;
+  return calendarDayDiff(prevIso, currIso) === 1;
+}
+
+// Diff em dias entre duas strings YYYY-MM-DD ancorada em UTC midnight
+// (DST-imune por construção). Caller garante o formato — fora dele, parsing
+// volta NaN e devolvemos 0 para não disparar gaps espúrios.
+function calendarDayDiff(prevDay: string, currDay: string): number {
+  const a = new Date(prevDay + 'T00:00:00Z').getTime();
+  const b = new Date(currDay + 'T00:00:00Z').getTime();
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return 0;
+  return Math.round((b - a) / 86_400_000);
 }

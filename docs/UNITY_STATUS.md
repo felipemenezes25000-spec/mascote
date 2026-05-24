@@ -7,6 +7,12 @@
 
 ## Estado atual da integração
 
+### Simulação → render (2026-05-24)
+
+- ✅ `lifeState.energy` / `lifeState.mood` passam para `buildUnityMascotState` (`simEnergy`, `simMood`)
+- ✅ `MascotRenderer` lê `lifeState` do store
+- ✅ `HomeAwayStrip` na Home exibe living moments / resumo de ausência
+
 ### Android
 
 - ✅ Bridge JS/Kotlin presente (`UnityMascotBridge`, `UnityMascotModule.kt`)

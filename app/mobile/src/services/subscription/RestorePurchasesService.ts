@@ -55,10 +55,16 @@ export class RestorePurchasesService {
           message: 'Plus restaurado com sucesso!',
         };
       }
-      trackSubscriptionRestored(previous, false);
+      // RC disse 'free' mas o local estava em premium — usuário cancelou
+      // pela loja e o app ficou com cache desatualizado. Reconcilia para
+      // não permitir uso premium indevido.
+      if (previous !== 'free') {
+        await localSubscriptionRepo.setTier(userId, 'free');
+      }
+      trackSubscriptionRestored('free', false);
       return {
         success: false,
-        tier: previous,
+        tier: 'free',
         demo: false,
         message: 'Nenhuma assinatura ativa encontrada nesta conta da loja.',
       };

@@ -13,7 +13,7 @@
  * vê tela quebrada — só "downgrade" silencioso.
  */
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import type {
   MascotCustomization,
@@ -94,14 +94,23 @@ export function Mascot3DLazyAsset(props: Props) {
  * idealmente seria React.ErrorBoundary mas pra mobile-only é overkill.
  */
 function AssetWithFallback(props: Props & { onFail: () => void }) {
-  // Lazy require pra evitar drei carregar em web Expo (causa canvas vazio)
-  let Mascot3DAsset: any;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    Mascot3DAsset = require('@/components/Mascot3DAsset').Mascot3DAsset;
-  } catch (e) {
-    // drei não disponível? Cai pro procedural.
-    props.onFail();
+  // Lazy require pra evitar drei carregar em web Expo (causa canvas vazio).
+  // Capturamos o resultado UMA vez via useState initializer — setState durante
+  // render do parent é proibido, então sinalizamos a falha via useEffect.
+  const [resolved] = useState<{ Cmp: any; failed: boolean }>(() => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return { Cmp: require('@/components/Mascot3DAsset').Mascot3DAsset, failed: false };
+    } catch {
+      return { Cmp: null, failed: true };
+    }
+  });
+  const onFail = props.onFail;
+  useEffect(() => {
+    if (resolved.failed) onFail();
+  }, [resolved.failed, onFail]);
+
+  if (resolved.failed || !resolved.Cmp) {
     return (
       <Mascot3DLazy
         dna={props.dna}
@@ -116,6 +125,7 @@ function AssetWithFallback(props: Props & { onFail: () => void }) {
       />
     );
   }
+  const Mascot3DAsset = resolved.Cmp;
 
   return (
     <Suspense fallback={<View />}>

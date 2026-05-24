@@ -11,7 +11,10 @@ export function aiSourceFromResponse(
   result: Pick<AiResponse, 'source'>,
   opts: { usedProxy: boolean; hadApiKey: boolean },
 ): AiReplySource {
-  if (opts.usedProxy && result.source !== 'mock') return 'proxy';
+  // Antes: `usedProxy && source !== 'mock'` rotulava como 'proxy' até
+  // resposta com source='fallback' (quando o proxy falhava e caía pro
+  // fallback local), inflando métricas de sucesso do proxy.
+  if (opts.usedProxy && result.source === 'openai') return 'proxy';
   if (result.source === 'openai' && opts.hadApiKey) return 'byok';
   if (result.source === 'openai' && !opts.hadApiKey) return 'proxy';
   return 'local';

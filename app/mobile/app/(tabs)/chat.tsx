@@ -107,19 +107,19 @@ export default function ChatTab() {
 
     setSending(true);
     setShowSuggestions(false);
-    // try/finally garante setSending(false) MESMO se messagesDb.add falhar
-    // (AsyncStorage cheio, JSON.stringify estourar limite, etc). Sem isso,
-    // o botão de enviar ficava desabilitado pra sempre e o user não tinha como
-    // se recuperar a não ser fechar o app.
+    // try/catch/finally garante setSending(false) MESMO se messagesDb.add ou
+    // generateReply falhar (AsyncStorage cheio, IA offline, etc). Sem o catch
+    // visível, a mensagem do user "sumia" sem nenhum feedback.
+    let userMsg: Message | null = null;
     try {
-      const userMsg = await messagesDb.add({
+      userMsg = await messagesDb.add({
         conversation_id: profile.id,
         role: 'user',
         content: text,
         safety_flag: 'safe',
         cached: false,
       });
-      setList(prev => [...prev, userMsg]);
+      setList(prev => [...prev, userMsg!]);
       if (!messageOverride) setInput('');
 
       // Extrai memórias da mensagem do user em background (não bloqueia resposta).
@@ -146,8 +146,11 @@ export default function ChatTab() {
 
       scheduleScrollToEnd(60);
 
-      // build history (último 5 messages do mesmo conversation)
-      const history = list.slice(-6).map(m => ({
+      // build history (último 5 messages do mesmo conversation).
+      // Inclui o userMsg recém persistido — `list` ainda é estado anterior
+      // (setList é assíncrono), então `[...list, userMsg]` é a única forma
+      // de a IA enxergar a mensagem que acabou de chegar como contexto.
+      const history = [...list, userMsg].slice(-6).map(m => ({
         role: m.role === 'user' ? ('user' as const) : ('mascot' as const),
         content: m.content,
       }));
@@ -177,6 +180,24 @@ export default function ChatTab() {
         safety_flag: result.safety_flag,
       });
       scheduleScrollToEnd(80);
+    } catch (err) {
+      // Algo falhou no pipeline (persist user msg, gerar resposta, persist
+      // resposta). Avisa o usuário em vez de deixar a mensagem sumir silente.
+      logger.warn('[chat] send failed', {
+        reason: err instanceof Error ? err.message : 'unknown',
+      });
+      try {
+        const sysMsg = await messagesDb.add({
+          conversation_id: profile.id,
+          role: 'system',
+          content: 'Não consegui responder agora. Tenta de novo em um instante.',
+          safety_flag: 'safe',
+          cached: false,
+        });
+        setList(prev => [...prev, sysMsg]);
+      } catch {
+        /* se nem o system msg salva, AsyncStorage tá com problema sério */
+      }
     } finally {
       setSending(false);
     }

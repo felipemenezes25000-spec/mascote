@@ -41,17 +41,25 @@ export function validateBillingEnv(): BillingEnvValidation {
     };
   }
 
-  if (
-    revenueCat.readiness === 'sdk_not_linked' ||
-    revenueCat.readiness === 'ready'
-  ) {
+  if (revenueCat.readiness === 'ready') {
+    return {
+      provider,
+      mode: 'production_ready',
+      canPurchase: true,
+      label: 'Produção (RevenueCat)',
+      detail: 'Compras nativas via App Store / Google Play.',
+      revenueCat,
+    };
+  }
+
+  if (revenueCat.readiness === 'sdk_not_linked') {
     return {
       provider,
       mode: 'production_ready',
       canPurchase: false,
       label: 'Produção (SDK pendente)',
       detail:
-        'RevenueCat configurado por variáveis de ambiente. Vincule react-native-purchases neste build para cobrar de verdade.',
+        'RevenueCat configurado por variáveis de ambiente. Inicialize react-native-purchases neste build para cobrar.',
       revenueCat,
     };
   }

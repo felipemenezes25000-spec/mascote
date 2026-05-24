@@ -25,8 +25,10 @@ export async function notify(
   // Respeita opt-out global
   if (!s.push_enabled && kind !== 'safety') return null;
 
-  // Respeita pause
-  if (s.paused_until && s.paused_until > todayLocal()) {
+  // Respeita pause — normaliza para YYYY-MM-DD antes de comparar.
+  // Sem isso, um valor ISO com tempo (`2026-05-25T00:00:00.000Z`) batia
+  // lex-> "2026-05-25" no dia 25 e mantinha o pause por +1 dia.
+  if (s.paused_until && pausedDate(s.paused_until) > todayLocal()) {
     if (kind !== 'safety') return null;
   }
 
@@ -62,6 +64,16 @@ export async function notify(
     payload: payload ?? null,
     read_at: null,
   });
+}
+
+/** Aceita ISO datetime ou date string; sempre devolve YYYY-MM-DD em hora local. */
+function pausedDate(value: string): string {
+  // Já é YYYY-MM-DD?
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  // ISO com tempo — converte para data local do device.
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value.slice(0, 10);
+  return dateLocal(d);
 }
 
 /** Aceita "9:00" e converte pra "09:00" — comparação string só funciona zero-padded. */

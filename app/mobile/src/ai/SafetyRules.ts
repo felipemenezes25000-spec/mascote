@@ -3,6 +3,7 @@
  */
 
 import { classifyInput, CRISIS_REPLY, DIAGNOSIS_REDIRECT } from '@/content/safety';
+import { classifySafetyEnsemble, moreSevere } from '@/lib/ml/safety/classifier';
 import type { SafetyFlag } from '@/types';
 
 export interface SafetyDecision {
@@ -12,7 +13,16 @@ export interface SafetyDecision {
 }
 
 export function evaluateUserMessage(message: string): SafetyDecision {
-  const flag = classifyInput(message);
+  // Ensemble (regex + Bayes + sentiment) + regex fundida com moreSevere para
+  // garantir que rate-limit/cost-budget no MascotAI nunca eclipse uma crise
+  // que só o ensemble detectaria (e.g., sentiment muito negativo sem keyword).
+  let flag: SafetyFlag;
+  try {
+    const ensemble = classifySafetyEnsemble(message);
+    flag = moreSevere(ensemble.flag, classifyInput(message));
+  } catch {
+    flag = classifyInput(message);
+  }
   if (flag === 'critical') {
     return { allowed: false, flag, redirect: CRISIS_REPLY };
   }

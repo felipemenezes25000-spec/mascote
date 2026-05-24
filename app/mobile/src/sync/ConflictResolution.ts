@@ -16,7 +16,23 @@ export function resolveConflict<T extends Timestamped>(
   if (strategy === 'local_wins') return local;
   if (strategy === 'remote_wins') return remote;
 
-  const localTs = Date.parse(local.updatedAt ?? '') || 0;
-  const remoteTs = Date.parse(remote.updatedAt ?? '') || 0;
+  // Date.parse('') is NaN — using `|| 0` lumped both "missing" and "epoch"
+  // together and broke newest-wins symmetry: when only one side had a
+  // timestamp, the side WITHOUT one was treated as 1970 (always older),
+  // and when both were missing local always won via `>=`. Now we keep
+  // the parsed values nullable and prefer the side that actually has
+  // one; when neither does, default to local (caller can pick strategy
+  // explicitly for that case).
+  const localTs = parseTs(local.updatedAt);
+  const remoteTs = parseTs(remote.updatedAt);
+  if (localTs === null && remoteTs === null) return local;
+  if (localTs === null) return remote;
+  if (remoteTs === null) return local;
   return localTs >= remoteTs ? local : remote;
+}
+
+function parseTs(value: string | undefined): number | null {
+  if (!value) return null;
+  const n = Date.parse(value);
+  return Number.isFinite(n) ? n : null;
 }

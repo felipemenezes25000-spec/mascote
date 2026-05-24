@@ -51,7 +51,7 @@ export function HabitChip({ kind, done, count, onPress, onLongPress }: Props) {
         <Icon name={iconName} size={14} color={iconColor} strokeWidth={2.2} />
       </View>
       <Text style={[styles.label, done && styles.labelDone]}>{meta.label}</Text>
-      {count && count > 0 ? (
+      {(count ?? 0) > 0 ? (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{count}</Text>
         </View>

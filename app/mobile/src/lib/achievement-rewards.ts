@@ -41,11 +41,16 @@ export async function applyAchievementReward(
           reference: { achievement: achievement.id },
         });
       }
+      // Persiste TODOS os campos derivados de applyXp+clamp — antes só
+      // xp/level/phase eram gravados, então o boost de energy/mood vindo de
+      // applyXp era silenciosamente descartado pelo merge do upsert.
       const saved = await mascotsDb.upsert({
         user_id: mascot.user_id,
         xp: capped.xp,
         level: capped.level,
         phase: capped.phase,
+        energy: capped.energy,
+        mood: capped.mood,
       });
       return { mascot: saved, label: reward.label };
     }

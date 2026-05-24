@@ -6,6 +6,21 @@
 import type { BillingTierId } from '@/content/billing';
 import { localSubscriptionRepo } from '@/repositories/local';
 import type { PurchaseResult } from './MockBillingProvider';
+import {
+  initRevenueCatSdk,
+  isRevenueCatSdkInitialized,
+  purchaseRevenueCatTier,
+  restoreRevenueCatPurchases,
+  __resetRevenueCatSdkForTests,
+  __setRevenueCatSdkInitializedForTests,
+} from './revenueCatSdk';
+
+export {
+  initRevenueCatSdk,
+  isRevenueCatSdkInitialized,
+  __resetRevenueCatSdkForTests,
+  __setRevenueCatSdkInitializedForTests,
+};
 
 export type RevenueCatReadiness =
   | 'not_selected'
@@ -33,9 +48,10 @@ export function getRevenueCatConfig(): RevenueCatConfig {
   if (providerKind === 'revenuecat') {
     if (!hasApiKey) readiness = 'missing_api_key';
     else if (!sdkEnabled) readiness = 'sdk_disabled';
+    else if (isRevenueCatSdkInitialized()) readiness = 'ready';
     else readiness = 'sdk_not_linked';
   }
-  const ready = readiness === 'sdk_not_linked' && hasApiKey && sdkEnabled;
+  const ready = readiness === 'ready';
   return { providerKind, hasApiKey, sdkEnabled, ready, readiness };
 }
 
@@ -85,11 +101,14 @@ export class RevenueCatBillingProvider {
       };
     }
 
-    // Ponto de extensão: Purchases.purchasePackage(...) quando react-native-purchases estiver no app.
+    const result = await purchaseRevenueCatTier(tier);
+    if (result.success) {
+      await localSubscriptionRepo.setTier(userId, result.tier);
+    }
     return {
-      success: false,
-      tier: current,
-      error: 'SDK RevenueCat não vinculado neste build — use mock em desenvolvimento.',
+      success: result.success,
+      tier: result.success ? result.tier : current,
+      error: result.error,
     };
   }
 
@@ -98,8 +117,11 @@ export class RevenueCatBillingProvider {
     if (!config.ready) {
       return localSubscriptionRepo.getTier(userId);
     }
-    // Ponto de extensão: Purchases.restorePurchases()
-    return localSubscriptionRepo.getTier(userId);
+    const tier = await restoreRevenueCatPurchases();
+    if (tier !== 'free') {
+      await localSubscriptionRepo.setTier(userId, tier);
+    }
+    return tier;
   }
 
   async cancel(userId: string): Promise<void> {

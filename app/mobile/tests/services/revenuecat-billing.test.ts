@@ -7,6 +7,8 @@ import {
   RevenueCatBillingProvider,
   getRevenueCatConfig,
   revenueCatUnavailableMessage,
+  __resetRevenueCatSdkForTests,
+  __setRevenueCatSdkInitializedForTests,
 } from '@/services/subscription/RevenueCatBillingProvider';
 
 describe('RevenueCatBillingProvider', () => {
@@ -19,6 +21,7 @@ describe('RevenueCatBillingProvider', () => {
 
   afterEach(() => {
     process.env = env;
+    __resetRevenueCatSdkForTests();
   });
 
   it('não está ready sem provider revenuecat', () => {
@@ -32,6 +35,27 @@ describe('RevenueCatBillingProvider', () => {
     delete process.env.EXPO_PUBLIC_REVENUECAT_API_KEY;
     expect(getRevenueCatConfig().hasApiKey).toBe(false);
     expect(getRevenueCatConfig().ready).toBe(false);
+  });
+
+  it('não está ready com key e RC_ENABLED mas SDK não linkado', () => {
+    process.env.EXPO_PUBLIC_BILLING_PROVIDER = 'revenuecat';
+    process.env.EXPO_PUBLIC_RC_ENABLED = 'true';
+    process.env.EXPO_PUBLIC_REVENUECAT_API_KEY = 'test_key';
+    const config = getRevenueCatConfig();
+    expect(config.hasApiKey).toBe(true);
+    expect(config.sdkEnabled).toBe(true);
+    expect(config.readiness).toBe('sdk_not_linked');
+    expect(config.ready).toBe(false);
+  });
+
+  it('ready quando SDK inicializado com env configurado', () => {
+    process.env.EXPO_PUBLIC_BILLING_PROVIDER = 'revenuecat';
+    process.env.EXPO_PUBLIC_RC_ENABLED = 'true';
+    process.env.EXPO_PUBLIC_REVENUECAT_API_KEY = 'test_key';
+    __setRevenueCatSdkInitializedForTests(true);
+    const config = getRevenueCatConfig();
+    expect(config.readiness).toBe('ready');
+    expect(config.ready).toBe(true);
   });
 
   it('mensagem amigável quando falta key', () => {

@@ -1,50 +1,45 @@
-# Release Readiness — Snapshot 2026-05-24
+# Release Readiness — Snapshot 2026-05-24 (pós P0)
 
 ## Status geral
 
-**Pronto para beta técnico controlado**, **ainda não pronto para release público amplo**.
+**Pronto para beta técnico interno controlado.**  
+**Ainda não pronto para release pública ampla.**
 
-## Checklist beta (estado atual)
+## Checklist beta técnico
 
-- ✅ **Gates locais mínimos**: `typecheck` e `npm test` passando (**5549 testes**).
-- ✅ **Cobertura formal desta rodada**: `npm run test:coverage` executado com thresholds ok.
-- ✅ **Fases 8-10 críticas**: debug panel Home, proxy integration test, sync `life_state`, guard de billing prod e ajuste de foco Home concluídos.
-- ✅ **Memória emocional 2.4**: eventos de simulação gravados em memória + recall usado em bubble proativo.
-- ✅ **Microevolução fase 3 (mínimo)**: trigger de forma rara adicionado e ligado ao fluxo Home.
-- 🟡 **Maestro smoke**: referências ajustadas e novo flow `home-return-sim.yaml` criado; execução real em device/emulador pendente.
-- ✅ **Guardrails billing**: build de produção força provider efetivo `revenuecat`.
-- ✅ **Perfis EAS**: `development`, `preview`, `preview-unity`, `preview-rc`, `production` presentes e com envs coerentes.
-- 🟡 **Submit EAS**: placeholders ainda presentes (`appleId`, `ascAppId`, `appleTeamId`, `serviceAccountKeyPath`) — esperado para ambiente local, precisa preencher no pipeline real.
-- ✅ **Varredura de segurança em `src/`**: sem hardcoded keys/tokens e sem `console.log` sensível novo.
+- [x] `npm ci` limpo em `app/mobile`
+- [x] `npm run quality` verde (typecheck + lint + testes)
+- [x] `npm run quality:ci` verde (coverage + thresholds)
+- [x] CI GitHub configurado (`.github/workflows/ci.yml`)
+- [x] RevenueCat: estados honestos; SDK no package; init em `_layout`
+- [x] Paywall não engana (`validateBillingEnv().canPurchase`)
+- [x] Unity fallback three/2D operacional
+- [x] Simulação → render contract (`simEnergy`/`simMood`)
+- [x] Proxy IA: rota Next.js `/api/v1/mascot/reply` (código pronto)
+- [ ] Proxy IA deployado + `EXPO_PUBLIC_AI_PROXY_URL` em produção
+- [ ] RevenueCat sandbox E2E compra/restore em device
+- [ ] Maestro crítico contínuo (`CI_E2E=1`)
+- [ ] Smoke iOS Unity real
+- [ ] npm audit vulns críticas tratadas ou justificadas (upgrade Expo)
 
-### Cobertura real desta rodada
+## Cobertura (rodada 2026-05-24)
 
-- Statements: **73.37%**
-- Branches: **67.66%**
-- Functions: **75.84%**
-- Lines: **73.61%**
+- Statements: **72.73%**
+- Branches: **66.96%**
+- Functions: **75.47%**
+- Lines: **72.99%**
 
-## Bloqueios para release amplo
+## Go/No-Go
 
-- 🔴 Proxy IA de produção ainda depende de backend externo estar deployado e validado ponta a ponta.
-- 🔴 RevenueCat sandbox/produção ainda precisa de rodada E2E real de compra/restauração em dispositivo.
-- 🔴 Smoke Maestro em dispositivo real não executado nesta rodada.
-- 🔴 Integração Unity iOS continua parcial/documental.
+| Gate | Veredito |
+|------|----------|
+| Beta interno técnico | **Go** — gates verdes, mocks identificados |
+| TestFlight / Play Internal | **Go condicional** — após EAS credenciais + RC sandbox |
+| Loja pública | **No-Go** — billing E2E + proxy prod + QA device + SDK upgrade |
 
-## Go/No-Go honesto
+## Bloqueios loja pública
 
-- **Go** para continuar beta técnico interno com monitoramento.
-- **No-Go** para publicação ampla até fechar billing real E2E + proxy server-side + smoke device real.
-
-## Checklist beta técnico (estado atual)
-
-- [x] Gates CI mobile com `typecheck` + `lint` + `test:coverage` em PR.
-- [x] Guard de billing em produção (provider efetivo não fica mock).
-- [x] Contrato proxy IA tipado no cliente + teste de integração local do payload.
-- [x] Home com debug panel Unity opcional por env (`EXPO_PUBLIC_UNITY_DEBUG_PANEL`).
-- [x] Export/import local inclui `life_state`.
-- [x] Perfis EAS principais presentes (`development`, `preview`, `preview-unity`, `preview-rc`, `production`).
-- [ ] RevenueCat nativo validado em sandbox real.
-- [ ] Proxy IA de produção deployado e validado ponta-a-ponta.
-- [ ] Maestro crítico rodando de forma contínua no CI (hoje depende de `vars.CI_E2E`).
-- [ ] Smoke iOS Unity real (pipeline ainda documental).
+1. RevenueCat sandbox validado ponta a ponta
+2. Proxy IA em produção (sem OpenAI key no client)
+3. QA Android/iOS real + performance Unity
+4. Vulnerabilidades npm da cadeia Expo 51

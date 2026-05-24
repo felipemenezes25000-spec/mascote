@@ -15,6 +15,7 @@ import { localFallbackReply } from './LocalFallbackAI';
 import { checkAiRateLimit, recordAiUsage } from './AIRateLimiter';
 import { checkAiCostBudget, recordAiCost } from './AICostGuard';
 import {
+  aiSourceFromResponse,
   trackAiReplyFailed,
   trackAiReplyRequested,
   trackAiReplySucceeded,
@@ -76,6 +77,15 @@ export async function mascotReply(
       // estimativa fixa só pra paths que não retornam usage.
       await recordAiCost(options.userId, result.usage?.totalTokens);
     }
+    // Happy path: emite request + succeeded com source real. Antes só os
+    // ramos de safety/rate/cost/catch emitiam, então `ai_reply_succeeded`
+    // não cobria justamente as respostas que funcionaram.
+    const source = aiSourceFromResponse(result, {
+      usedProxy: result.source === 'openai' && !options?.apiKey,
+      hadApiKey: !!options?.apiKey,
+    });
+    trackAiReplyRequested(tier, source);
+    trackAiReplySucceeded(tier, source, Date.now() - startedAt);
     return result;
   } catch {
     trackAiReplyRequested(tier, 'local');
