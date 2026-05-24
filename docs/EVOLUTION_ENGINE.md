@@ -74,7 +74,7 @@ import {
 
 - Persistência: `EvolutionPersistence` → `mascote:evolution:{userId}`
 - Export: incluído em `exportAll` (`evolution_snapshots`) e `localSyncRepo`
-- Migração futura: `SupabaseSyncRepositoryStub` em `src/repositories/supabase-stub.ts` — ver `docs/CURRENT_STATE.md`
+- Migração futura: sync remoto multi-device — ver `docs/SYNC_ARCHITECTURE.md`
 
 ## Testes
 

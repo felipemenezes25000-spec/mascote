@@ -48,7 +48,7 @@ Aprofundamento sem pay-to-win:
 - ➕ Acessórios premium (catalog +)
 - ➕ Relatório semanal narrado pelo mascote
 - ➕ Histórico avançado (calendar + heatmap)
-- ➕ Sync remoto (multi-device — quando Supabase deployado)
+- ➕ Sync remoto (multi-device — quando backend remoto existir)
 - ➕ Cores e patterns extras de DNA visualization
 
 ### Legendary (planejado, não criado)
@@ -102,7 +102,7 @@ Estado atual: `RevenueCatBillingProvider` existe, lê env, mas
 - [ ] Products criados nas lojas (App Store Connect + Play Console)
 - [ ] Products mapeados em RevenueCat (offerings + packages)
 - [ ] Entitlements configurados (`premium`, `legendary`)
-- [ ] Webhook RevenueCat → Supabase Edge Function (atualiza subscription_status)
+- [ ] Webhook RevenueCat → endpoint backend (atualiza subscription_status)
 - [ ] `expo install react-native-purchases` (SDK nativo)
 - [ ] Init em `app/_layout.tsx` com keys do env
 - [ ] `EXPO_PUBLIC_BILLING_PROVIDER=revenuecat`

@@ -56,7 +56,7 @@ export default function Privacy() {
         <Text style={styles.h2}>Quando virar produto real</Text>
         <Text style={styles.p}>
           Esse texto vai ser substituído por uma política completa em conformidade com a LGPD: bases legais por dado,
-          processadores (Supabase, OpenAI, RevenueCat, etc.), retenção, transferência internacional, DPO, contato com
+          processadores (OpenAI, RevenueCat, etc.), retenção, transferência internacional, DPO, contato com
           ANPD. Por ora, app é local — então a política curta basta.
         </Text>
 

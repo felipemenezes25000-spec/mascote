@@ -18,7 +18,6 @@ Cada item tem dono (você ou infra externa), estimativa e link pra detalhe.
 - [x] Telemetria gated por `consent_analytics`
 - [x] Mascot3D refatorado em 12 subcomponentes (mantenability)
 - [x] Analytics scaffold (interface + mock provider)
-- [x] Schema Supabase pronto pra deploy ([SUPABASE_SCHEMA.sql](SUPABASE_SCHEMA.sql))
 
 ## 🟡 PREPARADO — precisa decisão/configuração simples
 
@@ -58,18 +57,15 @@ Cada item tem dono (você ou infra externa), estimativa e link pra detalhe.
 
 ### Proxy IA (sem isso, premium não entrega IA inclusa)
 
-**Onde:** Supabase Edge Function (recomendado) ou Cloudflare Workers ou Firebase Cloud Functions.
+**Onde:** Cloudflare Workers, Firebase Cloud Functions ou servidor Node próprio.
 **Esforço:** ~3 dias.
 **Detalhe:** [AI_PRODUCTION_PLAN.md](AI_PRODUCTION_PLAN.md)
 
-- [ ] Criar projeto Supabase (se ainda não houver pra sync)
-- [ ] Configurar secret `OPENAI_API_KEY` no painel Supabase
-- [ ] Criar `supabase/functions/mascot-reply/index.ts`
+- [ ] Deploy de endpoint `POST /v1/mascot/reply` com chave OpenAI server-side
 - [ ] Implementar rate limit por `user_id_hash` + tier
 - [ ] Implementar cache (key = hash de personality + mood + msg normalizada)
-- [ ] Audit log em tabela `ai_usage` (timestamp + tokens, NUNCA conteúdo)
-- [ ] Deploy: `supabase functions deploy mascot-reply`
-- [ ] Setar `EXPO_PUBLIC_AI_PROXY_URL=https://<project>.functions.supabase.co/mascot-reply`
+- [ ] Audit log (timestamp + tokens, NUNCA conteúdo)
+- [ ] Setar `EXPO_PUBLIC_AI_PROXY_URL=https://api.seudominio.com/v1/mascot/reply`
 - [ ] Validar com curl manual antes de plugar no app
 - [ ] Validar via `ProxyMascotAI` em build de teste
 
@@ -88,7 +84,7 @@ Cada item tem dono (você ou infra externa), estimativa e link pra detalhe.
 - [ ] Trial 7d configurado nos products
 - [ ] Products mapeados em RevenueCat (offerings + packages)
 - [ ] Entitlements configurados (`premium`, `legendary`)
-- [ ] Webhook RevenueCat → Supabase Edge Function (atualiza `subscription_status`)
+- [ ] Webhook RevenueCat → endpoint backend (atualiza `subscription_status` server-side)
 - [ ] `npx expo install react-native-purchases`
 - [ ] Init em `app/_layout.tsx`:
   ```ts
@@ -105,17 +101,13 @@ Cada item tem dono (você ou infra externa), estimativa e link pra detalhe.
 - [ ] Validar fluxos: trial start → renew → cancel → refund → restore
 - [ ] Validar upgrade Monthly → Annual
 
-### Supabase sync (sem isso, premium não tem multi-device)
+### Sync multi-device (sem isso, premium não tem multi-device)
 
-**Esforço:** ~1 sem.
+**Esforço:** ~1 sem (depende de backend escolhido).
 **Detalhe:** [SYNC_ARCHITECTURE.md](SYNC_ARCHITECTURE.md)
 
-- [ ] Criar projeto Supabase
-- [ ] Executar [SUPABASE_SCHEMA.sql](SUPABASE_SCHEMA.sql) via SQL Editor
-- [ ] Configurar auth (Apple + Google providers no Auth → Providers)
-- [ ] Validar RLS com queries manuais
-- [ ] Setar `EXPO_PUBLIC_SUPABASE_URL` + `EXPO_PUBLIC_SUPABASE_ANON_KEY`
-- [ ] Substituir `supabaseSyncRepoStub` por implementação real em Repository pattern
+- [ ] Escolher e implementar backend remoto
+- [ ] Auth (Apple + Google providers)
 - [ ] Adicionar Sign in with Apple/Google via Expo AuthSession
 - [ ] Onboarding: opcional opt-in pra sync ("Quer sincronizar entre dispositivos?")
 - [ ] Validar conflict resolution com 2 dispositivos simultaneamente
@@ -127,7 +119,7 @@ Cada item tem dono (você ou infra externa), estimativa e link pra detalhe.
 - [ ] Política de Privacidade publicada (URL pública)
 - [ ] Termos de Uso publicados (URL pública)
 - [ ] Link no Onboarding + Settings
-- [ ] Política cobre: AsyncStorage local, OpenAI BYOK, Supabase opt-in, RevenueCat
+- [ ] Política cobre: AsyncStorage local, OpenAI BYOK, RevenueCat
 - [ ] LGPD: direito de exportar dados (já implementado: export local)
 - [ ] LGPD: direito de apagar dados (já implementado: reset de profile)
 

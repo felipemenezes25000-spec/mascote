@@ -3,9 +3,8 @@
  *
  * Por que existe: antes desse arquivo, [(tabs)/index.tsx](../../app/(tabs)/index.tsx)
  * importava `@/lib/db` direto e tinha 12 callsites com regras de negócio
- * embutidas no JSX. Esse acoplamento iria virar refactor amplo quando o
- * backend (Supabase) entrasse. Services abstraem o "como persiste" do "o
- * que o produto faz".
+ * embutidas no JSX. Services abstraem o "como persiste" do "o que o produto
+ * faz" — facilita refactor e teste isolado.
  *
  * Regra: routes consomem APENAS services + store. Services consomem db +
  * libs. Manter unidirecional.

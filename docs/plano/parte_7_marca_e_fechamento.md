@@ -1,4 +1,4 @@
-# Parte 7 — Marca e Fechamento
+﻿# Parte 7 — Marca e Fechamento
 
 Cobre seções 51–57: branding, copywriting, internacionalização, acessibilidade, ética e apego saudável, crítica de investidor, plano final.
 
@@ -469,10 +469,10 @@ Mascote é wellness + Tamagotchi + IA com 4 personalidades em PT-BR. Diferencia�
 ### Os próximos 7 dias (acionável, imediato)
 
 #### Sábado (hoje, 2026-05-16)
-- [ ] **Felipe (3h):** registrar domínio `meumascote.app`, criar contas (Vercel, Supabase, Resend, RevenueCat, Apple Dev, Google Play, TikTok, Meta, Plausible/PostHog)
+- [ ] **Felipe (3h):** registrar domínio `meumascote.app`, criar contas (Vercel, Backend, Resend, RevenueCat, Apple Dev, Google Play, TikTok, Meta, Plausible/PostHog)
 - [ ] **Felipe (3h):** scaffold landing Next.js, copia draft, deploy
 - [ ] **Renato (4h):** rascunhos do mascote em papel + 1 sketch digital
-- [ ] **Felipe (1h):** formulário waitlist conectado ao Supabase, email Resend funcionando
+- [ ] **Felipe (1h):** formulário waitlist conectado ao backend, email Resend funcionando
 
 #### Domingo (2026-05-17)
 - [ ] **Felipe (4h):** polish da landing, mobile responsivo, FAQ

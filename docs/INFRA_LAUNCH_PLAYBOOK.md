@@ -4,20 +4,19 @@
 > público pagando". Cada step tem comando pronto pra copy/paste e critério
 > de "feito".
 
-**Status do código nesta data:** todos os adapters, schemas, snippets e configs
-estão prontos no repo. O que falta é **executar com credenciais reais**.
+**Status do código nesta data:** adapters, configs e snippets estão prontos no
+repo. O app é **local-first** (sem backend remoto). O que falta é **executar
+com credenciais reais** (proxy IA, RevenueCat, EAS).
 
 ---
 
 ## Ordem de execução
 
 ```
-1. Supabase project (10 min)
-   └─→ 2. Schema base (5 min)
-        └─→ 3. Edge Function proxy IA (15 min)
-             └─→ 4. RevenueCat config (30 min — depende de Apple/Google)
-                  └─→ 5. EAS build setup (30 min)
-                       └─→ 6. Beta upload (15 min)
+1. Proxy IA backend (15 min)
+   └─→ 2. RevenueCat config (30 min — depende de Apple/Google)
+        └─→ 3. EAS build setup (30 min)
+             └─→ 4. Beta upload (15 min)
 ```
 
 Tempo total mínimo (sem espera de aprovação Apple): **~2 horas** de execução pura.
@@ -25,76 +24,14 @@ Caminho crítico real: ~3-5 dias (espera de propagação loja + revisão Apple).
 
 ---
 
-## 1. Supabase project
+## 1. Proxy IA backend
 
-1. Criar conta em [supabase.com](https://supabase.com) (free tier serve pro beta).
-2. Criar projeto "mascote-prod" — escolher região mais próxima dos usuários (sa-east-1 pro Brasil).
-3. **Anote em local seguro:**
-   - `Project URL` → `EXPO_PUBLIC_SUPABASE_URL`
-   - `anon key` (settings → API) → `EXPO_PUBLIC_SUPABASE_ANON_KEY`
-   - `service_role key` → guardar pra Edge Function (NÃO no cliente)
-
-**Feito quando:** consigo abrir o dashboard e ver "Project Status: Healthy".
-
----
-
-## 2. Schema base
+Deploy de um endpoint que aceita `POST /v1/mascot/reply` e chama OpenAI
+server-side. Opções: Cloudflare Workers, Firebase Cloud Functions ou servidor
+Node próprio.
 
 ```powershell
-# No SQL Editor do Supabase, cole conteúdo de:
-#   docs/SUPABASE_SCHEMA.sql
-# Roda em ~2s — 12 tabelas, RLS, triggers, indexes.
-
-# Validar:
-SELECT tablename FROM pg_tables WHERE schemaname = 'public';
-# Deve listar: user_profiles, mascots, mascot_genotypes, mascot_phenotypes,
-# evolution_events, missions, mission_completions, achievements,
-# mascot_memories, subscription_status, backups, sync_metadata
-```
-
-Adicionar tabela do proxy (não está no schema base):
-
-```sql
-CREATE TABLE IF NOT EXISTS public.ai_usage (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     uuid NOT NULL,
-  tier        text NOT NULL,
-  timestamp   timestamptz NOT NULL DEFAULT NOW(),
-  tokens_in   int,
-  tokens_out  int,
-  latency_ms  int,
-  cached      boolean DEFAULT false,
-  source      text,
-  safety_flag text
-);
-ALTER TABLE public.ai_usage ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "ai_usage_read_self" ON public.ai_usage
-  FOR SELECT USING (auth.uid()::text = user_id::text);
-CREATE INDEX idx_ai_usage_user_time ON public.ai_usage(user_id, timestamp DESC);
-```
-
-**Feito quando:** RLS está ON em todas as 13 tabelas (12 base + ai_usage).
-
----
-
-## 3. Edge Function proxy IA
-
-```powershell
-# Instalar Supabase CLI se ainda não tem
-npm install -g supabase
-
-# Login + link
-supabase login
-supabase link --project-ref <YOUR_REF>
-
-# Set secrets (NUNCA commitar)
-supabase secrets set OPENAI_API_KEY=sk-XXXXX
-supabase secrets set OPENAI_MODEL=gpt-4o-mini
-
-# Deploy a função
-supabase functions deploy mascot-reply
-
-# Validar com curl
+# Exemplo: validar endpoint após deploy
 $body = @{
   user_id_hash = "test-hash"
   tier = "free"
@@ -107,18 +44,17 @@ $body = @{
   safety_flag = "safe"
   language = "pt"
 } | ConvertTo-Json
-Invoke-RestMethod -Uri "https://<ref>.functions.supabase.co/mascot-reply" `
+Invoke-RestMethod -Uri "https://api.seudominio.com/v1/mascot/reply" `
   -Method POST -ContentType "application/json" -Body $body
 ```
 
-Função inteira em [`supabase/functions/mascot-reply/`](../supabase/functions/mascot-reply/).
-README detalhado: [`supabase/functions/mascot-reply/README.md`](../supabase/functions/mascot-reply/README.md).
+Detalhe da request/response: [AI_PRODUCTION_PLAN.md](AI_PRODUCTION_PLAN.md).
 
 **Feito quando:** curl retorna `{ reply: "...", source: "openai", remaining_quota: 4 }`.
 
 ---
 
-## 4. RevenueCat config
+## 2. RevenueCat config
 
 1. Conta: [revenuecat.com](https://revenuecat.com).
 2. Criar projeto "Mascote".
@@ -148,7 +84,7 @@ README detalhado: [`supabase/functions/mascot-reply/README.md`](../supabase/func
      - `premium` → marca ambos products
      - `legendary` → marca só annual (alinha com `TIER_TO_ENTITLEMENTS` em SubscriptionTypes.ts)
      - `ai_plus` → marca ambos
-8. **Webhook → Supabase Edge Function** (futuro — pra atualizar `subscription_status`):
+8. **Webhook → backend** (futuro — pra atualizar `subscription_status`):
    - Pode ficar pra depois do beta inicial; cliente local é fonte de verdade no MVP
 
 **Anotar:**
@@ -159,7 +95,7 @@ README detalhado: [`supabase/functions/mascot-reply/README.md`](../supabase/func
 
 ---
 
-## 5. EAS build setup
+## 3. EAS build setup
 
 ```powershell
 # Copiar template
@@ -179,9 +115,7 @@ npx eas credentials --platform android
 # Criar .env (NUNCA commitar)
 Copy-Item .env.example .env
 # Editar .env com:
-#   EXPO_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co
-#   EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-#   EXPO_PUBLIC_AI_PROXY_URL=https://<ref>.functions.supabase.co/mascot-reply
+#   EXPO_PUBLIC_AI_PROXY_URL=https://api.seudominio.com/v1/mascot/reply
 #   EXPO_PUBLIC_REVENUECAT_API_KEY_IOS=appl_XXXX
 #   EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID=goog_XXXX
 #   EXPO_PUBLIC_RC_ENABLED=true
@@ -203,7 +137,7 @@ npx eas build --platform ios --profile preview-rc
 
 ---
 
-## 6. Beta upload
+## 4. Beta upload
 
 ```powershell
 # Submit pra Internal Testing
@@ -244,10 +178,10 @@ Em **device físico**:
 
 ## Pendências pós-beta (não bloqueiam o beta, bloqueiam escala)
 
-1. **Webhook RevenueCat → Supabase** — sincroniza `subscription_status` server-side. Sem ele, cancel + reinstall reseta tier no cliente.
+1. **Webhook RevenueCat → backend** — sincroniza `subscription_status` server-side. Sem ele, cancel + reinstall reseta tier no cliente.
 2. **Upgrade Expo SDK 51 → 53+** — resolve 25 vulns do npm audit. Ver `docs/SECURITY_AUDIT.md`.
 3. **Audit log de safety flags** — guardar timestamps de critical/high (sem conteúdo) pra revisão de QA.
-4. **Multi-device sync real** — schema pronto (`SUPABASE_SCHEMA.sql`), falta wiring de repositories remotos (ver `docs/SYNC_ARCHITECTURE.md`).
+4. **Multi-device sync real** — app hoje é local-only; ver `docs/SYNC_ARCHITECTURE.md`.
 5. **Analytics provider real** (PostHog/Firebase/Amplitude) — scaffold tipado em `src/analytics/`.
 
 ---
@@ -256,9 +190,7 @@ Em **device físico**:
 
 | Recurso | Arquivo |
 |---|---|
-| Schema completo | [docs/SUPABASE_SCHEMA.sql](SUPABASE_SCHEMA.sql) |
-| Edge Function proxy | [supabase/functions/mascot-reply/index.ts](../supabase/functions/mascot-reply/index.ts) |
-| README do proxy | [supabase/functions/mascot-reply/README.md](../supabase/functions/mascot-reply/README.md) |
+| Plano de proxy IA | [docs/AI_PRODUCTION_PLAN.md](AI_PRODUCTION_PLAN.md) |
 | Snippet RevenueCat init | [src/services/subscription/revenuecat-init.snippet.ts](../app/mobile/src/services/subscription/revenuecat-init.snippet.ts) |
 | Template EAS | [app/mobile/eas.json.example](../app/mobile/eas.json.example) |
 | Template env | [app/mobile/.env.example](../app/mobile/.env.example) |

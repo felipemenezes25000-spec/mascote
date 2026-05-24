@@ -1,4 +1,4 @@
-# Plano Mascote — Documento de Execução Completo
+﻿# Plano Mascote — Documento de Execução Completo
 
 **Data:** 2026-05-16
 **Autor:** Comitê de especialistas (CEO, CPO, CTO, PM, UX/UI, Game Designer, IA, LGPD, Stores, RevOps, Growth, Analytics, Investidor cético, Dev mobile, Backend, Branding, Segurança emocional, Copy, QA)
@@ -28,7 +28,7 @@ O plano foi dividido em 7 partes. Cada parte cobre um conjunto coerente das 57 s
 ## TL;DR (para o Felipe ler em 90 segundos)
 
 **Veredito stack:** A hipótese inicial (React Native + Expo + TypeScript / Firebase / OpenAI / RevenueCat) é **aprovada com 3 ajustes**:
-1. Use **Supabase** no lugar do Firebase se quiser SQL relacional (XP/streak/cohort ficam mais fáceis). Firebase ainda é OK se prioridade é velocidade pura.
+1. Use **Backend (a definir)** no lugar do Firebase se quiser SQL relacional (XP/streak/cohort ficam mais fáceis). Firebase ainda é OK se prioridade é velocidade pura.
 2. **OpenAI gpt-4o-mini como default** com fallback Claude Haiku via roteador no backend Node. Cacheie respostas frequentes.
 3. **Rive** > Lottie para o mascote (state machines = transições emocionais sem código).
 
@@ -56,7 +56,7 @@ O plano foi dividido em 7 partes. Cada parte cobre um conjunto coerente das 57 s
 | # | Decisão | Status | Recomendação |
 |---|---|---|---|
 | D01 | Stack mobile | **Decidido** | React Native + Expo + TypeScript |
-| D02 | Backend | `[DECISÃO PENDENTE]` | Supabase (recomendado) ou Firebase |
+| D02 | Backend | `[DECISÃO PENDENTE]` | Backend remoto (a definir) ou Firebase |
 | D03 | Provedor IA | **Decidido** | OpenAI gpt-4o-mini + fallback Claude Haiku |
 | D04 | Animação mascote | **Decidido** | Rive (state machine) |
 | D05 | Paywall | **Decidido** | RevenueCat |

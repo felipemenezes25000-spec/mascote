@@ -44,12 +44,12 @@ de BYOK (usuário cola sua própria chave). Isso quebra a expectativa premium
 
 | Opção | Prós | Contras |
 |---|---|---|
-| **Supabase Edge Functions** (Deno) | Mesma conta, autenticação pronta | Cold start ~300ms, sem failover trivial |
 | **Cloudflare Workers** | Global edge, latência baixa | Conta separada, secrets management |
-| **Firebase Cloud Functions** | MCP já carregado nesta sessão | Vendor lock-in, custos pouco previsíveis |
+| **Firebase Cloud Functions** | Integração Google | Vendor lock-in, custos pouco previsíveis |
+| **Node próprio** (Express/Fastify) | Controle total | Ops manual |
 
-Recomendação: **Supabase Edge Functions** — alinha com a infra de sync que já
-está planejada e a auth do user fica automaticamente disponível pra rate-limit.
+Recomendação: **Cloudflare Workers** ou **servidor Node próprio** — o app é
+local-first; o proxy é o único backend necessário no beta.
 
 ### Schema da request/response
 
@@ -103,7 +103,7 @@ esperado: 15-25% (saudações + agradecimentos curtos).
 
 **Hoje:** sem registro de quem chamou o quê, quando.
 
-**Plano:** tabela `ai_usage` no Supabase com:
+**Plano:** tabela `ai_usage` no backend do proxy com:
 ```sql
 CREATE TABLE public.ai_usage (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -162,7 +162,7 @@ Não regredir:
 
 | Semana | Entrega |
 |---|---|
-| 1 | Deploy proxy Supabase Edge Function (sem cache) — paridade com BYOK |
+| 1 | Deploy proxy backend (sem cache) — paridade com BYOK |
 | 2 | Rate limit + cost guard + cotas por tier |
 | 3 | Cache de respostas (hit rate target ≥ 15%) |
 | 4 | Audit log + dashboards básicos |

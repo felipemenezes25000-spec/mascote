@@ -1,5 +1,5 @@
 /**
- * Contratos sync-ready — implementação local hoje; Supabase no futuro.
+ * Contratos de sync — implementação local (export/import).
  */
 
 import type { PersistedEvolution } from '@/game/evolution/EvolutionPersistence';
@@ -27,8 +27,8 @@ export interface SyncRepository {
   exportSnapshot(userId: string): Promise<SyncPayload>;
   /** Importa snapshot (sobrescreve dados locais do usuário). */
   importSnapshot(payload: SyncPayload): Promise<SyncPullResult>;
-  /** Placeholder — fila de operações pendentes para push remoto. */
+  /** Fila de operações pendentes (local). */
   listPendingOps(userId: string): Promise<readonly string[]>;
-  /** Placeholder — marca operação como sincronizada após Supabase. */
+  /** Marca operação como processada. */
   ackOp(userId: string, opId: string): Promise<void>;
 }

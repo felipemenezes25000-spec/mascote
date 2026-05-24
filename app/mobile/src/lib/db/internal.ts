@@ -7,7 +7,7 @@
  *
  * Histórico: era tudo um único `lib/db.ts` de 1351 linhas. Quebra em domínios
  * permite (a) achar o que importa, (b) lockfile de PR menor, (c) extensão por
- * domínio (Supabase futuro pode trocar 1 módulo de cada vez).
+ * domínio sem refator amplo.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from '@/lib/logger';

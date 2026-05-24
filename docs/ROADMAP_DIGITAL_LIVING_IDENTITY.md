@@ -138,7 +138,7 @@ check-in → narrativa procedural. **Mais perto da visão do que parece**.
 
 #### DLI-10 — Sync remoto opcional (multi-device + backup)
 - **Estado atual**: 100% local AsyncStorage. Reinstalar app perde tudo.
-- **Falta**: Supabase opt-in com encryption-at-rest. DNA NUNCA sai do device sem opt-in explícito.
+- **Falta**: sync remoto opt-in com encryption-at-rest. DNA NUNCA sai do device sem opt-in explícito.
 - **Esforço**: 2 semanas.
 
 #### DLI-11 — Behavior Engine ✅ ENTREGUE (DLI-v2/v3)

@@ -41,11 +41,10 @@ Mascote está em **beta-ready com bloqueadores claros de infra externa**. Mocks 
 - ✅ Factory `billing-provider` com `isDemoBilling()` / `isMockInProductionBuild()`
 
 ### Sync (`src/data/sync/`)
-- ✅ `SyncEngine` — orquestra export/import + push stub
+- ✅ `SyncEngine` — orquestra export/import local (`local_only`)
 - ✅ `SyncQueue` + `OfflineMutationQueue` — fila offline
 - ✅ `ConflictResolution` — newest_wins
 - ✅ `src/data/repositories/index.ts` — re-export unificado
-- ✅ `supabase-stub.ts` — nome honesto, delega local sem env
 
 ### Testes (+19)
 - ✅ `tests/ai/production-guards.test.ts` (9)
@@ -57,12 +56,12 @@ Mascote está em **beta-ready com bloqueadores claros de infra externa**. Mocks 
 - ✅ `docs/TEST_REPORT.md` — resultados verificados
 - ✅ `docs/COMMERCIAL_COPY.md` — textos App Store/paywall (PT-BR, sem claims médicos)
 - ✅ `README.md` — 1839 testes, 50+ mutações no catálogo
-- ✅ `.env.example` — `EXPO_PUBLIC_ENV`, billing, AI proxy, Supabase
+- ✅ `.env.example` — `EXPO_PUBLIC_ENV`, billing, AI proxy
 
 ### Herdado de sessão anterior (ainda válido)
 - Analytics scaffold (`src/analytics/`)
 - Mascot3D refatorado (12 subcomponentes)
-- `SUPABASE_SCHEMA.sql`, `AI_PRODUCTION_PLAN.md`, `SECURITY_AUDIT.md`, `SYNC_ARCHITECTURE.md`
+- `AI_PRODUCTION_PLAN.md`, `SECURITY_AUDIT.md`, `SYNC_ARCHITECTURE.md`
 - Coverage threshold realista (70% enforced)
 
 ---
@@ -73,7 +72,7 @@ Mascote está em **beta-ready com bloqueadores claros de infra externa**. Mocks 
 |---|---|---|
 | Billing | `MockBillingProvider` | `EXPO_PUBLIC_BILLING_PROVIDER=revenuecat` + SDK + keys |
 | RevenueCat | Adapter sem SDK linkado | `react-native-purchases` + sandbox |
-| Sync remoto | `SupabaseSyncRepositoryStub` | URL + anon key + repos remotos |
+| Sync remoto | Não implementado (local-only) | Backend remoto + auth |
 | IA cloud | Proxy placeholder | Deploy `EXPO_PUBLIC_AI_PROXY_URL` |
 | Analytics | `MockAnalyticsProvider` | Plug PostHog/Firebase |
 
@@ -106,7 +105,7 @@ Detalhe: [SECURITY_AUDIT.md](SECURITY_AUDIT.md)
 2. Deploy proxy IA (sem API key no cliente)
 3. EAS Build + credenciais lojas
 4. Política de Privacidade + Termos publicados
-5. Supabase deploy (opcional p/ beta, necessário p/ multi-device premium)
+5. Backend sync remoto (opcional p/ beta, necessário p/ multi-device premium)
 
 ---
 
@@ -138,7 +137,7 @@ docs/FINAL_ENGINEERING_REPORT.md (este arquivo)
 
 ## 8. Próximos passos
 
-1. **Sem 1:** Deploy Supabase + proxy IA + conta RevenueCat
+1. **Sem 1:** Deploy proxy IA + conta RevenueCat
 2. **Sem 2:** EAS + TestFlight/Play Internal + política privacidade
 3. **Sem 3–4:** Beta fechado 20–50 users, métricas D1/D7
 4. **Paralelo:** Upgrade Expo SDK 53

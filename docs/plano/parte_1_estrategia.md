@@ -1,4 +1,4 @@
-# Parte 1 — Estratégia
+﻿# Parte 1 — Estratégia
 
 Cobre seções 1–9 dos entregáveis obrigatórios: resumo executivo, pitches, posicionamento, público, personas, JTBD, proposta de valor.
 
@@ -59,7 +59,7 @@ Versões alternativas para testar em anúncios A/B:
 >
 > Modelo: R$ 19,90 por mês, trial de 7 dias. Mercado-alvo inicial são millennials e Gen Z 22–38 anos no Brasil que já tentaram apps de hábito e desistiram. Estimamos mercado endereçável local de 8 milhões de pessoas.
 >
-> Stack: React Native + Expo, IA via OpenAI no backend Node, Supabase, RevenueCat. Time é eu (Felipe) e meu sócio Renato.
+> Stack: React Native + Expo, IA via OpenAI no backend Node, Backend, RevenueCat. Time é eu (Felipe) e meu sócio Renato.
 >
 > Estamos antes do MVP. Próximos 30 dias: landing, formulário, 30 entrevistas, beta de 50 pessoas. Se o D7 do beta passar de 25% e a entrevista qualitativa confirmar a sensação de vínculo, a gente lança em julho.
 

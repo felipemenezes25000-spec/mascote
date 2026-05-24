@@ -1,4 +1,4 @@
-# Parte 4 — Monetização e Growth
+﻿# Parte 4 — Monetização e Growth
 
 Cobre seções 25–32: assinaturas, paywall, landing page, formulário de validação, anúncios, conteúdo orgânico, métricas, analytics.
 
@@ -133,7 +133,7 @@ Decidir via PostHog feature flag.
 
 - RevenueCat SDK no app
 - Produtos configurados em RevenueCat Console
-- Webhooks RevenueCat → Supabase Edge Function atualiza `subscriptions` table
+- Webhooks RevenueCat → Edge Function backend atualiza `subscriptions` table
 - Apple/Google sandbox para testes
 
 ---
@@ -195,7 +195,7 @@ Recomendação: começar com H1, A/B contra H2 após 100 visitantes.
 - Next.js 14 App Router
 - Tailwind + Framer Motion
 - Hospedagem Vercel
-- Forms → Supabase via API route
+- Forms → Backend via API route
 - Analytics: Vercel Analytics + Plausible/PostHog
 - SEO: meta tags + sitemap + robots
 
@@ -260,7 +260,7 @@ Cada amigo te avança 10 posições.
 ### Tech
 
 - Form como Server Action no Next.js
-- Salva em Supabase tabela `waitlist`
+- Salva em Backend tabela `waitlist`
 - Email confirmação via Resend
 - Encaminhamento captado por referral code
 

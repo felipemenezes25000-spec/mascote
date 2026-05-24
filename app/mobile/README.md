@@ -31,39 +31,51 @@ npm test
 
 # aqui
 npm run typecheck
-npm test              # 1779 testes · 110 arquivos · ~11s
+npm test
 npm run test:coverage
 npm run test:e2e:critical   # Maestro (emulador)
 ```
 
 CI na raiz: `.github/workflows/ci.yml`. E2E Maestro: `.github/workflows/maestro.yml` (nesta pasta).
 
-## Arquitetura (resumo)
+## Arquitetura
 
 ```
 app/mobile/
-├── app/                    # Expo Router (~48 rotas)
-│   ├── onboarding/         # signup, age, goal, quiz, meet, push, notice…
-│   ├── (tabs)/             # home, chat, evolution, report
-│   └── …                   # paywall, customize, missions, rewards…
+├── app/                      # Expo Router (rotas)
+│   ├── onboarding/
+│   ├── (tabs)/               # home, chat, evolution, report
+│   └── …                     # paywall, customize, missions…
 ├── src/
-│   ├── components/         # Mascot 2D/3D, UI, guards
-│   ├── lib/dna/            # genome, morphology, mutations, palette
-│   ├── lib/behavior/       # utility AI
-│   ├── lib/ml/             # safety, embeddings, memory
-│   ├── game/               # evolution engine, memory service
-│   ├── ai/                 # MascotAI, fallback local, proxy stub
-│   ├── repositories/       # local + sync stub
-│   └── store.ts            # Zustand
-├── tests/                  # Vitest
-└── .maestro/               # flows E2E
+│   ├── components/           # UI compartilhada (mascot 2D/3D, Unity, design system)
+│   ├── features/             # fatias por tela (ex.: home/)
+│   ├── services/             # orquestração de negócio (home, missions, subscription)
+│   ├── repositories/         # persistência local + contratos de sync
+│   ├── sync/                 # fila offline, motor de export/import
+│   ├── lib/                  # db, dna, behavior, ml, utilitários
+│   ├── game/                 # evolução, memória do jogo
+│   ├── ai/                   # safety, proxy, fallback, prompts
+│   ├── hooks/                # hooks globais (tier, evolution, pip)
+│   ├── content/              # catálogos estáticos (missões, billing, acessórios)
+│   ├── analytics/
+│   ├── core/                 # contrato de render Unity
+│   ├── design-system/
+│   └── store.ts              # Zustand
+├── tests/                    # Vitest (espelha domínios: lib/, sync/, ai/, …)
+├── docs/                     # guias locais (E2E, 3D, RevenueCat)
+├── assets/
+├── scripts/
+└── .maestro/                 # flows E2E
 ```
+
+**Fluxo de dependências:** `app/*` → `features` / `services` / `hooks` → `repositories` / `lib` / `sync`. Rotas não importam `@/lib/db` diretamente nas telas novas — use services.
 
 ## Configuração
 
 - Copie `.env.example` → `.env` (`EXPO_PUBLIC_BILLING_PROVIDER=mock` por padrão)
 - OpenAI (opcional): Settings → API Key no app
 - EAS: veja `eas.json.example`
+- RevenueCat (futuro): [docs/REVENUECAT_INTEGRATION.md](./docs/REVENUECAT_INTEGRATION.md)
 
 ## Docs relacionados
 
@@ -75,7 +87,6 @@ app/mobile/
 ## O que ainda não é produção
 
 - Cobrança real (RevenueCat SDK + SKUs nas lojas)
-- Sync multi-dispositivo (Supabase stub)
 - Proxy de IA em produção
 - Push nativo completo
 

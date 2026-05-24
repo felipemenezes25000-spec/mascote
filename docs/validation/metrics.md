@@ -113,10 +113,10 @@ Como cada métrica do `PLAN.md` é calculada na prática. Sem ambiguidade.
 | Métrica | Fonte (MVP) | Fonte (escala) |
 |---|---|---|
 | visit / unique sessions | localStorage + Vercel Analytics | Plausible self-hosted |
-| waitlist emails | localStorage da landing | Supabase table `waitlist` |
+| waitlist emails | localStorage da landing | Backend table `waitlist` |
 | install / onboarding events | console.log em DEV; Sentry em PROD | PostHog (a partir do beta) |
 | retention | telemetry events com user_id | PostHog cohorts |
-| survey responses | Google Forms / Tally | Supabase + Metabase |
+| survey responses | Google Forms / Tally | Backend + Metabase |
 
 **Importante:** consent é checado antes de cada event sair do device.
 `settings.consent_analytics` é o toggle real — `lib/telemetry.ts` honra isso.

@@ -1,4 +1,4 @@
-# Mascote — Auditoria AAA Completa
+﻿# Mascote — Auditoria AAA Completa
 
 > **Arquivo histórico.** Para o estado real do produto hoje, use [`CURRENT_STATE.md`](./CURRENT_STATE.md).
 
@@ -40,7 +40,7 @@ Após a auditoria inicial, **5 SPECs foram executadas** com qualidade. O score
 - ✅ Customização Sims/Spore com 6 morph sliders + postura + toggles
 - ✅ IA contextualizada por DNA (descritores semânticos seguros)
 
-**Próximas fases (não-bloqueadoras)**: push notifications, Supabase sync,
+**Próximas fases (não-bloqueadoras)**: push notifications, Backend sync,
 RevenueCat billing, shader patterns reais, voz procedural, memory graph.
 
 ---
@@ -1325,14 +1325,14 @@ Não testou bundle analysis (não há `expo-doctor --bundle` integrado).
 
 ### 13.1 Estado atual: **inexistente**
 
-- **Supabase**: nada. `src/lib/supabase.ts` não existe. `app.json` zero referência.
+- **Backend (a definir)**: nada. `src/lib/api-client.ts` não existe. `app.json` zero referência.
 - **Firebase**: nada.
 - **Custom backend**: nada.
 - **CDN**: nada.
 - **CI/CD**: GitHub Actions roda Maestro em PR. **Não há build EAS** (`eas.json`
   ausente).
 
-O auto-memory dizia "RN+Expo+Supabase+OpenAI" — Supabase está **planejado, não
+O auto-memory dizia "RN+Expo+Backend+OpenAI" — Backend está **planejado, não
 ativado**.
 
 ### 13.2 Implicações
@@ -1355,7 +1355,7 @@ ativado**.
 Pra MVP-com-backend (não AAA, mínimo viável):
 
 ```
-Supabase ou Firebase:
+Backend remoto ou Firebase:
   - Auth (anônimo OK pra MVP, evolui pra magic link)
   - Tabela `users` espelho do profile local
   - Tabela `mascot_snapshots` (export periódico do AsyncStorage)
@@ -1364,7 +1364,7 @@ Supabase ou Firebase:
   - Storage de screenshots se compartilhar progresso
 ```
 
-Custo: ~US$25/mês Supabase free tier cobre primeiros 500 users + 500MB DB.
+Custo: ~US$25/mês Backend free tier cobre primeiros 500 users + 500MB DB.
 Esforço: 1-2 semanas pra setup + integração + migration path.
 
 ### 13.4 Decisão estratégica
@@ -1529,7 +1529,7 @@ Sem device farm, isso é hipotético. Necessário antes de scale.
 
 | Pressão | Quebra em | Mitigação |
 |---|---|---|
-| User base > 100 | Sem backend, sem analytics, voa cego | Supabase + PostHog |
+| User base > 100 | Sem backend, sem analytics, voa cego | Backend + PostHog |
 | User base > 1k | Sem suporte (sem channel) | Discord + Notion FAQ |
 | User base > 10k | Sem A/B test, sem segmentação | Statsig / Optimizely / homegrown |
 | Power user 2+ anos | 10k+ check-ins, AsyncStorage degrada | Indexed storage / SQLite |
@@ -1555,7 +1555,7 @@ Sem device farm, isso é hipotético. Necessário antes de scale.
 ### 16.4 Roadmap de escala
 
 Marcos sugeridos:
-- **100 users**: ativar Supabase Auth + events table
+- **100 users**: ativar Auth backend + events table
 - **500 users**: PostHog ou Mixpanel pra retention real
 - **1k users**: SQLite local pra performance
 - **5k users**: HNSW pra embedding search; pruning de checkins
@@ -2233,7 +2233,7 @@ Mês 6     ▸ DLI-9 (rare form) + DLI-11 (behavior tree)
 
 Em paralelo aos DLI:
 
-**Mês 1**: Push notifications (expo-notifications) + Supabase auth
+**Mês 1**: Push notifications (expo-notifications) + Auth backend
 **Mês 2**: RevenueCat integração + StoreKit/Play Billing
 **Mês 3**: PostHog analytics + crash reporting (Sentry)
 **Mês 4**: EAS Build + Play Store / App Store
@@ -2273,15 +2273,15 @@ Test:            Vitest + Maestro ✅
 
 ```
 Push:            expo-notifications (P0)
-Backend:         Supabase (auth + storage + realtime + edge functions)
+Backend:         Backend remoto
 Billing:         RevenueCat (handles StoreKit/Play unified API)
 Analytics:       PostHog (open source, self-hostable)
 Crash report:    Sentry
 A/B:             Statsig ou GrowthBook (open source)
 LLM:             OpenAI gpt-4o-mini default + Anthropic Claude haiku fallback
 Embeddings:      OpenAI text-embedding-3-small (atual) + fallback local FAISS
-Vector DB:       (futuro com 50k users) pgvector via Supabase
-Realtime:        Supabase realtime channel
+Vector DB:       (futuro com 50k users) pgvector via Postgres
+Realtime:        Realtime backend channel
 Image gen:       (futuro) Stable Diffusion para skins sazonais geradas
 ```
 
@@ -2291,7 +2291,7 @@ Image gen:       (futuro) Stable Diffusion para skins sazonais geradas
 - **MongoDB**: relational fits melhor pra dados estruturados (checkins, missions)
 - **Unity/Unreal embedding**: complexity bomb, não vale pra mascot mobile
 - **Cocos2d**: overkill, R3F entrega
-- **Mongo Realm sync**: hype passou, Supabase realtime equivalente
+- **Mongo Realm sync**: hype passou, Realtime backend equivalente
 - **WebRTC**: irrelevante (sem voice live)
 
 ### 29.4 Decisão LLM provider

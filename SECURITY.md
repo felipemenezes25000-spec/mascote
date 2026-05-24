@@ -35,7 +35,6 @@ O projeto ainda não tem releases estáveis com versionamento semântico. Por en
 
 - Aplicativo mobile (`app/mobile/`)
 - Landing page (`app/web/`)
-- Edge Functions e schema Supabase (`supabase/`)
 - Workflows e infraestrutura em `.github/`
 
 Fora de escopo:

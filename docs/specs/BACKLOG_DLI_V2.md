@@ -419,7 +419,7 @@ type UnlockToastData =
 - Behavior tree para conversação (IA influenciando chat com base em behavior) — bound to SPEC-4 final
 - Voz procedural (DLI-7) — esperar até SPEC-3 + SPEC-4 maduros
 - Ambient reactive (DLI-6) — esperar até SPEC-3 maduro
-- Backend / Supabase / RevenueCat — gated por validação de retention (D7 > 20%)
+- Backend remoto / RevenueCat — gated por validação de retention (D7 > 20%)
 - Push notifications — micro-projeto separado (1 semana), pode rodar em paralelo
 
 ---

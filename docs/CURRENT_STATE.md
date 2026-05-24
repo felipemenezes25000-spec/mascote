@@ -24,7 +24,6 @@ Comandos na **raiz**: `npm run quality`, `npm test`, `npm run typecheck`, `npm r
 | Mutations | 12 marcos (7 individuais + 5 combo) — não 50+ como dito em iterações anteriores | [src/lib/dna/mutations.ts](../app/mobile/src/lib/dna/mutations.ts) e [mutations-extended.ts](../app/mobile/src/lib/dna/mutations-extended.ts) |
 | Analytics layer | ✅ Interface + MockProvider + 16 eventos tipados + consent gating | [src/analytics/](../app/mobile/src/analytics/) — provider real (Firebase/PostHog) plugável |
 | Billing demo guard | ✅ `isDemoBilling()` + `isMockInProductionBuild()` + warning estruturado | [billing-provider.ts](../app/mobile/src/services/subscription/billing-provider.ts) |
-| Supabase schema | ✅ SQL pronto (12 tabelas + RLS + indices + triggers) | [docs/SUPABASE_SCHEMA.sql](SUPABASE_SCHEMA.sql) |
 | npm audit | 🟡 25 vulns (15 high, 9 mod, 1 low) — todas tied a Expo SDK 51 chain | [SECURITY_AUDIT.md](SECURITY_AUDIT.md) — fix exige upgrade SDK 51→53 |
 | ESLint | ✅ Flat config (`eslint.config.js`) — RN + TS + react-hooks | Migrado de `.eslintrc.cjs` |
 | Design tokens | ✅ Tokens semânticos por emotion/rarity/archetype/phase/gamification | `src/lib/themes.ts` + `themes.md` |
@@ -38,7 +37,7 @@ Comandos na **raiz**: `npm run quality`, `npm test`, `npm run typecheck`, `npm r
 | Arquétipos UX | ✅ DNA % por arquétipo na aba Evolução; pill na Home | Onda C etapa 10 |
 | IA chat | 🟡 Fallback local rico; OpenAI BYOK opt-in; proxy URL preparado (`EXPO_PUBLIC_AI_PROXY_URL`) | Sem proxy deployado |
 | Billing | 🟡 Demo mock padrão; RevenueCat adapter sem SDK nativo | `EXPO_PUBLIC_BILLING_PROVIDER` |
-| Sync | 🟡 Local completo via `exportAll` / `localSyncRepo`; Supabase stub | Sem backend live |
+| Sync | ✅ Local completo via `exportAll` / `localSyncRepo` / `SyncEngine` (`local_only`) | Sem backend remoto |
 | Mutações DNA | ✅ 50+ no catálogo | `lib/dna/mutations*.ts` |
 | Maestro CI | 🟡 Workflow gatado por `vars.CI_E2E=1` | `.github/workflows/maestro.yml` |
 | EAS / loja | 🔴 Sem `eas.json` commitado; `eas.json.example` | Ver `BETA_RELEASE_CHECKLIST.md` |
@@ -57,7 +56,7 @@ Comandos na **raiz**: `npm run quality`, `npm test`, `npm run typecheck`, `npm r
 1. **Proxy IA**: deploy de servidor que aceite `POST /v1/mascot/reply` e use chave OpenAI server-side. Setar `EXPO_PUBLIC_AI_PROXY_URL` no app (cliente já implementado em `ProxyMascotAI.ts`).
 2. **RevenueCat real**: linkar SDK nativo, criar produtos no App Store/Play, definir `EXPO_PUBLIC_BILLING_PROVIDER=revenuecat` + `EXPO_PUBLIC_REVENUECAT_API_KEY*` + `EXPO_PUBLIC_RC_ENABLED=true`.
 3. **EAS / loja**: criar `eas.json`, configurar credenciais, beta tracks (TestFlight/Play Internal). Ver `BETA_RELEASE_CHECKLIST.md`.
-4. **Backend sync**: Supabase ou equivalente para multi-device.
+4. **Backend sync**: multi-device (backend remoto ainda não definido).
 5. **Maestro em PRs**: setar `gh variable set CI_E2E --body 1` quando o time aceitar o custo (~6min/run).
 
 ## Comandos de verificação
@@ -79,10 +78,9 @@ npm run quality
 - **`noUncheckedIndexedAccess` desligado** — habilitar surfou 271 erros em 60+ arquivos (Mascot3D, insights, kmeans, tokenize, graph). Sweep dedicado pendente.
 - ✅ **`useBehaviorTick.ts`** — coberto agora (12 testes, ~100%).
 - ✅ **`persistence.ts` (dna)** — coberto agora (11 testes, 100%).
-- **`supabase-stub.ts` em 0% coverage** — esperado, é stub. Candidato a exclude se ficar parado.
 - ✅ **Mascot3D.tsx** — quebrado em [components/mascot-3d/](../app/mobile/src/components/mascot-3d/) (12 subcomponentes, container ficou em 164 linhas).
 - **Vulnerabilidades npm (25)** — upgrade Expo SDK 51→53 em projeto dedicado.
 - **Proxy IA não deployado** — produção depende de BYOK até deploy. Ver [AI_PRODUCTION_PLAN.md](AI_PRODUCTION_PLAN.md).
 - **RevenueCat SDK não vinculado** — `RevenueCatBillingProvider` retorna erro honesto até integração nativa. Ver [PREMIUM_STRATEGY.md](PREMIUM_STRATEGY.md).
-- **Supabase não deployado** — `supabaseSyncRepoStub` delega pra local. Schema pronto em [SUPABASE_SCHEMA.sql](SUPABASE_SCHEMA.sql). Ver [SYNC_ARCHITECTURE.md](SYNC_ARCHITECTURE.md).
+- **Sync remoto não implementado** — app é 100% local-first. Ver [SYNC_ARCHITECTURE.md](SYNC_ARCHITECTURE.md).
 - **Analytics provider real** — só mock por ora. Plugar Firebase/PostHog quando decisão tomada. Ver [src/analytics/](../app/mobile/src/analytics/).

@@ -1,4 +1,4 @@
-# Parte 2 — Mercado e Stack
+﻿# Parte 2 — Mercado e Stack
 
 Cobre seções 10–14: concorrentes, diferenciação, stack (sem Flutter), arquitetura técnica, banco de dados.
 
@@ -159,14 +159,14 @@ Cobre seções 10–14: concorrentes, diferenciação, stack (sem Flutter), arqu
 | Camada | Recomendado | Por quê |
 |---|---|---|
 | **Mobile** | **React Native + Expo + TypeScript** | Cross-platform, ecossistema enorme, Rive/Lottie nativos, OTA updates via EAS, contratação fácil, OpenAI SDK first-class |
-| **Backend** | **Supabase** (decisão recomendada) ou Firebase | Supabase: SQL relacional facilita XP/streak/cohort + RLS poderoso. Firebase: velocidade pura, mas Firestore complica analytics de hábito |
+| **Backend** | **Backend (a definir)** (decisão recomendada) ou Firebase | Postgres/SQL relacional facilita XP/streak/cohort + RLS poderoso. Firebase: velocidade pura, mas Firestore complica analytics de hábito |
 | **IA** | **Backend Node/TS chamando OpenAI gpt-4o-mini** com fallback Claude Haiku via roteador próprio | Custo (gpt-4o-mini ~USD 0.15/1M input), latência boa, qualidade suficiente para companion casual; Haiku como fallback de safety |
 | **Assinatura** | **RevenueCat** | Webhook → backend, paywall A/B nativo, abstrai StoreKit/Google Billing |
 | **Push** | **Expo Notifications** (MVP) → **FCM nativo** (após 10k usuários) | Expo Notifications é "good enough" até ~5k usuários ativos |
 | **Animação** | **Rive** (não Lottie) | State machine = transições emocionais sem código mobile, peso menor, performance superior em RN |
 | **Analytics** | **Firebase Analytics** (MVP) + **PostHog** (a partir do beta) | Firebase pro funil padrão; PostHog para feature flags, session replay e funil customizado |
-| **Landing** | **Next.js 14 + Tailwind**, deploy Vercel | SEO, edge funcs, integração formulário Supabase |
-| **Painel admin** | **Next.js** mesmo monorepo da landing | Reutiliza auth Supabase, baixo custo |
+| **Landing** | **Next.js 14 + Tailwind**, deploy Vercel | SEO, edge funcs, integração formulário Backend |
+| **Painel admin** | **Next.js** mesmo monorepo da landing | Reutiliza Auth backend, baixo custo |
 | **Monorepo** | **Turborepo + pnpm** | apps/mobile, apps/web, packages/shared, packages/types |
 | **Tipos compartilhados** | **Zod** schemas + tipos derivados | Validação em runtime + tipo em compile-time |
 | **CI/CD** | **EAS Build** (mobile) + **Vercel** (web) + **GitHub Actions** (testes) | Standard, baixa configuração |
@@ -193,9 +193,9 @@ Cobre seções 10–14: concorrentes, diferenciação, stack (sem Flutter), arqu
 
 | Stack | Avaliação | Quando usar | Quando NÃO | Veredito |
 |---|---|---|---|---|
-| **Supabase** | ⭐⭐⭐⭐⭐ | Postgres + Auth + Realtime + Storage out-of-box, RLS forte | quando não conhece SQL | **RECOMENDADO** |
+| **Backend (a definir)** | ⭐⭐⭐⭐⭐ | Postgres + Auth + Realtime + Storage out-of-box, RLS forte | quando não conhece SQL | **RECOMENDADO** |
 | Firebase | ⭐⭐⭐⭐ | velocidade pura, ecossistema Google | analytics relacional de hábito | **alternativa válida** |
-| Node.js + TypeScript (Express/Fastify) | ⭐⭐⭐⭐ | API de IA, webhooks | substituir Supabase Auth (ruim) | usar para **edge functions/IA** |
+| Node.js + TypeScript (Express/Fastify) | ⭐⭐⭐⭐ | API de IA, webhooks | substituir Auth backend (ruim) | usar para **edge functions/IA** |
 | NestJS | ⭐⭐⭐ | quando time vem de Java/.NET | MVP rápido (overhead) | rejeitar para MVP |
 | Python + FastAPI | ⭐⭐⭐ | data/ML pesado | quando time é TS | rejeitar |
 | Go | ⭐⭐⭐ | performance extrema | MVP | rejeitar |
@@ -204,7 +204,7 @@ Cobre seções 10–14: concorrentes, diferenciação, stack (sem Flutter), arqu
 
 ### Tecnologias "parecem boas, evite agora"
 
-- **Edge Functions Vercel para IA** — limite de 25s mata respostas longas; use Supabase Edge Functions ou Node próprio
+- **Edge Functions Vercel para IA** — limite de 25s mata respostas longas; use Edge Function backends ou Node próprio
 - **GPT-4o full (não mini)** — 10x mais caro, marginal melhor para chat casual; usar apenas em conversas críticas
 - **Realtime WebSocket** para chat IA — overhead grande; HTTP request/response basta
 - **Self-hosted LLM** — custo absurdo para MVP
@@ -229,7 +229,7 @@ MONOREPO: turborepo + pnpm
 │   ├── analytics/                 wrapper Firebase + PostHog
 │   └── ui/                        componentes RN compartilhados (opcional)
 
-BACKEND: Supabase
+BACKEND: (a definir)
 ├── Postgres (banco principal)
 ├── Auth (email + Apple + Google)
 ├── Storage (assets de mascote, avatares)
@@ -244,12 +244,12 @@ IA PIPELINE
                                   → resposta + safety check + cache
 
 ASSINATURA
-└── RevenueCat → webhook → Supabase Edge Function /subscription-webhook
+└── RevenueCat → webhook → Edge Function backend /subscription-webhook
                           → atualiza tabela subscriptions
 
 PUSH
 └── Expo Notifications API → device token guardado em devices table
-                          → cron Supabase Edge Function /push-scheduler
+                          → cron Edge Function backend /push-scheduler
 
 ANALYTICS
 └── Firebase Analytics (eventos padrão funil)
@@ -263,14 +263,14 @@ CI/CD
 
 ERROS / OBSERVABILIDADE
 └── Sentry (mobile + web)
-└── Supabase logs + Axiom (opcional pós-MVP)
+└── Backend logs + Axiom (opcional pós-MVP)
 ```
 
 ### Custo mensal estimado (em ordem de magnitude)
 
 | Item | Pré-MVP | 100 usuários | 1.000 | 10.000 |
 |---|---|---|---|---|
-| Supabase | free | free | USD 25 | USD 100 |
+| Backend | free | free | USD 25 | USD 100 |
 | OpenAI gpt-4o-mini | USD 0 | USD 20 | USD 200 | USD 1.500 |
 | RevenueCat | free | free | free | USD 0 (até USD 10k MTR) |
 | Expo EAS | USD 0 | USD 0 | USD 29 | USD 99 |
@@ -290,14 +290,14 @@ Receita projetada com 10.000 ativos pagantes a R$ 19,90 ≈ R$ 199.000/mês (~US
 
 ```
 ┌────────────────┐         ┌──────────────────┐       ┌──────────────────┐
-│  iOS / Android │ ───────▶│ Supabase Edge Fn │ ────▶ │  OpenAI / Claude │
+│  iOS / Android │ ───────▶│ Backend Edge Fn │ ────▶ │  OpenAI / Claude │
 │  (Expo RN)     │ ◀───────│  /chat /missions │ ◀──── │  (com roteador)  │
 └────────────────┘         └──────────────────┘       └──────────────────┘
         │                          │
         │                          │
         │                          ▼
         │                  ┌──────────────────┐
-        │                  │  Supabase        │
+        │                  │  Backend        │
         │                  │  Postgres + RLS  │
         │                  │  Auth + Storage  │
         │                  └──────────────────┘
@@ -314,8 +314,8 @@ Receita projetada com 10.000 ativos pagantes a R$ 19,90 ≈ R$ 199.000/mês (~US
 
 
 ┌─────────────────┐
-│  Next.js Web    │  ──▶  Supabase Auth (admin)
-│  (landing+admin)│  ──▶  Supabase Postgres (admin views)
+│  Next.js Web    │  ──▶  Auth backend (admin)
+│  (landing+admin)│  ──▶  Postgres (admin views)
 └─────────────────┘
 ```
 
@@ -327,7 +327,7 @@ Receita projetada com 10.000 ativos pagantes a R$ 19,90 ≈ R$ 199.000/mês (~US
 4. **Cache agressivo de IA**: respostas comuns ("oi", "to mal", "to bem") cacheadas com prefixo de personalidade. ~30% das mensagens viram cache hit.
 5. **Eventos analytics no servidor**: cliente envia o evento ao backend, backend dispara para Firebase/PostHog. Razão: bot/spoof e LGPD (eventos sem PII).
 6. **Idempotência de check-in**: cada check-in tem `idempotency_key` (deviceId + dia + hábito). Evita XP duplicado em rede ruim.
-7. **Migrations versionadas**: Supabase migrations + GitHub. Banco nunca alterado manualmente em produção.
+7. **Migrations versionadas**: DB migrations + GitHub. Banco nunca alterado manualmente em produção.
 8. **Feature flags via PostHog**: paywall, prompts, streak forgiving — tudo trocável sem deploy.
 9. **OTA com EAS Update**: bug crítico não esperar review da Apple, pushar JS update em horas.
 10. **Disclaimer hard-coded**: linguagem de safety NÃO vem do servidor (não pode ser desativada por bug). Hardcoded no app.
@@ -339,9 +339,9 @@ Receita projetada com 10.000 ativos pagantes a R$ 19,90 ≈ R$ 199.000/mês (~US
 | **Apresentação** | telas, gestos, animações | RN + Reanimated + Rive |
 | **Estado** | local store, query cache | Zustand + TanStack Query |
 | **Domínio** | regras de XP, streak, missão (cópia leve client-side só para UX otimista) | TS puro em `packages/types` |
-| **Rede** | requests para Supabase | supabase-js + fetch |
+| **Rede** | requests para Backend | backend client SDK + fetch |
 | **Persistência local** | tokens, último check-in offline | MMKV ou expo-secure-store |
-| **Edge** | endpoints `/chat`, `/checkin`, `/streak`, `/push` | Supabase Edge Functions (Deno) |
+| **Edge** | endpoints `/chat`, `/checkin`, `/streak`, `/push` | Edge Function backends (Deno) |
 | **Domínio backend** | regras canônicas de XP/streak | TS shared via `packages/types` (compartilhado mobile/edge) |
 | **Persistência** | dados | Postgres + RLS |
 
@@ -349,7 +349,7 @@ Receita projetada com 10.000 ativos pagantes a R$ 19,90 ≈ R$ 199.000/mês (~US
 
 | Endpoint | Método | Função |
 |---|---|---|
-| `/auth/*` | POST | login via Supabase Auth (email magic link + Apple + Google) |
+| `/auth/*` | POST | login via Auth backend (email magic link + Apple + Google) |
 | `/checkin` | POST | registra check-in de hábito, retorna XP/streak/mascot state |
 | `/chat` | POST | envia mensagem para personalidade do mascote, retorna resposta + safety flag |
 | `/mascot/state` | GET | estado atual do mascote (XP, fase, humor, acessórios) |
@@ -377,7 +377,7 @@ Receita projetada com 10.000 ativos pagantes a R$ 19,90 ≈ R$ 199.000/mês (~US
 5. Se ambos falham → resposta hardcoded "estou aqui pra te acompanhar, mas se você precisa de ajuda profissional, considere..."
 
 **Push contextual:**
-1. Cron Supabase Edge Function roda 5x/dia
+1. Cron Edge Function backend roda 5x/dia
 2. Para cada user ativo, calcula "melhor janela" baseado no histórico de check-in (média + std dev)
 3. Se janela atual está dentro do critério E user não fez check-in hoje E não recebeu push hoje → manda push
 4. Push texto personalizado pela personalidade
@@ -388,7 +388,7 @@ Receita projetada com 10.000 ativos pagantes a R$ 19,90 ≈ R$ 199.000/mês (~US
 | ADR | Decisão | Status |
 |---|---|---|
 | ADR-001 | Cross-platform com React Native + Expo | accepted |
-| ADR-002 | Supabase como BaaS principal | proposed |
+| ADR-002 | Backend como BaaS principal | proposed |
 | ADR-003 | IA passa sempre pelo backend | accepted |
 | ADR-004 | RLS ativado em todas tabelas, default deny | accepted |
 | ADR-005 | Server-authoritative para XP | accepted |
@@ -404,11 +404,11 @@ Cada ADR vira um arquivo `.md` em `docs/adr/` no repositório real.
 
 ## 14. Banco de dados
 
-### Schema PostgreSQL (Supabase) — versão MVP (48h–7 dias)
+### Schema PostgreSQL (backend) — versão MVP (48h–7 dias)
 
 ```sql
 -- ============= USERS / AUTH =============
--- auth.users é tabela built-in do Supabase Auth.
+-- auth.users é tabela built-in do Auth backend.
 -- Estendemos com:
 
 CREATE TABLE public.profiles (
@@ -726,12 +726,12 @@ CREATE POLICY "self-insert" ON checkins
 -- Admin: role custom 'admin' bypassa via SECURITY DEFINER em views
 ```
 
-### Migrations (Supabase CLI)
+### Migrations (backend CLI)
 
 ```
-supabase migration new initial_schema
+db migration new initial_schema
 # preenche o arquivo SQL acima
-supabase db push     # aplica em prod via CI/CD
+db push     # aplica em prod via CI/CD
 ```
 
 ### Schema escalável (90+ dias)
@@ -747,7 +747,7 @@ Ao crescer, adicionar:
 
 ### Estratégia de backup
 
-- Supabase Pro inclui backup diário automático com retenção 7 dias
+- Backend Pro tier inclui backup diário automático com retenção 7 dias
 - Snapshot manual antes de migration em prod
 - Export CSV semanal para S3 cold storage (LGPD: dados de usuário deletado vão para `archived/` por 30 dias antes de purga definitiva)
 
@@ -757,7 +757,7 @@ Ao crescer, adicionar:
 
 | ID | Decisão | Opções | Prazo |
 |---|---|---|---|
-| P2.1 | Supabase ou Firebase | Supabase (recomendado) ou Firebase | Antes de começar código |
+| P2.1 | Backend remoto ou Firebase | Backend remoto (a definir) ou Firebase | Antes de começar código |
 | P2.2 | 1 mascote por user ou múltiplos | 1 (MVP) ou múltiplos (escala) | Antes do MVP |
 | P2.3 | Hábitos pré-definidos ou customizáveis | Pré (recomendado MVP) ou custom | Antes do MVP |
 

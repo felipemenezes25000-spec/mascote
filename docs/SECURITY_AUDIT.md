@@ -98,7 +98,7 @@ Referência: `app/mobile/tests/security/pentest-matrix.test.ts`
 
 1. Deploy proxy IA + rate limit server-side  
 2. Upgrade Expo SDK 53+ (reduz vulns npm)  
-3. Webhook RevenueCat → Supabase  
+3. Webhook RevenueCat → backend  
 4. Audit log local de safety flags (timestamp only)  
 
 ---

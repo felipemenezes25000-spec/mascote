@@ -51,7 +51,6 @@ export default defineConfig({
       // Gaps principais (alvos pra subir thresholds):
       //   - src/lib/behavior/useBehaviorTick.ts (0%) — hook precisa de teste com jsdom
       //   - src/lib/dna/persistence.ts (0%) — wrapper AsyncStorage não testado
-      //   - src/repositories/supabase-stub.ts (0%) — stub, candidato a exclude
       //   - src/services/subscription/* (~60%) — mock/RevenueCat com lacunas
       //   - src/hooks/* (~18%) — useEvolutionState, useSubscriptionTier sem testes
       //

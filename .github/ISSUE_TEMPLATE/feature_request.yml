@@ -35,7 +35,6 @@ body:
       options:
         - app/mobile (Expo / React Native)
         - app/web (Next.js landing)
-        - supabase (edge functions / DB / migrations)
         - 3D / DNA / criatura procedural
         - onboarding / UX
         - IA / chat

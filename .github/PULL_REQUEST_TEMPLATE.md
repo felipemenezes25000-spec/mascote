@@ -25,7 +25,6 @@
 
 - [ ] `app/mobile` (Expo / React Native)
 - [ ] `app/web` (landing Next.js)
-- [ ] `supabase` (edge functions, migrations, RLS)
 - [ ] `3D` / DNA / criatura procedural
 - [ ] `docs` / comunidade
 - [ ] `CI` / scripts

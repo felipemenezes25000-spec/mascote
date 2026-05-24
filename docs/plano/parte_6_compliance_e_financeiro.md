@@ -1,4 +1,4 @@
-# Parte 6 — Compliance e Financeiro
+﻿# Parte 6 — Compliance e Financeiro
 
 Cobre seções 43–50: LGPD, App Store / Google Play, QA, custos, modelo financeiro, experimentos, riscos, critérios go/no-go.
 
@@ -53,7 +53,7 @@ Cobre seções 43–50: LGPD, App Store / Google Play, QA, custos, modelo financ
 
 | Processador | Função | Localização dados | DPA assinado |
 |---|---|---|---|
-| Supabase | DB + Auth + Storage | EU (Frankfurt) ou US (escolher EU) | sim (template padrão) |
+| Backend | DB + Auth + Storage | EU (Frankfurt) ou US (escolher EU) | sim (template padrão) |
 | OpenAI | LLM | US | sim (zero-retention pra API) |
 | Anthropic | LLM fallback | US | sim |
 | RevenueCat | Assinatura | US | sim |
@@ -64,7 +64,7 @@ Cobre seções 43–50: LGPD, App Store / Google Play, QA, custos, modelo financ
 | Resend | Email | US | sim |
 | Expo | Push + builds | US | sim |
 
-**Importante:** quando der escolher entre EU e US, escolher EU para reduzir trânsito internacional. Para Supabase, escolher região `eu-central-1` ou Brasil quando disponível (Supabase BR está em roadmap).
+**Importante:** quando der escolher entre EU e US, escolher EU para reduzir trânsito internacional. Para o backend, escolher região `eu-central-1` ou Brasil quando disponível (Backend BR está em roadmap).
 
 ### Política de privacidade — estrutura
 
@@ -276,7 +276,7 @@ Privacidade: meumascote.app/privacidade
 |---|---|---|---|
 | Manual smoke pré-build | golden path | Felipe + Renato | a cada PR grande |
 | Unit | regras XP, streak, missão | Vitest | dev autor |
-| Integration | edge functions | Vitest + supabase | dev autor |
+| Integration | edge functions | Vitest + backend integration | dev autor |
 | E2E mobile | onboarding + check-in + chat | Maestro | semanal |
 | E2E web | landing form | Playwright | a cada deploy |
 | Acessibilidade | screen reader em fluxos críticos | manual | mensal |
@@ -360,7 +360,7 @@ Privacidade: meumascote.app/privacidade
 | Domínio | R$ 4 | meumascote.app via Namecheap |
 | Apple Developer | R$ 50 | USD 99/ano amortizado |
 | Google Play | R$ 0 | one-time USD 25 |
-| Supabase | R$ 0 | free tier |
+| Backend | R$ 0 | free tier |
 | Vercel | R$ 0 | free tier |
 | OpenAI (testes) | R$ 50 | ~3M tokens com gpt-4o-mini |
 | Figma | R$ 0 | free tier |
@@ -378,7 +378,7 @@ Privacidade: meumascote.app/privacidade
 |---|---|
 | Ferramentas (acima) | R$ 100 |
 | OpenAI prod (~100 ativos) | R$ 100 |
-| Supabase Pro (se ultrapassar free) | R$ 130 |
+| Backend Pro tier (se ultrapassar free) | R$ 130 |
 | EAS plan | R$ 150 |
 | PostHog (se ultrapassar 1M events) | R$ 0-300 |
 | Sentry team | R$ 150 |
@@ -390,7 +390,7 @@ Privacidade: meumascote.app/privacidade
 
 ### Custos por usuário ativo (escala)
 
-| Usuários | OpenAI | Supabase | RevenueCat | Push | Outros | Custo/user/mês |
+| Usuários | OpenAI | Backend | RevenueCat | Push | Outros | Custo/user/mês |
 |---|---|---|---|---|---|---|
 | 100 | R$ 100 | R$ 0 | R$ 0 | R$ 0 | R$ 200 | R$ 3,00 |
 | 1.000 | R$ 1.000 | R$ 130 | R$ 0 | R$ 100 | R$ 500 | R$ 1,73 |
@@ -677,7 +677,7 @@ Em stress, precisa de **R$ 60k de capital** OU corte drástico de ads.
 
 | ID | Decisão | Opções | Prazo |
 |---|---|---|---|
-| P6.1 | Região Supabase | EU (recomendado) ou US | Antes de codar |
+| P6.1 | Região Backend | EU (recomendado) ou US | Antes de codar |
 | P6.2 | DPA com OpenAI: zero-retention | sim (recomendado) | Antes do beta |
 | P6.3 | Capital próprio inicial | R$ 30k (recomendado), R$ 20k mínimo | Antes do mês 1 |
 | P6.4 | Quando abrir MEI | antes do primeiro pagamento real | Mês 2 |

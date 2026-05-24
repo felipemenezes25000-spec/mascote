@@ -124,7 +124,6 @@ flowchart LR
   subgraph Infra["Infra"]
     AS[(AsyncStorage<br/>local-first)]
     SS[(SecureStore<br/>chaves)]
-    SB[(Supabase<br/>schema pronto)]
     RC[RevenueCat<br/>adapter pronto]
   end
 
@@ -138,7 +137,6 @@ flowchart LR
   L1 -->|crise| CRISE[CVV 188 · SAMU 192]
   AS <-.-> G
   SS <-.-> BYOK
-  SB -.-> AS
   RC -.-> PROXY
 
   classDef you fill:#FEF3C7,stroke:#D97706,color:#92400E
@@ -247,7 +245,6 @@ Detalhe completo: [`docs/GUARANTEES.md`](docs/GUARANTEES.md).
 | **IA** | OpenAI BYOK opt-in · proxy Plus pronto (`EXPO_PUBLIC_AI_PROXY_URL`) · fallback local rico (TF-IDF + BM25 + sentiment + memory graph) |
 | **Safety** | Ensemble classifier (regex + sentiment + Bayes) · output filter anti-clínico · CVV/SAMU imediato sem IA |
 | **Billing** | Adapter RevenueCat pronto · demo guard (`isDemoBilling`, `isMockInProductionBuild`) · paywall ético testado |
-| **Backend (preparado)** | Supabase schema completo: 12 tabelas + RLS + indexes + triggers (`docs/SUPABASE_SCHEMA.sql`) |
 | **Testes** | Vitest (pool threads) · `fast-check` property-based (300 runs em decay) · Maestro 11 flows E2E |
 | **Qualidade** | TypeScript strict · ESLint flat config · `npm run quality` = typecheck + lint + suíte completa |
 | **Landing** | Next.js 14 (Tailwind), pt/en — `app/web/` |
@@ -330,7 +327,7 @@ mascote/
 │   │   │   ├── analytics/       ← eventos tipados + consent gating + provider plugável
 │   │   │   ├── components/      ← Mascot3D (split em 12), Mascot2D, MascotInteractive…
 │   │   │   ├── components/ui/   ← Typography, LivingCard, ProgressPulse, CreatureHero…
-│   │   │   ├── data/sync/       ← SyncEngine + OfflineMutationQueue (Supabase-ready)
+│   │   │   ├── sync/            ← SyncEngine local + OfflineMutationQueue
 │   │   │   ├── game/            ← evolution engine, behavior engine, memory graph
 │   │   │   ├── lib/moments/     ← creatureMoments — bus pub/sub semântico
 │   │   │   └── services/        ← subscription + billing provider + RevenueCat adapter

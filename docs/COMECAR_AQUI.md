@@ -226,7 +226,7 @@ assets/
 - Animações Rive/Lottie pro mascote
 - Push notifications nativos (expo-notifications precisa de Apple Dev account)
 - Cobrança real RevenueCat
-- Backend Supabase
+- Backend remoto (sync multi-device)
 - Tutorial interativo pós-onboarding
 - High contrast mode (toggle salva mas não aplica)
 

@@ -1,4 +1,4 @@
-# Parte 5 — Execução
+﻿# Parte 5 — Execução
 
 Cobre seções 33–42: roadmap 48h, 7 dias, 30 dias, 90 dias, backlog, user stories, PRD, doc dev, doc designer, doc investidor.
 
@@ -12,7 +12,7 @@ Foco: validar interesse antes de codar app.
 
 **Bloco 1 (manhã, 3h)**
 - [ ] Felipe: registra domínio `meumascote.app` (Namecheap)
-- [ ] Felipe: cria projeto Vercel + Supabase + GitHub repo
+- [ ] Felipe: cria projeto Vercel + Backend + GitHub repo
 - [ ] Felipe: cria conta Resend (email transacional)
 - [ ] Felipe: cria conta TikTok Ads + Meta Business + Google Ads (preparo)
 - [ ] Renato: rascunha 3 variações de copy do hero da landing
@@ -21,7 +21,7 @@ Foco: validar interesse antes de codar app.
 - [ ] Felipe: scaffold Next.js da landing (Vercel template)
 - [ ] Felipe: copia hero, FAQ, secciona "como funciona"
 - [ ] Renato: faz draft visual no Figma (homepage + form)
-- [ ] Felipe: configura formulário → Supabase tabela `waitlist`
+- [ ] Felipe: configura formulário → Backend tabela `waitlist`
 
 **Bloco 3 (noite, 2h)**
 - [ ] Felipe: deploy landing inicial (mesmo que feia)
@@ -126,7 +126,7 @@ Meta dos 30 dias: **beta fechado com 50 pessoas usando MVP funcional.**
 **Foco:** começar app + continuar validação
 
 - Setup monorepo (Turborepo + EAS)
-- Auth Supabase funcionando (email magic link + Apple + Google)
+- Auth backend funcionando (email magic link + Apple + Google)
 - Schema Postgres aplicado
 - Tela onboarding (4 passos)
 - 1 personalidade implementada (Calmo)
@@ -241,7 +241,7 @@ Priorizado P0–P3. P0 = bloqueia lançamento, P1 = essencial pós-launch primei
 
 | # | Item | Estimativa |
 |---|---|---|
-| B-001 | Auth Supabase (email + Apple + Google) | 2d |
+| B-001 | Auth backend (email + Apple + Google) | 2d |
 | B-002 | Onboarding 4 passos | 3d |
 | B-003 | Schema banco (todas tabelas core) | 2d |
 | B-004 | Tela home com mascote | 3d |
@@ -456,7 +456,7 @@ Ver Parte 6.
 
 #### 10. Open questions
 
-- Backend: Supabase (recomendado) ou Firebase? (decisão antes de codar)
+- Backend: Backend remoto (a definir) ou Firebase? (decisão antes de codar)
 - Trial: 7d ou 14d? (testar em A/B no mês 2)
 - Quiz no onboarding ou escolha livre? (testar)
 
@@ -466,7 +466,7 @@ Ver Parte 6.
 
 ### Resumo executivo do dev
 
-Mascote é um app RN + Expo + TS, backend Supabase + Edge Functions, IA OpenAI + Claude, assinatura RevenueCat. Veja Parte 2 §12-§14 para arquitetura completa.
+Mascote é um app RN + Expo + TS, Backend remoto + Edge Functions, IA OpenAI + Claude, assinatura RevenueCat. Veja Parte 2 §12-§14 para arquitetura completa.
 
 ### Setup inicial
 
@@ -475,7 +475,7 @@ Mascote é um app RN + Expo + TS, backend Supabase + Edge Functions, IA OpenAI +
 node 20+
 pnpm 9+
 expo cli (npx expo --version)
-supabase cli
+backend CLI
 git
 
 # 2. Clone monorepo
@@ -487,14 +487,14 @@ pnpm install
 # 3. Setup envs
 cp .env.example .env
 # preencher:
-# SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (server only)
+# BACKEND_URL, API_KEY (server only) (server only)
 # OPENAI_API_KEY, ANTHROPIC_API_KEY (server only)
 # REVENUECAT_PUBLIC_API_KEY_IOS, _ANDROID
 # EXPO_TOKEN
 
-# 4. Setup Supabase local
-supabase start
-supabase db reset   # aplica migrations
+# 4. Setup Backend local
+local backend start
+db reset   # aplica migrations
 
 # 5. Run mobile
 cd apps/mobile
@@ -516,7 +516,7 @@ apps/
         onboarding/
         paywall/
       components/     # UI components
-      lib/            # api client, supabase, helpers
+      lib/            # api client, helpers
       store/          # Zustand stores
   web/                # Next.js landing + admin
     app/
@@ -528,7 +528,7 @@ packages/
   analytics/          # PostHog + Firebase wrapper
   ui/                 # cross-platform componentes (opcional)
 
-supabase/
+backend/
   migrations/         # SQL versionado
   functions/          # Edge Functions Deno
     chat/
@@ -575,13 +575,13 @@ export const HabitChip = memo(function HabitChip(props: Props) {
 - Form: react-hook-form + zod resolver
 
 **API:**
-- Cliente Supabase em `lib/supabase.ts`
+- Cliente Backend em `lib/api-client.ts`
 - Wrappers em `lib/api/*.ts` retornando typed promises
 - Zod parse em todas respostas (paranoia)
 
 **Edge Functions:**
 - Deno + TypeScript
-- Cada function um arquivo `supabase/functions/[name]/index.ts`
+- Cada function um arquivo `backend/functions/[name]/index.ts`
 - Compartilha types via `packages/types`
 - Sempre validar input com Zod
 - Retorna `Response` JSON com schema definido
@@ -628,7 +628,7 @@ const ChatResponse = z.object({
 | Tipo | Tool | Cobertura alvo |
 |---|---|---|
 | Unit | Vitest | lógica pura em `packages/types` |
-| Integration | Vitest + supabase-js | edge functions |
+| Integration | Vitest + backend client SDK | edge functions |
 | E2E mobile | Detox ou Maestro (preferência Maestro: mais leve) | fluxo principal |
 | Smoke web | Playwright | landing + form |
 
@@ -639,13 +639,13 @@ const ChatResponse = z.object({
 - Mobile: `eas build --platform all --profile preview` → instala via QR
 - Mobile prod: `eas build --platform all --profile production` + `eas submit`
 - Web: push para main → Vercel auto-deploy
-- Edge functions: `supabase functions deploy chat`
+- Edge functions: `deploy backend functions chat`
 
 ### Observabilidade
 
 - Sentry init em `app/_layout.tsx` (mobile) e `app/layout.tsx` (web)
 - PostHog init com user identify pós-login
-- Logs Edge Function vão para Supabase logs (visível dashboard)
+- Logs Edge Function vão para Backend logs (visível dashboard)
 
 ### Segurança
 
@@ -660,7 +660,7 @@ const ChatResponse = z.object({
 ### Como contribuir
 
 1. Pega um item P0 do backlog
-2. Cria branch `feat/B-001-auth-supabase`
+2. Cria branch `feat/B-001-auth-backend`
 3. Commit pequeno, frequente
 4. Abre PR pra `dev` quando pronto
 5. Outro revisa, ou self-review com checklist
