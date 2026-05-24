@@ -7,12 +7,23 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX = 30;
+// Capped: o Map vivia para sempre num processo long-running e era um vetor
+// de OOM trivial (qualquer ataque com IPs únicos enchia memória). Em
+// ambiente serverless o counter é por-instância — defesa real fica no
+// reverse-proxy/Cloudflare; este aqui é só best-effort dentro do warm pool.
+const RATE_MAX_KEYS = 10_000;
 const ipHits = new Map<string, { count: number; resetAt: number }>();
 
 function rateLimit(ip: string): boolean {
   const now = Date.now();
   const entry = ipHits.get(ip);
   if (!entry || now > entry.resetAt) {
+    if (ipHits.size >= RATE_MAX_KEYS) {
+      // Evict oldest insertion (Map preserva ordem). Sem isso, basta um
+      // burst de IPs únicos pra consumir RAM até o crash.
+      const oldest = ipHits.keys().next().value;
+      if (oldest !== undefined) ipHits.delete(oldest);
+    }
     ipHits.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
     return true;
   }
@@ -20,6 +31,11 @@ function rateLimit(ip: string): boolean {
   entry.count += 1;
   return true;
 }
+
+const OPENAI_TIMEOUT_MS = 20_000;
+const MAX_HISTORY_ITEMS = 16;
+const MAX_MESSAGE_CHARS = 4_000;
+type SafetyFlag = 'safe' | 'watch' | 'high' | 'critical';
 
 interface ReplyBody {
   personality?: string;
@@ -52,20 +68,28 @@ export async function POST(req: NextRequest) {
   if (!userMessage) {
     return NextResponse.json({ error: 'message_required' }, { status: 400 });
   }
+  if (userMessage.length > MAX_MESSAGE_CHARS) {
+    return NextResponse.json({ error: 'message_too_long' }, { status: 400 });
+  }
 
   const system =
     body.system_prompt?.trim() ??
     `Você é um mascote digital de bem-estar. Tom: ${body.personality_flavor ?? 'caloroso e leve'}. Não diagnostique. Não prometa cura.`;
 
+  const history = Array.isArray(body.history) ? body.history : [];
   const messages = [
     { role: 'system' as const, content: system },
-    ...(body.history ?? []).slice(-8).map(h => ({
-      role: (h.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
-      content: String(h.content ?? ''),
+    ...history.slice(-MAX_HISTORY_ITEMS).map(h => ({
+      role: (h?.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
+      content: String(h?.content ?? '').slice(0, MAX_MESSAGE_CHARS),
     })),
     { role: 'user' as const, content: userMessage },
   ];
 
+  // AbortController evita request pendurada queimando memória do worker
+  // e o budget de billing da OpenAI quando o upstream trava.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
   try {
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -79,6 +103,7 @@ export async function POST(req: NextRequest) {
         max_tokens: 280,
         temperature: 0.85,
       }),
+      signal: controller.signal,
     });
 
     if (!res.ok) {
@@ -90,12 +115,23 @@ export async function POST(req: NextRequest) {
       usage?: { total_tokens?: number };
     };
     const reply = data.choices?.[0]?.message?.content?.trim() ?? '';
+    // Contrato com mobile (AIResponseValidator) exige flag = 'safe' | 'watch'
+    // | 'high' | 'critical'. Antes retornávamos 'none', que cai no fallback
+    // mas ainda assim sujava a telemetria. O mobile vai recomputar via
+    // classifyInput pra reforçar, então 'safe' aqui é só o default neutro.
+    const safetyFlag: SafetyFlag = 'safe';
     return NextResponse.json({
       reply,
-      safety_flag: 'none',
+      safety_flag: safetyFlag,
       usage: data.usage,
     });
-  } catch {
-    return NextResponse.json({ error: 'proxy_failure' }, { status: 502 });
+  } catch (err) {
+    const isAbort = err instanceof Error && err.name === 'AbortError';
+    return NextResponse.json(
+      { error: isAbort ? 'upstream_timeout' : 'proxy_failure' },
+      { status: isAbort ? 504 : 502 },
+    );
+  } finally {
+    clearTimeout(timer);
   }
 }
