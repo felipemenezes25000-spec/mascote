@@ -22,8 +22,20 @@ namespace Mascote.Unity.Core
         [SerializeField] IdleBehaviorController idleBehavior;
         [SerializeField] LookAtTouchController lookAtTouch;
 
-        readonly MaterialPropertyBlock _mpb = new();
+        MaterialPropertyBlock _mpb;
         UnityMascotState _current;
+
+        void Awake()
+        {
+            _mpb = new MaterialPropertyBlock();
+            // Auto-wire dos sub-controllers se não foram setados via Inspector/SceneBuilder.
+            if (mascotRoot == null) mascotRoot = transform;
+            if (morphology == null) morphology = GetComponent<MascotMorphologyController>();
+            if (accessories == null) accessories = GetComponent<MascotAccessoryController>();
+            if (animation == null) animation = GetComponent<MascotAnimationController>();
+            if (idleBehavior == null) idleBehavior = GetComponent<IdleBehaviorController>();
+            if (lookAtTouch == null) lookAtTouch = GetComponent<LookAtTouchController>();
+        }
 
         public void ApplyFromState(UnityMascotState state)
         {
@@ -63,6 +75,10 @@ namespace Mascote.Unity.Core
             var glow = HexColorUtil.IntToColor(visuals.glowTint);
             var emissive = accent * (visuals.emissiveIntensity * (visuals.evolution?.glowMultiplier ?? 1f));
 
+            // Skip body tint quando white puro — preserva paleta original do prefab.
+            // Em produção, JSON vem com bodyTint da DNA; aqui no harness o default é branco.
+            bool applyBodyTint = visuals.bodyTint != 0xFFFFFF && visuals.bodyTint != 0;
+
             if (tintRenderers == null || tintRenderers.Length == 0)
             {
                 tintRenderers = mascotRoot != null
@@ -73,11 +89,28 @@ namespace Mascote.Unity.Core
             foreach (var r in tintRenderers)
             {
                 if (r == null) continue;
+                // Não tinta acessórios — eles têm cor própria do AccessoryPrimitiveBuilder/GLB.
+                if (IsAccessoryDescendant(r.transform)) continue;
+                // Não tinta os olhos (preservam branco + pupila preta).
+                var n = r.gameObject.name;
+                if (n == "Eye_L" || n == "Eye_R" || n == "Pupil") continue;
+
                 r.GetPropertyBlock(_mpb);
-                _mpb.SetColor(BodyColorId, body);
+                if (applyBodyTint) _mpb.SetColor(BodyColorId, body);
                 _mpb.SetColor(AccentColorId, emissive + glow * 0.25f);
                 r.SetPropertyBlock(_mpb);
             }
+        }
+
+        static bool IsAccessoryDescendant(Transform t)
+        {
+            var cur = t;
+            while (cur != null)
+            {
+                if (cur.name != null && cur.name.StartsWith("acc_")) return true;
+                cur = cur.parent;
+            }
+            return false;
         }
 
         public void HandleGesture(string gesture, Vector2 normalized)

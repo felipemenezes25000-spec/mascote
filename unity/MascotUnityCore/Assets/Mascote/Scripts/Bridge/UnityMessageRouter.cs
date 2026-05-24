@@ -19,6 +19,12 @@ namespace Mascote.Unity.Bridge
             outbound = o;
         }
 
+        void Awake()
+        {
+            if (director == null) director = FindFirstObjectByType<MascotDirector>();
+            if (outbound == null) outbound = new OutboundEventDispatcher();
+        }
+
         public void RouteJson(string json)
         {
             if (!JsonMessageParser.TryParseInbound(json, out var type, out var payload))

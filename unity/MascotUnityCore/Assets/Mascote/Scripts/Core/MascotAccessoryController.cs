@@ -15,6 +15,11 @@ namespace Mascote.Unity.Core
         [SerializeField] Transform attachRoot;
         readonly Dictionary<string, GameObject> _spawned = new();
 
+        void Awake()
+        {
+            if (attachRoot == null) attachRoot = transform;
+        }
+
         public void ApplyAccessories(List<UnityAccessorySlot> slots)
         {
             foreach (var kv in _spawned)
@@ -41,7 +46,11 @@ namespace Mascote.Unity.Core
             }
 
             var boneName = !string.IsNullOrEmpty(slot.bone) ? slot.bone : def.defaultBone;
-            var parent = ResolveBone(boneName) ?? attachRoot ?? transform;
+            // Fallback chain: bone exato → Socket_<slot> → Socket_Hat etc convenção → attachRoot
+            var parent = ResolveBone(boneName)
+                         ?? ResolveBone(SocketNameForSlot(def.slot))
+                         ?? attachRoot
+                         ?? transform;
             var scale = slot.scale ?? def.defaultScale;
 
             var go = new GameObject($"acc_{def.assetKey}");
@@ -55,13 +64,38 @@ namespace Mascote.Unity.Core
             marker.glbRelativePath = AccessoryRegistry.GlbRelativePath(def);
             marker.glbExists = File.Exists(Path.Combine(Application.streamingAssetsPath, marker.glbRelativePath ?? ""));
 
+            // Sprint 2: gera visual primitivo (chapéu cone, óculos, asa, etc) já que
+            // o GLB ainda não é importado em runtime. Quando GLTFast estiver wired,
+            // este builder pode ser substituído por um async load do .glb real.
+            AccessoryPrimitiveBuilder.Build(go, def.assetKey, def.slot);
+
             _spawned[slot.id ?? def.assetKey] = go;
         }
 
         Transform ResolveBone(string boneName)
         {
-            if (string.IsNullOrEmpty(boneName) || attachRoot == null) return attachRoot;
-            return attachRoot.Find(boneName) ?? attachRoot.FindDeep(boneName) ?? attachRoot;
+            if (string.IsNullOrEmpty(boneName) || attachRoot == null) return null;
+            return attachRoot.Find(boneName)
+                ?? attachRoot.FindDeep(boneName)
+                ?? attachRoot.FindDeepIgnoreCase(boneName);
+        }
+
+        static string SocketNameForSlot(string slot)
+        {
+            if (string.IsNullOrEmpty(slot)) return null;
+            // hat → Socket_Hat, glasses → Socket_Glasses, ear_l → Socket_Ear_L etc.
+            var parts = slot.Split('_');
+            var sb = new System.Text.StringBuilder("Socket");
+            foreach (var p in parts)
+            {
+                sb.Append('_');
+                if (p.Length > 0)
+                {
+                    sb.Append(char.ToUpperInvariant(p[0]));
+                    if (p.Length > 1) sb.Append(p.Substring(1).ToLowerInvariant());
+                }
+            }
+            return sb.ToString();
         }
     }
 
@@ -81,6 +115,17 @@ namespace Mascote.Unity.Core
             for (var i = 0; i < parent.childCount; i++)
             {
                 var found = parent.GetChild(i).FindDeep(name);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        public static Transform FindDeepIgnoreCase(this Transform parent, string name)
+        {
+            if (string.Equals(parent.name, name, System.StringComparison.OrdinalIgnoreCase)) return parent;
+            for (var i = 0; i < parent.childCount; i++)
+            {
+                var found = parent.GetChild(i).FindDeepIgnoreCase(name);
                 if (found != null) return found;
             }
             return null;

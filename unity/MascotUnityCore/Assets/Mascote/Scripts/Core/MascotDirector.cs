@@ -20,6 +20,15 @@ namespace Mascote.Unity.Core
 
         public MascotStateStore Store => _store;
 
+        void Awake()
+        {
+            // Auto-wire: tenta achar controllers no MascotRoot da cena se não foram setados.
+            if (mascotController == null) mascotController = FindFirstObjectByType<MascotController>();
+            if (reactionController == null) reactionController = FindFirstObjectByType<MascotReactionController>();
+            if (qualityController == null) qualityController = FindFirstObjectByType<MascotQualityController>();
+            if (environmentController == null) environmentController = FindFirstObjectByType<MascotEnvironmentController>();
+        }
+
         public bool ApplyState(UnityMascotState state, int seq)
         {
             if (state == null)

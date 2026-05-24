@@ -30,6 +30,11 @@ namespace Mascote.Unity.Bridge
             DontDestroyOnLoad(gameObject);
             gameObject.name = GameObjectName;
 
+            // Auto-wire router se SerializeField não foi setado.
+            if (router == null) router = GetComponent<UnityMessageRouter>();
+
+            // OutboundEventDispatcher é POCO — instanciar se SerializeField não foi setado.
+            if (outbound == null) outbound = new OutboundEventDispatcher();
             outbound?.SetSender(SendToReactNative);
         }
 
