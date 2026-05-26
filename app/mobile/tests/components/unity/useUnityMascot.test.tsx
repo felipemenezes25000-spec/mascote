@@ -80,7 +80,7 @@ describe('useUnityMascot', () => {
       const base = buildUnityMascotState(mascotFixture('motivador'));
       const stateWithEvent = {
         ...base,
-        pendingEvent: { type: 'gesture' as const, gesture: 'pet' as const, intensity: 1 },
+        pendingEvent: { kind: 'gesture' as const, gesture: 'pet' as const },
       };
 
       const hook = renderHook<ReturnType<typeof useUnityMascot>, { state: typeof stateWithEvent }>(

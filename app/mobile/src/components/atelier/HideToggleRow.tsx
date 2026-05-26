@@ -10,6 +10,7 @@ import * as Haptics from 'expo-haptics';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Icon } from '@/components/Icon';
 import { Typography } from '@/components/ui';
+import { t } from '@/lib/i18n';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
@@ -37,7 +38,11 @@ export function HideToggleRow({ label, description, hidden, onChange }: HideTogg
       accessibilityRole="switch"
       accessibilityState={{ checked: hidden }}
       accessibilityLabel={label}
-      accessibilityHint={`Toque pra ${hidden ? 'mostrar' : 'esconder'}. ${description ?? ''}`.trim()}
+      accessibilityHint={t(
+        'atelier.toggles.a11y_hint',
+        hidden ? t('atelier.toggles.action_show') : t('atelier.toggles.action_hide'),
+        description ?? '',
+      )}
     >
       <View style={styles.text}>
         <Typography variant="bodyBold">{label}</Typography>

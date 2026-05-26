@@ -30,6 +30,7 @@ import {
   THEME_PRESETS,
   type ThemePreset,
 } from '@/lib/dna/themePresets';
+import { t } from '@/lib/i18n';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { MascotCustomization } from '@/types';
@@ -46,7 +47,9 @@ export function BlendPanel({ onApply }: BlendPanelProps) {
   const theme = useTheme();
   const [aId, setAId] = useState<string>(THEME_PRESETS[0].id);
   const [bId, setBId] = useState<string>(THEME_PRESETS[1]?.id ?? THEME_PRESETS[0].id);
-  const [t, setT] = useState<number>(0.5);
+  // `mix` é o slider 0..1 (0 = só A, 1 = só B). Antes era `t`, renomeado
+  // pra liberar o nome global de i18n helper t() sem shadow.
+  const [mix, setMix] = useState<number>(0.5);
 
   const presetA = findPreset(aId) ?? THEME_PRESETS[0];
   const presetB = findPreset(bId) ?? THEME_PRESETS[1] ?? THEME_PRESETS[0];
@@ -55,7 +58,7 @@ export function BlendPanel({ onApply }: BlendPanelProps) {
     const currentId = slot === 'A' ? aId : bId;
     Alert.alert(
       `Preset ${slot}`,
-      'Escolha um preset:',
+      t('atelier.blend.pick_prompt'),
       [
         ...THEME_PRESETS.map(p => ({
           text: `${p.emoji}  ${p.label}${p.id === currentId ? ' ✓' : ''}`,
@@ -64,7 +67,7 @@ export function BlendPanel({ onApply }: BlendPanelProps) {
             else setBId(p.id);
           },
         })),
-        { text: 'Cancelar', style: 'cancel' as const },
+        { text: t('atelier.actions.cancel'), style: 'cancel' as const },
       ],
     );
   };
@@ -76,7 +79,7 @@ export function BlendPanel({ onApply }: BlendPanelProps) {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
       return;
     }
-    const blended = blendPresets(presetA, presetB, t);
+    const blended = blendPresets(presetA, presetB, mix);
     onApply(blended);
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
       () => undefined,
@@ -93,7 +96,7 @@ export function BlendPanel({ onApply }: BlendPanelProps) {
           <PressableScale
             onPress={() => pickPreset('A')}
             accessibilityRole="button"
-            accessibilityLabel={`Preset A: ${presetA.label}. Toque para trocar.`}
+            accessibilityLabel={t('atelier.blend.a11y_pick_slot', 'A', presetA.label)}
           >
             <Chip label={`${presetA.emoji}  ${presetA.label}`} selected />
           </PressableScale>
@@ -113,7 +116,7 @@ export function BlendPanel({ onApply }: BlendPanelProps) {
           <PressableScale
             onPress={() => pickPreset('B')}
             accessibilityRole="button"
-            accessibilityLabel={`Preset B: ${presetB.label}. Toque para trocar.`}
+            accessibilityLabel={t('atelier.blend.a11y_pick_slot', 'B', presetB.label)}
           >
             <Chip label={`${presetB.emoji}  ${presetB.label}`} selected />
           </PressableScale>
@@ -122,14 +125,14 @@ export function BlendPanel({ onApply }: BlendPanelProps) {
 
       <View style={styles.sliderWrap}>
         <RangeSlider
-          label="Mix A ↔ B"
-          hint={`0 = só ${presetA.label}, 1 = só ${presetB.label}`}
-          value={t}
+          label={t('atelier.blend.slider_label')}
+          hint={t('atelier.blend.slider_hint', presetA.label, presetB.label)}
+          value={mix}
           min={0}
           max={1}
           defaultValue={0.5}
           format={v => `${Math.round(v * 100)}%`}
-          onChange={setT}
+          onChange={setMix}
         />
       </View>
 
@@ -143,7 +146,7 @@ export function BlendPanel({ onApply }: BlendPanelProps) {
           },
         ]}
         accessibilityRole="button"
-        accessibilityLabel="Aplicar blend ao draft"
+        accessibilityLabel={t('atelier.blend.a11y_apply')}
       >
         <Icon
           name="sparkles"
@@ -155,7 +158,7 @@ export function BlendPanel({ onApply }: BlendPanelProps) {
           variant="bodyBold"
           style={{ color: theme.tokens.semantic.inkOnBrand }}
         >
-          Aplicar blend
+          {t('atelier.blend.apply')}
         </Typography>
       </PressableScale>
     </View>

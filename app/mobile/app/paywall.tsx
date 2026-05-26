@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
@@ -37,6 +37,9 @@ export default function Paywall() {
   const streak = useStore(s => s.streak);
   const [tier, setTier] = useState<BillingTierId>('free');
   const [loading, setLoading] = useState(false);
+  // Ref guard fecha a janela entre handler enfileirado e setLoading propagar via render.
+  // Sem isso, dois taps em <1 frame leem closure stale (loading=false) e disparam 2 compras.
+  const purchaseInFlightRef = useRef(false);
   const [beforeVisuals, setBeforeVisuals] = useState<ReturnType<typeof modifiersToVisuals> | null>(null);
   const [afterVisuals, setAfterVisuals] = useState<ReturnType<typeof modifiersToVisuals> | null>(null);
 
@@ -78,11 +81,11 @@ export default function Paywall() {
   }, [profile?.id, mascot, streak]);
 
   async function handleSubscribe(selected: BillingTierId) {
-    // Re-entry guard: `setLoading` só repropaga via render, então cliques rápidos
-    // (até 1 frame de diferença) ainda enxergam loading=false e disparavam duas
-    // compras paralelas — gerando 2x cobrança no mock provider. `disabled` no
-    // botão ajuda mas não fecha a janela entre click → setLoading aplicado.
-    if (!profile || purchaseBlocked || loading) return;
+    // Re-entry guard via ref: `setLoading` só repropaga via render, então cliques
+    // rápidos (até 1 frame) leem closure stale com loading=false e disparariam 2
+    // compras paralelas — gerando 2x cobrança. Ref é síncrono, fecha a janela.
+    if (!profile || purchaseBlocked || loading || purchaseInFlightRef.current) return;
+    purchaseInFlightRef.current = true;
     setLoading(true);
     try {
       const result = await subscriptionService.subscribe(profile.id, selected);
@@ -97,6 +100,7 @@ export default function Paywall() {
         result.error ?? 'Não foi possível concluir a compra. Tente de novo ou use o modo demo.',
       );
     } finally {
+      purchaseInFlightRef.current = false;
       setLoading(false);
     }
   }

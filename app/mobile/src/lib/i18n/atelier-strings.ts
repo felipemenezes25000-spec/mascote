@@ -60,6 +60,10 @@ export const STRINGS_PT = {
       hide_tail: { label: 'Esconder cauda', description: 'apenas se o DNA tiver cauda' },
       hide_antennae: { label: 'Esconder antenas', description: 'apenas se o DNA tiver antenas' },
       hide_spikes: { label: 'Esconder espinhos', description: 'apenas se o DNA tiver espinhos' },
+      a11y_hint: (action: string, description: string) =>
+        `Toque pra ${action}. ${description}`.trim(),
+      action_show: 'mostrar',
+      action_hide: 'esconder',
     },
     actions: {
       undo: 'Desfazer',
@@ -68,10 +72,45 @@ export const STRINGS_PT = {
       reset: 'DNA puro',
       compare: 'Comparar antes/depois',
       attribution: 'Composição visual',
+      cancel: 'Cancelar',
+    },
+    blend: {
+      pick_prompt: 'Escolha um preset:',
+      slider_label: 'Mix A ↔ B',
+      slider_hint: (labelA: string, labelB: string) =>
+        `0 = só ${labelA}, 1 = só ${labelB}`,
+      apply: 'Aplicar blend',
+      a11y_pick_slot: (slot: string, label: string) =>
+        `Preset ${slot}: ${label}. Toque para trocar.`,
+      a11y_apply: 'Aplicar blend ao draft',
+    },
+    blend_multi: {
+      title: 'Compor 3 presets',
+      subtitle: 'normaliza pesos automaticamente',
+      add_slot: 'Adicionar preset',
+      remove_slot: 'Remover',
+      apply: 'Aplicar composição',
+      slot_label: (slot: number) => `Slot ${slot}`,
+      weight_label: 'Peso',
+    },
+    looks_history: {
+      title: 'Histórico de looks',
+      subtitle: 'snapshots automáticos da sua jornada',
+      empty: 'ainda não há snapshots. Volte daqui a uns dias.',
+      load: 'Carregar',
+      delete_action: 'Apagar snapshot',
+      delete_confirm_title: 'Apagar snapshot?',
+      delete_confirm_body: 'Snapshots automáticos podem ser regenerados em breve.',
+    },
+    celebration: {
+      title_new_mutation: 'Nova mutação ativa!',
+      subtitle: 'um marco do seu mascote',
+      dismiss: 'Continuar',
     },
     preview: {
       live: 'preview ao vivo',
       restored: '↻ rascunho restaurado · preview ao vivo',
+      loading: 'Carregando…',
     },
     alerts: {
       discard_changes: {
@@ -99,3 +138,22 @@ export const STRINGS_PT = {
 } as const;
 
 export type StringsPT = typeof STRINGS_PT;
+
+/**
+ * Widen literal types pra primitivas, preservando a forma e funções.
+ * Permite que `STRINGS_EN: StringsBundle` aceite traduções com textos
+ * diferentes — `as const` em STRINGS_PT trava os literais e quebra reuso.
+ */
+type Widen<T> = T extends string
+  ? string
+  : T extends number
+    ? number
+    : T extends boolean
+      ? boolean
+      : T extends (...args: infer A) => infer R
+        ? (...args: A) => Widen<R>
+        : T extends readonly (infer U)[]
+          ? readonly Widen<U>[]
+          : { -readonly [K in keyof T]: Widen<T[K]> };
+
+export type StringsBundle = Widen<typeof STRINGS_PT>;

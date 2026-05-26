@@ -13,10 +13,16 @@ import { morphInfluencesFromMorphology, MORPH_INFLUENCE_KEYS } from '@/lib/dna/m
 import { morphologyFromGenome } from '@/lib/dna/morphology';
 import { generateGenome } from '@/lib/dna/genome';
 
+function strSeed(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h * 31) + s.charCodeAt(i)) | 0;
+  return h;
+}
+
 describe('morphInfluencesFromMorphology', () => {
   it('weights SEMPRE em [0, 1]', () => {
     for (let seed = 0; seed < 100; seed++) {
-      const dna = generateGenome(`seed-${seed}`);
+      const dna = generateGenome(strSeed(`seed-${seed}`));
       const morph = morphologyFromGenome(dna);
       const influences = morphInfluencesFromMorphology(morph);
       for (const [key, value] of Object.entries(influences)) {
@@ -27,7 +33,7 @@ describe('morphInfluencesFromMorphology', () => {
   });
 
   it('keys apenas do catálogo MORPH_INFLUENCE_KEYS', () => {
-    const dna = generateGenome('test');
+    const dna = generateGenome(strSeed('test'));
     const morph = morphologyFromGenome(dna);
     const influences = morphInfluencesFromMorphology(morph);
     for (const key of Object.keys(influences)) {
@@ -37,7 +43,7 @@ describe('morphInfluencesFromMorphology', () => {
 
   it('pares são mutually exclusive (eye_big XOR eye_small)', () => {
     for (let seed = 0; seed < 100; seed++) {
-      const dna = generateGenome(`pair-${seed}`);
+      const dna = generateGenome(strSeed(`pair-${seed}`));
       const morph = morphologyFromGenome(dna);
       const inf = morphInfluencesFromMorphology(morph);
       const hasBig = 'eye_big' in inf && (inf.eye_big ?? 0) > 0;
@@ -55,7 +61,7 @@ describe('morphInfluencesFromMorphology', () => {
   });
 
   it('multiplier extremo body_height=1.3 satura body_tall em 1.0', () => {
-    const dna = generateGenome('extreme');
+    const dna = generateGenome(strSeed('extreme'));
     const morph = morphologyFromGenome(dna);
     const extreme = { ...morph, bodyHeightStretch: 1.3 };
     const inf = morphInfluencesFromMorphology(extreme);
@@ -64,7 +70,7 @@ describe('morphInfluencesFromMorphology', () => {
   });
 
   it('multiplier extremo body_width=0.7 satura body_narrow em 1.0', () => {
-    const dna = generateGenome('extreme');
+    const dna = generateGenome(strSeed('extreme'));
     const morph = morphologyFromGenome(dna);
     const extreme = { ...morph, bodyWidthSquash: 0.7 };
     const inf = morphInfluencesFromMorphology(extreme);
@@ -73,7 +79,7 @@ describe('morphInfluencesFromMorphology', () => {
   });
 
   it('multiplier neutro (=1.0) NÃO inclui nem positive nem negative', () => {
-    const dna = generateGenome('neutral');
+    const dna = generateGenome(strSeed('neutral'));
     const morph = morphologyFromGenome(dna);
     const neutral = {
       ...morph,
@@ -91,7 +97,7 @@ describe('morphInfluencesFromMorphology', () => {
   });
 
   it('aura_strong só aparece quando auraOpacity > 0.5', () => {
-    const dna = generateGenome('aura');
+    const dna = generateGenome(strSeed('aura'));
     const morph = morphologyFromGenome(dna);
     const lowAura = { ...morph, auraOpacity: 0.3 };
     expect('aura_strong' in morphInfluencesFromMorphology(lowAura)).toBe(false);
@@ -103,7 +109,7 @@ describe('morphInfluencesFromMorphology', () => {
   });
 
   it('payload mínimo — só keys com weight > 0', () => {
-    const dna = generateGenome('payload');
+    const dna = generateGenome(strSeed('payload'));
     const morph = morphologyFromGenome(dna);
     const inf = morphInfluencesFromMorphology(morph);
     for (const value of Object.values(inf)) {
@@ -112,7 +118,7 @@ describe('morphInfluencesFromMorphology', () => {
   });
 
   it('determinismo: mesmo DNA → mesma influences', () => {
-    const dna = generateGenome('determinism');
+    const dna = generateGenome(strSeed('determinism'));
     const morphA = morphologyFromGenome(dna);
     const morphB = morphologyFromGenome(dna);
     expect(morphInfluencesFromMorphology(morphA)).toEqual(

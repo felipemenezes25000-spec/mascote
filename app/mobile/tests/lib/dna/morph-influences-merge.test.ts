@@ -132,7 +132,7 @@ describe('aggregateVisualImpact morphInfluenceBoosts', () => {
 
     const step2 = mergeMorphInfluences(step1, persBias);
     // calmo tem eye_big +0.08 → step1 + 0.08 (clamped)
-    expect(step2.eye_big).toBeGreaterThanOrEqual(step1.eye_big);
+    expect(step2.eye_big).toBeGreaterThanOrEqual(step1.eye_big ?? 0);
     expect(step2.eye_big).toBeLessThanOrEqual(1);
     // calmo também tem posture_back e body_short que não existiam
     expect(step2.posture_back).toBeGreaterThan(0);

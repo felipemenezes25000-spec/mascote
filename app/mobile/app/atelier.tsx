@@ -45,6 +45,7 @@ import { applyPreset, matchPreset, type ThemePreset } from '@/lib/dna/themePrese
 import { useDraftAutoSave } from '@/hooks/useDraftAutoSave';
 import { useDraftHistory } from '@/hooks/useDraftHistory';
 import { maybeCreateWeeklySnapshot } from '@/lib/atelier/weeklySnapshot';
+import { t } from '@/lib/i18n';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -328,10 +329,10 @@ export default function AtelierScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <Stack.Screen options={{ headerShown: false }} />
-        <ScreenHeader title="Ateliê" variant="modal" />
+        <ScreenHeader title={t('atelier.header.title')} variant="modal" />
         <View style={styles.loading}>
           <Typography variant="body" tone="secondary">
-            Carregando…
+            {t('atelier.preview.loading')}
           </Typography>
         </View>
       </SafeAreaView>
@@ -342,8 +343,8 @@ export default function AtelierScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenHeader
-        title="Ateliê"
-        subtitle="esculpe o seu mascote"
+        title={t('atelier.header.title')}
+        subtitle={t('atelier.header.subtitle')}
         variant="modal"
         onClose={handleClose}
         rightSlot={<AutoSaveIndicator lastSavedAt={autoSave.lastSavedAt} />}
@@ -353,7 +354,7 @@ export default function AtelierScreen() {
                 {
                   icon: 'check',
                   onPress: () => void handleSave(),
-                  label: 'Salvar',
+                  label: t('atelier.header.save_action'),
                 },
               ]
             : undefined
@@ -377,25 +378,31 @@ export default function AtelierScreen() {
             />
           </View>
           <Typography variant="caption" tone="secondary" style={styles.previewLabel}>
-            {restoredFromAutoSave ? '↻ rascunho restaurado · preview ao vivo' : 'preview ao vivo'}
+            {restoredFromAutoSave ? t('atelier.preview.restored') : t('atelier.preview.live')}
           </Typography>
           <FpsCounter />
         </View>
 
         {/* Presets — atalhos de aparência */}
-        <SectionHeader title="Presets" subtitle="toque pra aplicar uma vibe" />
+        <SectionHeader
+          title={t('atelier.sections.presets.title')}
+          subtitle={t('atelier.sections.presets.subtitle')}
+        />
         <ThemePresetChips activePresetId={activePresetId} onSelect={handleApplyPreset} />
 
         {/* Blend de presets — combinação A + B em proporção variável */}
         <SectionHeader
-          title="Misturar presets"
-          subtitle="combine 2 vibes em proporção variável"
+          title={t('atelier.sections.blend.title')}
+          subtitle={t('atelier.sections.blend.subtitle')}
           compact
         />
         <BlendPanel onApply={handleApplyBlend} />
 
         {/* Forma */}
-        <SectionHeader title="Forma" subtitle="proporções do corpo e dos olhos" />
+        <SectionHeader
+          title={t('atelier.sections.forma.title')}
+          subtitle={t('atelier.sections.forma.subtitle')}
+        />
         <View style={styles.section}>
           <MorphSlider
             label="Tamanho dos olhos"
@@ -442,7 +449,10 @@ export default function AtelierScreen() {
         </View>
 
         {/* Aura & Padrão */}
-        <SectionHeader title="Aura & Padrão" subtitle="brilho e textura da pele" />
+        <SectionHeader
+          title={t('atelier.sections.aura_pattern.title')}
+          subtitle={t('atelier.sections.aura_pattern.subtitle')}
+        />
         <View style={styles.section}>
           <MorphSlider
             label="Intensidade da aura"
@@ -571,6 +581,7 @@ export default function AtelierScreen() {
             </PressableScale>
           </View>
         ) : null}
+        {mascot.dna ? (
         <View style={styles.actionsRow}>
           <PressableScale
             onPress={() => setAttributionOpen(true)}
@@ -584,6 +595,7 @@ export default function AtelierScreen() {
             </Typography>
           </PressableScale>
         </View>
+        ) : null}
 
         {/* Mutações ativas */}
         <SectionHeader
@@ -652,14 +664,16 @@ export default function AtelierScreen() {
         afterCustomization={previewCustomization}
       />
 
-      <MorphAttributionModal
-        visible={attributionOpen}
-        onClose={() => setAttributionOpen(false)}
-        dna={mascot.dna}
-        customization={previewCustomization}
-        personality={mascot.personality}
-        unlocked={unlockedMutations}
-      />
+      {mascot.dna ? (
+        <MorphAttributionModal
+          visible={attributionOpen}
+          onClose={() => setAttributionOpen(false)}
+          dna={mascot.dna}
+          customization={previewCustomization}
+          personality={mascot.personality}
+          unlocked={unlockedMutations}
+        />
+      ) : null}
 
       <AtelierOnboarding
         visible={onboarding.visible}

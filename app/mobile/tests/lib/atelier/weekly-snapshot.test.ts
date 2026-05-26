@@ -36,10 +36,12 @@ const sampleCustomization: MascotCustomization = {
 function makeProfile(createdAt: string): Profile {
   return {
     id: 'user-A',
-    nickname: 'Felipe',
-    created_at: createdAt,
+    display_name: 'Felipe',
+    age_band: null,
+    timezone: 'America/Sao_Paulo',
     locale: 'pt-BR',
-  } as Profile;
+    created_at: createdAt,
+  };
 }
 
 beforeEach(async () => {
