@@ -29,7 +29,12 @@ export { settings } from './settings';
 export { achievements } from './achievements';
 export { dnaMutations } from './dna-mutations';
 export { customization } from './customization';
-export { atelierLooks, MAX_LOOKS_PER_USER, type AtelierLook } from './atelier-looks';
+export {
+  atelierLooks,
+  MAX_AUTO_LOOKS_PER_USER,
+  MAX_LOOKS_PER_USER,
+  type AtelierLook,
+} from './atelier-looks';
 export { wallet } from './wallet';
 export { mascotLife } from './mascot-life';
 export { dailyReward, predictNextDailyRewardDay } from './daily-rewards';

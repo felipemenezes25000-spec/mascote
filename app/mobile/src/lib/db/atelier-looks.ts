@@ -12,7 +12,11 @@ import type { MascotCustomization } from '@/types';
 import { sanitizeCustomization } from '@/lib/dna/customization';
 import { read, withLock, write } from './internal';
 
+/** Cota de looks MANUAIS por usuário (criados explicitamente). */
 export const MAX_LOOKS_PER_USER = 5;
+
+/** Cota de looks AUTO por usuário (weekly snapshots etc) — separada dos manuais. */
+export const MAX_AUTO_LOOKS_PER_USER = 8;
 
 export interface AtelierLook {
   id: string;
@@ -21,6 +25,11 @@ export interface AtelierLook {
   /** Snapshot completo da customização — sem user_id/updated_at (recomputed on apply). */
   snapshot: Omit<MascotCustomization, 'user_id' | 'updated_at'>;
   created_at: string;
+  /**
+   * True = look criado por sistema (weekly snapshot, etc). False/undefined = manual.
+   * Cotas separadas: manuais ≤ MAX_LOOKS_PER_USER, autos ≤ MAX_AUTO_LOOKS_PER_USER.
+   */
+  is_auto?: boolean;
 }
 
 function generateId(): string {
@@ -46,22 +55,31 @@ export const atelierLooks = {
   /**
    * Salva look novo. Trunca pra MAX_LOOKS_PER_USER (mais antigo removido).
    * Aceita `customization` parcial — preenche faltantes via sanitize.
+   *
+   * Quando `isAuto=true`, conta na cota MAX_AUTO_LOOKS_PER_USER (separada).
    */
   async save(
     user_id: string,
     name: string,
     customization: MascotCustomization,
+    options: { isAuto?: boolean } = {},
   ): Promise<AtelierLook> {
     const trimmedName = name.trim().slice(0, 30) || 'Sem nome';
+    const isAuto = options.isAuto ?? false;
+    const maxCota = isAuto ? MAX_AUTO_LOOKS_PER_USER : MAX_LOOKS_PER_USER;
+
     return withLock('atelier_looks', async () => {
       const all = await read<AtelierLook>('atelier_looks');
-      const mine = all
-        .filter(l => l.user_id === user_id)
-        .sort((a, b) => b.created_at.localeCompare(a.created_at));
       const others = all.filter(l => l.user_id !== user_id);
+      const mine = all.filter(l => l.user_id === user_id);
 
-      // FIFO trim: mantém os MAX-1 mais recentes pra dar espaço pro novo.
-      const kept = mine.slice(0, MAX_LOOKS_PER_USER - 1);
+      // Separa em manuais e autos — cotas independentes.
+      const manuais = mine
+        .filter(l => !l.is_auto)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at));
+      const autos = mine
+        .filter(l => l.is_auto === true)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at));
 
       const next: AtelierLook = {
         id: generateId(),
@@ -69,7 +87,14 @@ export const atelierLooks = {
         name: trimmedName,
         snapshot: snapshotOf(customization),
         created_at: new Date().toISOString(),
+        is_auto: isAuto,
       };
+
+      // FIFO trim só na cota relevante — outra cota fica intacta.
+      const kept =
+        isAuto
+          ? [...manuais, ...autos.slice(0, maxCota - 1)]
+          : [...manuais.slice(0, maxCota - 1), ...autos];
 
       await write<AtelierLook>('atelier_looks', [...others, next, ...kept]);
       return next;

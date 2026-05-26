@@ -37,11 +37,14 @@ export function weekNumber(profileCreatedAt: string, now: number = Date.now()): 
 
 /**
  * Detecta se ALGUM look automático foi criado nas últimas WEEK_MS.
- * Usa naming convention (prefix + suffix) pra identificar — sem schema mudança.
+ * Prioriza flag `is_auto:true` (mais robusto), fallback pro naming antigo
+ * pra compatibilidade com snapshots criados antes da flag existir.
  */
 function hasRecentAutoSnapshot(looks: readonly AtelierLook[], now: number = Date.now()): boolean {
   return looks.some(l => {
-    if (!l.name.startsWith(AUTO_PREFIX) || !l.name.endsWith(AUTO_SUFFIX)) return false;
+    const isAuto = l.is_auto === true ||
+      (l.name.startsWith(AUTO_PREFIX) && l.name.endsWith(AUTO_SUFFIX));
+    if (!isAuto) return false;
     const createdMs = new Date(l.created_at).getTime();
     if (!Number.isFinite(createdMs)) return false;
     return now - createdMs < WEEK_MS;
@@ -74,7 +77,8 @@ export async function maybeCreateWeeklySnapshot(
     }
     const week = weekNumber(profile.created_at ?? new Date(now).toISOString(), now);
     const name = `${AUTO_PREFIX}${week}${AUTO_SUFFIX}`;
-    const created = await atelierLooks.save(profile.id, name, customization);
+    // isAuto: true → conta na cota MAX_AUTO_LOOKS_PER_USER, não rouba slot manual
+    const created = await atelierLooks.save(profile.id, name, customization, { isAuto: true });
     return { created };
   } catch {
     return { created: null, reason: 'error' };

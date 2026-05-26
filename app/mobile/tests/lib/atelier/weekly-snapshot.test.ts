@@ -118,21 +118,25 @@ describe('maybeCreateWeeklySnapshot', () => {
     expect(result.reason).toBe('no_profile');
   });
 
-  it('snapshot conta na cota MAX_LOOKS_PER_USER (FIFO trim normal)', async () => {
-    // Cria 5 looks manuais
+  it('snapshot AUTO usa cota separada — NÃO rouba slot manual', async () => {
+    // Cria 5 looks manuais (cota cheia)
     for (let i = 0; i < 5; i++) {
       await atelierLooks.save('user-A', `Manual-${i}`, sampleCustomization);
       await new Promise(r => setTimeout(r, 2));
     }
     expect((await atelierLooks.list('user-A')).length).toBe(5);
 
-    // Cria auto — empurra o mais antigo (Manual-0) e fica em 5 total
+    // Cria auto — vai pra cota separada de autos, manuais ficam intactos
     const profile = makeProfile(new Date('2026-05-01T00:00:00Z').toISOString());
     await maybeCreateWeeklySnapshot(profile, sampleCustomization);
 
     const list = await atelierLooks.list('user-A');
-    expect(list.length).toBe(5);
-    expect(list.some(l => l.name === 'Manual-0')).toBe(false);
-    expect(list.some(l => /Semana \d+ \(auto\)/.test(l.name))).toBe(true);
+    // Total = 5 manuais + 1 auto = 6
+    expect(list.length).toBe(6);
+    // Todos os manuais preservados
+    for (let i = 0; i < 5; i++) {
+      expect(list.some(l => l.name === `Manual-${i}`)).toBe(true);
+    }
+    expect(list.some(l => l.is_auto === true)).toBe(true);
   });
 });
