@@ -13,11 +13,20 @@
 <br/>
 
 <p>
+  <a href="https://github.com/felipemenezes25000-spec/mascote/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/felipemenezes25000-spec/mascote/ci.yml?branch=main&style=flat-square&logo=githubactions&logoColor=white&label=CI"/></a>
+  <a href="https://github.com/felipemenezes25000-spec/mascote/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/felipemenezes25000-spec/mascote?style=flat-square&logo=git&logoColor=white"/></a>
+  <a href="https://github.com/felipemenezes25000-spec/mascote"><img alt="Top language" src="https://img.shields.io/github/languages/top/felipemenezes25000-spec/mascote?style=flat-square&logo=typescript&logoColor=white"/></a>
+  <a href="https://github.com/felipemenezes25000-spec/mascote/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/felipemenezes25000-spec/mascote?style=flat-square&logo=github"/></a>
+</p>
+
+<p>
   <a href="app/mobile/app.json"><img alt="Expo SDK 51" src="https://img.shields.io/badge/Expo%20SDK-51-000020?style=flat-square&logo=expo&logoColor=white"/></a>
   <a href="app/mobile/package.json"><img alt="React Native 0.74" src="https://img.shields.io/badge/React%20Native-0.74-61dafb?style=flat-square&logo=react&logoColor=black"/></a>
   <a href="app/mobile/tsconfig.json"><img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white"/></a>
   <a href="app/mobile/src/components/Mascot3D.tsx"><img alt="R3F + three.js" src="https://img.shields.io/badge/R3F-procedural%203D-000000?style=flat-square&logo=threedotjs&logoColor=white"/></a>
+  <a href="unity/MascotUnityCore"><img alt="Unity 6" src="https://img.shields.io/badge/Unity-6.x-000000?style=flat-square&logo=unity&logoColor=white"/></a>
   <a href="app/mobile/tests/guarantees/"><img alt="Garantias 4/4" src="https://img.shields.io/badge/garantias-4%2F4-22c55e?style=flat-square"/></a>
+  <a href="app/mobile/tests/"><img alt="Vitest" src="https://img.shields.io/badge/Vitest-5549%20testes-6E9F18?style=flat-square&logo=vitest&logoColor=white"/></a>
   <img alt="Feito no Brasil" src="https://img.shields.io/badge/feito%20no-Brasil-009c3b?style=flat-square&labelColor=ffdf00"/>
 </p>
 
@@ -61,6 +70,7 @@
 - [Quickstart](#quickstart)
 - [Testes & Maestro E2E](#testes--maestro-e2e)
 - [Estrutura do monorepo](#estrutura-do-monorepo)
+- [Operações & governança do repositório](#operações--governança-do-repositório)
 - [Filosofia: identidade viva](#filosofia-identidade-viva)
 - [Documentação rica](#documentação-rica)
 - [Contribuir](#contribuir)
@@ -350,8 +360,27 @@ mascote/
 │   └── archive/                 ← docs históricos/obsoletos consolidados
 ├── docs/plano/                  ← estratégia (7 partes)
 ├── docs/design/prototypes/      ← protótipos HTML standalone (criatura procedural etc.)
+├── docs/maintenance/            ← relatórios de governança (cleanups, auditorias ITIL)
+├── scripts/                     ← QA Android, Maestro, pipeline Blender
+├── scripts/ops/                 ← scripts operacionais (VM, rede, drivers) — fora do app
 └── .github/workflows/           ← CI quality gate (typecheck + lint + coverage)
 ```
+
+---
+
+## Operações & governança do repositório
+
+Repositório curado em padrão ITIL — raiz enxuta, scripts por domínio, prevenção de lixo no `.gitignore`.
+
+| Área | Caminho | Descrição |
+|---|---|---|
+| QA Android & Maestro | [`scripts/`](scripts/README.md) | `android-smoke.ps1`, fluxos Maestro auxiliares |
+| Pipeline 3D (Blender) | [`scripts/blender/`](scripts/blender/) | Shape keys, geração e validação de GLBs |
+| Operações locais | [`scripts/ops/`](scripts/ops/README.md) | VM, Wi-Fi, drivers (Kali / VirtualBox) — não faz parte do produto |
+| Auditorias / cleanups | [`docs/maintenance/`](docs/maintenance/) | Relatórios ITIL e governança contínua |
+
+**Convenções:** nomes em `kebab-case`, nada solto na raiz, artefatos pesados em `scripts/ops/network/artifacts/` (gitignored).  
+**Última higienização:** [`docs/maintenance/ITIL_CLEANUP_2026-05-26.md`](docs/maintenance/ITIL_CLEANUP_2026-05-26.md).
 
 ---
 

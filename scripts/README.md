@@ -1,8 +1,20 @@
 # scripts/
 
-Automação de QA do Mascote.
+Automação do repositório Mascote: **QA do app** (raiz desta pasta) e **operações locais** (`ops/`).
 
-## TL;DR
+## Organização (padrão ITIL)
+
+| Área | Pasta | Quando usar |
+|---|---|---|
+| QA / smoke Android | `scripts/` (`android-smoke.ps1`, `maestro/`) | Validar build e fluxos do app |
+| Blender / pipeline 3D | `scripts/blender/` | Shape keys e geração de GLBs |
+| VM / rede / drivers | [`scripts/ops/`](ops/README.md) | Kali, VirtualBox, Wi-Fi — **não** faz parte do produto |
+
+**Regras:** scripts novos em `kebab-case`; nada solto na raiz do repo; artefatos grandes em `scripts/ops/network/artifacts/` (gitignored).
+
+---
+
+## TL;DR (QA Android)
 
 ```powershell
 # 1. Smoke test só com screenshots (não precisa Maestro)

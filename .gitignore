@@ -110,7 +110,25 @@ tsc-output.txt
 
 # Backups locais de refactor (histórico já tá no git)
 *.bak
+*.tmp
+**/*.tmp
+**/*.bak
+**/*.swp
+**/*.swo
 
 # Status notes pessoais (contexto privado: saúde, prazos, stakeholders)
 STATUS_NOITE.md
 STATUS_*.md
+
+# Scripts operacionais avulsos na raiz (use scripts/ops/**)
+/fix-realtek-usb-vm.ps1
+/update_wifi_driver*.sh
+/fluxion_audit.sh
+/guest_build.sh
+/hash.txt
+/wordlist.txt
+/rtl8188fu.tar
+/rtl8188fu/
+
+# Artefatos locais de driver Wi-Fi (não versionar; copiar para VM quando necessário)
+scripts/ops/network/artifacts/
