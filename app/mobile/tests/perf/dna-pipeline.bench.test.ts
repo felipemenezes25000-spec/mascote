@@ -44,7 +44,7 @@ describe('perf: pipeline DNA -> morphInfluences', () => {
       const impact = aggregateVisualImpact([]);
       const withMut = applyMutationVisualImpact(withCustom, impact);
       const baseInf = morphInfluencesFromMorphology(withMut);
-      mergeMorphInfluences(baseInf, personalityMorphBias('sereno'));
+      mergeMorphInfluences(baseInf, personalityMorphBias('calmo'));
     }
     const elapsed = performance.now() - start;
     console.log(`[perf] pipeline x${N}: ${elapsed.toFixed(1)}ms (${(elapsed / N).toFixed(3)}ms/iter)`);

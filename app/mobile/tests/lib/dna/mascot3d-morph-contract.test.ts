@@ -59,7 +59,7 @@ describe('Mascot3D procedural: contrato morphInfluences', () => {
     // nao diferir do neutro em todas as keys pra qualquer seed. Aqui
     // garantimos apenas o bound — composability ja eh coberta pelos
     // tests de mergeMorphInfluences em outro arquivo.
-    for (const p of ['sereno', 'animado', 'curioso'] as const) {
+    for (const p of ['calmo', 'motivador', 'sabio'] as const) {
       const inf = buildInfluences({ seed: 7, personality: p });
       for (const [key, v] of Object.entries(inf)) {
         expect(v, `${p}/${key}`).toBeGreaterThanOrEqual(0);

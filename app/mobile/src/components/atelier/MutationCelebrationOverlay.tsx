@@ -138,7 +138,7 @@ export function MutationCelebrationOverlay({
             <Typography variant="bodyBold" align="center">
               {t('atelier.celebration.title_new_mutation')}
             </Typography>
-            <Typography variant="title2" align="center">
+            <Typography variant="title" align="center">
               {mutationLabel}
             </Typography>
             <Typography variant="caption" tone="secondary" align="center">

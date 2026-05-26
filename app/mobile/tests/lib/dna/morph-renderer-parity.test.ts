@@ -111,7 +111,7 @@ describe('renderer parity: 3D pipeline produces consistent influence dicts', () 
 
   it('todos os outputs respeitam bound [0, 1] — 3D track', () => {
     for (let seed = 0; seed < 20; seed++) {
-      const inf = computeInfluences({ seed, personality: 'animado' });
+      const inf = computeInfluences({ seed, personality: 'motivador' });
       for (const [k, v] of Object.entries(inf)) {
         expect(v, `seed=${seed} ${k}`).toBeGreaterThanOrEqual(0);
         expect(v, `seed=${seed} ${k}`).toBeLessThanOrEqual(1);
@@ -121,7 +121,7 @@ describe('renderer parity: 3D pipeline produces consistent influence dicts', () 
 
   it('todos os outputs respeitam bound [0, 1] — 2D track', () => {
     for (let seed = 0; seed < 20; seed++) {
-      const inf = computeInfluences2D({ seed, personality: 'curioso' });
+      const inf = computeInfluences2D({ seed, personality: 'sabio' });
       for (const [k, v] of Object.entries(inf)) {
         expect(v, `seed=${seed} ${k}`).toBeGreaterThanOrEqual(0);
         expect(v, `seed=${seed} ${k}`).toBeLessThanOrEqual(1);

@@ -30,7 +30,6 @@ import { t } from '@/lib/i18n';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
-import type { MascotCustomization } from '@/types';
 
 export default function LooksHistoryScreen() {
   const styles = useStyles(makeStyles);
@@ -41,11 +40,11 @@ export default function LooksHistoryScreen() {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    if (!profile?.user_id) return;
-    const all = await atelierLooks.list(profile.user_id);
+    if (!profile?.id) return;
+    const all = await atelierLooks.list(profile.id);
     setAutoLooks(all.filter(l => l.is_auto === true));
     setLoading(false);
-  }, [profile?.user_id]);
+  }, [profile?.id]);
 
   useEffect(() => {
     void refresh();
@@ -53,21 +52,16 @@ export default function LooksHistoryScreen() {
 
   const handleLoad = useCallback(
     async (look: AtelierLook) => {
-      if (!profile?.user_id) return;
-      const next: MascotCustomization = {
-        ...look.snapshot,
-        user_id: profile.user_id,
-        updated_at: new Date().toISOString(),
-      };
-      await customizationDb.save(next);
+      if (!profile?.id) return;
+      await customizationDb.update(profile.id, look.snapshot);
       router.back();
     },
-    [profile?.user_id],
+    [profile?.id],
   );
 
   const handleDelete = useCallback(
     (look: AtelierLook) => {
-      if (!profile?.user_id) return;
+      if (!profile?.id) return;
       Alert.alert(
         t('atelier.looks_history.delete_confirm_title'),
         t('atelier.looks_history.delete_confirm_body'),
@@ -77,13 +71,13 @@ export default function LooksHistoryScreen() {
             text: t('atelier.looks_history.delete_action'),
             style: 'destructive',
             onPress: () => {
-              void atelierLooks.delete(profile.user_id, look.id).then(refresh);
+              void atelierLooks.delete(profile.id, look.id).then(refresh);
             },
           },
         ],
       );
     },
-    [profile?.user_id, refresh],
+    [profile?.id, refresh],
   );
 
   return (
@@ -126,7 +120,7 @@ export default function LooksHistoryScreen() {
                       size={80}
                       customization={{
                         ...item.snapshot,
-                        user_id: profile?.user_id ?? '',
+                        user_id: profile?.id ?? '',
                         updated_at: item.created_at,
                       }}
                       reduceMotion

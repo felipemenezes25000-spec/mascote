@@ -33,7 +33,8 @@ import {
   morphInfluencesFromMorphology,
   mergeMorphInfluences,
 } from '@/lib/dna/morphInfluences';
-import { morphologyFromGenome, applyCustomization } from '@/lib/dna/morphology';
+import { morphologyFromGenome } from '@/lib/dna/morphology';
+import { applyCustomization } from '@/lib/dna/customization';
 import {
   aggregateVisualImpact,
   applyMutationVisualImpact,
