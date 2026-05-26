@@ -45,6 +45,19 @@ import type { MascotCustomization } from '@/types';
 // Campos que o usuário edita no Ateliê (sem user_id/updated_at gerenciados).
 type DraftFields = Omit<MascotCustomization, 'user_id' | 'updated_at'>;
 
+/** Subset de fields que aceitam lock (apenas os MorphSlider mostram cadeado). */
+type LockableField = 'eye_size' | 'eye_spread' | 'body_height' | 'body_width' | 'aura_intensity' | 'pattern_density';
+
+/** Mescla draft + base preservando os fields travados em `locks`. */
+function applyWithLocks(prev: DraftFields, next: DraftFields, locks: Set<LockableField>): DraftFields {
+  if (locks.size === 0) return next;
+  const merged: DraftFields = { ...next };
+  locks.forEach(field => {
+    merged[field] = prev[field];
+  });
+  return merged;
+}
+
 function pickDraftFields(c: MascotCustomization): DraftFields {
   const { user_id: _u, updated_at: _t, ...rest } = c;
   return rest;
@@ -86,6 +99,16 @@ export default function AtelierScreen() {
   const [compareOpen, setCompareOpen] = useState(false);
   const [looks, setLooks] = useState<AtelierLook[]>([]);
   const [unlockedMutations, setUnlockedMutations] = useState<UnlockedMutation[]>([]);
+  const [locks, setLocks] = useState<Set<LockableField>>(new Set());
+
+  const toggleLock = (field: LockableField): void => {
+    setLocks(prev => {
+      const next = new Set(prev);
+      if (next.has(field)) next.delete(field);
+      else next.add(field);
+      return next;
+    });
+  };
 
   // Carrega customization + looks salvos na entrada.
   useEffect(() => {
@@ -210,28 +233,33 @@ export default function AtelierScreen() {
 
   const handleRandomize = (): void => {
     if (!profile) return;
-    const next = randomizeCustomization(profile.id);
-    setDraft(pickDraftFields(next));
+    const next = pickDraftFields(randomizeCustomization(profile.id));
+    setDraft(prev => (prev ? applyWithLocks(prev, next, locks) : next));
   };
 
   const handleApplyPreset = (preset: ThemePreset): void => {
-    setDraft(prev => (prev ? applyPreset(prev, preset) : prev));
+    setDraft(prev => {
+      if (!prev) return prev;
+      const applied = applyPreset(prev, preset);
+      return applyWithLocks(prev, applied, locks);
+    });
   };
 
   const handleApplyBlend = (blended: DraftFields): void => {
-    setDraft(blended);
+    setDraft(prev => (prev ? applyWithLocks(prev, blended, locks) : blended));
   };
 
   const handleReset = (): void => {
     Alert.alert(
       'Voltar ao DNA puro?',
-      'Vai resetar todos os sliders e padrões. Você poderá salvar depois.',
+      locks.size > 0
+        ? `Vai resetar todos os sliders e padrões — exceto ${locks.size} field${locks.size === 1 ? '' : 's'} travado${locks.size === 1 ? '' : 's'}. Você poderá salvar depois.`
+        : 'Vai resetar todos os sliders e padrões. Você poderá salvar depois.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Resetar',
           onPress: () => {
-            // Reset local apenas — só persiste se salvar
             const defaults: DraftFields = {
               eye_size: 1,
               eye_spread: 1,
@@ -245,7 +273,7 @@ export default function AtelierScreen() {
               force_hide_antennae: false,
               force_hide_spikes: false,
             };
-            setDraft(defaults);
+            setDraft(prev => (prev ? applyWithLocks(prev, defaults, locks) : defaults));
           },
         },
       ],
@@ -328,24 +356,32 @@ export default function AtelierScreen() {
             hint="grandes parecem mais fofos; pequenos mais maduros"
             value={draft.eye_size}
             onChange={v => updateDraft({ eye_size: v })}
+            locked={locks.has('eye_size')}
+            onToggleLock={() => toggleLock('eye_size')}
           />
           <MorphSlider
             label="Separação dos olhos"
             hint="afasta ou aproxima os olhos"
             value={draft.eye_spread}
             onChange={v => updateDraft({ eye_spread: v })}
+            locked={locks.has('eye_spread')}
+            onToggleLock={() => toggleLock('eye_spread')}
           />
           <MorphSlider
             label="Altura do corpo"
             hint="alonga ou achata vertical"
             value={draft.body_height}
             onChange={v => updateDraft({ body_height: v })}
+            locked={locks.has('body_height')}
+            onToggleLock={() => toggleLock('body_height')}
           />
           <MorphSlider
             label="Largura do corpo"
             hint="alarga ou afina horizontal"
             value={draft.body_width}
             onChange={v => updateDraft({ body_width: v })}
+            locked={locks.has('body_width')}
+            onToggleLock={() => toggleLock('body_width')}
           />
           <RangeSlider
             label="Inclinação"
@@ -367,12 +403,16 @@ export default function AtelierScreen() {
             hint="partículas e brilho ao redor"
             value={draft.aura_intensity}
             onChange={v => updateDraft({ aura_intensity: v })}
+            locked={locks.has('aura_intensity')}
+            onToggleLock={() => toggleLock('aura_intensity')}
           />
           <MorphSlider
             label="Densidade do padrão"
             hint="mais ou menos marcas no corpo"
             value={draft.pattern_density}
             onChange={v => updateDraft({ pattern_density: v })}
+            locked={locks.has('pattern_density')}
+            onToggleLock={() => toggleLock('pattern_density')}
           />
         </View>
         <PatternChips

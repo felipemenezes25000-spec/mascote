@@ -36,6 +36,13 @@ interface Props {
   hint?: string;
   /** Pra acessibilidade — anuncia mudanças. */
   accessibilityLabel?: string;
+  /**
+   * Se true, slider mostra ícone de cadeado + bloqueia gesto E reset btn.
+   * Lock NÃO atua sobre `onChange` programático (caller decide).
+   */
+  locked?: boolean;
+  /** Callback quando usuário toca no cadeado (toggle lock). */
+  onToggleLock?: () => void;
 }
 
 /**
@@ -54,30 +61,43 @@ function positionToValue(p: number): number {
   return MIN_MULT + bounded * (MAX_MULT - MIN_MULT);
 }
 
-export function MorphSlider({ label, value, onChange, hint, accessibilityLabel }: Props) {
+export function MorphSlider({
+  label,
+  value,
+  onChange,
+  hint,
+  accessibilityLabel,
+  locked = false,
+  onToggleLock,
+}: Props) {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
   const trackWidth = useRef(0);
   const valueRef = useRef(value);
   valueRef.current = value;
+  const lockedRef = useRef(locked);
+  lockedRef.current = locked;
 
-  const handleReset = useCallback(() => onChange(1), [onChange]);
+  const handleReset = useCallback(() => {
+    if (lockedRef.current) return;
+    onChange(1);
+  }, [onChange]);
 
   const pan: PanResponderInstance = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+      // Locked slider não captura gestures — passa pro parent (ScrollView).
+      onStartShouldSetPanResponder: () => !lockedRef.current,
+      onMoveShouldSetPanResponder: () => !lockedRef.current,
       onPanResponderGrant: e => {
+        if (lockedRef.current) return;
         const x = e.nativeEvent.locationX;
         const w = trackWidth.current || 1;
         const next = positionToValue(x / w);
         onChange(next);
       },
       onPanResponderMove: (_e, gesture) => {
+        if (lockedRef.current) return;
         const w = trackWidth.current || 1;
-        // Acumula dx sobre o valueRef (snapshot na hora do grant via valueRef).
-        // Antes havia uma linha morta calculando `x` a partir de moveX que
-        // nunca era lida — removida pra evitar confusão em manutenção.
         const baseRatio = valueToPosition(valueRef.current);
         const nextRatio = baseRatio + gesture.dx / w;
         onChange(positionToValue(nextRatio));
@@ -96,7 +116,29 @@ export function MorphSlider({ label, value, onChange, hint, accessibilityLabel }
           <Text style={styles.label}>{label}</Text>
           {hint && <Text style={styles.hint}>{hint}</Text>}
         </View>
-        {!isDefault && (
+        {onToggleLock ? (
+          <PressableScale
+            onPress={onToggleLock}
+            style={[
+              styles.resetBtn,
+              locked && {
+                backgroundColor: theme.colors.primary + '22',
+                borderColor: theme.colors.primary,
+              },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={locked ? `Destravar ${label}` : `Travar ${label}`}
+            accessibilityState={{ checked: locked }}
+          >
+            <Icon
+              name={locked ? 'lock' : 'unlock'}
+              size={12}
+              color={locked ? theme.colors.primary : theme.colors.textSecondary}
+              strokeWidth={2.2}
+            />
+          </PressableScale>
+        ) : null}
+        {!isDefault && !locked && (
           <PressableScale
             onPress={handleReset}
             style={styles.resetBtn}
@@ -109,12 +151,16 @@ export function MorphSlider({ label, value, onChange, hint, accessibilityLabel }
         )}
       </View>
       <View
-        style={styles.track}
+        style={[
+          styles.track,
+          locked && { opacity: 0.45 },
+        ]}
         onLayout={e => {
           trackWidth.current = e.nativeEvent.layout.width;
         }}
         accessibilityRole="adjustable"
         accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityState={{ disabled: locked }}
         accessibilityValue={{
           min: -30,
           max: 30,
