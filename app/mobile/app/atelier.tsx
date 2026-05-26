@@ -112,6 +112,21 @@ export default function AtelierScreen() {
     setLooks(refreshed);
   };
 
+  const handleImportLook = async (
+    name: string,
+    snapshot: AtelierLook['snapshot'],
+  ): Promise<void> => {
+    if (!profile) return;
+    const fullCustom: MascotCustomization = {
+      ...snapshot,
+      user_id: profile.id,
+      updated_at: new Date().toISOString(),
+    };
+    await atelierLooks.save(profile.id, name, fullCustom);
+    const refreshed = await atelierLooks.list(profile.id);
+    setLooks(refreshed);
+  };
+
   const isDirty = useMemo(() => {
     if (!initial || !draft) return false;
     return !isSameDraft(initial, draft);
@@ -408,6 +423,7 @@ export default function AtelierScreen() {
           onApply={handleApplyLook}
           onSave={handleSaveLook}
           onDelete={handleDeleteLook}
+          onImport={handleImportLook}
         />
 
         {/* Footer info */}

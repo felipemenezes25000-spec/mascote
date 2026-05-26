@@ -9,6 +9,7 @@
  *  - Aviso quando FIFO substituiria (>= MAX_LOOKS - 1)
  */
 
+import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
@@ -16,6 +17,7 @@ import { Icon } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
 import { Typography } from '@/components/ui';
 import { MAX_LOOKS_PER_USER, type AtelierLook } from '@/lib/db';
+import { exportLook, importLook } from '@/lib/dna/lookShare';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
@@ -24,14 +26,62 @@ export interface LookManagerProps {
   onApply: (look: AtelierLook) => void;
   onSave: (name: string) => Promise<void>;
   onDelete: (lookId: string) => Promise<void>;
+  /** Salva look importado direto (snapshot já validado). */
+  onImport: (name: string, snapshot: AtelierLook['snapshot']) => Promise<void>;
 }
 
-export function LookManager({ looks, onApply, onSave, onDelete }: LookManagerProps) {
+export function LookManager({
+  looks,
+  onApply,
+  onSave,
+  onDelete,
+  onImport,
+}: LookManagerProps) {
   const styles = useStyles(makeStyles);
   const theme = useTheme();
   const [inputOpen, setInputOpen] = useState(false);
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const handleExport = async (look: AtelierLook): Promise<void> => {
+    const json = exportLook(look);
+    try {
+      await Clipboard.setStringAsync(json);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
+        () => undefined,
+      );
+      Alert.alert(
+        'Look copiado!',
+        `"${look.name}" foi copiado pra área de transferência. Cole pra compartilhar.`,
+      );
+    } catch (e) {
+      Alert.alert('Erro ao copiar', String(e instanceof Error ? e.message : e));
+    }
+  };
+
+  const handleImport = async (): Promise<void> => {
+    try {
+      const text = await Clipboard.getStringAsync();
+      if (!text) {
+        Alert.alert(
+          'Nada pra importar',
+          'Sua área de transferência está vazia. Copie um look JSON e tente de novo.',
+        );
+        return;
+      }
+      const result = importLook(text);
+      if (!result.ok) {
+        Alert.alert('Look inválido', result.error);
+        return;
+      }
+      await onImport(result.name, result.snapshot);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
+        () => undefined,
+      );
+    } catch (e) {
+      Alert.alert('Erro ao importar', String(e instanceof Error ? e.message : e));
+    }
+  };
 
   const atLimit = looks.length >= MAX_LOOKS_PER_USER;
 
@@ -65,12 +115,16 @@ export function LookManager({ looks, onApply, onSave, onDelete }: LookManagerPro
     onApply(look);
   };
 
-  const handleDeleteConfirm = (look: AtelierLook): void => {
+  const handleLongPress = (look: AtelierLook): void => {
     Alert.alert(
-      'Apagar look?',
-      `"${look.name}" será removido. Sua customização atual fica intacta.`,
+      `"${look.name}"`,
+      'Escolha uma ação:',
       [
         { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Compartilhar',
+          onPress: () => void handleExport(look),
+        },
         {
           text: 'Apagar',
           style: 'destructive',
@@ -93,7 +147,7 @@ export function LookManager({ looks, onApply, onSave, onDelete }: LookManagerPro
           <Pressable
             key={look.id}
             onPress={() => handleApply(look)}
-            onLongPress={() => handleDeleteConfirm(look)}
+            onLongPress={() => handleLongPress(look)}
             delayLongPress={400}
             style={({ pressed }) => [
               styles.lookChip,
@@ -104,7 +158,7 @@ export function LookManager({ looks, onApply, onSave, onDelete }: LookManagerPro
               },
             ]}
             accessibilityRole="button"
-            accessibilityLabel={`Aplicar look ${look.name}. Toque longo para apagar.`}
+            accessibilityLabel={`Aplicar look ${look.name}. Toque longo para compartilhar ou apagar.`}
           >
             <Icon name="sparkle" size={14} color={theme.colors.text} strokeWidth={2} />
             <Typography variant="caption" style={{ fontWeight: '700' }}>
@@ -113,27 +167,50 @@ export function LookManager({ looks, onApply, onSave, onDelete }: LookManagerPro
           </Pressable>
         ))}
         {!inputOpen ? (
-          <PressableScale
-            onPress={() => setInputOpen(true)}
-            style={[
-              styles.lookChip,
-              {
-                backgroundColor: theme.colors.primary + '18',
-                borderColor: theme.colors.primary,
-                borderStyle: 'dashed',
-              },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel="Salvar customização atual como novo look"
-          >
-            <Icon name="plus" size={14} color={theme.colors.primary} strokeWidth={2.5} />
-            <Typography
-              variant="caption"
-              style={{ color: theme.colors.primary, fontWeight: '700' }}
+          <>
+            <PressableScale
+              onPress={() => setInputOpen(true)}
+              style={[
+                styles.lookChip,
+                {
+                  backgroundColor: theme.colors.primary + '18',
+                  borderColor: theme.colors.primary,
+                  borderStyle: 'dashed',
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Salvar customização atual como novo look"
             >
-              Salvar look
-            </Typography>
-          </PressableScale>
+              <Icon name="plus" size={14} color={theme.colors.primary} strokeWidth={2.5} />
+              <Typography
+                variant="caption"
+                style={{ color: theme.colors.primary, fontWeight: '700' }}
+              >
+                Salvar look
+              </Typography>
+            </PressableScale>
+            <PressableScale
+              onPress={() => void handleImport()}
+              style={[
+                styles.lookChip,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                  borderStyle: 'dashed',
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Importar look colado da área de transferência"
+            >
+              <Icon name="share" size={14} color={theme.colors.textSecondary} strokeWidth={2} />
+              <Typography
+                variant="caption"
+                style={{ color: theme.colors.textSecondary, fontWeight: '700' }}
+              >
+                Importar
+              </Typography>
+            </PressableScale>
+          </>
         ) : null}
       </ScrollView>
 
