@@ -15,7 +15,7 @@
  * Breath cycle em useFrame: scale modulado por sin com freq DNA-driven.
  */
 
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import type { MascotDNA } from '@/types';
@@ -113,6 +113,16 @@ export function Body({
     geo.computeVertexNormals();
     return geo;
   }, [dna, morph]);
+
+  // Dispose GPU resources quando geometry é trocada (deps change) ou no unmount.
+  // R3F NÃO auto-dispõe geometry passada via prop — só dispõe primitives JSX
+  // (`<sphereGeometry>` declarado inline). Esta geometry vem de `useMemo + new
+  // THREE.SphereGeometry(...)` então VBO/IBO vazam na GPU sem este cleanup.
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+    };
+  }, [geometry]);
 
   useFrame(() => {
     const m = meshRef.current;

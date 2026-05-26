@@ -125,26 +125,37 @@ async function playNativePhrase(
   });
   const b64 = synthesizePhraseWavBase64(profile, line);
   const path = `${FileSystem.cacheDirectory ?? ''}voice-${id}.wav`;
-  await FileSystem.writeAsStringAsync(path, b64, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
-  const { sound } = await Audio.Sound.createAsync({ uri: path }, { volume: 0.2 });
-  await sound.playAsync();
-  await new Promise<void>(resolve => {
-    const timeout = setTimeout(() => {
-      void sound.unloadAsync().catch(() => undefined);
-      void FileSystem.deleteAsync(path, { idempotent: true }).catch(() => undefined);
-      resolve();
-    }, 3000);
-    sound.setOnPlaybackStatusUpdate(status => {
-      if (status.isLoaded && status.didJustFinish) {
-        clearTimeout(timeout);
+  // Track se o arquivo foi escrito; se sim e algo abaixo falhar, garante cleanup
+  // (antes, write OK + createAsync fail deixava WAV ~MB no cache pra sempre).
+  let wrote = false;
+  try {
+    await FileSystem.writeAsStringAsync(path, b64, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    wrote = true;
+    const { sound } = await Audio.Sound.createAsync({ uri: path }, { volume: 0.2 });
+    await sound.playAsync();
+    await new Promise<void>(resolve => {
+      const timeout = setTimeout(() => {
         void sound.unloadAsync().catch(() => undefined);
         void FileSystem.deleteAsync(path, { idempotent: true }).catch(() => undefined);
         resolve();
-      }
+      }, 3000);
+      sound.setOnPlaybackStatusUpdate(status => {
+        if (status.isLoaded && status.didJustFinish) {
+          clearTimeout(timeout);
+          void sound.unloadAsync().catch(() => undefined);
+          void FileSystem.deleteAsync(path, { idempotent: true }).catch(() => undefined);
+          resolve();
+        }
+      });
     });
-  });
+  } catch (err) {
+    if (wrote) {
+      void FileSystem.deleteAsync(path, { idempotent: true }).catch(() => undefined);
+    }
+    throw err;
+  }
 }
 
 /* v8 ignore stop */

@@ -53,9 +53,14 @@ export function validateBillingEnv(): BillingEnvValidation {
   }
 
   if (revenueCat.readiness === 'sdk_not_linked') {
+    // Env vars OK mas o módulo nativo react-native-purchases não foi linkado
+    // neste build — não dá pra cobrar. Era 'production_ready' aqui, o que
+    // ESCAPAVA `assertProductionConfig()` (runtime-config.ts:101 só barra
+    // 'production_misconfigured'), permitindo subir build de produção sem
+    // billing real funcionando.
     return {
       provider,
-      mode: 'production_ready',
+      mode: 'production_misconfigured',
       canPurchase: false,
       label: 'Produção (SDK pendente)',
       detail:

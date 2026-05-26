@@ -5,7 +5,7 @@
  * componente em si não checa mood (sempre desenha).
  */
 
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import { glowHex, paletteFromGenome } from '@/lib/dna';
@@ -34,6 +34,13 @@ export function SparkleBurst({
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     return g;
   }, [count]);
+
+  // Dispose VBO no unmount — R3F não auto-dispõe geometry passada via prop.
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+    };
+  }, [geometry]);
 
   useFrame(() => {
     if (!pointsRef.current) return;

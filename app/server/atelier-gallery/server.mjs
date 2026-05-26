@@ -33,6 +33,10 @@ const PORT = Number(process.env.PORT ?? 4174);
 
 const SCHEMA = 1;
 const MAX_LOOKS = 1000; // server-side cap conservador
+// Bound de payload por request — sem isso, cliente hostil pode mandar 1GB de
+// body, acumula em memoria via `chunks.push(c)` e mata o processo (OOM/DoS).
+// 256KB cobre snapshots de look completos com folga (typical < 30KB).
+const MAX_BODY_BYTES = 256 * 1024;
 
 async function ensureData() {
   await fs.mkdir(DATA_DIR, { recursive: true });
@@ -61,8 +65,23 @@ async function writeStore(store) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
-    req.on('data', c => chunks.push(c));
+    let total = 0;
+    let aborted = false;
+    req.on('data', c => {
+      if (aborted) return;
+      total += c.length;
+      if (total > MAX_BODY_BYTES) {
+        aborted = true;
+        // Destroi o socket pra parar de receber bytes — apenas `reject` não
+        // impede o cliente de continuar streaming chunk-after-chunk.
+        req.destroy();
+        reject(new Error(`payload too large (>${MAX_BODY_BYTES} bytes)`));
+        return;
+      }
+      chunks.push(c);
+    });
     req.on('end', () => {
+      if (aborted) return;
       const buf = Buffer.concat(chunks).toString('utf-8');
       if (!buf) return resolve({});
       try {
@@ -71,7 +90,10 @@ function readBody(req) {
         reject(new Error('invalid JSON body'));
       }
     });
-    req.on('error', reject);
+    req.on('error', err => {
+      if (aborted) return;
+      reject(err);
+    });
   });
 }
 

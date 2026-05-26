@@ -12,6 +12,10 @@ import {
   getProductionViolations,
   getRuntimeConfig,
 } from '@/lib/env/runtime-config';
+import {
+  __resetRevenueCatSdkForTests,
+  __setRevenueCatSdkInitializedForTests,
+} from '@/services/subscription/revenueCatSdk';
 
 const ENV_KEYS = [
   'EXPO_PUBLIC_ENV',
@@ -40,6 +44,7 @@ afterEach(() => {
     if (snapshot[k] === undefined) delete process.env[k];
     else process.env[k] = snapshot[k];
   }
+  __resetRevenueCatSdkForTests();
 });
 
 const VALID_ENVS = ['development', 'production', 'staging', 'test'];
@@ -202,12 +207,27 @@ describe('assertProductionConfig — comportamento', () => {
     expect(() => assertProductionConfig()).not.toThrow();
   });
 
-  it('production válido (revenuecat ready, sem key) NÃO lança', () => {
+  it('production válido (revenuecat SDK linkado) NÃO lança', () => {
+    // billing-config marca `sdk_not_linked` como production_misconfigured
+    // (impede shipping de build sem SDK nativo). Simulamos SDK linkado
+    // pra testar o caso production_ready efetivo.
     process.env.EXPO_PUBLIC_ENV = 'production';
     process.env.EXPO_PUBLIC_BILLING_PROVIDER = 'revenuecat';
     process.env.EXPO_PUBLIC_REVENUECAT_API_KEY = 'appl_xxx';
     process.env.EXPO_PUBLIC_RC_ENABLED = 'true';
+    __setRevenueCatSdkInitializedForTests(true);
     expect(() => assertProductionConfig()).not.toThrow();
+  });
+
+  it('production com env vars OK mas SDK não linkado LANÇA', () => {
+    // Regressão pro fix em billing-config.ts: env vars sozinhas não bastam,
+    // o módulo nativo react-native-purchases precisa estar linkado.
+    process.env.EXPO_PUBLIC_ENV = 'production';
+    process.env.EXPO_PUBLIC_BILLING_PROVIDER = 'revenuecat';
+    process.env.EXPO_PUBLIC_REVENUECAT_API_KEY = 'appl_xxx';
+    process.env.EXPO_PUBLIC_RC_ENABLED = 'true';
+    __setRevenueCatSdkInitializedForTests(false);
+    expect(() => assertProductionConfig()).toThrow(/SDK|linkad/i);
   });
 
   it('production mal-configurado lança Error', () => {

@@ -45,5 +45,6 @@ export function rarityLabel(tier: RarityTier): string {
     case 'raro': return 'Raro';
     case 'epico': return 'Épico';
     case 'lendario': return 'Lendário';
+    default: return 'Comum';
   }
 }

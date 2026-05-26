@@ -118,7 +118,13 @@ export class RevenueCatBillingProvider {
       return localSubscriptionRepo.getTier(userId);
     }
     const tier = await restoreRevenueCatPurchases();
-    if (tier !== 'free') {
+    // Antes: só sincronizava o local quando RC devolvia tier premium. Se o
+    // usuário cancelava pela loja e o RC retornava 'free', o local ficava
+    // com 'plus_*' stale — acesso premium indevido até nova compra/cancel.
+    // RestorePurchasesService já compensa esse caso, mas mantê-lo aqui evita
+    // footgun se algum caller futuro bypassar o service e usar o provider direto.
+    const current = await localSubscriptionRepo.getTier(userId);
+    if (tier !== current) {
       await localSubscriptionRepo.setTier(userId, tier);
     }
     return tier;

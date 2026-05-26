@@ -9,7 +9,7 @@
  * `calmAura` aplica leve atenuação na opacity (modo zen).
  */
 
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import type { MascotMood } from '@/types';
@@ -68,6 +68,13 @@ export function Aura({
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     return { geometry: geo, orbits: orb };
   }, [morph.auraParticleCount, particleBoost]);
+
+  // Dispose GPU resources quando geometry muda ou unmount (ver Body.tsx).
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+    };
+  }, [geometry]);
 
   useFrame(() => {
     if (reduceMotion || !pointsRef.current) return;

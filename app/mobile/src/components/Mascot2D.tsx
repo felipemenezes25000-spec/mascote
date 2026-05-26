@@ -15,7 +15,7 @@
  *  - Acessórios: cap, bow, glasses, scarf, crown, flower, headphones
  */
 
-import { memo, useEffect, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
@@ -292,7 +292,10 @@ function MascotImpl({
   // Computa morphInfluences pra aproximar via scaleX/scaleY no wrapper.
   // NO-OP quando dna ausente — preserva comportamento legado pra callers
   // que ainda não passam DNA (testes antigos, etc).
-  const morphScale = (() => {
+  // useMemo: pipeline morph→customization→mutations→personality é caro;
+  // sem memo, rodava a cada render (causa: SVG é children de tudo, qualquer
+  // re-render do parent triggava recálculo + quebrava memoização de filhos).
+  const morphScale = useMemo(() => {
     if (!dna) return { scaleX: 1, scaleY: 1 };
     try {
       const baseMorph = morphologyFromGenome(dna as Genome);
@@ -307,7 +310,7 @@ function MascotImpl({
     } catch {
       return { scaleX: 1, scaleY: 1 };
     }
-  })();
+  }, [dna, customization, mutationIds, personality]);
 
   const wrapStyle = useAnimatedStyle(() => ({
     transform: [

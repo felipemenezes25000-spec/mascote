@@ -142,3 +142,29 @@ test('OPTIONS preflight returns 204', async () => {
   const r = await request('OPTIONS', '/api/gallery');
   assert.equal(r.status, 204);
 });
+
+test('POST rejects payload exceeding MAX_BODY_BYTES', async () => {
+  // 300KB de body — acima do cap de 256KB no server.
+  const huge = 'x'.repeat(300 * 1024);
+  const body = JSON.stringify({ schema: 1, name: 'big', snapshot: { blob: huge } });
+  const r = await new Promise((resolve, reject) => {
+    const req = http.request(
+      `${BASE}/api/gallery`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'content-length': body.length },
+      },
+      res => {
+        const chunks = [];
+        res.on('data', c => chunks.push(c));
+        res.on('end', () => resolve({ status: res.statusCode }));
+      },
+    );
+    // Socket destroy do server pode disparar 'error' antes de resolver — trata
+    // ambos os finais como sucesso (server rejeitou, que é o que queremos).
+    req.on('error', () => resolve({ status: 'destroyed' }));
+    req.write(body);
+    req.end();
+  });
+  assert.ok(r.status === 400 || r.status === 'destroyed', `expected reject, got ${r.status}`);
+});
