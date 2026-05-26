@@ -143,6 +143,13 @@ namespace Mascote.Unity.State
         public bool hasTail;
         public bool hasSpikes;
         public string pattern;
+
+        /// <summary>
+        /// Blend shape weights normalizados [0, 1]. Catálogo de keys oficial em
+        /// `lib/dna/morphInfluences.ts:MORPH_INFLUENCE_KEYS` (slice 2026-05-25).
+        /// Aplicado por <see cref="Mascote.Unity.Core.MascotBlendShapeController"/>.
+        /// </summary>
+        public Dictionary<string, float> morphInfluences;
     }
 
     [Serializable]

@@ -10,6 +10,7 @@ import {
   type UserAgeBand,
 } from '@/lib/dna/bindings';
 import { morphologyFromGenome, type MorphPattern } from '@/lib/dna/morphology';
+import { morphInfluencesFromMorphology } from '@/lib/dna/morphInfluences';
 import { sanitizeGenome, type Genome } from '@/lib/dna';
 import type { MascotEvolutionVisuals } from '@/game/evolution/PhenotypeRenderer';
 import type { Checkin, Mascot, MascotPhase, Profile, HabitKind } from '@/types';
@@ -244,6 +245,7 @@ export function buildUnityMascotState(
       hasTail: morph.hasTail,
       hasSpikes: morph.hasSpikes,
       pattern: toMorphPattern(morph.pattern),
+      morphInfluences: morphInfluencesFromMorphology(morph),
     },
     accessories: buildAccessories(dna, equipped, unlocked),
     mutations: mutationIds.map(id => ({ id })),

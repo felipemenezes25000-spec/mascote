@@ -134,6 +134,16 @@ export interface UnityBoneScales {
   jaw: number;
 }
 
+/**
+ * Blend shape weights normalizados [0, 1].
+ * Unity controller multiplica por 100 (range nativo SetBlendShapeWeight).
+ * Three.js consome direto via `mesh.morphTargetInfluences`.
+ *
+ * Catálogo de keys em `lib/dna/morphInfluences.ts:MORPH_INFLUENCE_KEYS`.
+ * Apenas keys com weight > 0 são incluídas (payload mínimo).
+ */
+export type UnityMorphInfluences = Record<string, number>;
+
 export interface UnityMorphologyParams {
   boneScales: UnityBoneScales;
   limbCount: number;
@@ -141,6 +151,8 @@ export interface UnityMorphologyParams {
   hasTail: boolean;
   hasSpikes: boolean;
   pattern: UnityMorphPattern;
+  /** Slice 2026-05-25 — blend shape weights derivados da Morphology final. */
+  morphInfluences?: UnityMorphInfluences;
 }
 
 export interface UnityAccessorySlot {

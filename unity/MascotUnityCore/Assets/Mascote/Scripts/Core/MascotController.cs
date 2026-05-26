@@ -17,6 +17,7 @@ namespace Mascote.Unity.Core
         [SerializeField] Transform mascotRoot;
         [SerializeField] Renderer[] tintRenderers;
         [SerializeField] MascotMorphologyController morphology;
+        [SerializeField] MascotBlendShapeController blendShapes;
         [SerializeField] MascotAccessoryController accessories;
         [SerializeField] MascotAnimationController animation;
         [SerializeField] IdleBehaviorController idleBehavior;
@@ -31,6 +32,7 @@ namespace Mascote.Unity.Core
             // Auto-wire dos sub-controllers se não foram setados via Inspector/SceneBuilder.
             if (mascotRoot == null) mascotRoot = transform;
             if (morphology == null) morphology = GetComponent<MascotMorphologyController>();
+            if (blendShapes == null) blendShapes = GetComponent<MascotBlendShapeController>();
             if (accessories == null) accessories = GetComponent<MascotAccessoryController>();
             if (animation == null) animation = GetComponent<MascotAnimationController>();
             if (idleBehavior == null) idleBehavior = GetComponent<IdleBehaviorController>();
@@ -44,6 +46,12 @@ namespace Mascote.Unity.Core
 
             EnsureRoot();
             morphology?.ApplyMorphology(state.morphology, state.visuals);
+            // Blend shapes opcionais — só aplica se contrato incluir e GLB expor.
+            // NO-OP silent quando influences null/vazio ou GLB sem blend shapes.
+            if (blendShapes != null && state.morphology?.morphInfluences != null)
+            {
+                blendShapes.ApplyMorphInfluences(state.morphology.morphInfluences);
+            }
             accessories?.ApplyAccessories(state.accessories);
             animation?.ApplyLiveState(state.state);
             ApplyVisualTints(state.visuals);
