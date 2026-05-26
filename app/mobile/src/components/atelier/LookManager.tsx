@@ -18,6 +18,7 @@ import { PressableScale } from '@/components/PressableScale';
 import { Typography } from '@/components/ui';
 import { MAX_LOOKS_PER_USER, type AtelierLook } from '@/lib/db';
 import { exportLook, importLook } from '@/lib/dna/lookShare';
+import { LookThumbnail } from './LookThumbnail';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
@@ -153,14 +154,15 @@ export function LookManager({
               styles.lookChip,
               {
                 backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
+                borderColor: look.is_auto ? theme.colors.border + '88' : theme.colors.border,
+                borderStyle: look.is_auto ? 'dashed' : 'solid',
                 opacity: pressed ? 0.7 : 1,
               },
             ]}
             accessibilityRole="button"
-            accessibilityLabel={`Aplicar look ${look.name}. Toque longo para compartilhar ou apagar.`}
+            accessibilityLabel={`Aplicar look ${look.name}${look.is_auto ? ' (automático)' : ''}. Toque longo para compartilhar ou apagar.`}
           >
-            <Icon name="sparkle" size={14} color={theme.colors.text} strokeWidth={2} />
+            <LookThumbnail look={look} size={20} />
             <Typography variant="caption" style={{ fontWeight: '700' }}>
               {look.name}
             </Typography>
