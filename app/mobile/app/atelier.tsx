@@ -16,13 +16,17 @@ import { Icon } from '@/components/Icon';
 import { MascotRenderer } from '@/components/MascotRenderer';
 import { MorphSlider } from '@/components/MorphSlider';
 import { PressableScale } from '@/components/PressableScale';
+import { RangeSlider } from '@/components/RangeSlider';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SectionHeader, Typography } from '@/components/ui';
+import { CompareModal } from '@/components/atelier/CompareModal';
 import { HideToggleRow } from '@/components/atelier/HideToggleRow';
 import { PatternChips } from '@/components/atelier/PatternChips';
+import { ThemePresetChips } from '@/components/atelier/ThemePresetChips';
 import { customization as customizationDb } from '@/lib/db';
-import { sanitizeCustomization } from '@/lib/dna/customization';
+import { MAX_POSTURE, MIN_POSTURE, sanitizeCustomization } from '@/lib/dna/customization';
 import { randomizeCustomization } from '@/lib/dna/randomizeCustomization';
+import { applyPreset, matchPreset, type ThemePreset } from '@/lib/dna/themePresets';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -61,6 +65,7 @@ export default function AtelierScreen() {
   const [initial, setInitial] = useState<DraftFields | null>(null);
   const [draft, setDraft] = useState<DraftFields | null>(null);
   const [saving, setSaving] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   // Carrega customization existente na entrada.
   useEffect(() => {
@@ -88,6 +93,18 @@ export default function AtelierScreen() {
     if (!draft || !profile) return null;
     return { ...draft, user_id: profile.id, updated_at: new Date().toISOString() };
   }, [draft, profile?.id]);
+
+  // Initial customization montada (pra compare antes/depois).
+  const initialCustomization = useMemo<MascotCustomization | null>(() => {
+    if (!initial || !profile) return null;
+    return { ...initial, user_id: profile.id, updated_at: new Date().toISOString() };
+  }, [initial, profile?.id]);
+
+  // Preset atualmente "match" (highlight no chip).
+  const activePresetId = useMemo(() => {
+    if (!draft) return undefined;
+    return matchPreset(draft)?.id;
+  }, [draft]);
 
   const updateDraft = (patch: Partial<DraftFields>): void => {
     setDraft(prev => (prev ? { ...prev, ...patch } : prev));
@@ -129,6 +146,10 @@ export default function AtelierScreen() {
     if (!profile) return;
     const next = randomizeCustomization(profile.id);
     setDraft(pickDraftFields(next));
+  };
+
+  const handleApplyPreset = (preset: ThemePreset): void => {
+    setDraft(prev => (prev ? applyPreset(prev, preset) : prev));
   };
 
   const handleReset = (): void => {
@@ -216,6 +237,10 @@ export default function AtelierScreen() {
           </Typography>
         </View>
 
+        {/* Presets — atalhos de aparência */}
+        <SectionHeader title="Presets" subtitle="toque pra aplicar uma vibe" />
+        <ThemePresetChips activePresetId={activePresetId} onSelect={handleApplyPreset} />
+
         {/* Forma */}
         <SectionHeader title="Forma" subtitle="proporções do corpo e dos olhos" />
         <View style={styles.section}>
@@ -242,6 +267,16 @@ export default function AtelierScreen() {
             hint="alarga ou afina horizontal"
             value={draft.body_width}
             onChange={v => updateDraft({ body_width: v })}
+          />
+          <RangeSlider
+            label="Inclinação"
+            hint="postura do corpo (negativo = pra trás, positivo = pra frente)"
+            value={draft.posture_lean}
+            min={MIN_POSTURE}
+            max={MAX_POSTURE}
+            defaultValue={0}
+            format={v => `${(v * 57.3).toFixed(0)}°`}
+            onChange={v => updateDraft({ posture_lean: v })}
           />
         </View>
 
@@ -318,6 +353,21 @@ export default function AtelierScreen() {
             </Typography>
           </PressableScale>
         </View>
+        {isDirty ? (
+          <View style={styles.actionsRow}>
+            <PressableScale
+              onPress={() => setCompareOpen(true)}
+              style={[styles.actionBtn, { backgroundColor: theme.colors.surface }]}
+              accessibilityRole="button"
+              accessibilityLabel="Comparar antes e depois"
+            >
+              <Icon name="sparkle" size={16} color={theme.colors.text} strokeWidth={2} />
+              <Typography variant="bodyBold" style={styles.actionLabel}>
+                Comparar antes/depois
+              </Typography>
+            </PressableScale>
+          </View>
+        ) : null}
 
         {/* Footer info */}
         <View style={styles.footer}>
@@ -329,6 +379,14 @@ export default function AtelierScreen() {
           </Typography>
         </View>
       </ScrollView>
+
+      <CompareModal
+        visible={compareOpen}
+        onClose={() => setCompareOpen(false)}
+        mascot={mascot}
+        beforeCustomization={initialCustomization}
+        afterCustomization={previewCustomization}
+      />
     </SafeAreaView>
   );
 }
