@@ -1,14 +1,18 @@
 /**
- * CompareModal — split antes/depois pro Ateliê.
+ * CompareModal — split antes/depois pro Atelie (opcionalmente comparar 3).
  *
- * Modal centrado mostrando 2 mascotes lado a lado:
- *  - "Antes" usa initial customization (ou null = pure DNA)
- *  - "Depois" usa draft atual
+ * Modal centrado mostrando 2 mascotes lado a lado por padrao:
+ *  - "antes" usa initial customization (ou null = pure DNA)
+ *  - "depois" usa draft atual
  *
- * Útil pro usuário decidir se vale salvar.
+ * Se `thirdCustomization` for passado, renderiza uma 3a coluna
+ * (ex.: comparar com um look salvo). `thirdLabel` customiza o caption.
+ *
+ * Util pro usuario decidir se vale salvar ou pra colocar lado a lado
+ * com um look antigo antes de sobrescrever.
  */
 
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { MascotRenderer } from '@/components/MascotRenderer';
 import { ModalShell } from '@/components/ui/ModalShell';
 import { Typography } from '@/components/ui';
@@ -21,6 +25,10 @@ export interface CompareModalProps {
   mascot: Mascot;
   beforeCustomization: MascotCustomization | null;
   afterCustomization: MascotCustomization | null;
+  /** Opcional: 3a coluna pra comparar com look salvo, snapshot, etc. */
+  thirdCustomization?: MascotCustomization | null;
+  /** Caption da 3a coluna. Default: "salvo". */
+  thirdLabel?: string;
 }
 
 export function CompareModal({
@@ -29,13 +37,22 @@ export function CompareModal({
   mascot,
   beforeCustomization,
   afterCustomization,
+  thirdCustomization,
+  thirdLabel = 'salvo',
 }: CompareModalProps) {
   const theme = useTheme();
-  const previewSize = 140;
+  // Com 3 colunas reduzimos o tamanho pra caber sem scroll horizontal
+  // em maioria dos devices. 2 colunas mantem o tamanho original.
+  const hasThird = thirdCustomization !== undefined;
+  const previewSize = hasThird ? 110 : 140;
 
   return (
     <ModalShell visible={visible} onClose={onClose} title="Antes & Depois">
-      <View style={styles.row}>
+      <ScrollView
+        horizontal
+        contentContainerStyle={styles.row}
+        showsHorizontalScrollIndicator={false}
+      >
         <View style={styles.column}>
           <View
             style={[
@@ -89,10 +106,40 @@ export function CompareModal({
             depois
           </Typography>
         </View>
-      </View>
+
+        {hasThird ? (
+          <View style={styles.column}>
+            <View
+              style={[
+                styles.previewSurface,
+                {
+                  width: previewSize + 32,
+                  height: previewSize + 32,
+                  backgroundColor: theme.colors.bg,
+                  borderColor: theme.colors.border,
+                  borderRadius: theme.radius.lg,
+                  borderStyle: 'dashed',
+                },
+              ]}
+            >
+              <MascotRenderer
+                personality={mascot.personality}
+                phase={mascot.phase}
+                mood={mascot.mood}
+                size={previewSize}
+                customization={thirdCustomization ?? null}
+                reduceMotion
+              />
+            </View>
+            <Typography variant="caption" tone="secondary">
+              {thirdLabel}
+            </Typography>
+          </View>
+        ) : null}
+      </ScrollView>
 
       <Typography variant="caption" tone="secondary" align="center">
-        Os dois mascotes têm o mesmo DNA — só muda a camada de customização.
+        Mesma DNA — só muda a camada de customização.
       </Typography>
     </ModalShell>
   );
@@ -103,6 +150,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 16,
     justifyContent: 'center',
+    paddingHorizontal: 4,
   },
   column: {
     alignItems: 'center',
