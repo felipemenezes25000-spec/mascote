@@ -1,16 +1,5 @@
 /**
- * Atelier strings (EN-US) — espelha STRINGS_PT.atelier.*
- *
- * Por que: i18n scaffold deixava apenas PT-BR. Esta é a tradução
- * complementar pra permitir suporte real a EN-US via helper `t()`.
- *
- * Regras de tradução:
- *   - Manter o tom casual/lúdico do PT-BR original.
- *   - Não usar termos clínicos ("growth tracker" vs. "treatment").
- *   - Preservar princípio "sem culpa": linguagem positiva ou neutra.
- *
- * Shape deve bater 1:1 com STRINGS_PT.atelier pra TypeScript validar
- * via type assertion em STRINGS_EN: AtelierStrings.
+ * Atelier strings (EN-US) — mirrors STRINGS_PT.atelier.*
  */
 
 import type { StringsBundle } from './atelier-strings';
@@ -74,7 +63,7 @@ export const STRINGS_EN: StringsBundle = {
     },
     blend: {
       pick_prompt: 'Pick a preset:',
-      slider_label: 'Mix A ↔ B',
+      slider_label: 'Mix A B',
       slider_hint: (labelA: string, labelB: string) =>
         `0 = only ${labelA}, 1 = only ${labelB}`,
       apply: 'Apply blend',
@@ -107,8 +96,8 @@ export const STRINGS_EN: StringsBundle = {
     },
     preview: {
       live: 'live preview',
-      restored: '↻ draft restored · live preview',
-      loading: 'Loading…',
+      restored: 'draft restored - live preview',
+      loading: 'Loading...',
     },
     alerts: {
       discard_changes: {
@@ -128,9 +117,9 @@ export const STRINGS_EN: StringsBundle = {
       save_error: { title: 'Error saving' },
     },
     footer: {
-      closet_hint: '🔒 Accessories and scenes live in the Closet.',
+      closet_hint: 'Accessories and scenes live in the Closet.',
       dna_safety: 'Customization never alters DNA — it only sculpts the look.',
-      preferences_link: '⚙ Atelier preferences',
+      preferences_link: 'Atelier preferences',
     },
   },
 };

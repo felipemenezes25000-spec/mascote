@@ -1,20 +1,5 @@
 /**
- * Atelier strings — primeira extração i18n do app Mascote.
- *
- * Por que começar pelo Atelier: feature mais recente, maior densidade de
- * strings PT-BR (sliders, presets, alerts, modals). Resto do app pode ser
- * migrado em slices futuros sem refator amplo.
- *
- * Estratégia: namespace por feature; chaves em snake_case; valores PT-BR
- * como source of truth. Outras línguas adicionadas no mesmo shape.
- *
- * Uso planejado:
- *   import { t } from '@/lib/i18n';
- *   t('atelier.header.title')  // → "Ateliê"
- *
- * Esse arquivo só EXPÕE as strings PT-BR. O helper `t()` virá em slice
- * futuro junto com detecção de locale e fallback. Por agora componentes
- * podem importar `STRINGS_PT.atelier.header.title` direto.
+ * Atelier strings — PT-BR source of truth.
  */
 
 export const STRINGS_PT = {
@@ -76,7 +61,7 @@ export const STRINGS_PT = {
     },
     blend: {
       pick_prompt: 'Escolha um preset:',
-      slider_label: 'Mix A ↔ B',
+      slider_label: 'Mix A B',
       slider_hint: (labelA: string, labelB: string) =>
         `0 = só ${labelA}, 1 = só ${labelB}`,
       apply: 'Aplicar blend',
@@ -109,8 +94,8 @@ export const STRINGS_PT = {
     },
     preview: {
       live: 'preview ao vivo',
-      restored: '↻ rascunho restaurado · preview ao vivo',
-      loading: 'Carregando…',
+      restored: 'rascunho restaurado · preview ao vivo',
+      loading: 'Carregando...',
     },
     alerts: {
       discard_changes: {
@@ -130,30 +115,12 @@ export const STRINGS_PT = {
       save_error: { title: 'Erro ao salvar' },
     },
     footer: {
-      closet_hint: '🔒 Acessórios e cenas ficam no Closet.',
+      closet_hint: 'Acessórios e cenas ficam no Closet.',
       dna_safety: 'Customização nunca altera o DNA — só esculpe a aparência.',
-      preferences_link: '⚙ Preferências do Ateliê',
+      preferences_link: 'Preferências do Ateliê',
     },
   },
-} as const;
+};
 
 export type StringsPT = typeof STRINGS_PT;
-
-/**
- * Widen literal types pra primitivas, preservando a forma e funções.
- * Permite que `STRINGS_EN: StringsBundle` aceite traduções com textos
- * diferentes — `as const` em STRINGS_PT trava os literais e quebra reuso.
- */
-type Widen<T> = T extends string
-  ? string
-  : T extends number
-    ? number
-    : T extends boolean
-      ? boolean
-      : T extends (...args: infer A) => infer R
-        ? (...args: A) => Widen<R>
-        : T extends readonly (infer U)[]
-          ? readonly Widen<U>[]
-          : { -readonly [K in keyof T]: Widen<T[K]> };
-
-export type StringsBundle = Widen<typeof STRINGS_PT>;
+export type StringsBundle = StringsPT;
