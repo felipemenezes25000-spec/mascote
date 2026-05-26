@@ -17,7 +17,9 @@
     "preview": {
       "distribution": "internal",
       "channel": "preview",
-      "android": { "buildType": "apk" },
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_ENV": "preview",
         "EXPO_PUBLIC_BILLING_PROVIDER": "mock",
@@ -52,6 +54,28 @@
         "EXPO_PUBLIC_RC_ENABLED": "true",
         "EXPO_PUBLIC_MASCOT_RENDERER": "three",
         "EXPO_PUBLIC_UNITY_ENABLED": "false"
+      }
+    },
+    "simulator": {
+      "extends": "development",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_ENV": "development",
+        "EXPO_PUBLIC_BILLING_PROVIDER": "mock",
+        "EXPO_PUBLIC_MASCOT_RENDERER": "three",
+        "EXPO_PUBLIC_UNITY_ENABLED": "false"
+      }
+    },
+    "production-unity": {
+      "extends": "production",
+      "env": {
+        "EXPO_PUBLIC_MASCOT_RENDERER": "unity",
+        "EXPO_PUBLIC_UNITY_ENABLED": "true",
+        "EXPO_PUBLIC_UNITY_HOME": "true",
+        "EXPO_PUBLIC_UNITY_QUALITY": "auto",
+        "EXPO_PUBLIC_UNITY_DEBUG_PANEL": "false"
       }
     }
   },
