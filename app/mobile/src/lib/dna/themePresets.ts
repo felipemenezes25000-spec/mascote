@@ -141,6 +141,87 @@ export function findPreset(id: string): ThemePreset | undefined {
   return THEME_PRESETS.find(p => p.id === id);
 }
 
+const DEFAULT_DRAFT: DraftFields = {
+  eye_size: 1,
+  eye_spread: 1,
+  body_height: 1,
+  body_width: 1,
+  aura_intensity: 1,
+  pattern_density: 1,
+  preferred_pattern: 'plain',
+  posture_lean: 0,
+  force_hide_tail: false,
+  force_hide_antennae: false,
+  force_hide_spikes: false,
+};
+
+/**
+ * Combina 2 presets via lerp do delta em relação ao default.
+ *
+ * Por que NÃO média direta dos multipliers:
+ *   média(1.25, 0.75) = 1.0 → preset blend "neutraliza" tudo.
+ *
+ * Por que lerp do delta:
+ *   delta_a = 1.25 - 1 = +0.25
+ *   delta_b = 0.75 - 1 = -0.25
+ *   blend_50 = 1 + lerp(0.25, -0.25, 0.5) = 1 + 0 = 1.0 (esperado: neutralizou)
+ *
+ *   delta_a = 1.25, delta_b = 1.15
+ *   blend_50 = 1 + lerp(0.25, 0.15, 0.5) = 1.20 (média dos deltas)
+ *
+ * `t` em [0, 1]: 0 = só preset A, 1 = só preset B, 0.5 = mix igual.
+ *
+ * Pattern + booleans: t < 0.5 → A vence, t >= 0.5 → B vence (escolha binária).
+ */
+export function blendPresets(a: ThemePreset, b: ThemePreset, t: number): DraftFields {
+  const tClamped = Math.max(0, Math.min(1, t));
+
+  const lerpField = (key: keyof DraftFields): number => {
+    const dft = DEFAULT_DRAFT[key] as number;
+    const aVal = (a.patch[key] as number | undefined) ?? dft;
+    const bVal = (b.patch[key] as number | undefined) ?? dft;
+    const deltaA = aVal - dft;
+    const deltaB = bVal - dft;
+    const blendedDelta = deltaA + (deltaB - deltaA) * tClamped;
+    return dft + blendedDelta;
+  };
+
+  const pickCategorical = <T>(av: T | undefined, bv: T | undefined, dft: T): T => {
+    if (tClamped < 0.5) return av ?? dft;
+    return bv ?? dft;
+  };
+
+  return {
+    eye_size: lerpField('eye_size'),
+    eye_spread: lerpField('eye_spread'),
+    body_height: lerpField('body_height'),
+    body_width: lerpField('body_width'),
+    aura_intensity: lerpField('aura_intensity'),
+    pattern_density: lerpField('pattern_density'),
+    preferred_pattern: pickCategorical(
+      a.patch.preferred_pattern,
+      b.patch.preferred_pattern,
+      DEFAULT_DRAFT.preferred_pattern,
+    ),
+    posture_lean: lerpField('posture_lean'),
+    force_hide_tail: pickCategorical(
+      a.patch.force_hide_tail,
+      b.patch.force_hide_tail,
+      DEFAULT_DRAFT.force_hide_tail,
+    ),
+    force_hide_antennae: pickCategorical(
+      a.patch.force_hide_antennae,
+      b.patch.force_hide_antennae,
+      DEFAULT_DRAFT.force_hide_antennae,
+    ),
+    force_hide_spikes: pickCategorical(
+      a.patch.force_hide_spikes,
+      b.patch.force_hide_spikes,
+      DEFAULT_DRAFT.force_hide_spikes,
+    ),
+  };
+}
+
 /**
  * Detecta se draft atual bate exatamente com algum preset (pra highlight).
  * Tolerância de 0.005 em multiplicadores.
