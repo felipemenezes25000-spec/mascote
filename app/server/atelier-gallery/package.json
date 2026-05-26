@@ -1,0 +1,11 @@
+{
+  "name": "@mascote/atelier-gallery-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Mock JSON server stub pra atelier gallery — dev only",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs"
+  }
+}
