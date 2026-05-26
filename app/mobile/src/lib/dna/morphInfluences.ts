@@ -120,3 +120,29 @@ export function morphInfluencesFromMorphology(morph: Morphology): MorphInfluence
 
   return out;
 }
+
+/**
+ * Soma boosts aditivos (de mutations, personality, etc) sobre influences base.
+ * Boosts > 0 EMPURRAM key. Boosts < 0 REDUZEM. Resultado clamped [0, 1].
+ *
+ * Importante: se boost cria key inexistente em base, ela é adicionada.
+ * Se boost zera uma key, ela é REMOVIDA (payload mínimo preservado).
+ */
+export function mergeMorphInfluences(
+  base: MorphInfluences,
+  boosts: Record<string, number> | undefined,
+): MorphInfluences {
+  if (!boosts || Object.keys(boosts).length === 0) return { ...base };
+  const out: MorphInfluences = { ...base };
+  for (const [key, boost] of Object.entries(boosts)) {
+    if (typeof boost !== 'number' || !Number.isFinite(boost)) continue;
+    const current = (out[key as MorphInfluenceKey] ?? 0) as number;
+    const merged = Math.max(0, Math.min(1, current + boost));
+    if (merged > 0) {
+      out[key as MorphInfluenceKey] = merged;
+    } else {
+      delete out[key as MorphInfluenceKey];
+    }
+  }
+  return out;
+}

@@ -10,7 +10,9 @@ import {
   type UserAgeBand,
 } from '@/lib/dna/bindings';
 import { morphologyFromGenome, type MorphPattern } from '@/lib/dna/morphology';
-import { morphInfluencesFromMorphology } from '@/lib/dna/morphInfluences';
+import { morphInfluencesFromMorphology, mergeMorphInfluences } from '@/lib/dna/morphInfluences';
+import { personalityMorphBias } from '@/lib/dna/personalityMorphBias';
+import { aggregateVisualImpact } from '@/lib/dna/mutations';
 import { sanitizeGenome, type Genome } from '@/lib/dna';
 import type { MascotEvolutionVisuals } from '@/game/evolution/PhenotypeRenderer';
 import type { Checkin, Mascot, MascotPhase, Profile, HabitKind } from '@/types';
@@ -245,7 +247,17 @@ export function buildUnityMascotState(
       hasTail: morph.hasTail,
       hasSpikes: morph.hasSpikes,
       pattern: toMorphPattern(morph.pattern),
-      morphInfluences: morphInfluencesFromMorphology(morph),
+      // Influences derivadas + boosts agregados (mutations + personality).
+      // mergeMorphInfluences clamps final em [0, 1].
+      // Personality bias é APLICADO POR ÚLTIMO — assina visualmente mas com
+      // peso pequeno, não destrói customização forte do usuário.
+      morphInfluences: mergeMorphInfluences(
+        mergeMorphInfluences(
+          morphInfluencesFromMorphology(morph),
+          aggregateVisualImpact(mutationIds).morphInfluenceBoosts,
+        ),
+        personalityMorphBias(mascot.personality),
+      ),
     },
     accessories: buildAccessories(dna, equipped, unlocked),
     mutations: mutationIds.map(id => ({ id })),

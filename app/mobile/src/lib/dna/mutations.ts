@@ -71,6 +71,13 @@ export interface VisualImpact {
   pattern?: BodyPattern;
   /** Multiplicador na quantidade de partículas da aura. */
   auraParticleMultiplier?: number;
+  /**
+   * Boosts aditivos pros blend shape weights derivados da Morphology.
+   * Range [-1, 1]; somado ao influences base, clamped final em [0, 1].
+   * Catálogo de keys em `morphInfluences.ts:MORPH_INFLUENCE_KEYS`.
+   * NO-OP se GLB não expõe blend shapes.
+   */
+  morphInfluenceBoosts?: Partial<Record<string, number>>;
 }
 
 export interface Mutation {
@@ -117,6 +124,7 @@ const MUTATION_CATALOG_CORE: readonly Mutation[] = [
     },
     visualImpact: {
       morphologyMultipliers: { bodyBottomBias: 1.18, bodyWidthSquash: 1.08, bodyRoughness: 0.85 },
+      morphInfluenceBoosts: { body_wide: 0.25, body_short: 0.15 },
     },
     rarity: 'rare',
   },
@@ -133,6 +141,7 @@ const MUTATION_CATALOG_CORE: readonly Mutation[] = [
     },
     visualImpact: {
       morphologyMultipliers: { eyeSize: 1.15, pupilEmissive: 1.3 },
+      morphInfluenceBoosts: { eye_big: 0.3 },
     },
     rarity: 'rare',
   },
@@ -149,6 +158,7 @@ const MUTATION_CATALOG_CORE: readonly Mutation[] = [
     },
     visualImpact: {
       pattern: 'fractal',
+      morphInfluenceBoosts: { pattern_dense: 0.35 },
     },
     rarity: 'epic',
   },
@@ -182,6 +192,7 @@ const MUTATION_CATALOG_CORE: readonly Mutation[] = [
     visualImpact: {
       morphologyMultipliers: { auraOpacity: 1.25, auraSize: 1.3 },
       auraParticleMultiplier: 1.4,
+      morphInfluenceBoosts: { aura_strong: 0.4 },
     },
     rarity: 'rare',
   },
@@ -318,6 +329,8 @@ export interface AggregatedVisualImpact {
   bioluminescent: boolean;
   pattern: BodyPattern;
   auraParticleMultiplier: number;
+  /** Boosts aditivos pros blend shape weights (slice 2026-05-25). */
+  morphInfluenceBoosts: Record<string, number>;
 }
 
 export const NEUTRAL_VISUAL_IMPACT: AggregatedVisualImpact = {
@@ -326,6 +339,7 @@ export const NEUTRAL_VISUAL_IMPACT: AggregatedVisualImpact = {
   bioluminescent: false,
   pattern: 'plain',
   auraParticleMultiplier: 1,
+  morphInfluenceBoosts: {},
 };
 
 /**
@@ -341,6 +355,7 @@ export function aggregateVisualImpact(
     bioluminescent: false,
     pattern: 'plain',
     auraParticleMultiplier: 1,
+    morphInfluenceBoosts: {},
   };
   for (const id of unlockedIds) {
     const m = getMutationById(id);
@@ -363,6 +378,14 @@ export function aggregateVisualImpact(
     }
     if (typeof v.auraParticleMultiplier === 'number') {
       out.auraParticleMultiplier *= v.auraParticleMultiplier;
+    }
+    if (v.morphInfluenceBoosts) {
+      for (const [key, boost] of Object.entries(v.morphInfluenceBoosts)) {
+        if (typeof boost !== 'number' || !Number.isFinite(boost)) continue;
+        // Boosts somam aditivamente — várias mutations com mesmo key compõem.
+        // Clamp final acontece em quem consome (Three.js, Unity controller).
+        out.morphInfluenceBoosts[key] = (out.morphInfluenceBoosts[key] ?? 0) + boost;
+      }
     }
   }
   return out;

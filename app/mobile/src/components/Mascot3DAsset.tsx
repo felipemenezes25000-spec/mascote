@@ -35,6 +35,11 @@ import {
   PERSONALITY_TO_GLB,
   type UserAgeBand,
 } from '@/lib/dna/bindings';
+import { morphologyFromGenome } from '@/lib/dna/morphology';
+import { applyCustomization } from '@/lib/dna/customization';
+import { morphInfluencesFromMorphology, mergeMorphInfluences } from '@/lib/dna/morphInfluences';
+import { personalityMorphBias } from '@/lib/dna/personalityMorphBias';
+import { aggregateVisualImpact } from '@/lib/dna/mutations';
 
 interface Props {
   personality: Personality;
@@ -86,6 +91,22 @@ export function Mascot3DAsset({
     [dna, phase, userBand],
   );
 
+  // DNA + customization → morph influences (blend shape weights [0, 1]).
+  // Aplicado em meshes que tenham morphTargetDictionary (definido no GLB).
+  // GLBs atuais NÃO têm blend shapes → influences é computado mas NO-OP no apply.
+  // Quando artista 3D adicionar shape keys conforme docs/MORPH_TARGETS_DESIGN.md,
+  // mascote vira fisicamente único sem mexer nesse arquivo.
+  const morphInfluences = useMemo(() => {
+    const baseMorph = morphologyFromGenome(dna);
+    const withCustom = applyCustomization(baseMorph, customization ?? null);
+    const baseInfluences = morphInfluencesFromMorphology(withCustom);
+    const withMutBoosts = mergeMorphInfluences(
+      baseInfluences,
+      aggregateVisualImpact(mutationIds).morphInfluenceBoosts,
+    );
+    return mergeMorphInfluences(withMutBoosts, personalityMorphBias(personality));
+  }, [dna, customization, mutationIds, personality]);
+
   // Aplica material tints + scales na cena clonada
   useEffect(() => {
     clonedScene.traverse(obj => {
@@ -123,7 +144,31 @@ export function Mascot3DAsset({
     // 'head' mesh + 'body' mesh são criados pelo generate_mascot.py
     if (meshes.head) meshes.head.scale.setScalar(boneScales.head);
     if (meshes.body) meshes.body.scale.setScalar(boneScales.body);
-  }, [clonedScene, bindings, boneScales]);
+
+    // Aplica morphTargetInfluences se mesh tiver morphTargetDictionary.
+    // Defensive: GLBs sem blend shapes têm dictionary undefined → skip silent.
+    // Quando shape keys forem adicionadas (catálogo em morphInfluences.ts),
+    // weights são aplicados automaticamente sem mudança aqui.
+    clonedScene.traverse(obj => {
+      if (!(obj instanceof THREE.Mesh)) return;
+      const dict = obj.morphTargetDictionary;
+      const influences = obj.morphTargetInfluences;
+      if (!dict || !influences) return;
+
+      // Zera weights primeiro pra evitar resíduo de update anterior.
+      for (let i = 0; i < influences.length; i++) {
+        influences[i] = 0;
+      }
+
+      // Aplica apenas keys que existem no dictionary do mesh.
+      for (const [key, weight] of Object.entries(morphInfluences)) {
+        const idx = dict[key];
+        if (idx !== undefined && idx >= 0 && idx < influences.length) {
+          influences[idx] = Math.max(0, Math.min(1, weight));
+        }
+      }
+    });
+  }, [clonedScene, bindings, boneScales, morphInfluences]);
 
   // Animation mixer pro idle (breath + blink embedded no GLB)
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
