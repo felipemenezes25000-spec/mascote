@@ -41,7 +41,7 @@ def export_glb(path):
         filepath=str(path),
         export_format='GLB',
         export_morph=True,
-        export_morph_normal=True,
+        export_morph_normal=False,
         export_morph_tangent=False,
         use_selection=False,
     )

@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
@@ -108,8 +109,9 @@ namespace Mascote.Unity.EditorTools
                 {
                     var firstError = report.steps
                         .SelectMany(s => s.messages)
-                        .FirstOrDefault(m => m.type == LogType.Error)?.content
-                        ?? "ver Console";
+                        .Where(m => m.type == LogType.Error)
+                        .Select(m => m.content)
+                        .FirstOrDefault() ?? "ver Console";
 
                     Debug.LogError($"[Mascote] ❌ Build Android FAILED. Primeiro erro: {firstError}");
                     EditorUtility.DisplayDialog(
@@ -189,7 +191,7 @@ namespace Mascote.Unity.EditorTools
         private static void ApplyMobilePlayerSettings()
         {
             // Scripting backend IL2CPP + ARM64 (obrigatório pra Play Store + Unity 6).
-            PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
+            PlayerSettings.SetScriptingBackend(NamedBuildTarget.FromBuildTargetGroup(BuildTargetGroup.Android), ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures =
                 AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
 
@@ -201,7 +203,7 @@ namespace Mascote.Unity.EditorTools
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
 
             // Strip engine code agressivo (menor AAR).
-            PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.Android, ManagedStrippingLevel.Medium);
+            PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.FromBuildTargetGroup(BuildTargetGroup.Android), ManagedStrippingLevel.Medium);
 
             // Garante that as a library doesn't try to be standalone APK.
             EditorUserBuildSettings.exportAsGoogleAndroidProject = true;
