@@ -239,6 +239,7 @@ export function LookManager({
           <PressableScale
             onPress={handleCancel}
             style={[styles.iconBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+            accessibilityRole="button"
             accessibilityLabel="Cancelar"
           >
             <Icon name="x" size={16} color={theme.colors.textSecondary} strokeWidth={2.2} />
@@ -246,6 +247,7 @@ export function LookManager({
           <PressableScale
             onPress={() => void handleSave()}
             style={[styles.iconBtn, { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
+            accessibilityRole="button"
             accessibilityLabel="Salvar"
           >
             <Icon name="check" size={16} color={theme.tokens.semantic.inkOnBrand} strokeWidth={2.5} />
