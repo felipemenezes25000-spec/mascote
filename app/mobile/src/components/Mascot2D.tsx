@@ -31,9 +31,18 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { useTheme } from '@/lib/useTheme';
-import type { MascotDNA, MascotMood, MascotPhase, Personality } from '@/types';
+import type { MascotCustomization, MascotDNA, MascotMood, MascotPhase, Personality } from '@/types';
 import { getPersonality } from '@/content/personalities';
 import { paletteFromGenome, type Genome } from '@/lib/dna';
+import { applyCustomization } from '@/lib/dna/customization';
+import { morphologyFromGenome } from '@/lib/dna/morphology';
+import {
+  mergeMorphInfluences,
+  morphInfluencesFromMorphology,
+  type MorphInfluences,
+} from '@/lib/dna/morphInfluences';
+import { aggregateVisualImpact } from '@/lib/dna/mutations';
+import { personalityMorphBias } from '@/lib/dna/personalityMorphBias';
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 
@@ -74,6 +83,32 @@ interface Props {
    * Se ausente, mantém comportamento legado (personality.primaryColor).
    */
   dna?: MascotDNA;
+  /** Customização opcional — afeta scaleX/scaleY do wrapper via morphInfluences. */
+  customization?: MascotCustomization | null;
+  /** Mutations desbloqueadas — contribuem boosts de morphInfluences. */
+  mutationIds?: readonly string[];
+}
+
+/**
+ * Converte morphInfluences em scaleX/scaleY pra wrapper SVG.
+ *
+ * SVG não tem blend shapes nativos como mesh 3D, então aproximamos:
+ * - body_tall/body_short → scaleY (1.0 ± 0.15 * weight)
+ * - body_wide/body_narrow → scaleX (1.0 ± 0.15 * weight)
+ *
+ * Eye/posture/aura são proporcionais ao scale global — não distorcem mais
+ * que isso. É um fallback fiel cromaticamente, aproximado morfologicamente.
+ */
+function morphInfluencesToScale(inf: MorphInfluences): { scaleX: number; scaleY: number } {
+  const MAX_DELTA = 0.15;
+  const tall = inf.body_tall ?? 0;
+  const short = inf.body_short ?? 0;
+  const wide = inf.body_wide ?? 0;
+  const narrow = inf.body_narrow ?? 0;
+  return {
+    scaleX: 1 + (wide - narrow) * MAX_DELTA,
+    scaleY: 1 + (tall - short) * MAX_DELTA,
+  };
 }
 
 // Cada fase tem stage ÚNICO (1..6) — antes ovo e bebe compartilhavam stage 1
@@ -131,6 +166,8 @@ function MascotImpl({
   accessory,
   reduceMotion,
   dna,
+  customization,
+  mutationIds = [],
 }: Props) {
   const theme = useTheme();
   const meta = getPersonality(personality);
@@ -252,10 +289,32 @@ function MascotImpl({
     };
   }, []);
 
+  // Computa morphInfluences pra aproximar via scaleX/scaleY no wrapper.
+  // NO-OP quando dna ausente — preserva comportamento legado pra callers
+  // que ainda não passam DNA (testes antigos, etc).
+  const morphScale = (() => {
+    if (!dna) return { scaleX: 1, scaleY: 1 };
+    try {
+      const baseMorph = morphologyFromGenome(dna as Genome);
+      const withCustom = applyCustomization(baseMorph, customization ?? null);
+      const base = morphInfluencesFromMorphology(withCustom);
+      const withMut = mergeMorphInfluences(
+        base,
+        aggregateVisualImpact(mutationIds).morphInfluenceBoosts,
+      );
+      const final = mergeMorphInfluences(withMut, personalityMorphBias(personality));
+      return morphInfluencesToScale(final);
+    } catch {
+      return { scaleX: 1, scaleY: 1 };
+    }
+  })();
+
   const wrapStyle = useAnimatedStyle(() => ({
     transform: [
       { translateY: hop.value },
       { scale: breath.value * phaseScale.value },
+      { scaleX: morphScale.scaleX },
+      { scaleY: morphScale.scaleY },
       { rotate: `${phaseRotate.value + moodTilt.value}deg` },
     ],
   }));
