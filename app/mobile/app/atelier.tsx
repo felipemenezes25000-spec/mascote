@@ -37,6 +37,7 @@ import type { UnlockedMutation } from '@/lib/dna/mutations';
 import { MAX_POSTURE, MIN_POSTURE, sanitizeCustomization } from '@/lib/dna/customization';
 import { randomizeCustomization } from '@/lib/dna/randomizeCustomization';
 import { applyPreset, matchPreset, type ThemePreset } from '@/lib/dna/themePresets';
+import { useDraftAutoSave } from '@/hooks/useDraftAutoSave';
 import { useDraftHistory } from '@/hooks/useDraftHistory';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
@@ -101,6 +102,20 @@ export default function AtelierScreen() {
   const [looks, setLooks] = useState<AtelierLook[]>([]);
   const [unlockedMutations, setUnlockedMutations] = useState<UnlockedMutation[]>([]);
   const [locks, setLocks] = useState<Set<LockableField>>(new Set());
+  const [restoredFromAutoSave, setRestoredFromAutoSave] = useState(false);
+
+  // Auto-save: persiste draft com debounce + restaura no mount.
+  // Se houver draft recuperado, sobrescreve o initial carregado da DB.
+  const autoSave = useDraftAutoSave<DraftFields>({
+    userId: profile?.id ?? null,
+    draft,
+    onRestore: restored => {
+      if (restored !== null) {
+        setRestoredFromAutoSave(true);
+        draftHistory.reset(sanitizeCustomization({ ...restored, user_id: profile?.id ?? '' }));
+      }
+    },
+  });
 
   const toggleLock = (field: LockableField): void => {
     setLocks(prev => {
@@ -202,6 +217,8 @@ export default function AtelierScreen() {
 
   const handleClose = (): void => {
     if (!isDirty) {
+      // Sem mudanças — limpa auto-save mesmo assim, evita restore vestigial.
+      void autoSave.clear();
       router.back();
       return;
     }
@@ -213,7 +230,10 @@ export default function AtelierScreen() {
         {
           text: 'Descartar',
           style: 'destructive',
-          onPress: () => router.back(),
+          onPress: () => {
+            void autoSave.clear();
+            router.back();
+          },
         },
       ],
     );
@@ -224,6 +244,8 @@ export default function AtelierScreen() {
     setSaving(true);
     try {
       await customizationDb.update(profile.id, draft);
+      // Persistiu pra DB real — limpa auto-save pra não restaurar de novo na próxima.
+      await autoSave.clear();
       router.back();
     } catch (e) {
       Alert.alert('Erro ao salvar', String(e instanceof Error ? e.message : e));
@@ -333,7 +355,7 @@ export default function AtelierScreen() {
             />
           </View>
           <Typography variant="caption" tone="secondary" style={styles.previewLabel}>
-            preview ao vivo
+            {restoredFromAutoSave ? '↻ rascunho restaurado · preview ao vivo' : 'preview ao vivo'}
           </Typography>
         </View>
 
