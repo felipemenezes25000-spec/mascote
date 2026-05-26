@@ -36,6 +36,7 @@ import type { UnlockedMutation } from '@/lib/dna/mutations';
 import { MAX_POSTURE, MIN_POSTURE, sanitizeCustomization } from '@/lib/dna/customization';
 import { randomizeCustomization } from '@/lib/dna/randomizeCustomization';
 import { applyPreset, matchPreset, type ThemePreset } from '@/lib/dna/themePresets';
+import { useDraftHistory } from '@/hooks/useDraftHistory';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -72,7 +73,15 @@ export default function AtelierScreen() {
   const mascot = useStore(s => s.mascot);
 
   const [initial, setInitial] = useState<DraftFields | null>(null);
-  const [draft, setDraft] = useState<DraftFields | null>(null);
+  const draftHistory = useDraftHistory<DraftFields | null>(null);
+  const draft = draftHistory.current;
+  const setDraft = (next: DraftFields | null | ((prev: DraftFields | null) => DraftFields | null)): void => {
+    if (typeof next === 'function') {
+      draftHistory.set(next(draftHistory.current));
+    } else {
+      draftHistory.set(next);
+    }
+  };
   const [saving, setSaving] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [looks, setLooks] = useState<AtelierLook[]>([]);
@@ -91,7 +100,9 @@ export default function AtelierScreen() {
       if (cancelled) return;
       const fields = pickDraftFields(sanitizeCustomization(current));
       setInitial(fields);
-      setDraft(fields);
+      // reset() limpa o history e usa o snapshot carregado como entry [0].
+      // Sem isso, undo poderia voltar pro null inicial e crashar o render.
+      draftHistory.reset(fields);
       setLooks(savedLooks);
       setUnlockedMutations(muts);
     })();
@@ -397,6 +408,44 @@ export default function AtelierScreen() {
 
         {/* Ações */}
         <SectionHeader title="Ações" />
+        <View style={styles.actionsRow}>
+          <PressableScale
+            onPress={draftHistory.undo}
+            style={[
+              styles.actionBtn,
+              {
+                backgroundColor: theme.colors.surface,
+                opacity: draftHistory.canUndo ? 1 : 0.4,
+              },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Desfazer última mudança"
+            disabled={!draftHistory.canUndo}
+          >
+            <Icon name="arrow-left" size={16} color={theme.colors.text} strokeWidth={2} />
+            <Typography variant="bodyBold" style={styles.actionLabel}>
+              Desfazer
+            </Typography>
+          </PressableScale>
+          <PressableScale
+            onPress={draftHistory.redo}
+            style={[
+              styles.actionBtn,
+              {
+                backgroundColor: theme.colors.surface,
+                opacity: draftHistory.canRedo ? 1 : 0.4,
+              },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Refazer mudança desfeita"
+            disabled={!draftHistory.canRedo}
+          >
+            <Icon name="arrow-right" size={16} color={theme.colors.text} strokeWidth={2} />
+            <Typography variant="bodyBold" style={styles.actionLabel}>
+              Refazer
+            </Typography>
+          </PressableScale>
+        </View>
         <View style={styles.actionsRow}>
           <PressableScale
             onPress={handleRandomize}
