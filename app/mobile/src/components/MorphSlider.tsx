@@ -75,9 +75,9 @@ export function MorphSlider({ label, value, onChange, hint, accessibilityLabel }
       },
       onPanResponderMove: (_e, gesture) => {
         const w = trackWidth.current || 1;
-        // gesture.moveX é absoluto; recalcula com posição relativa ao track
-        const x = gesture.x0 - (gesture.x0 - gesture.moveX) - (gesture.dx === 0 ? 0 : 0);
-        // Simplificação: usa dx em cima de valueRef
+        // Acumula dx sobre o valueRef (snapshot na hora do grant via valueRef).
+        // Antes havia uma linha morta calculando `x` a partir de moveX que
+        // nunca era lida — removida pra evitar confusão em manutenção.
         const baseRatio = valueToPosition(valueRef.current);
         const nextRatio = baseRatio + gesture.dx / w;
         onChange(positionToValue(nextRatio));

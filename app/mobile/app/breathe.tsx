@@ -98,7 +98,9 @@ export default function Breathe() {
     setSecondsLeft(Math.floor(spec.duration / 1000));
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
-      setSecondsLeft(s => Math.max(1, s - 1));
+      // Clamp em 0 (não 1) — antes travava exibindo "1" pelo último segundo
+      // do hold/exhale (7s/8s), dando impressão de freeze do timer.
+      setSecondsLeft(s => Math.max(0, s - 1));
     }, 1000);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
