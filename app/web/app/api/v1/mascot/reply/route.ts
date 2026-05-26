@@ -161,6 +161,9 @@ export async function POST(req: NextRequest) {
         temperature: 0.85,
       }),
       signal: controller.signal,
+      // Next 14 não cacheia POST por padrão, mas explicit blinda contra
+      // futura mudança / refactor que mude o verbo.
+      cache: 'no-store',
     });
 
     if (!res.ok) {
@@ -229,5 +232,10 @@ export async function OPTIONS() {
 }
 
 export async function GET() {
-  return json({ error: 'method_not_allowed' }, 405);
+  // 405 sem Allow header viola RFC 9110 § 15.5.6 e alguns proxies caem em
+  // loop de retry. no-store já está em json(); adicionamos Allow no merge.
+  return NextResponse.json(
+    { error: 'method_not_allowed' },
+    { status: 405, headers: { ...NO_STORE_HEADERS, Allow: 'POST, OPTIONS' } },
+  );
 }

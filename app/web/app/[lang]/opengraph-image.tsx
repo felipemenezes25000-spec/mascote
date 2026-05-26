@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { isLocale, type Locale } from "@/lib/i18n";
 
 export const runtime = "edge";
 export const alt = "Mascote — bem-estar com alma brasileira";
@@ -7,8 +7,10 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function OG({ params }: { params: { lang: string } }) {
+  // Não importamos getDictionary aqui: copy do OG é hardcoded abaixo, e
+  // arrastar os JSONs inteiros pro bundle Edge custa KBs por warm-up sem
+  // benefício (toda string usada está nas branches por idioma).
   const lang = (isLocale(params.lang) ? params.lang : "pt") as Locale;
-  const dict = getDictionary(lang);
   const headline =
     lang === "pt"
       ? "Cuide de você. Ele evolui junto."

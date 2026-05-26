@@ -11,6 +11,12 @@ function pickLocale(req: NextRequest): Locale {
 }
 
 export function middleware(req: NextRequest) {
+  // Defesa em profundidade contra CVE-2025-29927 (middleware bypass via header
+  // sintético). Already patched em next>=14.2.25, mas qualquer request externo
+  // que carregue esse header não tem motivo legítimo — bloqueamos.
+  if (req.headers.get("x-middleware-subrequest")) {
+    return new NextResponse(null, { status: 400 });
+  }
   const { pathname } = req.nextUrl;
   const hasLocale = locales.some(
     (l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`),
