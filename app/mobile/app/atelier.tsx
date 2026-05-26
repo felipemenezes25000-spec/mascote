@@ -23,6 +23,7 @@ import { AtelierDebugMenu } from '@/components/atelier/AtelierDebugMenu';
 import { AtelierOnboarding, useAtelierOnboarding } from '@/components/atelier/AtelierOnboarding';
 import { AutoSaveIndicator } from '@/components/atelier/AutoSaveIndicator';
 import { BlendPanel } from '@/components/atelier/BlendPanel';
+import { FpsCounter } from '@/components/atelier/FpsCounter';
 import { CompareModal } from '@/components/atelier/CompareModal';
 import { HideToggleRow } from '@/components/atelier/HideToggleRow';
 import { LookManager } from '@/components/atelier/LookManager';
@@ -378,6 +379,7 @@ export default function AtelierScreen() {
           <Typography variant="caption" tone="secondary" style={styles.previewLabel}>
             {restoredFromAutoSave ? '↻ rascunho restaurado · preview ao vivo' : 'preview ao vivo'}
           </Typography>
+          <FpsCounter />
         </View>
 
         {/* Presets — atalhos de aparência */}
