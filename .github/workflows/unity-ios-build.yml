@@ -1,0 +1,131 @@
+name: Unity iOS — Build Framework
+
+# Build automatizado do UnityFramework.framework via game-ci/unity-builder em macOS.
+# Espelha unity-android-build.yml mas em macos-latest runner (Mac é caro: $0.08/min).
+#
+# ⚠️ PRÉ-REQUISITOS (idem Android + macOS-specific):
+#   - UNITY_LICENSE: license ULF file content
+#   - UNITY_EMAIL / UNITY_PASSWORD
+#   - opcional: APPLE_DEVELOPMENT_TEAM_ID (pra code signing — sem isso, AAR sai unsigned)
+#
+# Por que separado do Android: macOS runners custam ~10x mais que Linux.
+# Faz sentido rodar iOS só quando absolutamente necessário (tag, manual).
+# Android pode rodar em todo PR sem dor.
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload_artifact:
+        description: 'Upload UnityFramework como artifact'
+        required: false
+        default: 'true'
+  # Descomentar quando workflow estiver estável + sentir confiança no custo:
+  # push:
+  #   tags:
+  #     - 'unity-ios-v*'
+
+jobs:
+  build-ios:
+    name: Unity 6 iOS Export
+    runs-on: macos-latest # macOS necessário pra UnityFramework
+    timeout-minutes: 90 # iOS builds tendem a ser mais lentos que Android
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: unity/MascotUnityCore/Library
+          key: Library-iOS-${{ hashFiles('unity/MascotUnityCore/Assets/**', 'unity/MascotUnityCore/Packages/**', 'unity/MascotUnityCore/ProjectSettings/**') }}
+          restore-keys: |
+            Library-iOS-
+            Library-
+
+      - name: Setup Xcode (use latest stable on macos-latest)
+        # macos-latest já vem com Xcode preinstalled, mas garantir versão estável
+        # evita surpresa quando GitHub atualiza runner.
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
+
+      - name: Build iOS Framework via Unity
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: unity/MascotUnityCore
+          targetPlatform: iOS
+          unityVersion: 6000.4.8f1
+          # Por enquanto usa BuildPipeline.BuildPlayer default em modo iOS.
+          # Quando criarmos IOSBuildPipeline.cs Editor script, trocar pra:
+          # buildMethod: Mascote.Unity.EditorTools.IOSBuildPipeline.BuildIOSFramework
+
+      - name: Verify Xcode project generated
+        run: |
+          set -e
+          # Unity gera pasta build/ com .xcodeproj
+          if [ ! -d "unity/MascotUnityCore/build" ]; then
+            echo "❌ build/ não encontrado em unity/MascotUnityCore/"
+            ls -la unity/MascotUnityCore/ || true
+            exit 1
+          fi
+          echo "✅ iOS Xcode project gerado"
+          ls -la unity/MascotUnityCore/build/
+
+      - name: Build UnityFramework.framework (xcodebuild)
+        # Compila o Xcode project pra produzir UnityFramework.framework binário.
+        # Sem code signing — só pra validar build clean. App final assina.
+        run: |
+          cd unity/MascotUnityCore/build
+          xcodebuild \
+            -project Unity-iPhone.xcodeproj \
+            -scheme UnityFramework \
+            -configuration Release \
+            -sdk iphoneos \
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=NO \
+            build \
+            2>&1 | tail -50
+
+      - name: Verify UnityFramework.framework
+        run: |
+          set -e
+          FRAMEWORK_PATH=$(find unity/MascotUnityCore/build -type d -name 'UnityFramework.framework' | head -1)
+          if [ -z "$FRAMEWORK_PATH" ]; then
+            echo "❌ UnityFramework.framework não encontrada após xcodebuild"
+            exit 1
+          fi
+          echo "✅ Framework: $FRAMEWORK_PATH"
+          du -sh "$FRAMEWORK_PATH"
+
+      - name: Upload UnityFramework artifact
+        if: ${{ inputs.upload_artifact == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: UnityFramework-ios
+          path: unity/MascotUnityCore/build/UnityFramework.framework
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Summary
+        run: |
+          {
+            echo "## Unity iOS Build — Resumo"
+            echo ""
+            echo "- ✅ Xcode project: \`unity/MascotUnityCore/build/Unity-iPhone.xcodeproj\`"
+            FRAMEWORK_PATH=$(find unity/MascotUnityCore/build -type d -name 'UnityFramework.framework' | head -1)
+            SIZE=$(du -sh "$FRAMEWORK_PATH" 2>/dev/null | cut -f1)
+            echo "- 📦 UnityFramework.framework: ${SIZE:-unknown}"
+            echo "- 🎮 Unity version: 6000.4.8f1"
+            echo "- 🎯 Próximo (manual em Mac dev):"
+            echo "  1. Baixar artifact UnityFramework-ios"
+            echo "  2. Drag pro Xcode project: General → Frameworks → Embed & Sign"
+            echo "  3. Setup bridging header (docs/UNITY_IOS_INTEGRATION.md)"
+            echo "  4. Patch AppDelegate.swift com UnityPlayerHelper callbacks"
+          } >> $GITHUB_STEP_SUMMARY

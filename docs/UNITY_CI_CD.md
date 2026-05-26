@@ -105,10 +105,31 @@ Build de ~15min usa ~30 GitHub minutes (cache hit). Em repo private, ~150 builds
 | `Editor script BuildAndroidLibrary não existe` | namespace errado | Verificar `Mascote.Unity.EditorTools.AndroidBuildPipeline` bate |
 | `gradlew not found in export` | Unity 6 mudou structure do export | OK — AAR vai ser built quando RN buildar o app |
 
+## iOS workflow (slice 2026-05-25)
+
+Espelho do Android em macOS runner: `.github/workflows/unity-ios-build.yml`.
+
+**Diferenças do Android:**
+
+| Aspecto | Android | iOS |
+|---|---|---|
+| Runner | ubuntu-latest (grátis em public repo) | macos-latest ($0.08/min — caro) |
+| Output | unityLibrary/ (gradle module) | UnityFramework.framework (Xcode framework) |
+| Trigger sugerido | PR + push | tag manual apenas (custo) |
+| Build time | ~15 min com cache | ~25 min com cache |
+| Custo por run (private) | ~30 min @ $0.008 = $0.24 | ~50 min @ $0.08 = $4.00 |
+
+**Setup:** mesmos 3 secrets (UNITY_LICENSE/EMAIL/PASSWORD). Validar
+primeira run manual antes de habilitar trigger automático.
+
+**Code signing:** workflow desabilita com `CODE_SIGNING_ALLOWED=NO` — framework
+sai unsigned. Assinatura final é responsabilidade do app que embeda (Xcode
+do projeto RN). Isso é OK porque o framework é embedded, não distribuído sozinho.
+
 ## Próximos slices candidatos
 
 - **Auto-wire pós-build**: rodar `wire-unity-android.ps1` automaticamente após upload artifact
 - **Test do AAR**: build do app Android RN consumindo o AAR baixado, verifica que não quebra
-- **iOS workflow**: equivalente em macos-latest runner com `game-ci/unity-builder` iOS
+- **IOSBuildPipeline.cs Editor script**: espelho do AndroidBuildPipeline pra deixar buildMethod custom no iOS também
 - **Release tag → AAB**: tag `unity-v*` triggera build, anexa AAR na release GitHub
 - **Slack notification**: avisa quando AAR novo está disponível
