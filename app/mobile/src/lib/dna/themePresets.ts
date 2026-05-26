@@ -248,3 +248,81 @@ export function matchPreset(draft: DraftFields): ThemePreset | undefined {
     );
   });
 }
+
+/**
+ * Compose N presets with arbitrary weights.
+ *
+ * Why a separate helper from blendPresets:
+ *   blendPresets handles the 2-preset case with a single `t` knob.
+ *   blendN generalizes to N>=1 with per-slot weights, normalized so they
+ *   always sum to 1. UI surfaces "3 vibes mixed" without re-running
+ *   pairwise blends.
+ *
+ * Strategy:
+ *   - Filter zero/negative weights.
+ *   - Normalize weights so they sum to 1.
+ *   - Numeric fields: weighted sum of delta-from-default.
+ *   - Categorical fields (pattern, hide_*): top-weight slot wins.
+ *
+ * Invariants:
+ *   - N=0 (or all weights = 0) -> DEFAULT_DRAFT.
+ *   - N=1 -> applyPreset(default, preset).
+ */
+export interface WeightedPreset {
+  preset: ThemePreset;
+  weight: number;
+}
+
+export function blendN(slots: ReadonlyArray<WeightedPreset>): DraftFields {
+  const dft: DraftFields = {
+    eye_size: 1,
+    eye_spread: 1,
+    body_height: 1,
+    body_width: 1,
+    aura_intensity: 1,
+    pattern_density: 1,
+    preferred_pattern: 'plain',
+    posture_lean: 0,
+    force_hide_tail: false,
+    force_hide_antennae: false,
+    force_hide_spikes: false,
+  };
+
+  const active = slots.filter(s => s.weight > 0 && s.preset);
+  const total = active.reduce((acc, s) => acc + s.weight, 0);
+  if (active.length === 0 || total <= 0) return dft;
+
+  const normalized = active.map(s => ({ preset: s.preset, weight: s.weight / total }));
+
+  const numericFields: Array<keyof DraftFields> = [
+    'eye_size',
+    'eye_spread',
+    'body_height',
+    'body_width',
+    'aura_intensity',
+    'pattern_density',
+    'posture_lean',
+  ];
+
+  const numericOut: Partial<DraftFields> = {};
+  for (const key of numericFields) {
+    const baseline = dft[key] as number;
+    let sumDelta = 0;
+    for (const { preset, weight } of normalized) {
+      const v = (preset.patch[key] as number | undefined) ?? baseline;
+      sumDelta += (v - baseline) * weight;
+    }
+    (numericOut as Record<string, number>)[key as string] = baseline + sumDelta;
+  }
+
+  const top = [...normalized].sort((a, b) => b.weight - a.weight)[0];
+
+  return {
+    ...dft,
+    ...numericOut,
+    preferred_pattern: top.preset.patch.preferred_pattern ?? dft.preferred_pattern,
+    force_hide_tail: top.preset.patch.force_hide_tail ?? dft.force_hide_tail,
+    force_hide_antennae: top.preset.patch.force_hide_antennae ?? dft.force_hide_antennae,
+    force_hide_spikes: top.preset.patch.force_hide_spikes ?? dft.force_hide_spikes,
+  };
+}
