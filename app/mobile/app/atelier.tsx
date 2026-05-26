@@ -19,10 +19,12 @@ import { PressableScale } from '@/components/PressableScale';
 import { RangeSlider } from '@/components/RangeSlider';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SectionHeader, Typography } from '@/components/ui';
+import { AtelierOnboarding, useAtelierOnboarding } from '@/components/atelier/AtelierOnboarding';
 import { BlendPanel } from '@/components/atelier/BlendPanel';
 import { CompareModal } from '@/components/atelier/CompareModal';
 import { HideToggleRow } from '@/components/atelier/HideToggleRow';
 import { LookManager } from '@/components/atelier/LookManager';
+import { MorphAttributionModal } from '@/components/atelier/MorphAttributionModal';
 import { MutationsActiveStrip } from '@/components/atelier/MutationsActiveStrip';
 import { PatternChips } from '@/components/atelier/PatternChips';
 import { PersonalityPreviewSwatch } from '@/components/atelier/PersonalityPreviewSwatch';
@@ -99,10 +101,12 @@ export default function AtelierScreen() {
   };
   const [saving, setSaving] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [attributionOpen, setAttributionOpen] = useState(false);
   const [looks, setLooks] = useState<AtelierLook[]>([]);
   const [unlockedMutations, setUnlockedMutations] = useState<UnlockedMutation[]>([]);
   const [locks, setLocks] = useState<Set<LockableField>>(new Set());
   const [restoredFromAutoSave, setRestoredFromAutoSave] = useState(false);
+  const onboarding = useAtelierOnboarding();
 
   // Auto-save: persiste draft com debounce + restaura no mount.
   // Se houver draft recuperado, sobrescreve o initial carregado da DB.
@@ -548,6 +552,19 @@ export default function AtelierScreen() {
             </PressableScale>
           </View>
         ) : null}
+        <View style={styles.actionsRow}>
+          <PressableScale
+            onPress={() => setAttributionOpen(true)}
+            style={[styles.actionBtn, { backgroundColor: theme.colors.surface }]}
+            accessibilityRole="button"
+            accessibilityLabel="Ver composição dos blend shapes"
+          >
+            <Icon name="info" size={16} color={theme.colors.text} strokeWidth={2} />
+            <Typography variant="bodyBold" style={styles.actionLabel}>
+              Composição visual
+            </Typography>
+          </PressableScale>
+        </View>
 
         {/* Mutações ativas */}
         <SectionHeader
@@ -604,6 +621,20 @@ export default function AtelierScreen() {
         mascot={mascot}
         beforeCustomization={initialCustomization}
         afterCustomization={previewCustomization}
+      />
+
+      <MorphAttributionModal
+        visible={attributionOpen}
+        onClose={() => setAttributionOpen(false)}
+        dna={mascot.dna}
+        customization={previewCustomization}
+        personality={mascot.personality}
+        unlocked={unlockedMutations}
+      />
+
+      <AtelierOnboarding
+        visible={onboarding.visible}
+        onFinish={() => void onboarding.finish()}
       />
     </SafeAreaView>
   );
