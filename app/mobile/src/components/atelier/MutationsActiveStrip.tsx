@@ -53,6 +53,8 @@ export function MutationsActiveStrip({ unlocked }: MutationsActiveStripProps) {
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.row}
+      accessibilityRole="list"
+      accessibilityLabel={`${resolved.length} mutações desbloqueadas afetando o preview`}
     >
       {resolved.map(({ unlocked: u, def: mut }) => {
         const emoji = RARITY_EMOJI[mut.rarity] ?? '✨';

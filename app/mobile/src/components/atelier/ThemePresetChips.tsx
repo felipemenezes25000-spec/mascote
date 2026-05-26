@@ -27,6 +27,8 @@ export function ThemePresetChips({ activePresetId, onSelect }: ThemePresetChipsP
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.row}
+      accessibilityRole="radiogroup"
+      accessibilityLabel="Presets de aparência do mascote"
     >
       {THEME_PRESETS.map(preset => (
         <View key={preset.id} style={styles.item}>

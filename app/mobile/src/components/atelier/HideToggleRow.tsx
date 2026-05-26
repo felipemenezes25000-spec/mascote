@@ -36,7 +36,8 @@ export function HideToggleRow({ label, description, hidden, onChange }: HideTogg
       style={styles.row}
       accessibilityRole="switch"
       accessibilityState={{ checked: hidden }}
-      accessibilityLabel={`${label}: ${hidden ? 'escondido' : 'visível'}`}
+      accessibilityLabel={label}
+      accessibilityHint={`Toque pra ${hidden ? 'mostrar' : 'esconder'}. ${description ?? ''}`.trim()}
     >
       <View style={styles.text}>
         <Typography variant="bodyBold">{label}</Typography>

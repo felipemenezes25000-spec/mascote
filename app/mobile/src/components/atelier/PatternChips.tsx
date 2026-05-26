@@ -44,16 +44,21 @@ export function PatternChips({ value, onChange }: PatternChipsProps) {
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.row}
+      accessibilityRole="radiogroup"
+      accessibilityLabel="Padrão visual do mascote"
     >
-      {OPTIONS.map(opt => (
-        <View key={opt.value} style={styles.item}>
-          <Chip
-            label={`${opt.emoji}  ${opt.label}`}
-            selected={value === opt.value}
-            onPress={() => handleSelect(opt.value)}
-          />
-        </View>
-      ))}
+      {OPTIONS.map(opt => {
+        const isSelected = value === opt.value;
+        return (
+          <View key={opt.value} style={styles.item}>
+            <Chip
+              label={`${opt.emoji}  ${opt.label}`}
+              selected={isSelected}
+              onPress={() => handleSelect(opt.value)}
+            />
+          </View>
+        );
+      })}
     </ScrollView>
   );
 }
