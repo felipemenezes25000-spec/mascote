@@ -21,9 +21,10 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { SectionHeader, Typography } from '@/components/ui';
 import { CompareModal } from '@/components/atelier/CompareModal';
 import { HideToggleRow } from '@/components/atelier/HideToggleRow';
+import { LookManager } from '@/components/atelier/LookManager';
 import { PatternChips } from '@/components/atelier/PatternChips';
 import { ThemePresetChips } from '@/components/atelier/ThemePresetChips';
-import { customization as customizationDb } from '@/lib/db';
+import { atelierLooks, customization as customizationDb, type AtelierLook } from '@/lib/db';
 import { MAX_POSTURE, MIN_POSTURE, sanitizeCustomization } from '@/lib/dna/customization';
 import { randomizeCustomization } from '@/lib/dna/randomizeCustomization';
 import { applyPreset, matchPreset, type ThemePreset } from '@/lib/dna/themePresets';
@@ -66,22 +67,50 @@ export default function AtelierScreen() {
   const [draft, setDraft] = useState<DraftFields | null>(null);
   const [saving, setSaving] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [looks, setLooks] = useState<AtelierLook[]>([]);
 
-  // Carrega customization existente na entrada.
+  // Carrega customization + looks salvos na entrada.
   useEffect(() => {
     if (!profile) return;
     let cancelled = false;
     void (async () => {
-      const current = await customizationDb.get(profile.id);
+      const [current, savedLooks] = await Promise.all([
+        customizationDb.get(profile.id),
+        atelierLooks.list(profile.id),
+      ]);
       if (cancelled) return;
       const fields = pickDraftFields(sanitizeCustomization(current));
       setInitial(fields);
       setDraft(fields);
+      setLooks(savedLooks);
     })();
     return () => {
       cancelled = true;
     };
   }, [profile?.id]);
+
+  const handleApplyLook = (look: AtelierLook): void => {
+    setDraft({ ...look.snapshot });
+  };
+
+  const handleSaveLook = async (name: string): Promise<void> => {
+    if (!profile || !draft) return;
+    const fullCustom: MascotCustomization = {
+      ...draft,
+      user_id: profile.id,
+      updated_at: new Date().toISOString(),
+    };
+    await atelierLooks.save(profile.id, name, fullCustom);
+    const refreshed = await atelierLooks.list(profile.id);
+    setLooks(refreshed);
+  };
+
+  const handleDeleteLook = async (lookId: string): Promise<void> => {
+    if (!profile) return;
+    await atelierLooks.delete(profile.id, lookId);
+    const refreshed = await atelierLooks.list(profile.id);
+    setLooks(refreshed);
+  };
 
   const isDirty = useMemo(() => {
     if (!initial || !draft) return false;
@@ -368,6 +397,18 @@ export default function AtelierScreen() {
             </PressableScale>
           </View>
         ) : null}
+
+        {/* Looks salvos */}
+        <SectionHeader
+          title="Looks salvos"
+          subtitle="customizações nomeadas pra trocar rapidamente"
+        />
+        <LookManager
+          looks={looks}
+          onApply={handleApplyLook}
+          onSave={handleSaveLook}
+          onDelete={handleDeleteLook}
+        />
 
         {/* Footer info */}
         <View style={styles.footer}>
