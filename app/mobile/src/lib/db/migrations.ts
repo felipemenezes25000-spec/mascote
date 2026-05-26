@@ -9,6 +9,11 @@
  *  v5 — remove campos legados de settings (theme, dark_mode, haptics, sounds,
  *       notifications, push_subscribed) que sumiram do schema mas continuavam
  *       persistidos — risco de view ler campo stale.
+ *  v6 — backfill is_auto=false em atelier_looks legados. Antes do snapshot
+ *       semanal automático todos os looks eram manuais e o campo nem existia.
+ *       Sem o backfill, a separação por cota (5 manuais + 8 autos) trata os
+ *       legados como auto-snapshots, errando a contagem e podendo apagar
+ *       customizações que o usuário criou à mão.
  *
  * Bumps requerem (a) incrementar CURRENT_SCHEMA_VERSION, (b) adicionar entry no
  * SCHEMA_MIGRATIONS na posição (current → next).
@@ -20,7 +25,7 @@ import {
   writeAny,
 } from './internal';
 
-export const CURRENT_SCHEMA_VERSION = 5;
+export const CURRENT_SCHEMA_VERSION = 6;
 
 export interface DbMeta {
   schema: number;
@@ -132,6 +137,20 @@ const SCHEMA_MIGRATIONS: readonly Migration[] = [
       return cleaned;
     });
     if (touched) await writeT('settings', next);
+  },
+  // 5 -> 6: backfill is_auto=false em atelier_looks pre-snapshot-semanal.
+  // Idempotente: cada row sem is_auto vira { ..., is_auto: false }.
+  async (readT, writeT) => {
+    const rows = await readT('atelier_looks');
+    if (rows.length === 0) return;
+    let touched = false;
+    const next = rows.map(row => {
+      const r = row as Record<string, unknown>;
+      if (typeof r.is_auto === 'boolean') return row;
+      touched = true;
+      return { ...r, is_auto: false };
+    });
+    if (touched) await writeT('atelier_looks', next);
   },
 ];
 
