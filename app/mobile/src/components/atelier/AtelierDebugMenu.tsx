@@ -17,7 +17,8 @@ import { Icon } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
 import { Typography } from '@/components/ui';
 import { BottomSheet } from '@/components/ui/ModalShell';
-import { atelierLooks, customization as customizationDb } from '@/lib/db';
+import { atelierLooks, customization as customizationDb, dnaMutations, mascots as mascotsDb } from '@/lib/db';
+import { MUTATION_CATALOG } from '@/lib/dna/mutations';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
@@ -97,6 +98,52 @@ function AtelierDebugMenuImpl({ userId, onAfterAction }: AtelierDebugMenuProps) 
     );
   };
 
+  const handleSimulateMutation = (): void => {
+    // Pega 5 mutations random pra escolher uma
+    const sample = [...MUTATION_CATALOG].sort(() => Math.random() - 0.5).slice(0, 5);
+    Alert.alert(
+      'Simular mutation unlock',
+      'Escolha uma das 5 mutations aleatórias:',
+      [
+        ...sample.map(mut => ({
+          text: `${mut.name} (${mut.rarity})`,
+          onPress: async () => {
+            await dnaMutations.unlock(userId, mut.id);
+            Alert.alert('Unlocked', mut.name);
+            setOpen(false);
+            onAfterAction();
+          },
+        })),
+        { text: 'Cancelar', style: 'cancel' as const },
+      ],
+    );
+  };
+
+  const handleAdvancePhase = (): void => {
+    const phases = ['ovo', 'bebe', 'crianca', 'adolescente', 'adulto', 'evoluido'] as const;
+    Alert.alert(
+      'Forçar fase do mascote',
+      'Escolha pra qual fase pular:',
+      [
+        ...phases.map(p => ({
+          text: p,
+          onPress: async () => {
+            const current = await mascotsDb.forUser(userId);
+            if (!current) {
+              Alert.alert('Erro', 'Mascote não encontrado.');
+              return;
+            }
+            await mascotsDb.upsert({ user_id: userId, phase: p });
+            Alert.alert('OK', `Mascote agora está em fase: ${p}`);
+            setOpen(false);
+            onAfterAction();
+          },
+        })),
+        { text: 'Cancelar', style: 'cancel' as const },
+      ],
+    );
+  };
+
   return (
     <>
       <PressableScale
@@ -141,6 +188,20 @@ function AtelierDebugMenuImpl({ userId, onAfterAction }: AtelierDebugMenuProps) 
             onPress={handleResetCustomization}
             theme={theme}
             danger
+          />
+          <DebugAction
+            icon="info"
+            label="Simular mutation unlock"
+            description="Desbloqueia uma mutation aleatória do catálogo"
+            onPress={handleSimulateMutation}
+            theme={theme}
+          />
+          <DebugAction
+            icon="info"
+            label="Forçar fase do mascote"
+            description="Pula direto pra ovo/bebe/crianca/adolescente/adulto/evoluido"
+            onPress={handleAdvancePhase}
+            theme={theme}
           />
         </View>
         <Typography variant="caption" tone="dim" align="center">
