@@ -26,10 +26,17 @@ function parseDateParts(s: string): { y: number; m: number; d: number } | null {
   if (typeof s !== 'string') return null;
   const parts = s.split('-');
   if (parts.length !== 3) return null;
+  // Sem regex strict, "2e3-01-01" (Number("2e3")=2000) ou "1-1-1" passavam.
+  // Storage/import corrupto gerava "739000 dias entre datas" silencioso em
+  // vez de detectar o lixo. Exige YYYY-MM-DD literal.
+  if (!/^\d{4}$/.test(parts[0]) || !/^\d{2}$/.test(parts[1]) || !/^\d{2}$/.test(parts[2])) {
+    return null;
+  }
   const y = Number(parts[0]);
   const m = Number(parts[1]);
   const d = Number(parts[2]);
   if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
+  if (y < 1970 || y > 9999) return null;
   if (m < 1 || m > 12 || d < 1 || d > 31) return null;
   return { y, m, d };
 }

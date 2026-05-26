@@ -32,9 +32,12 @@ export class SyncEngine {
     // Como não há ack remoto, drenamos as ops localmente (já foram aplicadas
     // ao AsyncStorage no momento da escrita pelo respectivo db layer; a fila
     // serve só pro futuro replay quando o sync remoto entrar).
-    const pending = await syncQueue.list(userId);
+    //
+    // ANTES: `list()` + `clear()` em duas chamadas separadas — qualquer enqueue
+    // entre as duas era apagado pelo clear sem nunca ser "pushed". `drainAll`
+    // faz read+remove atomico sob o mesmo lock.
+    const pending = await syncQueue.drainAll(userId);
     if (pending.length === 0) return { pushed: 0, failed: 0 };
-    await syncQueue.clear(userId);
     return { pushed: pending.length, failed: 0 };
   }
 

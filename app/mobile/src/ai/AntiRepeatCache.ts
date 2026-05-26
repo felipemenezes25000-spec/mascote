@@ -65,14 +65,17 @@ export async function rememberReply(
   }
 }
 
-/** Heurística simples: dois replies "iguais" se compartilham 80%+ palavras. */
+/** Heurística simples: Jaccard 80%+ de palavras longas em comum. */
 export function isNearDuplicate(a: string, b: string): boolean {
   const wordsA = new Set(a.toLowerCase().split(/\s+/).filter(w => w.length > 3));
   const wordsB = new Set(b.toLowerCase().split(/\s+/).filter(w => w.length > 3));
-  if (wordsA.size === 0 || wordsB.size === 0) return false;
+  if (wordsA.size < 3 || wordsB.size < 3) return false;
   const intersection = new Set(Array.from(wordsA).filter(w => wordsB.has(w)));
-  const smaller = Math.min(wordsA.size, wordsB.size);
-  return intersection.size / smaller >= 0.8;
+  // Antes: `intersection / min(A,B)`. Reply curto B com 2 palavras tudo
+  // contido em A longo (10 palavras) dava 2/2=1.0 false-positive.
+  // Jaccard (intersect / union) é simétrico e nao infla replies curtos.
+  const union = new Set([...wordsA, ...wordsB]);
+  return intersection.size / union.size >= 0.5;
 }
 
 /** Test helper. */

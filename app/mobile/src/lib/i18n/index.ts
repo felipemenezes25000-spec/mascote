@@ -20,6 +20,7 @@ import {
   createElement,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -105,9 +106,14 @@ export function LocaleProvider(props: LocaleProviderProps) {
     [locale, handleSetLocale],
   );
 
-  if (currentLocale !== locale) {
-    setLocale(locale);
-  }
+  // Side-effect (mutar `currentLocale` modulo-level) tem que sair do body do
+  // render. Em Strict Mode roda 2x; em concurrent rendering pode dessincronizar
+  // com outros providers/effects que tambem chamam setLocale.
+  useEffect(() => {
+    if (currentLocale !== locale) {
+      setLocale(locale);
+    }
+  }, [locale]);
 
   return createElement(LocaleContext.Provider, { value }, children);
 }

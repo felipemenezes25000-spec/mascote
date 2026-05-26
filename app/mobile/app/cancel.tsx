@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
 import { addDays, settings as settingsDb, todayLocal } from '@/lib/db';
-import { mockBillingProvider } from '@/services/subscription/MockBillingProvider';
+import { subscriptionService } from '@/services/subscription/SubscriptionService';
 import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
@@ -43,7 +43,11 @@ export default function Cancel() {
           onPress: async () => {
             if (!profile) return;
             try {
-              await mockBillingProvider.cancel(profile.id);
+              // ANTES: chamava `mockBillingProvider.cancel` direto, ignorando
+              // qual provider (RevenueCat em prod) esta ativo — risco "cancelei
+              // mas continuo cobrando". subscriptionService delega pro provider
+              // correto + dispara analytics + serializa via withLock.
+              await subscriptionService.cancel(profile.id);
               Alert.alert(
                 'Plano gratuito',
                 'Você voltou pro plano Free. Seus dados e o mascote continuam aqui; recursos premium ficam limitados.',

@@ -37,40 +37,47 @@ export default function Notice() {
     // flag não era atômica, então ambos os tap viam `alreadyDelivered=false`.
     if (finishing) return;
     setFinishing(true);
-    if (profile) {
-      const updated = await settingsDb.update(profile.id, { push_enabled: pushEnabled });
-      setSettings(updated);
-    }
-    // === Pacote Bem-Vindo ===
-    // QA flagrou: primeira sessão sem dopamina mata D1. Aqui damos 50 XP
-    // (sobe pra nível 2, desbloqueia Boné azul), 25 moedas, equipa o boné e
-    // marca a flag pro home toast aparecer. Tudo idempotente — settings.welcome_pack
-    // garante que rodar 2x não duplica.
+    // try/finally externo: sem isso, qualquer falha nos awaits abaixo deixava
+    // `finishing=true` permanente, travando o botao "Entendi" em disabled e
+    // prendendo o user no onboarding sem retry.
     try {
-      if (profile && mascot) {
-        const flag = await settingsDb.get(profile.id);
-        const alreadyDelivered = (flag as unknown as { welcome_pack_delivered?: boolean })?.welcome_pack_delivered;
-        if (!alreadyDelivered) {
-          const nextXp = (mascot.xp ?? 0) + 50;
-          const updatedMascot = await mascotsDb.upsert({
-            user_id: profile.id,
-            xp: nextXp,
-            level: Math.max(2, mascot.level ?? 1),
-          });
-          setMascot(updatedMascot);
-          const w = await walletDb.add(profile.id, 25, 0);
-          setWallet(w);
-          await inventory.unlock(profile.id, 'cap');
-          await inventory.equip(profile.id, 'cap');
-          // marca como entregue (campo livre dentro do settings json)
-          await settingsDb.update(profile.id, ({ welcome_pack_delivered: true } as unknown) as Partial<typeof flag>);
-        }
+      if (profile) {
+        const updated = await settingsDb.update(profile.id, { push_enabled: pushEnabled });
+        setSettings(updated);
       }
-    } catch (e) {
-      // Pacote é nice-to-have — nunca bloqueia entrada na home.
+      // === Pacote Bem-Vindo ===
+      // QA flagrou: primeira sessão sem dopamina mata D1. Aqui damos 50 XP
+      // (sobe pra nível 2, desbloqueia Boné azul), 25 moedas, equipa o boné e
+      // marca a flag pro home toast aparecer. Tudo idempotente — settings.welcome_pack
+      // garante que rodar 2x não duplica.
+      try {
+        if (profile && mascot) {
+          const flag = await settingsDb.get(profile.id);
+          const alreadyDelivered = (flag as unknown as { welcome_pack_delivered?: boolean })?.welcome_pack_delivered;
+          if (!alreadyDelivered) {
+            const nextXp = (mascot.xp ?? 0) + 50;
+            const updatedMascot = await mascotsDb.upsert({
+              user_id: profile.id,
+              xp: nextXp,
+              level: Math.max(2, mascot.level ?? 1),
+            });
+            setMascot(updatedMascot);
+            const w = await walletDb.add(profile.id, 25, 0);
+            setWallet(w);
+            await inventory.unlock(profile.id, 'cap');
+            await inventory.equip(profile.id, 'cap');
+            // marca como entregue (campo livre dentro do settings json)
+            await settingsDb.update(profile.id, ({ welcome_pack_delivered: true } as unknown) as Partial<typeof flag>);
+          }
+        }
+      } catch (e) {
+        // Pacote é nice-to-have — nunca bloqueia entrada na home.
+      }
+      clearOnboardingDraft();
+      router.replace({ pathname: '/(tabs)', params: { welcome: '1' } });
+    } finally {
+      setFinishing(false);
     }
-    clearOnboardingDraft();
-    router.replace({ pathname: '/(tabs)', params: { welcome: '1' } });
   }
 
   return (

@@ -57,13 +57,20 @@ export function useDraftAutoSave<T>(
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const restoredRef = useRef(false);
+  const restoredForUserRef = useRef<string | null>(null);
   const onRestoreRef = useRef(onRestore);
   onRestoreRef.current = onRestore;
 
-  // Restauração no mount — UMA VEZ por userId
+  // Restauração no mount — UMA VEZ por userId. Antes: `restoredRef`
+  // booleano sem dimensao de userId. Quando user A trocava pra B,
+  // restoredRef ficava `true` e o draft do B nunca era carregado;
+  // o save effect entao gravava o draft do A na storageKey do B
+  // (vazamento de draft entre profiles).
   useEffect(() => {
-    if (!userId || restoredRef.current) return;
+    if (!userId) return;
+    if (restoredForUserRef.current === userId) return;
     restoredRef.current = true;
+    restoredForUserRef.current = userId;
     let cancelled = false;
     void (async () => {
       try {

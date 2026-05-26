@@ -120,6 +120,17 @@ export default function SettingsScreen() {
     try {
       const parsed = JSON.parse(importDraft);
       if (typeof parsed !== 'object' || !parsed) throw new Error('JSON inválido');
+      // Schema-shape guard: importAll aceita Record<string, unknown[]>.
+      // Sem validar, qualquer JSON estranho (com numbers/strings nas
+      // chaves) era passado pro importer, que processava silenciosamente
+      // (ou crashava num lugar feio). Verifica top-level keys serem
+      // arrays antes de prosseguir.
+      const obj = parsed as Record<string, unknown>;
+      for (const [k, v] of Object.entries(obj)) {
+        if (!Array.isArray(v)) {
+          throw new Error(`Tabela "${k}" precisa ser array.`);
+        }
+      }
       Alert.alert(
         'Restaurar dados',
         'Isso vai SOBRESCREVER tudo que você tem agora. Vai precisar reiniciar o app pra ver as mudanças. Continuar?',
@@ -129,7 +140,7 @@ export default function SettingsScreen() {
             text: 'Restaurar',
             style: 'destructive',
             onPress: async () => {
-              await importAll(parsed);
+              await importAll(parsed as Record<string, unknown[]>);
               if (profile) {
                 const { clearMemoryCaches } = await import('@/lib/memory');
                 clearMemoryCaches(profile.id);
@@ -387,7 +398,18 @@ export default function SettingsScreen() {
               <View style={styles.rowBtns}>
                 <Button variant="secondary" label="Cancelar" style={{ flex: 1 }} onPress={() => { setShowKey(false); setKeyDraft(''); }} />
                 <Button label="Salvar" style={{ flex: 1 }} onPress={() => {
-                  setOpenAiKey(keyDraft.trim() || null);
+                  const trimmed = keyDraft.trim();
+                  // Sem validar formato, qualquer texto era aceito como chave
+                  // e o usuario achava que tinha salvado. Fail soft com Alert
+                  // pro user trocar; chave vazia continua significando "remover".
+                  if (trimmed && !/^sk-[A-Za-z0-9_-]{20,}$/.test(trimmed)) {
+                    Alert.alert(
+                      'Chave invalida',
+                      'A chave deve comecar com "sk-" e ter pelo menos 20 caracteres validos. Verifique se voce copiou ela inteira.',
+                    );
+                    return;
+                  }
+                  setOpenAiKey(trimmed || null);
                   setShowKey(false);
                   setKeyDraft('');
                 }} />

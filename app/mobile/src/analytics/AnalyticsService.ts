@@ -17,6 +17,7 @@ import type { AnalyticsProvider } from './AnalyticsProvider';
 import type { AnalyticsEventName, AnalyticsEventPayload } from './AnalyticsEvents';
 import { MockAnalyticsProvider } from './MockAnalyticsProvider';
 import { mockAnalyticsProvider } from './MockAnalyticsProvider';
+import { logger } from '@/lib/logger';
 
 interface ConsentSource {
   isConsented(): boolean;
@@ -60,20 +61,44 @@ class AnalyticsService {
   ): void {
     if (!this.consent.isConsented()) return;
     if (this.isMockForbiddenInProduction()) return;
-    this.provider.track(event, {
-      ...props,
-      user_id_hash: this.userIdHash ?? undefined,
-      ts: Date.now(),
-    });
+    // Provider buggy nao deve crashar hot path (track e chamado de UI,
+    // checkin pipeline, etc). Engole + loga.
+    try {
+      this.provider.track(event, {
+        ...props,
+        user_id_hash: this.userIdHash ?? undefined,
+        ts: Date.now(),
+      });
+    } catch (err) {
+      logger.warn('[analytics] track failed', {
+        event,
+        reason: err instanceof Error ? err.message : 'unknown',
+      });
+    }
   }
 
   reset(): void {
     this.userIdHash = null;
-    this.provider.reset?.();
+    try {
+      this.provider.reset?.();
+    } catch (err) {
+      logger.warn('[analytics] reset failed', {
+        reason: err instanceof Error ? err.message : 'unknown',
+      });
+    }
   }
 
   async flush(): Promise<void> {
-    await this.provider.flush?.();
+    // flush() e usado em logout/reset, comum via `void analytics.flush()`.
+    // Sem try/catch, rejeicao sincrona de provider buggy virava unhandled
+    // rejection silenciosa.
+    try {
+      await this.provider.flush?.();
+    } catch (err) {
+      logger.warn('[analytics] flush failed', {
+        reason: err instanceof Error ? err.message : 'unknown',
+      });
+    }
   }
 }
 

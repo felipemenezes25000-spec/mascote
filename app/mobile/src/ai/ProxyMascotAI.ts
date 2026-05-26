@@ -69,6 +69,13 @@ export interface ProxyOptions extends GenerateReplyOptions {
   dna?: MascotDNA;
   /** Replies recentes pra backend instruir o modelo a não ecoar. */
   recentReplies?: string[];
+  /**
+   * Severidade ja classificada do INPUT do user — propagada pro validator
+   * pra que o flag final do proxy nunca seja menos severo que o do input.
+   * Sem isso, msg `'watch'` (self-statement clinico) recebia reply tagged
+   * `'safe'`, bypassando disclaimers downstream.
+   */
+  inputFlag?: SafetyFlag;
 }
 
 export async function proxyMascotReply(
@@ -96,7 +103,7 @@ export async function proxyMascotReply(
     const data = (await res.json()) as MascotReplyContractResponse;
     if (!data.reply) return null;
     const totalTokens = Number(data.usage?.total_tokens) || 0;
-    const response = toAiResponse(data, 'openai');
+    const response = toAiResponse(data, 'openai', options.inputFlag ?? 'safe');
     if (totalTokens > 0) response.usage = { totalTokens };
     return response;
   } catch (err) {

@@ -4,7 +4,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { BillingTierId } from '@/content/billing';
-import { profiles, mascots, missions as missionsDb, achievements as achievementsDb } from '@/lib/db';
+import { profiles, mascots, missions as missionsDb, achievements as achievementsDb, withLock } from '@/lib/db';
 import { loadEvolutionState, saveEvolutionState } from '@/game/evolution/EvolutionPersistence';
 import type {
   UserProfileRepository,
@@ -64,8 +64,14 @@ export const localPersonalizationRepo: PersonalizationRepository = {
       return null;
     }
   },
+  // Sem lock, dois saves concorrentes (onboarding finalizando + paywall
+  // alterando pronoun) interleavam: last-writer-wins e fica vendo torn
+  // state. Lock serializa as gravacoes e prepara terreno pra um futuro
+  // read-modify-write merge.
   async save(uid, data) {
-    await AsyncStorage.setItem(PERSONALIZATION_KEY(uid), JSON.stringify(data));
+    await withLock(`personalization:${uid}`, async () => {
+      await AsyncStorage.setItem(PERSONALIZATION_KEY(uid), JSON.stringify(data));
+    });
   },
 };
 
@@ -79,8 +85,12 @@ export const localSubscriptionRepo: SubscriptionRepository = {
     } catch { /* ignore */ }
     return 'free';
   },
+  // Lock previne torn state quando upgrade + restorePurchases racem
+  // (RevenueCat dispara ambos no foreground).
   async setTier(uid, tier: BillingTierId) {
     if (tier !== 'free' && tier !== 'plus_monthly' && tier !== 'plus_annual') return;
-    await AsyncStorage.setItem(SUB_KEY(uid), JSON.stringify({ tier, updatedAt: new Date().toISOString() }));
+    await withLock(`subscription:${uid}`, async () => {
+      await AsyncStorage.setItem(SUB_KEY(uid), JSON.stringify({ tier, updatedAt: new Date().toISOString() }));
+    });
   },
 };

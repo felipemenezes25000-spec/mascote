@@ -50,10 +50,22 @@ export function HabitValueModal({ visible, kind, onClose, onConfirm }: Props) {
   const theme = useTheme();
   const config = kind ? configs[kind] : null;
   const [value, setValue] = useState<number>(config?.default ?? 1);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (kind) setValue(configs[kind].default);
+    if (kind) {
+      setValue(configs[kind].default);
+      setSubmitting(false);
+    }
   }, [kind]);
+
+  // Guard contra duplo-tap (backend tem withLock mas UI deve evitar 2
+  // analytics events e 2 chamadas no pipeline).
+  function handleConfirm() {
+    if (submitting) return;
+    setSubmitting(true);
+    onConfirm(value);
+  }
 
   if (!kind || !config) return null;
   const meta = habitMeta[kind];
@@ -101,8 +113,8 @@ export function HabitValueModal({ visible, kind, onClose, onConfirm }: Props) {
           </View>
 
           <View style={styles.actions}>
-            <Button variant="secondary" label="Cancelar" style={{ flex: 1 }} onPress={onClose} />
-            <Button label="Anotar" style={{ flex: 1 }} onPress={() => onConfirm(value)} />
+            <Button variant="secondary" label="Cancelar" style={{ flex: 1 }} onPress={onClose} disabled={submitting} />
+            <Button label="Anotar" style={{ flex: 1 }} onPress={handleConfirm} disabled={submitting} />
           </View>
         </Pressable>
       </Pressable>

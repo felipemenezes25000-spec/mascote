@@ -43,7 +43,10 @@ export function generatePhenotypeSlots(
     personalityFlavor: slotIndex(rng, PHENOTYPE_CATALOG_SIZES.personalityFlavor, 0),
     rarityTier: Math.min(
       PHENOTYPE_CATALOG_SIZES.rarityTier - 1,
-      { comum: 0, incomum: 1, raro: 2, lendario: 4 }[genotype.initialRarity],
+      // ANTES: faltava `epico` no map — genotype `epico` (do RaritySystem
+      // 5-tier) caia em `undefined` e Math.min recebia NaN, silenciosamente
+      // bugando o rarityTier do phenotype.
+      { comum: 0, incomum: 1, raro: 2, epico: 3, lendario: 4 }[genotype.initialRarity],
     ),
   };
 }

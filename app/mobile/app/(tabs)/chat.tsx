@@ -55,6 +55,10 @@ export default function ChatTab() {
   const [ratedMessageIds, setRatedMessageIds] = useState<Set<string>>(() => new Set());
   const listRef = useRef<FlatList<ListItem>>(null);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Guard contra duplo-greeting: StrictMode roda effects 2x em dev e o
+  // load() pode rodar 2x antes do primeiro await terminar — dois greetings
+  // duplicados na primeira abertura. Ref vinculada ao profile.id.
+  const greetingCreatedForProfileRef = useRef<string | null>(null);
 
   useEffect(() => () => {
     if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
@@ -77,6 +81,14 @@ export default function ChatTab() {
     if (!profile || !mascot) return;
     const rows = await messagesDb.listRecent(profile.id, 80);
     if (rows.length === 0) {
+      // Guard re-entrancia (StrictMode + race): se outro load() ja criou
+      // greeting pra esse profile, refresh list e sai sem duplicar.
+      if (greetingCreatedForProfileRef.current === profile.id) {
+        const refreshed = await messagesDb.listRecent(profile.id, 80);
+        setList(refreshed);
+        return;
+      }
+      greetingCreatedForProfileRef.current = profile.id;
       const meta = getPersonality(mascot.personality);
       const greeting = await messagesDb.add({
         conversation_id: profile.id,

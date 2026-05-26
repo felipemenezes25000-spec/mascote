@@ -47,7 +47,7 @@ export interface Genotype {
   latentTraits: string[];
   mutationPredisposition: string[];
   basePersonality: Personality;
-  initialRarity: 'comum' | 'incomum' | 'raro' | 'lendario';
+  initialRarity: 'comum' | 'incomum' | 'raro' | 'epico' | 'lendario';
   bondType: BondType;
   userGoal: UserGoal;
   communicationTone: CommunicationTone;

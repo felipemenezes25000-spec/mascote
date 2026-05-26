@@ -37,9 +37,14 @@ export function nextMilestone(streak: number): number | null {
  * (suficiente pra colisão extremamente improvável em base populacional pequena).
  */
 export function buildInviteLink(userId: string | undefined | null): string {
-  if (!userId) return 'https://mascote.app/i/amigo';
+  // Strings vazias / só whitespace tambem caem no fallback "amigo" —
+  // `if (!userId)` deixava `' '` truthy passar e o tag virava ' '.
+  if (!userId || !userId.trim()) return 'https://mascote.app/i/amigo';
   const tag = userId.length >= 6 ? userId.slice(-6) : userId;
-  return `https://mascote.app/i/${tag}`;
+  // userId é tipado string mas pode conter `/`, `?`, `#`, espaço, unicode
+  // (Supabase UUIDs hoje, mas o tipo nao garante). Sem encode, URL fica
+  // ambigua tipo `https://mascote.app/i/abc/def`.
+  return `https://mascote.app/i/${encodeURIComponent(tag)}`;
 }
 
 /**

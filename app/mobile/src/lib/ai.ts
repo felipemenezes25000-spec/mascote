@@ -173,6 +173,10 @@ async function generateReplyInternal(
       memories,
       dna,
       recentReplies,
+      // Thread o flag do input pro validator — proxy nunca devolve flag
+      // menos severo que o do input do user. Sem isso, msg 'watch' (e.g.,
+      // self-statement clinico) virava reply 'safe', skip de disclaimers.
+      inputFlag,
     });
     if (proxied) {
       if (userId) await rememberReply(userId, personality, proxied.reply);

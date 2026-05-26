@@ -12,7 +12,7 @@
  */
 
 import { router } from 'expo-router';
-import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/Icon';
 import { Mascot } from '@/components/Mascot';
@@ -22,6 +22,21 @@ import { useStyles, useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 
+// Falha aberta com Alert em vez de catch silencioso. Em momento de crise
+// emocional, sem feedback o user nao sabe se a chamada disparou ou nao.
+async function safeOpen(url: string, fallbackTitle: string, fallbackBody: string) {
+  try {
+    const canOpen = await Linking.canOpenURL(url);
+    if (!canOpen) {
+      Alert.alert(fallbackTitle, fallbackBody);
+      return;
+    }
+    await Linking.openURL(url);
+  } catch {
+    Alert.alert(fallbackTitle, fallbackBody);
+  }
+}
+
 export default function SafeNight() {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
@@ -30,13 +45,13 @@ export default function SafeNight() {
   const phase = mascot?.phase ?? 'crianca';
 
   function callCvv() {
-    Linking.openURL('tel:188').catch(() => {});
+    void safeOpen('tel:188', 'CVV — 188', 'Disque 188 do seu telefone. 24h, gratuito.');
   }
   function chatCvv() {
-    Linking.openURL('https://www.cvv.org.br/chat').catch(() => {});
+    void safeOpen('https://www.cvv.org.br/chat', 'cvv.org.br/chat', 'Abra cvv.org.br/chat no navegador.');
   }
   function callSamu() {
-    Linking.openURL('tel:192').catch(() => {});
+    void safeOpen('tel:192', 'SAMU — 192', 'Disque 192 do seu telefone para emergencia medica.');
   }
 
   return (

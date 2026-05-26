@@ -1,4 +1,4 @@
-import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
@@ -6,6 +6,22 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { StaggeredView } from '@/components/StaggeredView';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
+
+// Em iPad/tablet sem app de telefone, tel: nao abre e o `.catch(() => {})`
+// engolia o erro — user em crise tappa "Ligar 188" e nada acontece, sem
+// feedback. Falha aberta com Alert mostrando o numero pra digitar manual.
+async function safeOpen(url: string, fallbackTitle: string, fallbackBody: string) {
+  try {
+    const canOpen = await Linking.canOpenURL(url);
+    if (!canOpen) {
+      Alert.alert(fallbackTitle, fallbackBody);
+      return;
+    }
+    await Linking.openURL(url);
+  } catch {
+    Alert.alert(fallbackTitle, fallbackBody);
+  }
+}
 
 export default function Safety() {
   const theme = useTheme();
@@ -47,21 +63,21 @@ export default function Safety() {
               title="CVV — 188"
               body="24h, gratuito, sigiloso"
               cta="Ligar"
-              onPress={() => Linking.openURL('tel:188').catch(() => {})}
+              onPress={() => safeOpen('tel:188', 'CVV — 188', 'Disque 188 do seu telefone. 24h, gratuito.')}
             />
             <CrisisBtn
               icon="message-circle"
               title="cvv.org.br"
               body="Chat anônimo"
               cta="Abrir"
-              onPress={() => Linking.openURL('https://www.cvv.org.br').catch(() => {})}
+              onPress={() => safeOpen('https://www.cvv.org.br', 'cvv.org.br', 'Abra cvv.org.br no navegador para chat anonimo.')}
             />
             <CrisisBtn
               icon="alert-triangle"
               title="SAMU — 192"
               body="Emergência médica"
               cta="Ligar"
-              onPress={() => Linking.openURL('tel:192').catch(() => {})}
+              onPress={() => safeOpen('tel:192', 'SAMU — 192', 'Disque 192 do seu telefone para emergencia medica.')}
             />
           </View>
         </StaggeredView>

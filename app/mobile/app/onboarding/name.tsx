@@ -97,21 +97,37 @@ export default function NameStep() {
       primaryGoal: (params.primaryGoal as UserGoal) ?? 'saude_geral',
     };
     const parsedSeed = params.dna_seed ? parseInt(params.dna_seed, 10) : NaN;
-    const seed = Number.isFinite(parsedSeed) ? parsedSeed : seedFromOnboardingAnswers(answers);
+    // Clamp em int32 nao-negativo: `Number.isFinite(1e308)` e true, e seed
+    // gigante via deep-link hostil inflava a geracao de DNA. PRNG nosso usa
+    // mod 2^32, entao qualquer coisa > 2^31 ja perde semantica determinista.
+    const validSeed = Number.isFinite(parsedSeed) && parsedSeed >= 0 && parsedSeed < 2 ** 31
+      ? parsedSeed
+      : null;
+    const seed = validSeed ?? seedFromOnboardingAnswers(answers);
     const input = buildPersonalizationInput(answers, mascotName.trim() || defaultMascotName, personality);
     const genotype = generateGenotype({ ...input, seed });
     const dna = sanitizeGenome(genotype.genome);
 
-    const mascot = await mascots.upsert({
-      user_id: profile.id,
-      name: mascotName.trim() || defaultMascotName,
-      personality,
-      phase: 'ovo',
-      mood: initialMood ?? 'feliz',
-      energy: 90,
-      dna,
-      dna_seed: seed,
-    });
+    // Rollback de profile orphaned: se mascots.upsert (ou qualquer step do
+    // pipeline) falhar depois do profiles.upsert ja ter criado o profile,
+    // o usuario fica com perfil sem mascot → splash → /(tabs) → crash em
+    // telas que assumem mascot existe.
+    let mascot;
+    try {
+      mascot = await mascots.upsert({
+        user_id: profile.id,
+        name: mascotName.trim() || defaultMascotName,
+        personality,
+        phase: 'ovo',
+        mood: initialMood ?? 'feliz',
+        energy: 90,
+        dna,
+        dna_seed: seed,
+      });
+    } catch (err) {
+      await profiles.clear().catch(() => {});
+      throw err;
+    }
     await persistOnboardingPersonalization(profile.id, answers, mascotName.trim() || defaultMascotName, personality);
     try {
       const { mascotMemoryService } = await import('@/game/memory/MascotMemoryService');

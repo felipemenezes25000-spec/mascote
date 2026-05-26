@@ -85,7 +85,10 @@ export function generateUserMascotEvolutionPath(
       ...behaviorHistory,
       habitCounts: {
         ...behaviorHistory.habitCounts,
-        [habit]: (behaviorHistory.habitCounts[habit as keyof typeof behaviorHistory.habitCounts] ?? 0) + day + 1,
+        // ANTES: `+ day + 1` inflava geometricamente — 30 dias de habito
+        // unico viravam 465 ocorrencias, quebrando `requiredCheckins: 30`
+        // logo no primeiro dia da simulacao.
+        [habit]: (behaviorHistory.habitCounts[habit as keyof typeof behaviorHistory.habitCounts] ?? 0) + 1,
       },
     };
     const newMicro = eligibleMicroEvolutions(

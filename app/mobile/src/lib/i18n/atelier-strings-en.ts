@@ -25,7 +25,7 @@ export const STRINGS_EN: StringsBundle = {
       mutations_active: {
         title: 'Active mutations',
         subtitle_count: (n: number) =>
-          `${n} unlocked — affecting the preview`,
+          `${n} mutation${n === 1 ? '' : 's'} unlocked — affecting the preview`,
         subtitle_empty: 'biological milestones still to come',
       },
       personalities: {

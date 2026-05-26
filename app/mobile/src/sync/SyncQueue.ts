@@ -84,6 +84,21 @@ export class SyncQueue {
       await AsyncStorage.removeItem(QUEUE_KEY(userId));
     });
   }
+
+  /**
+   * Lê e limpa a fila atomicamente num único lock — evita check-then-act:
+   * `list()` + `clear()` separados deixavam ops slipping between the two
+   * (concurrent enqueue) serem apagadas sem ack/log → data loss silenciosa.
+   * Usado em `SyncEngine.pushPending`.
+   */
+  async drainAll(userId: string): Promise<SyncOp[]> {
+    return withLock(`sync_queue:${userId}`, async () => {
+      const list = await this.listLocked(userId);
+      if (list.length === 0) return [];
+      await AsyncStorage.removeItem(QUEUE_KEY(userId));
+      return list;
+    });
+  }
 }
 
 export const syncQueue = new SyncQueue();

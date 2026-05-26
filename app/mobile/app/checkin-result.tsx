@@ -37,7 +37,20 @@ export default function CheckInResult() {
       if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
         throw new Error('JSON inválido');
       }
-      setAnswers(parsed as Record<string, number>);
+      // Deep-link malicioso (`/checkin-result?data={"sleep":"DROP","x":NaN}`)
+      // passava direto pro applyCheckinFully. Filtra so chaves de HabitKind
+      // conhecidas + valores numericos finitos positivos.
+      const valid: Record<string, number> = {};
+      const ALLOWED: HabitKind[] = ['water', 'sleep', 'exercise', 'meditation', 'reading', 'journaling', 'breath', 'outdoor', 'sun'];
+      for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+        if (!ALLOWED.includes(k as HabitKind)) continue;
+        if (typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 10_000) continue;
+        valid[k] = v;
+      }
+      if (Object.keys(valid).length === 0) {
+        throw new Error('Nenhum habito valido no payload');
+      }
+      setAnswers(valid);
     } catch {
       Alert.alert('Dados inválidos', 'Não consegui ler o check-in. Tente de novo.', [
         { text: 'OK', onPress: () => router.back() },

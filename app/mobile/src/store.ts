@@ -86,7 +86,10 @@ export const useStore = create<AppState>((set, get) => ({
        defensiva: profiles.get tem try/catch interno e retorna null/[] em erro,
        nunca rejeita. O early-return `if (!profile)` é exercitado em testes. */
     const [openAiKey, profile] = await Promise.all([
-      secureGet(SECURE_KEYS.openAiKey),
+      // Sem .catch, keychain corrompido (raro mas documentado em migrations
+      // de iOS) rejeitava Promise.all inteiro, hydrate abortava antes do
+      // `set({hydrated:true})` -> splash infinito.
+      secureGet(SECURE_KEYS.openAiKey).catch(() => null),
       profiles.get().catch(() => null),
     ]);
     if (!profile) {

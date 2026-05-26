@@ -75,8 +75,19 @@ export function decodeLookDeepLink(url: string): DecodeResult {
   const trimmed = url.trim();
   if (!trimmed) return { ok: false, error: 'URL vazia.' };
 
-  // Quick path: aceita tanto mascote://... quanto https://mascote.app/atelier/look?p=
-  // (pra fallback de "open in browser" se o app nao estiver instalado).
+  // Sem validar scheme+path, qualquer URL com `?p=<base64>` era aceita
+  // (`https://evil.com/x?p=...`). Como handlers de intent passam URLs
+  // externas direto pra cá, isso virava vetor de injection via link
+  // arbitrario. Aceita so as duas formas legitimas.
+  const validPrefix =
+    trimmed.startsWith(`${APP_SCHEME}://${LOOK_DEEP_PATH}?`) ||
+    trimmed.startsWith(`${APP_SCHEME}://${LOOK_DEEP_PATH}/?`) ||
+    trimmed.startsWith(`https://mascote.app/${LOOK_DEEP_PATH}?`) ||
+    trimmed.startsWith(`https://mascote.app/${LOOK_DEEP_PATH}/?`);
+  if (!validPrefix) {
+    return { ok: false, error: 'Scheme/path invalido.' };
+  }
+
   let queryStr = '';
   if (trimmed.includes('?')) {
     queryStr = trimmed.split('?', 2)[1] ?? '';

@@ -19,7 +19,17 @@ type FeedbackEntry = { score: number; text: string; created_at: string };
 async function persistFeedback(entry: FeedbackEntry): Promise<void> {
   try {
     const raw = await AsyncStorage.getItem(FEEDBACK_STORAGE_KEY);
-    const arr: FeedbackEntry[] = raw ? (JSON.parse(raw) as FeedbackEntry[]) : [];
+    // Parse isolado: blob corrompido nao deve transformar a fila inteira em
+    // lixo permanente. Recupera com array vazio e segue gravando o novo entry.
+    let arr: FeedbackEntry[] = [];
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) arr = parsed as FeedbackEntry[];
+      } catch {
+        logger.warn('[feedback] queue parse failed; reseting');
+      }
+    }
     arr.push(entry);
     // Manter no máx 50 entradas (drop oldest) — evita inflar AsyncStorage.
     const next = arr.slice(-MAX_QUEUE);

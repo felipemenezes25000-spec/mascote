@@ -1,4 +1,4 @@
-import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
@@ -6,6 +6,21 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { StaggeredView } from '@/components/StaggeredView';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
+
+// Em iPad/dispositivo sem app de telefone, tel: nao abre. Catch silencioso
+// deixava o usuario em crise sem feedback — fail abertamente com fallback.
+async function safeOpen(url: string, fallbackTitle: string, fallbackBody: string) {
+  try {
+    const canOpen = await Linking.canOpenURL(url);
+    if (!canOpen) {
+      Alert.alert(fallbackTitle, fallbackBody);
+      return;
+    }
+    await Linking.openURL(url);
+  } catch {
+    Alert.alert(fallbackTitle, fallbackBody);
+  }
+}
 
 export default function Help() {
   const theme = useTheme();
@@ -34,7 +49,7 @@ export default function Help() {
               title="CVV — 188"
               sub="Ligação gratuita, 24h, sigiloso"
               cta="Ligar"
-              onPress={() => Linking.openURL('tel:188').catch(() => {})}
+              onPress={() => safeOpen('tel:188', 'CVV — 188', 'Disque 188 do seu telefone. 24h, gratuito.')}
             />
             <ResourceRow
               icon="message-circle"
@@ -42,7 +57,7 @@ export default function Help() {
               title="CVV — chat"
               sub="cvv.org.br"
               cta="Abrir"
-              onPress={() => Linking.openURL('https://www.cvv.org.br').catch(() => {})}
+              onPress={() => safeOpen('https://www.cvv.org.br', 'cvv.org.br', 'Abra cvv.org.br no navegador para chat anonimo.')}
               isLast
             />
           </Section>

@@ -27,6 +27,10 @@ export function ChatReplyRating({ onRate }: Props) {
   }
 
   function pick(kind: ReplyRatingKind) {
+    // Guard contra duplo-tap rapido (<300ms): setState e assincrono e o
+    // re-render que esconde a UI nao acontece antes do segundo tap, entao
+    // 2 analytics events / 2 backend calls saiam por engano.
+    if (done) return;
     setDone(kind);
     if (kind === 'helpful') onRate(true, false);
     else if (kind === 'not_helpful') onRate(false, false);
