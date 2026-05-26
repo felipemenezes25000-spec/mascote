@@ -55,7 +55,7 @@ export interface MaybeCreateWeeklySnapshotResult {
   /** Look novo criado, ou null se foi NO-OP. */
   created: AtelierLook | null;
   /** Motivo do skip (quando created=null). Útil pra debug/log. */
-  reason?: 'recent_auto_exists' | 'no_profile' | 'error';
+  reason?: 'recent_auto_exists' | 'no_profile' | 'error' | 'disabled_by_user';
 }
 
 /**
@@ -67,8 +67,10 @@ export async function maybeCreateWeeklySnapshot(
   profile: Profile | null,
   customization: MascotCustomization,
   now: number = Date.now(),
+  options: { disabled?: boolean } = {},
 ): Promise<MaybeCreateWeeklySnapshotResult> {
   if (!profile?.id) return { created: null, reason: 'no_profile' };
+  if (options.disabled) return { created: null, reason: 'disabled_by_user' };
 
   try {
     const existing = await atelierLooks.list(profile.id);

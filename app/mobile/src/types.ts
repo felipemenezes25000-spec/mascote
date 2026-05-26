@@ -166,6 +166,12 @@ export interface Settings {
   language: string;
   consent_analytics: boolean;
   tour_completed: boolean;
+  /**
+   * Quando true, weekly snapshot automático fica desabilitado.
+   * Default false (snapshots criados automaticamente — Frente U).
+   * Aparece em /atelier/settings (Frente V).
+   */
+  atelier_disable_weekly_snapshot?: boolean;
 }
 
 export interface InAppNotification {

@@ -154,7 +154,10 @@ export default function AtelierScreen() {
 
       // Weekly snapshot: idempotente, NO-OP se < 7 dias do último auto.
       // Fire-and-forget — não bloqueia o mount nem mostra erro ao user.
-      const snapResult = await maybeCreateWeeklySnapshot(profile, current);
+      const userSettings = await import('@/lib/db').then(m => m.settings.get(profile.id));
+      const snapResult = await maybeCreateWeeklySnapshot(profile, current, Date.now(), {
+        disabled: userSettings?.atelier_disable_weekly_snapshot ?? false,
+      });
       if (cancelled) return;
       if (snapResult.created) {
         // Re-fetch looks pra mostrar o novo snapshot na lista.
@@ -626,6 +629,16 @@ export default function AtelierScreen() {
           <Typography variant="caption" tone="secondary" align="center">
             Customização nunca altera o DNA — só esculpe a aparência.
           </Typography>
+          <PressableScale
+            onPress={() => router.push('/atelier-settings')}
+            style={styles.preferencesLink}
+            accessibilityRole="link"
+            accessibilityLabel="Preferências do Ateliê"
+          >
+            <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>
+              ⚙ Preferências do Ateliê
+            </Typography>
+          </PressableScale>
         </View>
       </ScrollView>
 
@@ -735,6 +748,12 @@ function makeStyles(theme: Theme) {
       paddingHorizontal: theme.spacing.lg,
       paddingTop: theme.spacing.lg,
       gap: theme.spacing.xs,
+      alignItems: 'center',
+    },
+    preferencesLink: {
+      marginTop: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
     },
   });
 }
