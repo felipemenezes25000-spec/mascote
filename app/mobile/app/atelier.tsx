@@ -19,7 +19,9 @@ import { PressableScale } from '@/components/PressableScale';
 import { RangeSlider } from '@/components/RangeSlider';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SectionHeader, Typography } from '@/components/ui';
+import { AtelierDebugMenu } from '@/components/atelier/AtelierDebugMenu';
 import { AtelierOnboarding, useAtelierOnboarding } from '@/components/atelier/AtelierOnboarding';
+import { AutoSaveIndicator } from '@/components/atelier/AutoSaveIndicator';
 import { BlendPanel } from '@/components/atelier/BlendPanel';
 import { CompareModal } from '@/components/atelier/CompareModal';
 import { HideToggleRow } from '@/components/atelier/HideToggleRow';
@@ -41,6 +43,7 @@ import { randomizeCustomization } from '@/lib/dna/randomizeCustomization';
 import { applyPreset, matchPreset, type ThemePreset } from '@/lib/dna/themePresets';
 import { useDraftAutoSave } from '@/hooks/useDraftAutoSave';
 import { useDraftHistory } from '@/hooks/useDraftHistory';
+import { maybeCreateWeeklySnapshot } from '@/lib/atelier/weeklySnapshot';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -148,6 +151,16 @@ export default function AtelierScreen() {
       draftHistory.reset(fields);
       setLooks(savedLooks);
       setUnlockedMutations(muts);
+
+      // Weekly snapshot: idempotente, NO-OP se < 7 dias do último auto.
+      // Fire-and-forget — não bloqueia o mount nem mostra erro ao user.
+      const snapResult = await maybeCreateWeeklySnapshot(profile, current);
+      if (cancelled) return;
+      if (snapResult.created) {
+        // Re-fetch looks pra mostrar o novo snapshot na lista.
+        const refreshed = await atelierLooks.list(profile.id);
+        if (!cancelled) setLooks(refreshed);
+      }
     })();
     return () => {
       cancelled = true;
@@ -329,6 +342,7 @@ export default function AtelierScreen() {
         subtitle="esculpe o seu mascote"
         variant="modal"
         onClose={handleClose}
+        rightSlot={<AutoSaveIndicator lastSavedAt={autoSave.lastSavedAt} />}
         rightActions={
           isDirty
             ? [
@@ -635,6 +649,27 @@ export default function AtelierScreen() {
       <AtelierOnboarding
         visible={onboarding.visible}
         onFinish={() => void onboarding.finish()}
+      />
+
+      <AtelierDebugMenu
+        userId={profile.id}
+        onAfterAction={() => {
+          // Re-mount-ish: força reload de customization + looks + mutations.
+          // Mais simples: navigate back e reabre. Aqui só forço re-fetch
+          // dos looks/mutations e reset do draft.
+          void (async () => {
+            const [current, savedLooks, muts] = await Promise.all([
+              customizationDb.get(profile.id),
+              atelierLooks.list(profile.id),
+              dnaMutations.listForUser(profile.id),
+            ]);
+            const fields = pickDraftFields(sanitizeCustomization(current));
+            setInitial(fields);
+            draftHistory.reset(fields);
+            setLooks(savedLooks);
+            setUnlockedMutations(muts);
+          })();
+        }}
       />
     </SafeAreaView>
   );
