@@ -19,12 +19,20 @@ import { PressableScale } from '@/components/PressableScale';
 import { RangeSlider } from '@/components/RangeSlider';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SectionHeader, Typography } from '@/components/ui';
+import { BlendPanel } from '@/components/atelier/BlendPanel';
 import { CompareModal } from '@/components/atelier/CompareModal';
 import { HideToggleRow } from '@/components/atelier/HideToggleRow';
 import { LookManager } from '@/components/atelier/LookManager';
+import { MutationsActiveStrip } from '@/components/atelier/MutationsActiveStrip';
 import { PatternChips } from '@/components/atelier/PatternChips';
 import { ThemePresetChips } from '@/components/atelier/ThemePresetChips';
-import { atelierLooks, customization as customizationDb, type AtelierLook } from '@/lib/db';
+import {
+  atelierLooks,
+  customization as customizationDb,
+  dnaMutations,
+  type AtelierLook,
+} from '@/lib/db';
+import type { UnlockedMutation } from '@/lib/dna/mutations';
 import { MAX_POSTURE, MIN_POSTURE, sanitizeCustomization } from '@/lib/dna/customization';
 import { randomizeCustomization } from '@/lib/dna/randomizeCustomization';
 import { applyPreset, matchPreset, type ThemePreset } from '@/lib/dna/themePresets';
@@ -68,21 +76,24 @@ export default function AtelierScreen() {
   const [saving, setSaving] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [looks, setLooks] = useState<AtelierLook[]>([]);
+  const [unlockedMutations, setUnlockedMutations] = useState<UnlockedMutation[]>([]);
 
   // Carrega customization + looks salvos na entrada.
   useEffect(() => {
     if (!profile) return;
     let cancelled = false;
     void (async () => {
-      const [current, savedLooks] = await Promise.all([
+      const [current, savedLooks, muts] = await Promise.all([
         customizationDb.get(profile.id),
         atelierLooks.list(profile.id),
+        dnaMutations.listForUser(profile.id),
       ]);
       if (cancelled) return;
       const fields = pickDraftFields(sanitizeCustomization(current));
       setInitial(fields);
       setDraft(fields);
       setLooks(savedLooks);
+      setUnlockedMutations(muts);
     })();
     return () => {
       cancelled = true;
@@ -196,6 +207,10 @@ export default function AtelierScreen() {
     setDraft(prev => (prev ? applyPreset(prev, preset) : prev));
   };
 
+  const handleApplyBlend = (blended: DraftFields): void => {
+    setDraft(blended);
+  };
+
   const handleReset = (): void => {
     Alert.alert(
       'Voltar ao DNA puro?',
@@ -274,6 +289,7 @@ export default function AtelierScreen() {
               mood={mascot.mood}
               size={200}
               customization={previewCustomization}
+              mutationIds={unlockedMutations.map(m => m.mutation_id)}
             />
           </View>
           <Typography variant="caption" tone="secondary" style={styles.previewLabel}>
@@ -284,6 +300,14 @@ export default function AtelierScreen() {
         {/* Presets — atalhos de aparência */}
         <SectionHeader title="Presets" subtitle="toque pra aplicar uma vibe" />
         <ThemePresetChips activePresetId={activePresetId} onSelect={handleApplyPreset} />
+
+        {/* Blend de presets — combinação A + B em proporção variável */}
+        <SectionHeader
+          title="Misturar presets"
+          subtitle="combine 2 vibes em proporção variável"
+          compact
+        />
+        <BlendPanel onApply={handleApplyBlend} />
 
         {/* Forma */}
         <SectionHeader title="Forma" subtitle="proporções do corpo e dos olhos" />
@@ -412,6 +436,17 @@ export default function AtelierScreen() {
             </PressableScale>
           </View>
         ) : null}
+
+        {/* Mutações ativas */}
+        <SectionHeader
+          title="Mutações ativas"
+          subtitle={
+            unlockedMutations.length > 0
+              ? `${unlockedMutations.length} desbloqueada${unlockedMutations.length === 1 ? '' : 's'} — afetando o preview`
+              : 'marcos biológicos que ainda virão'
+          }
+        />
+        <MutationsActiveStrip unlocked={unlockedMutations} />
 
         {/* Looks salvos */}
         <SectionHeader
