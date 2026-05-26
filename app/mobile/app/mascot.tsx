@@ -144,16 +144,28 @@ export default function MascotIdentity() {
             reduceMotion
             mutationIds={unlocked.map(u => u.mutation_id)}
           />
-          <Pressable
-            onPress={() => router.push('/mascot-room')}
-            accessibilityRole="button"
-            accessibilityLabel="Abrir quarto do mascote"
-            style={({ pressed }) => [styles.roomCta, pressed && { opacity: 0.7 }]}
-          >
-            <Typography variant="mono" style={styles.roomCtaText}>
-              Visitar o quarto →
-            </Typography>
-          </Pressable>
+          <View style={styles.heroCtas}>
+            <Pressable
+              onPress={() => router.push('/mascot-room')}
+              accessibilityRole="button"
+              accessibilityLabel="Abrir quarto do mascote"
+              style={({ pressed }) => [styles.roomCta, pressed && { opacity: 0.7 }]}
+            >
+              <Typography variant="mono" style={styles.roomCtaText}>
+                Visitar o quarto →
+              </Typography>
+            </Pressable>
+            <Pressable
+              onPress={() => router.push('/atelier')}
+              accessibilityRole="button"
+              accessibilityLabel="Abrir Ateliê para customizar mascote"
+              style={({ pressed }) => [styles.roomCta, pressed && { opacity: 0.7 }]}
+            >
+              <Typography variant="mono" style={styles.roomCtaText}>
+                ✨ Ateliê
+              </Typography>
+            </Pressable>
+          </View>
         </View>
 
         {arch ? (
@@ -382,8 +394,14 @@ function makeStyles(theme: Theme) {
       alignItems: 'center',
       paddingVertical: theme.spacing.md,
     },
-    roomCta: {
+    heroCtas: {
       marginTop: theme.spacing.md,
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    roomCta: {
       paddingHorizontal: theme.spacing.md,
       paddingVertical: 8,
       borderRadius: theme.radius.pill,

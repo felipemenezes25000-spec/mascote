@@ -1,0 +1,398 @@
+/**
+ * /atelier — Ateliê do Mascote.
+ *
+ * Tela de customização visual: sliders, padrões, esconder apêndices.
+ * Draft local + persiste só no save. Preview ao vivo reflete cada mudança.
+ *
+ * Princípio: customização é uma camada SOBRE o DNA — nunca muta o genome.
+ * "Reset" volta pros defaults (eye_size=1, etc) — DNA original sempre intacto.
+ */
+
+import { router, Stack } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Icon } from '@/components/Icon';
+import { MascotRenderer } from '@/components/MascotRenderer';
+import { MorphSlider } from '@/components/MorphSlider';
+import { PressableScale } from '@/components/PressableScale';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { SectionHeader, Typography } from '@/components/ui';
+import { HideToggleRow } from '@/components/atelier/HideToggleRow';
+import { PatternChips } from '@/components/atelier/PatternChips';
+import { customization as customizationDb } from '@/lib/db';
+import { sanitizeCustomization } from '@/lib/dna/customization';
+import { randomizeCustomization } from '@/lib/dna/randomizeCustomization';
+import { useStore } from '@/store';
+import { useStyles, useTheme } from '@/lib/useTheme';
+import type { Theme } from '@/lib/themes';
+import type { MascotCustomization } from '@/types';
+
+// Campos que o usuário edita no Ateliê (sem user_id/updated_at gerenciados).
+type DraftFields = Omit<MascotCustomization, 'user_id' | 'updated_at'>;
+
+function pickDraftFields(c: MascotCustomization): DraftFields {
+  const { user_id: _u, updated_at: _t, ...rest } = c;
+  return rest;
+}
+
+function isSameDraft(a: DraftFields, b: DraftFields): boolean {
+  return (
+    a.eye_size === b.eye_size &&
+    a.eye_spread === b.eye_spread &&
+    a.body_height === b.body_height &&
+    a.body_width === b.body_width &&
+    a.aura_intensity === b.aura_intensity &&
+    a.pattern_density === b.pattern_density &&
+    a.preferred_pattern === b.preferred_pattern &&
+    a.posture_lean === b.posture_lean &&
+    a.force_hide_tail === b.force_hide_tail &&
+    a.force_hide_antennae === b.force_hide_antennae &&
+    a.force_hide_spikes === b.force_hide_spikes
+  );
+}
+
+export default function AtelierScreen() {
+  const theme = useTheme();
+  const styles = useStyles(makeStyles);
+  const profile = useStore(s => s.profile);
+  const mascot = useStore(s => s.mascot);
+
+  const [initial, setInitial] = useState<DraftFields | null>(null);
+  const [draft, setDraft] = useState<DraftFields | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Carrega customization existente na entrada.
+  useEffect(() => {
+    if (!profile) return;
+    let cancelled = false;
+    void (async () => {
+      const current = await customizationDb.get(profile.id);
+      if (cancelled) return;
+      const fields = pickDraftFields(sanitizeCustomization(current));
+      setInitial(fields);
+      setDraft(fields);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profile?.id]);
+
+  const isDirty = useMemo(() => {
+    if (!initial || !draft) return false;
+    return !isSameDraft(initial, draft);
+  }, [initial, draft]);
+
+  // Customization montada pra passar pro MascotRenderer (precisa user_id/updated_at).
+  const previewCustomization = useMemo<MascotCustomization | null>(() => {
+    if (!draft || !profile) return null;
+    return { ...draft, user_id: profile.id, updated_at: new Date().toISOString() };
+  }, [draft, profile?.id]);
+
+  const updateDraft = (patch: Partial<DraftFields>): void => {
+    setDraft(prev => (prev ? { ...prev, ...patch } : prev));
+  };
+
+  const handleClose = (): void => {
+    if (!isDirty) {
+      router.back();
+      return;
+    }
+    Alert.alert(
+      'Sair sem salvar?',
+      'Suas mudanças no Ateliê serão descartadas.',
+      [
+        { text: 'Continuar editando', style: 'cancel' },
+        {
+          text: 'Descartar',
+          style: 'destructive',
+          onPress: () => router.back(),
+        },
+      ],
+    );
+  };
+
+  const handleSave = async (): Promise<void> => {
+    if (!profile || !draft || saving) return;
+    setSaving(true);
+    try {
+      await customizationDb.update(profile.id, draft);
+      router.back();
+    } catch (e) {
+      Alert.alert('Erro ao salvar', String(e instanceof Error ? e.message : e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRandomize = (): void => {
+    if (!profile) return;
+    const next = randomizeCustomization(profile.id);
+    setDraft(pickDraftFields(next));
+  };
+
+  const handleReset = (): void => {
+    Alert.alert(
+      'Voltar ao DNA puro?',
+      'Vai resetar todos os sliders e padrões. Você poderá salvar depois.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Resetar',
+          onPress: () => {
+            // Reset local apenas — só persiste se salvar
+            const defaults: DraftFields = {
+              eye_size: 1,
+              eye_spread: 1,
+              body_height: 1,
+              body_width: 1,
+              aura_intensity: 1,
+              pattern_density: 1,
+              preferred_pattern: 'plain',
+              posture_lean: 0,
+              force_hide_tail: false,
+              force_hide_antennae: false,
+              force_hide_spikes: false,
+            };
+            setDraft(defaults);
+          },
+        },
+      ],
+    );
+  };
+
+  if (!mascot || !profile || !draft) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <ScreenHeader title="Ateliê" variant="modal" />
+        <View style={styles.loading}>
+          <Typography variant="body" tone="secondary">
+            Carregando…
+          </Typography>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <ScreenHeader
+        title="Ateliê"
+        subtitle="esculpe o seu mascote"
+        variant="modal"
+        onClose={handleClose}
+        rightActions={
+          isDirty
+            ? [
+                {
+                  icon: 'check',
+                  onPress: () => void handleSave(),
+                  label: 'Salvar',
+                },
+              ]
+            : undefined
+        }
+      />
+
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Preview */}
+        <View style={styles.previewWrap}>
+          <View style={styles.previewSurface}>
+            <MascotRenderer
+              personality={mascot.personality}
+              phase={mascot.phase}
+              mood={mascot.mood}
+              size={200}
+              customization={previewCustomization}
+            />
+          </View>
+          <Typography variant="caption" tone="secondary" style={styles.previewLabel}>
+            preview ao vivo
+          </Typography>
+        </View>
+
+        {/* Forma */}
+        <SectionHeader title="Forma" subtitle="proporções do corpo e dos olhos" />
+        <View style={styles.section}>
+          <MorphSlider
+            label="Tamanho dos olhos"
+            hint="grandes parecem mais fofos; pequenos mais maduros"
+            value={draft.eye_size}
+            onChange={v => updateDraft({ eye_size: v })}
+          />
+          <MorphSlider
+            label="Separação dos olhos"
+            hint="afasta ou aproxima os olhos"
+            value={draft.eye_spread}
+            onChange={v => updateDraft({ eye_spread: v })}
+          />
+          <MorphSlider
+            label="Altura do corpo"
+            hint="alonga ou achata vertical"
+            value={draft.body_height}
+            onChange={v => updateDraft({ body_height: v })}
+          />
+          <MorphSlider
+            label="Largura do corpo"
+            hint="alarga ou afina horizontal"
+            value={draft.body_width}
+            onChange={v => updateDraft({ body_width: v })}
+          />
+        </View>
+
+        {/* Aura & Padrão */}
+        <SectionHeader title="Aura & Padrão" subtitle="brilho e textura da pele" />
+        <View style={styles.section}>
+          <MorphSlider
+            label="Intensidade da aura"
+            hint="partículas e brilho ao redor"
+            value={draft.aura_intensity}
+            onChange={v => updateDraft({ aura_intensity: v })}
+          />
+          <MorphSlider
+            label="Densidade do padrão"
+            hint="mais ou menos marcas no corpo"
+            value={draft.pattern_density}
+            onChange={v => updateDraft({ pattern_density: v })}
+          />
+        </View>
+        <PatternChips
+          value={draft.preferred_pattern}
+          onChange={v => updateDraft({ preferred_pattern: v })}
+        />
+
+        {/* Apêndices */}
+        <SectionHeader
+          title="Apêndices"
+          subtitle="esconde partes que o DNA mostra (não inventa o que não tem)"
+        />
+        <View style={styles.section}>
+          <HideToggleRow
+            label="Esconder cauda"
+            description="apenas se o DNA tiver cauda"
+            hidden={draft.force_hide_tail}
+            onChange={v => updateDraft({ force_hide_tail: v })}
+          />
+          <HideToggleRow
+            label="Esconder antenas"
+            description="apenas se o DNA tiver antenas"
+            hidden={draft.force_hide_antennae}
+            onChange={v => updateDraft({ force_hide_antennae: v })}
+          />
+          <HideToggleRow
+            label="Esconder espinhos"
+            description="apenas se o DNA tiver espinhos"
+            hidden={draft.force_hide_spikes}
+            onChange={v => updateDraft({ force_hide_spikes: v })}
+          />
+        </View>
+
+        {/* Ações */}
+        <SectionHeader title="Ações" />
+        <View style={styles.actionsRow}>
+          <PressableScale
+            onPress={handleRandomize}
+            style={[styles.actionBtn, { backgroundColor: theme.colors.surface }]}
+            accessibilityRole="button"
+            accessibilityLabel="Gerar aparência aleatória"
+          >
+            <Icon name="sparkles" size={16} color={theme.colors.text} strokeWidth={2} />
+            <Typography variant="bodyBold" style={styles.actionLabel}>
+              Aleatório
+            </Typography>
+          </PressableScale>
+          <PressableScale
+            onPress={handleReset}
+            style={[styles.actionBtn, { backgroundColor: theme.colors.surface }]}
+            accessibilityRole="button"
+            accessibilityLabel="Voltar ao DNA puro"
+          >
+            <Icon name="arrow-left" size={16} color={theme.colors.text} strokeWidth={2} />
+            <Typography variant="bodyBold" style={styles.actionLabel}>
+              DNA puro
+            </Typography>
+          </PressableScale>
+        </View>
+
+        {/* Footer info */}
+        <View style={styles.footer}>
+          <Typography variant="caption" tone="secondary" align="center">
+            🔒 Acessórios e cenas ficam no <Typography variant="caption" style={{ fontWeight: '700' }}>Closet</Typography>.
+          </Typography>
+          <Typography variant="caption" tone="secondary" align="center">
+            Customização nunca altera o DNA — só esculpe a aparência.
+          </Typography>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function makeStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.bg,
+    },
+    loading: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    scroll: {
+      paddingBottom: theme.spacing.xxl,
+    },
+    previewWrap: {
+      alignItems: 'center',
+      paddingTop: theme.spacing.lg,
+      paddingBottom: theme.spacing.md,
+      gap: theme.spacing.xs,
+    },
+    previewSurface: {
+      width: 240,
+      height: 240,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.radius.xl,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      ...theme.shadow.sm,
+    },
+    previewLabel: {
+      fontStyle: 'italic',
+    },
+    section: {
+      paddingHorizontal: theme.spacing.md,
+      gap: theme.spacing.xs,
+    },
+    actionsRow: {
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      marginTop: theme.spacing.xs,
+    },
+    actionBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.radius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    actionLabel: {},
+    footer: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.lg,
+      gap: theme.spacing.xs,
+    },
+  });
+}
