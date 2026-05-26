@@ -73,6 +73,57 @@ function habitMorph(habit: HabitKind, tier: number): VisualImpact {
     impact.pattern = habit === 'outdoor' ? 'stripes' : 'spots';
   }
   if (tier >= 4 && habit === 'meditation') impact.bioluminescent = true;
+
+  // Morph influence boosts — slice 2026-05-25 / extended pra slice 2026-05-26.
+  // Cada hábito empurra blend shapes coerentes com a vibe da prática.
+  // Boosts pequenos por tier (max ~0.3 no tier 4) — não dominam customização.
+  const boostStep = 0.06 * tier;
+  const morphInfluenceBoosts: Partial<Record<string, number>> = {};
+  switch (habit) {
+    case 'water':
+      // hidratação → corpo mais cheio (wide)
+      morphInfluenceBoosts.body_wide = boostStep;
+      break;
+    case 'sleep':
+      // descanso → olhos relaxados (big), postura recolhida (back)
+      morphInfluenceBoosts.eye_big = boostStep * 0.8;
+      morphInfluenceBoosts.posture_back = boostStep * 0.5;
+      break;
+    case 'exercise':
+      // movimento → corpo erguido (tall), postura ativa (forward)
+      morphInfluenceBoosts.body_tall = boostStep;
+      morphInfluenceBoosts.posture_forward = boostStep * 0.8;
+      break;
+    case 'meditation':
+      // presença → aura forte
+      morphInfluenceBoosts.aura_strong = boostStep;
+      break;
+    case 'reading':
+      // leitura → olhar analítico (small)
+      morphInfluenceBoosts.eye_small = boostStep * 0.6;
+      morphInfluenceBoosts.pattern_dense = boostStep * 0.4;
+      break;
+    case 'journaling':
+      // reflexão → olhos introspectivos (big)
+      morphInfluenceBoosts.eye_big = boostStep;
+      break;
+    case 'breath':
+      // respiração → aura
+      morphInfluenceBoosts.aura_strong = boostStep * 0.7;
+      break;
+    case 'outdoor':
+      // ar livre → postura aberta (forward), pattern emerge
+      morphInfluenceBoosts.posture_forward = boostStep;
+      morphInfluenceBoosts.pattern_dense = boostStep * 0.5;
+      break;
+    case 'sun':
+      // luz solar → aura forte
+      morphInfluenceBoosts.aura_strong = boostStep;
+      break;
+  }
+  if (Object.keys(morphInfluenceBoosts).length > 0) {
+    impact.morphInfluenceBoosts = morphInfluenceBoosts;
+  }
   return impact;
 }
 
@@ -102,11 +153,27 @@ function buildHabitMutations(): Mutation[] {
 
 function buildStreakMutations(): Mutation[] {
   const streaks: [number, string, MutationRarity, VisualImpact][] = [
-    [3, 'Faísca de constância', 'common', { glowBoost: 0.05 }],
-    [7, 'Ritmo semanal', 'rare', { morphologyMultipliers: { auraSize: 1.15 } }],
-    [14, 'Compromisso firme', 'rare', { auraParticleMultiplier: 1.2 }],
-    [21, 'Hábito enraizado', 'epic', { pattern: 'cells' }],
-    [45, 'Legado de presença', 'legendary', { bioluminescent: true, glowBoost: 0.2 }],
+    [3, 'Faísca de constância', 'common', {
+      glowBoost: 0.05,
+      morphInfluenceBoosts: { aura_strong: 0.1 },
+    }],
+    [7, 'Ritmo semanal', 'rare', {
+      morphologyMultipliers: { auraSize: 1.15 },
+      morphInfluenceBoosts: { aura_strong: 0.2 },
+    }],
+    [14, 'Compromisso firme', 'rare', {
+      auraParticleMultiplier: 1.2,
+      morphInfluenceBoosts: { aura_strong: 0.25, posture_forward: 0.1 },
+    }],
+    [21, 'Hábito enraizado', 'epic', {
+      pattern: 'cells',
+      morphInfluenceBoosts: { pattern_dense: 0.3, body_tall: 0.1 },
+    }],
+    [45, 'Legado de presença', 'legendary', {
+      bioluminescent: true,
+      glowBoost: 0.2,
+      morphInfluenceBoosts: { aura_strong: 0.5, eye_big: 0.15, pattern_dense: 0.2 },
+    }],
   ];
   return streaks.map(([days, name, rarity, visualImpact]) => ({
     id: `mut.streak.${days}`,
@@ -121,11 +188,28 @@ function buildStreakMutations(): Mutation[] {
 
 function buildTimeMutations(): Mutation[] {
   const daysList: [number, string, GeneKey, VisualImpact][] = [
-    [7, 'Primeira semana', 'curiosity', { morphologyMultipliers: { antennaWiggle: 1.2 } }],
-    [14, 'Duas semanas juntos', 'empathy', { morphologyMultipliers: { eyeSize: 1.08 } }],
-    [30, 'Um mês de vida', 'adaptability', { pattern: 'stripes' }],
-    [90, 'Trimestre vivido', 'resilience', { glowBoost: 0.12, morphologyMultipliers: { bodyEmissiveIntensity: 1.15 } }],
-    [180, 'Meio ano de companhia', 'emotionalDepth', { bioluminescent: true, pattern: 'fractal' }],
+    [7, 'Primeira semana', 'curiosity', {
+      morphologyMultipliers: { antennaWiggle: 1.2 },
+      morphInfluenceBoosts: { eye_big: 0.08 },
+    }],
+    [14, 'Duas semanas juntos', 'empathy', {
+      morphologyMultipliers: { eyeSize: 1.08 },
+      morphInfluenceBoosts: { eye_big: 0.15 },
+    }],
+    [30, 'Um mês de vida', 'adaptability', {
+      pattern: 'stripes',
+      morphInfluenceBoosts: { pattern_dense: 0.25, body_tall: 0.05 },
+    }],
+    [90, 'Trimestre vivido', 'resilience', {
+      glowBoost: 0.12,
+      morphologyMultipliers: { bodyEmissiveIntensity: 1.15 },
+      morphInfluenceBoosts: { aura_strong: 0.3, body_wide: 0.1 },
+    }],
+    [180, 'Meio ano de companhia', 'emotionalDepth', {
+      bioluminescent: true,
+      pattern: 'fractal',
+      morphInfluenceBoosts: { aura_strong: 0.45, pattern_dense: 0.35, eye_big: 0.2 },
+    }],
   ];
   return daysList.map(([days, name, gene, visualImpact]) => ({
     id: `mut.age.${days}d`,
