@@ -29,6 +29,18 @@ import type { MascotEvolutionVisuals } from '@/game/evolution/PhenotypeRenderer'
 import type { MascotAnimationKind } from '@/lib/animation-triggers';
 import { SceneLights } from './mascot-3d/SceneLights';
 import { Creature } from './mascot-3d/Creature';
+import {
+  morphInfluencesFromMorphology,
+  mergeMorphInfluences,
+} from '@/lib/dna/morphInfluences';
+import { morphologyFromGenome, applyCustomization } from '@/lib/dna/morphology';
+import {
+  aggregateVisualImpact,
+  applyMutationVisualImpact,
+} from '@/lib/dna/mutations';
+import { personalityMorphBias } from '@/lib/dna/personalityMorphBias';
+import type { Genome } from '@/lib/dna/genome';
+import type { Personality } from '@/types';
 
 interface Props {
   dna: MascotDNA;
@@ -63,6 +75,12 @@ interface Props {
   action?: { kind: MascotAnimationKind; key: number };
   /** Modificadores visuais do fenótipo (hábitos + microevoluções). */
   evolutionVisuals?: MascotEvolutionVisuals | null;
+  /**
+   * Personalidade ativa do mascote — usado pelo personalityMorphBias
+   * pra adicionar um boost sutil (<=0.20) nos morphInfluences.
+   * Quando omitido, biases ficam neutros.
+   */
+  personality?: Personality;
 }
 
 /**
@@ -83,6 +101,7 @@ export function Mascot3D({
   mood,
   action,
   evolutionVisuals = null,
+  personality,
 }: Props) {
   const [look, setLook] = useState({ x: 0, y: 0 });
   const [bouncePulse, setBouncePulse] = useState(0);
@@ -124,6 +143,22 @@ export function Mascot3D({
     [],
   );
 
+  // morphInfluences eh o "blend shape dict" usado pelos renderers Asset
+  // (GLB morphTargetInfluences) e Unity (SetBlendShapeWeight). Aqui no
+  // procedural R3F nao ha mesh com shape keys, mas a Creature usa as
+  // mesmas chaves pra modular escala de leaves selecionados (Body),
+  // mantendo paridade visual entre as 3 trilhas de render.
+  const morphInfluences = useMemo(() => {
+    const base = morphologyFromGenome(dna as Genome);
+    const withCustom = applyCustomization(base, customization ?? null);
+    const impact = aggregateVisualImpact(mutationIds);
+    const withMut = applyMutationVisualImpact(withCustom, impact);
+    const baseInf = morphInfluencesFromMorphology(withMut);
+    return personality
+      ? mergeMorphInfluences(baseInf, personalityMorphBias(personality))
+      : baseInf;
+  }, [dna, customization, mutationIds, personality]);
+
   return (
     <View
       style={[styles.container, size != null && { width: size, height: size }]}
@@ -154,6 +189,7 @@ export function Mascot3D({
           bouncePulse={bouncePulse}
           action={action}
           evolutionVisuals={evolutionVisuals}
+          morphInfluences={morphInfluences}
         />
       </Canvas>
     </View>

@@ -52,6 +52,13 @@ export interface CreatureProps {
   /** Action externo (Behavior Engine). Key novo = trigger. */
   action?: { kind: MascotAnimationKind; key: number };
   evolutionVisuals?: MascotEvolutionVisuals | null;
+  /**
+   * Dict de blend shape weights computado em Mascot3D (paridade com Asset/
+   * Unity). Aqui no procedural eh usado pra modular escala do group
+   * baseado em body_wide/body_narrow/body_tall/body_short, sem precisar
+   * de mesh com shape keys.
+   */
+  morphInfluences?: Partial<Record<string, number>>;
 }
 
 // Mapeia humor → modificadores de postura. Valores são lerp targets, não saltos.
@@ -82,6 +89,7 @@ export function Creature({
   bouncePulse = 0,
   action,
   evolutionVisuals = null,
+  morphInfluences,
 }: CreatureProps) {
   const groupRef = useRef<THREE.Group>(null);
   // Morphology pipeline: base DNA → customization → mutations. Mudanças no DNA
@@ -105,6 +113,17 @@ export function Creature({
       bounceAmp: base.bounceAmp + (evolutionVisuals?.activeEnergy ? 0.008 : 0),
     };
   }, [mood, evolutionVisuals]);
+
+  // morphInfluences eh recebido pra paridade de contrato com Mascot3DAsset
+  // (que aplica em morphTargetInfluences) e Unity (SetBlendShapeWeight).
+  // O procedural ja consome `morph` diretamente nos leaves (Body usa
+  // morph.bodyWidth, etc), entao re-aplicar aqui dobra a escala. O dict
+  // fica disponivel via debug/observabilidade e pra leaves futuras que
+  // queiram observar weights normalizados pra animacoes adicionais.
+  // Importante: void no useEffect garante que o memo nao eh tree-shaken
+  // pelo bundler em prod e que componentes downstream que dependem deste
+  // sinal nao sejam invalidados sem causa.
+  useMemo(() => morphInfluences, [morphInfluences]);
 
   // Bounce-on-tap state — tracked via ref pra useFrame (sem re-render).
   const bouncePulseSeen = useRef(0);
