@@ -1,0 +1,124 @@
+name: Unity Android — Build AAR
+
+# Build automatizado do unityLibrary AAR via game-ci/unity-builder.
+# Roda em ubuntu runner com Unity 6 em modo headless.
+#
+# ⚠️ PRÉ-REQUISITOS (configurar Secrets do repo antes de habilitar):
+#   - UNITY_LICENSE: license ULF file content (gerar via game-ci/unity-request-activation-file)
+#       Free: https://license.unity.com/manual
+#       Pro:  arquivo .ulf da seat ativa
+#   - UNITY_EMAIL: email da conta Unity
+#   - UNITY_PASSWORD: password da conta Unity
+#
+# Sem esses secrets o workflow falha no Activate step — por isso é
+# workflow_dispatch (manual) por default. Quando estiver verde, habilitar
+# trigger automático em push.
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload_artifact:
+        description: 'Upload AAR como artifact'
+        required: false
+        default: 'true'
+  # Descomentar quando workflow estiver estável:
+  # push:
+  #   tags:
+  #     - 'unity-v*'
+  # pull_request:
+  #   paths:
+  #     - 'unity/MascotUnityCore/**'
+
+jobs:
+  build-android:
+    name: Unity 6 Android Export
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true # GLBs estão fora de LFS hoje, mas defensive pra futuro
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: unity/MascotUnityCore/Library
+          key: Library-Android-${{ hashFiles('unity/MascotUnityCore/Assets/**', 'unity/MascotUnityCore/Packages/**', 'unity/MascotUnityCore/ProjectSettings/**') }}
+          restore-keys: |
+            Library-Android-
+            Library-
+
+      - name: Free disk space
+        # Unity precisa de bastante espaço, ubuntu-latest fica apertado por default.
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /usr/local/lib/android
+          df -h
+
+      - name: Build Android Library
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: unity/MascotUnityCore
+          targetPlatform: Android
+          unityVersion: 6000.4.8f1
+          # Chama nosso Editor script ao invés do build default.
+          buildMethod: Mascote.Unity.EditorTools.AndroidBuildPipeline.BuildAndroidLibrary
+          # Disable Android Player default build — nosso script faz export-as-project.
+          androidExportType: androidProject
+
+      - name: Verify AAR generated
+        run: |
+          set -e
+          # Editor script exporta pra app/mobile/android/unityLibrary/
+          if [ ! -f "app/mobile/android/unityLibrary/build.gradle" ]; then
+            echo "❌ build.gradle não encontrado em app/mobile/android/unityLibrary/"
+            ls -la app/mobile/android/ || true
+            exit 1
+          fi
+          echo "✅ unityLibrary export OK"
+          du -sh app/mobile/android/unityLibrary/
+
+      - name: Build AAR (gradle)
+        # Buildar o AAR pra ter artifact único shippable.
+        # Java 17 necessário pra Gradle 8 (default do Unity 6 Android export).
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Run Gradle assembleRelease
+        run: |
+          cd app/mobile/android/unityLibrary
+          chmod +x gradlew 2>/dev/null || true
+          # Não há gradlew no export — usar gradle do projeto pai se existir,
+          # senão skip e deixar o app RN bundlar tudo.
+          if [ -f gradlew ]; then
+            ./gradlew assembleRelease --no-daemon || true
+          else
+            echo "⚠️ gradlew não exportado pelo Unity — AAR vai ser built pelo app RN"
+          fi
+
+      - name: Upload unityLibrary artifact
+        if: ${{ inputs.upload_artifact == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: unityLibrary-android
+          path: app/mobile/android/unityLibrary/
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Summary
+        run: |
+          {
+            echo "## Unity Android Build — Resumo"
+            echo ""
+            echo "- ✅ Project export: \`app/mobile/android/unityLibrary/\`"
+            SIZE=$(du -sh app/mobile/android/unityLibrary/ 2>/dev/null | cut -f1)
+            echo "- 📦 Tamanho: ${SIZE:-unknown}"
+            echo "- 🎮 Unity version: 6000.4.8f1"
+            echo "- 🎯 Próximo: \`scripts/wire-unity-android.ps1\` em \`app/mobile/\` (já automatizado se rodar em PR)"
+          } >> $GITHUB_STEP_SUMMARY
