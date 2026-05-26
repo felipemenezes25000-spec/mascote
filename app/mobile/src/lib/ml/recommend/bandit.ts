@@ -50,7 +50,10 @@ function gammaSample(k: number, rng: () => number): number {
   }
   const d = k - 1 / 3;
   const c = 1 / Math.sqrt(9 * d);
-  for (;;) {
+  // Cap defensivo: rng corrompido/adversarial podia loopar sem fim (busy-wait
+  // bloqueia thread JS). Em Marsaglia bem-comportado, aceita na 1ª-2ª iteração;
+  // 1000 é ordens-de-magnitude acima e ainda barato.
+  for (let iter = 0; iter < 1000; iter++) {
     let x: number, v: number;
     do {
       // box-muller pra normal padrão
@@ -64,6 +67,8 @@ function gammaSample(k: number, rng: () => number): number {
     if (u < 1 - 0.0331 * x ** 4) return d * v;
     if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v;
   }
+  // Fallback: retorna a moda da gamma (k-1 para k>=1). Mantém shape razoável.
+  return Math.max(d, 1e-10);
 }
 
 export function betaSample(alpha: number, beta: number, rng: () => number = Math.random): number {

@@ -27,7 +27,10 @@ export function evaluateUserMessage(message: string): SafetyDecision {
     return { allowed: false, flag, redirect: CRISIS_REPLY };
   }
   if (flag === 'high') {
-    return { allowed: false, flag, redirect: CRISIS_REPLY };
+    // Invariante (audit mai/2026): high é tratado como critical — flag exportada
+    // tem que ser 'critical' pra UI/analytics aplicarem disclaimers corretos.
+    // lib/ai.ts já fazia isso; aqui estava regredido.
+    return { allowed: false, flag: 'critical', redirect: CRISIS_REPLY };
   }
   if (/tenho (depress|ansiedade|tdah|bipolar)/i.test(message)) {
     return { allowed: false, flag: 'watch', redirect: DIAGNOSIS_REDIRECT };

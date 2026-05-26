@@ -87,7 +87,16 @@ export function applyXp(mascot: Mascot, deltaRaw: number, dailyXpAlready: number
   const nextPhase = phaseRank(derivedPhase) >= phaseRank(prevPhase) ? derivedPhase : prevPhase;
   // Aplica energy boost ANTES de derivar mood, pra que o boost seja
   // refletido no humor (ex.: 75 → 85 deve virar 'empolgado').
-  const nextEnergy = Math.min(100, Math.max(0, mascot.energy) + 10);
+  // Guards:
+  //  - mascot.energy=NaN (corrupção de storage/import) era envenenado:
+  //    Math.max(0, NaN)=NaN → NaN+10=NaN → mood travado em 'ok'.
+  //  - Só boost energy se houve XP real (delta>0). Sem isso, spam-tap após
+  //    cap diário ainda subia energy → mood 'empolgado' incongruente com
+  //    "0 XP ganhos hoje".
+  const safeEnergy = Number.isFinite(mascot.energy) ? mascot.energy : 0;
+  const nextEnergy = delta > 0
+    ? Math.min(100, Math.max(0, safeEnergy) + 10)
+    : Math.min(100, Math.max(0, safeEnergy));
   const updated: Mascot = {
     ...mascot,
     xp: nextXp,

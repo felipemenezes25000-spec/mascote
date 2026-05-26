@@ -39,7 +39,10 @@ export function scoreReply(text: string): Omit<StyleVector, 'n'> {
   const exclam = (text.match(/!/g) ?? []).length;
   const energy = Math.tanh(exclam / 2);
   const emojis = (text.match(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}]/gu) ?? []).length;
-  const gírias = /(tô|tá|né|massa|bora|aiii|aii)/i.test(text) ? 1 : 0;
+  // Word boundaries (`\b`) evitam falsos positivos em "está" (contém "tá"),
+  // "também" (contém "ta"), "tomate" etc — sem isso, style tracker aprendia
+  // tom "casual" mesmo de respostas formais e reforçava estilo errado no prompt.
+  const gírias = /\b(tô|tá|né|massa|bora|aii+)\b/i.test(text) ? 1 : 0;
   const casualness = Math.tanh((emojis + gírias) / 2);
   const questions = (text.match(/\?/g) ?? []).length;
   const periods = (text.match(/\./g) ?? []).length;

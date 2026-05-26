@@ -1,6 +1,11 @@
 import type { InAppNotification } from '@/types';
 import { read, write, withLock, uid } from './internal';
 
+// Cap defensivo: in-app notifications acumulavam indefinidamente, inclusive
+// já-lidas. Sem trim, `notify.ts` itera a lista inteira pra dedup por dia →
+// O(n) por call, degrada com a vida do usuário. FIFO mantém 300.
+const MAX_NOTIFICATIONS = 300;
+
 export const notifications = {
   async list(user_id: string): Promise<InAppNotification[]> {
     const rows = await read<InAppNotification>('notifications');
@@ -14,7 +19,11 @@ export const notifications = {
     return withLock('notifications', async () => {
       const rows = await read<InAppNotification>('notifications');
       const next: InAppNotification = { ...n, id: uid('n_'), created_at: new Date().toISOString() };
-      await write<InAppNotification>('notifications', [...rows, next]);
+      const combined = [...rows, next];
+      const trimmed = combined.length > MAX_NOTIFICATIONS
+        ? combined.slice(-MAX_NOTIFICATIONS)
+        : combined;
+      await write<InAppNotification>('notifications', trimmed);
       return next;
     });
   },

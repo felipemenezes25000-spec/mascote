@@ -3,6 +3,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { KEY, META_KEY, withLock, write } from './internal';
+import { secureRemove, SECURE_KEYS } from '@/lib/secureStore';
 
 const ALL_TABLES = [
   'profiles',
@@ -47,8 +48,16 @@ export async function resetAll(): Promise<void> {
   const externalKeys = allKeys.filter(
     k => k.startsWith('paywall_shown:') || k.startsWith('birthday_shown:'),
   );
-  const toRemove = [...new Set([...mascoteKeys, ...externalKeys])];
+  // No web, secureStore usa prefixo `secure:` em AsyncStorage — sem isso
+  // a chave OpenAI persistia depois de "Resetar tudo".
+  const secureKeys = allKeys.filter(k => k.startsWith('secure:'));
+  const toRemove = [...new Set([...mascoteKeys, ...externalKeys, ...secureKeys])];
   await Promise.all(toRemove.map(k => AsyncStorage.removeItem(k)));
+  // No mobile, expo-secure-store vive fora do AsyncStorage (Keychain/Keystore).
+  // Precisa de remoção explícita para cada SECURE_KEY conhecida.
+  await Promise.all(
+    Object.values(SECURE_KEYS).map(k => secureRemove(k)),
+  );
 }
 
 async function readRaw(table: string): Promise<unknown[]> {

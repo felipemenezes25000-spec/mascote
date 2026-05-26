@@ -139,6 +139,20 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
     idempotency_key: `${profile.id}-${today}-${kind}-${value}-${dailyXpSoFar}`,
   });
 
+  // Detecta dedupe hit: quando idempotency_key colide com um checkin já
+  // persistido (mesmo dia/kind/value/dailyXpSoFar), `checkinsDb.add` retorna
+  // o row existente em vez de criar um novo. Sem essa detecção, walletDb.add
+  // rodava incondicionalmente → tap-spam após cap diário (delta=0,
+  // dailyXpSoFar estagnado) reusava a mesma key e mintava moedas infinitas.
+  // Heurística: se occurred_at do retorno é >1s atrás, é row pré-existente.
+  let isDedupedHit = false;
+  if (persistedCheckin) {
+    const occurredMs = new Date(persistedCheckin.occurred_at).getTime();
+    if (Number.isFinite(occurredMs)) {
+      isDedupedHit = Date.now() - occurredMs > 1000;
+    }
+  }
+
   if (result.delta > 0) {
     await xpEvents.add({
       user_id: profile.id,
@@ -147,7 +161,10 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
       reference: { habit: kind, value },
     });
   }
-  await walletDb.add(profile.id, coinsInput, 0);
+  // Só credita moedas se o checkin é genuinamente novo (não dedupe).
+  if (!isDedupedHit) {
+    await walletDb.add(profile.id, coinsInput, 0);
+  }
 
   let finalMascot = tierCapped;
   let finalLeveled = result.leveledUp;

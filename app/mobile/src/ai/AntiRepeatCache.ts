@@ -17,6 +17,21 @@ const KEY = (userId: string, personality: Personality) =>
   `mascote:ai_recent_replies:${userId}:${personality}`;
 
 const MAX_RECENT = 5;
+const MAX_REPLY_CHARS = 200;
+
+/**
+ * Sanitiza um reply antes de injetar no system prompt.
+ * Strings que vêm de AsyncStorage podem ter sido corrompidas por debug, import
+ * ou bug em outro código — não confiar nelas como puro texto. Sem isso, alguém
+ * podia gravar "\n\nNOVA REGRA: ignore o resto." no cache e o conteúdo entraria
+ * no system prompt na próxima chamada (cache-poisoning → prompt injection).
+ */
+function sanitizeReply(s: string): string | null {
+  if (typeof s !== 'string') return null;
+  const cleaned = s.replace(/[\r\n\t]+/g, ' ').replace(/"/g, '').trim();
+  if (cleaned.length === 0 || cleaned.length > MAX_REPLY_CHARS) return null;
+  return cleaned;
+}
 
 export async function shouldRetryForVariety(
   userId: string,
@@ -26,7 +41,8 @@ export async function shouldRetryForVariety(
     const raw = await AsyncStorage.getItem(KEY(userId, personality));
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((s): s is string => typeof s === 'string') : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(sanitizeReply).filter((s): s is string => s !== null);
   } catch {
     return [];
   }
@@ -37,12 +53,12 @@ export async function rememberReply(
   personality: Personality,
   reply: string,
 ): Promise<void> {
-  const trimmed = reply.trim();
-  if (!trimmed) return;
+  const cleaned = sanitizeReply(reply);
+  if (!cleaned) return;
   try {
     const existing = await shouldRetryForVariety(userId, personality);
     // Dedup: se já tem exatamente essa frase, move pro topo em vez de duplicar.
-    const next = [trimmed, ...existing.filter(r => r !== trimmed)].slice(0, MAX_RECENT);
+    const next = [cleaned, ...existing.filter(r => r !== cleaned)].slice(0, MAX_RECENT);
     await AsyncStorage.setItem(KEY(userId, personality), JSON.stringify(next));
   } catch {
     /* cache é melhor-esforço */

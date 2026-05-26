@@ -25,8 +25,17 @@ export class SyncEngine {
     return localSyncRepo.importSnapshot(payload);
   }
 
-  async pushPending(_userId: string): Promise<{ pushed: number; failed: number }> {
-    return { pushed: 0, failed: 0 };
+  async pushPending(userId: string): Promise<{ pushed: number; failed: number }> {
+    // Modo local_only: backend remoto ainda não existe. Antes esse stub era
+    // no-op enquanto `queueMutation` continuava enfileirando — fila acumulava
+    // até MAX_QUEUE_ITEMS=5000 e perdia ops antigas via FIFO drop.
+    // Como não há ack remoto, drenamos as ops localmente (já foram aplicadas
+    // ao AsyncStorage no momento da escrita pelo respectivo db layer; a fila
+    // serve só pro futuro replay quando o sync remoto entrar).
+    const pending = await syncQueue.list(userId);
+    if (pending.length === 0) return { pushed: 0, failed: 0 };
+    await syncQueue.clear(userId);
+    return { pushed: pending.length, failed: 0 };
   }
 
   async queueMutation(

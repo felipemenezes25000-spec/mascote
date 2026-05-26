@@ -42,10 +42,12 @@ export async function buildMascotContextLine(
     const snap = await mascotMemoryService.snapshot(userId, mascot.name);
     const tone = inferEmotionalTone(snap.entries);
     const prefix = emotionalPrefix(tone);
-    const memoryHint =
-      snap.entries[0]?.summary
-        ? `Lembro que você mencionou: "${snap.entries[0].summary.slice(0, 60)}". `
-        : '';
+    // ANTES: ecoava `summary` cru no bubble, vazando PII/sensitive em
+    // screenshot/over-the-shoulder. Agora referencia abstrata — o usuário
+    // sabe que o mascote lembra, sem nada citável publicamente.
+    const memoryHint = snap.entries[0]?.summary
+      ? 'Ainda lembro do que você compartilhou. '
+      : '';
 
     if (context === 'return' || context === 'saudade') {
       return `${prefix}${memoryHint}${STATIC_LINES[context][0]}`;

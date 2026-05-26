@@ -2,6 +2,12 @@ import type { Message } from '@/types';
 import { read, write, withLock, uid } from './internal';
 import { dateLocal } from './dates';
 
+// Cap defensivo contra crescimento ilimitado da tabela `messages`. Usuário
+// ativo gera centenas de mensagens/dia; sem trim, o JSON.parse/stringify da
+// tabela inteira (feito em cada read/write) degrada o app e arrisca quota
+// do AsyncStorage (~6MB no Android). FIFO mantém as 1000 mais recentes.
+const MAX_MESSAGES = 1000;
+
 export const messages = {
   async listRecent(user_id: string, limit = 50): Promise<Message[]> {
     const rows = await read<Message>('messages');
@@ -22,7 +28,11 @@ export const messages = {
     return withLock('messages', async () => {
       const rows = await read<Message>('messages');
       const next: Message = { ...m, id: uid('msg_'), created_at: new Date().toISOString() };
-      await write<Message>('messages', [...rows, next]);
+      const combined = [...rows, next];
+      const trimmed = combined.length > MAX_MESSAGES
+        ? combined.slice(-MAX_MESSAGES)
+        : combined;
+      await write<Message>('messages', trimmed);
       return next;
     });
   },
