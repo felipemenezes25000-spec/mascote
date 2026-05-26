@@ -25,6 +25,7 @@ import { HideToggleRow } from '@/components/atelier/HideToggleRow';
 import { LookManager } from '@/components/atelier/LookManager';
 import { MutationsActiveStrip } from '@/components/atelier/MutationsActiveStrip';
 import { PatternChips } from '@/components/atelier/PatternChips';
+import { PersonalityPreviewSwatch } from '@/components/atelier/PersonalityPreviewSwatch';
 import { ThemePresetChips } from '@/components/atelier/ThemePresetChips';
 import {
   atelierLooks,
@@ -536,6 +537,20 @@ export default function AtelierScreen() {
           }
         />
         <MutationsActiveStrip unlocked={unlockedMutations} />
+
+        {/* Personalidades — explorar como ficaria com outra personality */}
+        <SectionHeader
+          title="Outras personalidades"
+          subtitle="o mesmo DNA com vibes diferentes (read-only)"
+          compact
+        />
+        <PersonalityPreviewSwatch
+          currentPersonality={mascot.personality}
+          phase={mascot.phase}
+          mood={mascot.mood}
+          customization={previewCustomization}
+          mutationIds={unlockedMutations.map(m => m.mutation_id)}
+        />
 
         {/* Looks salvos */}
         <SectionHeader
