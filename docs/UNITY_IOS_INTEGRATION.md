@@ -1,8 +1,14 @@
 # Integração Unity iOS — Mascote mobile
 
-## Status
+## Status (atualizado 2026-05-25)
 
-Integração iOS é **documentada + plugin stub**. Requer **Mac + Xcode + Unity Editor** para export real. Sem Mac no CI, apenas validação de contrato RN e plugin Expo.
+Integração iOS agora tem **bridge nativo Swift completo + lifecycle helper + config plugin que copia tudo no prebuild**. Requer **Mac + Xcode + Unity Editor** apenas pra:
+1. Gerar `ios/` via `expo prebuild --platform ios`
+2. Exportar UnityFramework do Unity Editor
+3. Embed framework no Xcode + configurar bridging header
+4. Patcheia `AppDelegate.swift` com lifecycle delegation (snippet documentado)
+
+Toda a parte de código nativo (Swift + ObjC) **já está pronta** em `app/mobile/plugins/ios-unity-source/` e é copiada automaticamente pra `ios/Mascote/Unity/` durante o prebuild.
 
 ## Arquitetura espelhada (Android)
 
@@ -44,21 +50,59 @@ Plugin `plugins/withUnityIOS.js` adiciona comentário no Podfile para:
 3. Configure **Build Phases → Run Script** se necessário para IL2CPP
 4. `Info.plist`: permissões de câmera/microfone se mini-games futuros
 
-### 4. Bridge nativa iOS (a implementar)
+### 4. Bridge nativa iOS — JÁ PRONTA (slice 2026-05-25)
 
-Espelhar Android:
+Templates Swift/ObjC em `app/mobile/plugins/ios-unity-source/`:
+- `UnityMascotModule.swift` — bridge RN ↔ Unity (espelha `UnityMascotModule.kt`)
+- `UnityMascotModule.m` — `RCT_EXTERN_MODULE` registro
+- `UnityPlayerHelper.swift` — lifecycle reflection-safe (espelha `UnityPlayerActivityHelper.kt`)
+- `Mascote-Bridging-Header.h` — bridging header template
 
-```objc
-// UnityMascotModule.m — stub futuro
-RCT_EXPORT_METHOD(postMessage:(NSString *)json ...)
-```
+`withUnityIOS.js` (config plugin) copia tudo pra `ios/Mascote/Unity/` no prebuild.
 
-Unity C# chama via:
+**Setup adicional no Xcode (one-time):**
+
+1. **Build Settings → Swift Compiler - General → Objective-C Bridging Header:**
+   `Mascote/Unity/Mascote-Bridging-Header.h`
+
+2. **Embed UnityFramework.framework** (após export Unity):
+   General → Frameworks → Drag & Embed & Sign
+
+3. **Descomentar `@import UnityFramework;`** em `Mascote-Bridging-Header.h`
+
+4. **Patchear `AppDelegate.swift`** (snippet completo):
+   ```swift
+   override func applicationWillResignActive(_ application: UIApplication) {
+       super.applicationWillResignActive(application)
+       UnityPlayerHelper.applicationWillResignActive()
+   }
+   override func applicationDidEnterBackground(_ application: UIApplication) {
+       super.applicationDidEnterBackground(application)
+       UnityPlayerHelper.applicationDidEnterBackground()
+   }
+   override func applicationWillEnterForeground(_ application: UIApplication) {
+       super.applicationWillEnterForeground(application)
+       UnityPlayerHelper.applicationWillEnterForeground()
+   }
+   override func applicationDidBecomeActive(_ application: UIApplication) {
+       super.applicationDidBecomeActive(application)
+       UnityPlayerHelper.applicationDidBecomeActive()
+   }
+   override func applicationDidReceiveMemoryWarning(_ application: UIApplication) {
+       super.applicationDidReceiveMemoryWarning(application)
+       UnityPlayerHelper.applicationDidReceiveMemoryWarning()
+   }
+   ```
+
+Unity C# chama RN via:
 
 ```csharp
 #if UNITY_IOS
 [DllImport("__Internal")]
 private static extern void onUnityMessage(string json);
+
+// No ReactNativeBridge.cs:
+onUnityMessage(jsonString);
 #endif
 ```
 
@@ -97,7 +141,25 @@ EXPO_PUBLIC_UNITY_ENABLED=true
 
 ## Próximos passos
 
-1. Mac dev: export UnityFramework
-2. Implementar `UnityMascotModule.swift` espelhando Kotlin
-3. Substituir placeholder `UnityMascotView` por `UIView` Unity
-4. TestFlight beta com `EXPO_PUBLIC_UNITY_DEBUG_PANEL=true`
+1. ✅ `UnityMascotModule.swift` espelhando Kotlin (slice 2026-05-25)
+2. ✅ `UnityPlayerHelper.swift` espelhando Kotlin (slice 2026-05-25)
+3. ✅ Config plugin copia tudo no prebuild (slice 2026-05-25)
+4. 🟡 Mac dev: export UnityFramework
+5. 🟡 Xcode: configurar bridging header + embed framework + AppDelegate patch
+6. 🟡 Substituir placeholder `UnityMascotView` por `UIView` Unity nativo
+7. 🟡 TestFlight beta com `EXPO_PUBLIC_UNITY_DEBUG_PANEL=true`
+
+## Validação status (slice 2026-05-25)
+
+⚠️ **Não testado em Mac/device físico** — implementação seguiu specs oficiais
+de UnityFramework + RN Bridge espelhando 1:1 o Android (que já testamos
+parcialmente). Bugs prováveis em:
+
+- Configuração do bridging header (paths)
+- Embed do framework (Code Signing)
+- Init do `UnityAppController` integration (não está no escopo do helper —
+  precisa setup manual no Xcode)
+- Lifecycle race conditions (iOS scenes vs UIApplication)
+
+**Primeiro Mac/device deve seguir o checklist em
+`app/mobile/plugins/ios-unity-source/README.md` e reportar issues.**
