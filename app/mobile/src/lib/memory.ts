@@ -352,7 +352,12 @@ export async function recall(
             /* v8 ignore next — vector store contém IDs que vêm de `items`,
                então itemById.get sempre encontra. Defensivo contra dessincronização. */
             if (!item) return null;
-            const ageDays = (now.getTime() - new Date(item.created_at).getTime()) / 86_400_000;
+            // created_at corrompido (import/storage) → NaN propaga p/ score
+            // e desestabiliza o sort. Clamp em 0 (= recency máxima neutra).
+            const createdMs = new Date(item.created_at).getTime();
+            const ageDays = Number.isFinite(createdMs)
+              ? Math.max(0, (now.getTime() - createdMs) / 86_400_000)
+              : 0;
             const recency = 1 / (1 + ageDays / 30);
             const kindWeight = item.kind === 'event' ? 1.5 : 1;
             return { item, score: r.score * recency * kindWeight };
@@ -388,7 +393,10 @@ export async function recall(
   const scored = items
     .map(item => {
       const overlap = item.keywords.filter(k => ctxKeywords.has(k)).length;
-      const ageDays = (now.getTime() - new Date(item.created_at).getTime()) / 86_400_000;
+      const createdMs = new Date(item.created_at).getTime();
+      const ageDays = Number.isFinite(createdMs)
+        ? Math.max(0, (now.getTime() - createdMs) / 86_400_000)
+        : 0;
       const recency = 1 / (1 + ageDays / 30);
       const kindWeight = item.kind === 'event' ? 1.5 : 1;
       return { item, score: overlap * recency * kindWeight };
@@ -404,7 +412,7 @@ export async function recall(
 
 async function markRecalled(
   userId: string,
-  items: MemoryItem[],
+  _items: MemoryItem[],
   recalledIds: string[],
   now: Date
 ): Promise<void> {
@@ -415,8 +423,12 @@ async function markRecalled(
   // sobre uma versão stale capturada antes.
   await withLock(`memory:${userId}`, async () => {
     const fresh = await read(userId);
-    const baseline = fresh.length > 0 ? fresh : items;
-    const updated = baseline.map(i => (ids.has(i.id) ? { ...i, last_recalled_at: nowIso } : i));
+    // ANTES: fallback `fresh.length > 0 ? fresh : items` ressuscitava
+    // memórias quando `clearMemories()` rodava entre `recall()` e cá —
+    // o write reescrevia `items` (snapshot pré-clear) por cima do storage
+    // já limpo. Agora confiamos em `fresh`: se está vazio, write([]) é
+    // no-op idempotente; nada é ressuscitado.
+    const updated = fresh.map(i => (ids.has(i.id) ? { ...i, last_recalled_at: nowIso } : i));
     await write(userId, updated);
   });
 }
