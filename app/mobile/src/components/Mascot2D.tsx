@@ -43,6 +43,12 @@ import {
 } from '@/lib/dna/morphInfluences';
 import { aggregateVisualImpact } from '@/lib/dna/mutations';
 import { personalityMorphBias } from '@/lib/dna/personalityMorphBias';
+import {
+  DEFAULT_IDENTITY,
+  identityFromHSL,
+  tintIdentity,
+  type MascotIdentity,
+} from '@/lib/color/tint';
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 
@@ -335,11 +341,25 @@ function MascotImpl({
   //
   // Sem DNA, cai pra preset por personality (Calmo=sage, Motivador=brand,
   // Fofo=coral, Sábio=lilac) — comportamento legado preservado.
+  //
+  // **Identidade cromática (Task 3.4):** o CORPO usa `tintIdentity(identity, mood)`
+  // — mantém cor base do genome dominante, mood é tint sutil (±20° hue máximo).
+  // Acentos (parafusos laterais, bochechas, etc.) usam `tintIdentity(identity,
+  // 'ok')` pra ficarem FIXOS independentes do humor — Pip "é o mesmo Pip"
+  // em todas as telas mesmo que esteja triste numa e empolgado em outra.
   const dnaPalette = dna ? paletteFromGenome(dna as Genome) : null;
-  const brand = dnaPalette?.body ?? meta.primaryColor;
+  const identity: MascotIdentity = dnaPalette
+    ? identityFromHSL(dnaPalette.bodyHSL)
+    : DEFAULT_IDENTITY;
+  // Corpo: identidade + tint de mood (sutil).
+  const brand = tintIdentity(identity, mood);
+  // Identidade pura (sem mood) — usada em acentos pra ficarem estáveis.
+  const identityFixed = tintIdentity(identity, 'ok');
+  // Fallback de "deep"/accent: paleta DNA tem accent próprio (matiz +22°),
+  // se ausente cai no preset por personality (legado).
   const brandDeep = dnaPalette?.accent ?? meta.accentColor;
   const accent = dnaPalette?.accent ?? meta.accentColor;
-  const accentDeep = dnaPalette?.body ?? meta.primaryColor;
+  const accentDeep = dnaPalette?.body ? identityFixed : meta.primaryColor;
 
   // Morfologia por fase — cada fase adiciona elementos NOVOS visíveis.
   //  ovo (1):       só casca, sem cabeça

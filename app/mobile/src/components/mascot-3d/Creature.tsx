@@ -255,6 +255,7 @@ export function Creature({
         morph={morph}
         palette={palette}
         mood={moodS}
+        moodKind={mood}
         reduceMotion={reduceMotion}
         glowMultiplier={evolutionVisuals?.glowMultiplier ?? 1}
         bodyFirmness={evolutionVisuals?.bodyFirmness ?? 0}

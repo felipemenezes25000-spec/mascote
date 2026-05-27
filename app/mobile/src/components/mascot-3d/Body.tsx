@@ -18,7 +18,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
-import type { MascotDNA } from '@/types';
+import type { MascotDNA, MascotMood } from '@/types';
 import {
   bodyHex,
   glowHex,
@@ -26,12 +26,16 @@ import {
   paletteFromGenome,
   sanitizeGenome,
 } from '@/lib/dna';
+import { identityFromHSL, tintIdentity } from '@/lib/color/tint';
 
 export interface BodyProps {
   dna: MascotDNA;
   morph: ReturnType<typeof morphologyFromGenome>;
   palette: ReturnType<typeof paletteFromGenome>;
+  /** Score numérico [0..1] do mood — usado em emissiveIntensity. */
   mood: number;
+  /** Mood enum — usado em tintIdentity pra modular cor do CORPO (não emissivo). */
+  moodKind?: MascotMood;
   reduceMotion: boolean;
   glowMultiplier?: number;
   bodyFirmness?: number;
@@ -42,6 +46,7 @@ export function Body({
   morph,
   palette,
   mood,
+  moodKind,
   reduceMotion,
   glowMultiplier = 1,
   bodyFirmness = 0,
@@ -150,7 +155,16 @@ export function Body({
     );
   });
 
-  const color = bodyHex(palette);
+  // IDENTIDADE cromática (Task 3.4): cor do corpo = identidade base
+  // (paletteFromGenome.bodyHSL) tintada com mood SUTIL (±20° hue).
+  // Identidade preserva entre telas — mood não substitui cor, só modula.
+  //
+  // Emissivo segue paleta DNA original (glow) — não muda com mood pra
+  // manter "luz interna" da criatura como traço estável.
+  const identity = identityFromHSL(palette.bodyHSL);
+  const tintedHex = tintIdentity(identity, moodKind);
+  // tintIdentity retorna "#rrggbb" — Three.js aceita string ou number.
+  const color = tintedHex;
   const emissive = glowHex(palette);
 
   let mat_roughness = morph.bodyRoughness;
