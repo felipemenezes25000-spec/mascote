@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui';
 /**
  * Aba "Relatório" — quarta tab do handoff.
  * Mostra heatmap + stats da semana + link pra relatório completo.
@@ -5,7 +6,7 @@
 
 import { router, useFocusEffect, Redirect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card } from '@/components/Card';
 import { HabitChart } from '@/components/HabitChart';
@@ -15,6 +16,7 @@ import { PressableScale } from '@/components/PressableScale';
 import { StaggeredView } from '@/components/StaggeredView';
 import { addDays, checkins, todayLocal, xpEvents } from '@/lib/db';
 import { isStreakMilestone, nextMilestone } from '@/lib/share';
+import { daysToNextMilestone } from '@/lib/format/plural';
 import { Button } from '@/components/Button';
 import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
 import { buildWeeklyInsightLite } from '@/lib/weekly-insight-lite';
@@ -85,7 +87,7 @@ export default function ReportTab() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <StaggeredView index={0}>
-          <Text accessibilityRole="header" style={styles.h1}>Relatório</Text>
+          <Typography variant="body" accessibilityRole="header" style={styles.h1}>Relatório</Typography>
         </StaggeredView>
 
         <StaggeredView index={1}>
@@ -100,10 +102,10 @@ export default function ReportTab() {
         {weekCount === 0 && (
           <StaggeredView index={2}>
             <Card variant="elevated" padding="md" style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>Sem check-ins nesta semana</Text>
-              <Text style={styles.emptyBody}>
+              <Typography variant="body" style={styles.emptyTitle}>Sem check-ins nesta semana</Typography>
+              <Typography variant="body" style={styles.emptyBody}>
                 Quando quiser retomar, um check-in curto já começa a preencher seu mapa.
-              </Text>
+              </Typography>
               <Button variant="secondary" label="Fazer check-in" onPress={() => router.push('/checkin')} />
             </Card>
           </StaggeredView>
@@ -113,9 +115,9 @@ export default function ReportTab() {
           <Card variant="elevated" padding="md" style={styles.insightCard}>
             <View style={styles.cardHeader}>
               <Icon name="sparkles" size={12} color={theme.colors.textSecondary} strokeWidth={2.2} />
-              <Text style={styles.cardTitle}>Insight da semana</Text>
+              <Typography variant="body" style={styles.cardTitle}>Insight da semana</Typography>
             </View>
-            <Text style={styles.insightBody}>{weeklyInsight}</Text>
+            <Typography variant="body" style={styles.insightBody}>{weeklyInsight}</Typography>
           </Card>
         </StaggeredView>
 
@@ -123,22 +125,22 @@ export default function ReportTab() {
           <Card variant="elevated" padding="md" style={styles.card}>
             <View style={styles.cardHeader}>
               <Icon name="calendar" size={12} color={theme.colors.textSecondary} strokeWidth={2.2} />
-              <Text style={styles.cardTitle}>
+              <Typography variant="body" style={styles.cardTitle}>
                 {isPremium ? 'Últimas 12 semanas' : 'Últimas 4 semanas'}
-              </Text>
+              </Typography>
             </View>
             <Heatmap countsByDate={countsByDate} weeks={heatmapWeeks} />
             {!isPremium && (
               <View style={styles.plusHint}>
-                <Text style={styles.plusHintText}>
+                <Typography variant="body" style={styles.plusHintText}>
                   Plus expande para 12 semanas + relatório narrativo completo
-                </Text>
+                </Typography>
                 <Pressable
                   onPress={() => router.push('/paywall')}
                   accessibilityRole="link"
                   accessibilityLabel="Conhecer Plus"
                 >
-                  <Text style={styles.plusLink}>Conhecer →</Text>
+                  <Typography variant="body" style={styles.plusLink}>Conhecer →</Typography>
                 </Pressable>
               </View>
             )}
@@ -150,7 +152,7 @@ export default function ReportTab() {
             <View style={{ gap: theme.spacing.sm, paddingHorizontal: theme.spacing.lg }}>
               <View style={styles.sectionHeader}>
                 <Icon name="trophy" size={12} color={theme.colors.textSecondary} strokeWidth={2.2} />
-                <Text style={styles.sectionTitle}>Top hábitos da semana</Text>
+                <Typography variant="body" style={styles.sectionTitle}>Top hábitos da semana</Typography>
               </View>
               {topHabits.map(k => {
                 const habCheckins = weekCheckins.filter(c => c.habit_kind === k);
@@ -168,7 +170,7 @@ export default function ReportTab() {
             accessibilityLabel="Ver relatório completo"
           >
             <Icon name="bar-chart" size={16} color={theme.tokens.semantic.inkOnBrand} strokeWidth={2.4} />
-            <Text style={styles.bigBtnText}>Ver relatório narrativo completo</Text>
+            <Typography variant="body" style={styles.bigBtnText}>Ver relatório narrativo completo</Typography>
             <Icon name="arrow-right" size={16} color={theme.tokens.semantic.inkOnBrand} strokeWidth={2.4} />
           </PressableScale>
         </StaggeredView>
@@ -181,7 +183,7 @@ export default function ReportTab() {
             const headline = milestone
               ? `${cur} dias! Convida alguém pra essa jornada?`
               : next
-                ? `Faltam ${next - cur} dias pro próximo marco — bora junto?`
+                ? `${daysToNextMilestone(next - cur)} — bora junto?`
                 : 'Conta pra alguém que precisa cuidar de si';
             return (
               <PressableScale
@@ -191,7 +193,7 @@ export default function ReportTab() {
                 accessibilityLabel="Compartilhar ou convidar amigo"
               >
                 <Icon name="heart" size={14} color={theme.colors.primary} strokeWidth={2.4} />
-                <Text style={styles.shareBtnText}>{headline}</Text>
+                <Typography variant="body" style={styles.shareBtnText}>{headline}</Typography>
                 <Icon name="arrow-right" size={14} color={theme.colors.primary} strokeWidth={2.4} />
               </PressableScale>
             );
@@ -199,10 +201,10 @@ export default function ReportTab() {
         </StaggeredView>
 
         <StaggeredView index={7}>
-          <Text style={styles.totalXp}>Total acumulado · {totalXp} XP</Text>
-          <Text style={styles.disclaimer}>
+          <Typography variant="body" style={styles.totalXp}>Total acumulado · {totalXp} XP</Typography>
+          <Typography variant="body" style={styles.disclaimer}>
             Gerado localmente. Nada saiu do seu dispositivo.
-          </Text>
+          </Typography>
         </StaggeredView>
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -218,9 +220,9 @@ function Stat({ icon, label, value, sub }: { icon: IconName; label: string; valu
       <View style={styles.statIconWrap}>
         <Icon name={icon} size={12} color={theme.colors.primary} strokeWidth={2.4} />
       </View>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statSub}>{sub}</Text>
+      <Typography variant="body" style={styles.statValue}>{value}</Typography>
+      <Typography variant="body" style={styles.statLabel}>{label}</Typography>
+      <Typography variant="body" style={styles.statSub}>{sub}</Typography>
     </View>
   );
 }

@@ -1,12 +1,17 @@
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Typography } from '@/components/ui';
 import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
+import { formatBRL, getTier } from '@/content/billing';
 
+import { Typography } from '@/components/ui';
 export default function Terms() {
   const styles = useStyles(makeStyles);
+  const annual = getTier('plus_annual');
+  const monthly = getTier('plus_monthly');
+  const annualPrice = formatBRL(annual.totalCents);
+  const monthlyPrice = formatBRL(monthly.totalCents);
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.headerRow}>
@@ -71,8 +76,8 @@ export default function Terms() {
           Pagamento
         </Typography>
         <Typography variant="body" tone="secondary" style={styles.p}>
-          Nessa versão local, não há cobrança. O paywall existente é demo. Quando virar produto real, será R$ 19,90/mês
-          ou R$ 149/ano com 7 dias de teste, cobrança via Apple/Google.
+          Nessa versão local, não há cobrança. O paywall existente é demo. Quando virar produto real, será {monthlyPrice}/mês
+          ou {annualPrice}/ano com 7 dias de teste, cobrança via Apple/Google.
         </Typography>
 
         <Typography variant="bodyBold" style={styles.section}>

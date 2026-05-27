@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui';
 /**
  * /mascot — Tela de identidade da criatura.
  *
@@ -23,7 +24,6 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/Icon';
 import { MascotRenderer } from '@/components/MascotRenderer';
-import { Typography } from '@/components/ui';
 import { archetypeAffinities } from '@/game/evolution/archetypeAffinity';
 import { sanitizeGenome } from '@/lib/dna';
 import { GENE_META } from '@/lib/dna/genome';
@@ -38,6 +38,7 @@ import {
 import { emergentPhaseDescriptions, emergentPhaseLabels } from '@/lib/phaseLabels';
 import { checkins as checkinsDb, dnaMutations } from '@/lib/db';
 import { bondTierLabel, getBondTotals, type BondTotals } from '@/lib/bond';
+import { plural } from '@/lib/format/plural';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -368,11 +369,11 @@ function describeRemaining(cond: MutationCondition, ctx: ProgressContext): strin
   }
   if (typeof cond.streakAtLeast === 'number') {
     const need = Math.max(0, cond.streakAtLeast - ctx.currentStreak);
-    if (need > 0) parts.push(`+${need} dias de streak`);
+    if (need > 0) parts.push(`+${plural(need, 'dia de streak', 'dias de streak')}`);
   }
   if (typeof cond.daysSinceCreatedAtLeast === 'number') {
     const need = Math.max(0, cond.daysSinceCreatedAtLeast - ctx.daysSinceCreated);
-    if (need > 0) parts.push(`${need} dias juntos`);
+    if (need > 0) parts.push(plural(need, 'dia juntos', 'dias juntos'));
   }
   if (parts.length === 0) return 'Quase lá — equilíbrio dos genes acontece sozinho.';
   return `Falta: ${parts.join(' · ')}`;
