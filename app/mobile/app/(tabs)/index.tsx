@@ -426,6 +426,13 @@ export default function Home() {
     [mascot]
   );
   const unityAckStats = useMemo(() => unityMascotBridge.getAckStats(), [ackTick]);
+  // bannerActive precisa vir ANTES do early-return abaixo: hooks devem ser
+  // chamados na mesma ordem em todo render (rules-of-hooks). seasonalEvent e
+  // showNightWarning já estão no escopo (declarados acima).
+  const bannerActive = useMemo(
+    () => showNightWarning || !!activeLimitedEvent() || !!seasonalEvent,
+    [showNightWarning, seasonalEvent],
+  );
 
   if (!profile || !mascot) return <Redirect href="/splash" />;
   const scene = getScene(snapshot.activeSceneId);
@@ -442,16 +449,6 @@ export default function Home() {
     ) ??
     mascotLine;
   const sceneHour = new Date().getHours();
-
-  // selectActiveBanner — escolhe 1 banner por vez para a above-fold.
-  // Prioridade: noite difícil > evento limitado > sazonal.
-  // O HomeBanner já encapsula essa lógica internamente; aqui apenas
-  // calculamos se há *algum* banner ativo, para evitar criar o nó React quando
-  // não há banner — preservando peso da first-paint.
-  const bannerActive = useMemo(
-    () => showNightWarning || !!activeLimitedEvent() || !!seasonalEvent,
-    [showNightWarning, seasonalEvent],
-  );
   const missionActive = mission !== null;
   const rewardAvailable = !snapshot.dailyClaimedToday;
   const awayHours = mascot.last_seen_at ? hoursAway(mascot.last_seen_at) : 0;
