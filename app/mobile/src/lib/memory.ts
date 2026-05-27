@@ -308,7 +308,29 @@ async function rememberFromMessageCore(
   return dedup;
 }
 
-/** Grava memória explícita (marcos, recompensas) sem depender de regex. */
+/**
+ * Janela de idempotência para `rememberExplicit`.
+ *
+ * Antes desse guard, `recordSimulationEvent` / `recordMilestone` chamados
+ * em `useFocusEffect` da home gravavam a MESMA memória ("Momento de retorno:
+ * Fiquei aqui N dias…") a cada foco do usuário na aba — gerando 5-6 cópias
+ * no feed `/memories` em poucos minutos. `recordSimulationMemories` em
+ * `lib/memory/simulation.ts` tinha um dedup parcial mas só contra `existing`
+ * lido no início do loop, então duas chamadas paralelas (focus + mount)
+ * passavam ambas. Com 5min de janela aqui (dentro do mesmo lock), qualquer
+ * caller que tente persistir summary idêntica em rajada vira no-op silencioso
+ * e retorna o item já existente. Janela maior do que a do `rememberFromMessage`
+ * (24h) seria conservadora demais para marcos legítimos (ex: "first_evolution"
+ * pode acontecer 2x no mesmo dia se o user resetar e re-evoluir).
+ */
+const EXPLICIT_IDEMPOTENCY_MS = 5 * 60 * 1000;
+
+/** Grava memória explícita (marcos, recompensas) sem depender de regex.
+ *
+ * Idempotente dentro de 5min para o mesmo `summary`: se o último write com
+ * essa string foi há menos de 5min, retorna o item existente sem criar novo.
+ * Isso previne duplicação por re-execução de `useFocusEffect` / re-mount.
+ */
 export async function rememberExplicit(
   userId: string,
   summary: string,
@@ -316,6 +338,17 @@ export async function rememberExplicit(
   now: Date = new Date(),
 ): Promise<MemoryItem> {
   return withLock(`memory:${userId}`, async () => {
+    const existing = await read(userId);
+    // Idempotency window: se já gravamos esse summary nos últimos 5min,
+    // retorna o item existente em vez de criar duplicata.
+    const cutoff = now.getTime() - EXPLICIT_IDEMPOTENCY_MS;
+    const recent = existing.find(e => {
+      if (e.summary !== summary) return false;
+      const createdMs = new Date(e.created_at).getTime();
+      return Number.isFinite(createdMs) && createdMs > cutoff;
+    });
+    if (recent) return recent;
+
     const item: MemoryItem = {
       id: mkId(),
       user_id: userId,
@@ -326,7 +359,6 @@ export async function rememberExplicit(
       created_at: now.toISOString(),
       last_recalled_at: null,
     };
-    const existing = await read(userId);
     await write(userId, [...existing, item]);
     const stats = await getStats(userId);
     addDocument(stats, summary);

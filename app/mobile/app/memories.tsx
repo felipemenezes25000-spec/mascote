@@ -3,7 +3,8 @@ import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
-import { Typography, MemoryCard, EmptyState } from '@/components/ui';
+import { EmptyState, MemoryCard, Typography } from '@/components/ui';
+
 import { useStore } from '@/store';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -40,10 +41,20 @@ export default function Memories() {
     if (!profile) return;
     void (async () => {
       const all = await listMemories(profile.id);
+      // Defensive view-side dedup por summary: se houver legacy data com
+      // memórias duplicadas pré-idempotency-window (commit fix(memories)),
+      // ficam visíveis 1x cada. Mantém a mais recente por summary.
+      // (Storage não é mutado aqui — apenas a renderização.)
+      const seen = new Set<string>();
       const sorted = [...all].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
-      setMemories(sorted);
+      const deduped = sorted.filter(m => {
+        if (seen.has(m.summary)) return false;
+        seen.add(m.summary);
+        return true;
+      });
+      setMemories(deduped);
       setLoaded(true);
     })();
   }, [profile?.id]);
