@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { HabitKind, Mascot, MascotDNA, Profile, Settings, Streak, Wallet } from '@/types';
 import { applyHabitDrift, sanitizeGenome } from '@/lib/dna';
 import { readSystemReduceMotion } from '@/lib/accessibility';
-import { mascots, profiles, runMigrations, settings, streaks, wallet as walletDb } from '@/lib/db';
+import { mascots, profiles, runMigrations, settings, streaks, wallet as walletDb, withLock } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { SECURE_KEYS, secureGet, secureRemove, secureSet } from '@/lib/secureStore';
 import type { UnlockToastData } from '@/components/UnlockToast';
@@ -241,22 +241,35 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   async driftDnaFromHabit(habit, intensity) {
-    const state = get();
-    const m = state.mascot;
-    if (!m || !m.dna) return;
-    const nextDna = applyHabitDrift(m.dna, { habit, intensity });
-    const persisted = await mascots.updateDna(m.user_id, nextDna);
-    if (persisted) set({ mascot: persisted });
-    else logger.warn('[store] driftDnaFromHabit: mascot não encontrado');
+    // Lock cobre read+compute+persist+set para serializar contra setDna e
+    // runLifeSimulation — todas mutam mascot.dna e racem entre si
+    // (last-writer-wins) quando rodam concorrentes. Key inclui user_id pra
+    // não bloquear entre profiles diferentes.
+    const uid = get().mascot?.user_id;
+    if (!uid) return;
+    await withLock(`mascot_logic:${uid}`, async () => {
+      const m = get().mascot;
+      if (!m || !m.dna || m.user_id !== uid) return;
+      const nextDna = applyHabitDrift(m.dna, { habit, intensity });
+      const persisted = await mascots.updateDna(m.user_id, nextDna);
+      if (persisted) set({ mascot: persisted });
+      else logger.warn('[store] driftDnaFromHabit: mascot não encontrado');
+    });
   },
 
   async setDna(dna) {
-    const state = get();
-    const m = state.mascot;
-    if (!m) return;
-    const safe = sanitizeGenome(dna);
-    const persisted = await mascots.updateDna(m.user_id, safe);
-    if (persisted) set({ mascot: persisted });
+    // Serializa contra driftDnaFromHabit/runLifeSimulation (mesmo namespace
+    // mascot_logic:${uid}) — caso contrário um setDna debug pode ser
+    // sobrescrito por um drift concorrente, ou vice-versa.
+    const uid = get().mascot?.user_id;
+    if (!uid) return;
+    await withLock(`mascot_logic:${uid}`, async () => {
+      const m = get().mascot;
+      if (!m || m.user_id !== uid) return;
+      const safe = sanitizeGenome(dna);
+      const persisted = await mascots.updateDna(m.user_id, safe);
+      if (persisted) set({ mascot: persisted });
+    });
   },
 
   reset() {
@@ -279,22 +292,30 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   async runLifeSimulation() {
-    const m = get().mascot;
-    if (!m) return;
-    try {
-      const sim = await orchestrateLifeSimulation(m);
-      set({
-        mascot: sim.mascot,
-        lifeState: sim.lifeState,
-        lifeEvents: sim.events,
-        lifeSummaryLine: sim.summaryLine ?? null,
-        lifeReturnCelebration: hasReturnCelebration(sim.events),
-      });
-    } catch (err) {
-      logger.warn('[store] runLifeSimulation failed', {
-        reason: err instanceof Error ? err.message : 'unknown',
-      });
-    }
+    // Locked sob mascot_logic:${uid} pra serializar contra
+    // driftDnaFromHabit/setDna — orchestrateLifeSimulation deriva o novo
+    // mascot a partir do snapshot atual, então um drift concorrente seria
+    // perdido se rodassem em paralelo (last-writer-wins na .dna).
+    const uid = get().mascot?.user_id;
+    if (!uid) return;
+    await withLock(`mascot_logic:${uid}`, async () => {
+      const m = get().mascot;
+      if (!m || m.user_id !== uid) return;
+      try {
+        const sim = await orchestrateLifeSimulation(m);
+        set({
+          mascot: sim.mascot,
+          lifeState: sim.lifeState,
+          lifeEvents: sim.events,
+          lifeSummaryLine: sim.summaryLine ?? null,
+          lifeReturnCelebration: hasReturnCelebration(sim.events),
+        });
+      } catch (err) {
+        logger.warn('[store] runLifeSimulation failed', {
+          reason: err instanceof Error ? err.message : 'unknown',
+        });
+      }
+    });
   },
 
   clearLifeEvents() {

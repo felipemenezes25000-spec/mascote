@@ -15,6 +15,7 @@ export { inferEmotionalTone, emotionalPrefix } from './EmotionalMemory';
 import { generateReply as baseGenerateReply } from '@/lib/ai';
 import { evaluateUserMessage } from './SafetyRules';
 import { localFallbackReply } from './LocalFallbackAI';
+import { withLock } from '@/lib/db';
 import { checkAiRateLimit, recordAiUsage } from './AIRateLimiter';
 import { checkAiCostBudget, recordAiCost } from './AICostGuard';
 import {
@@ -49,37 +50,71 @@ export async function mascotReply(
     };
   }
 
-  if (options?.userId) {
-    const rate = await checkAiRateLimit(options.userId, tier);
-    if (!rate.allowed) {
-      trackAiReplyRequested(tier, 'local');
-      trackAiReplySucceeded(tier, 'local', Date.now() - startedAt);
-      return {
-        reply: rate.reason ?? 'Limite diário atingido.',
-        safety_flag: 'safe',
-        source: 'fallback' as const,
-      };
-    }
-    const cost = await checkAiCostBudget(options.userId, tier);
-    if (!cost.allowed) {
-      trackAiReplyRequested(tier, 'local');
-      trackAiReplySucceeded(tier, 'local', Date.now() - startedAt);
-      return {
-        reply: cost.reason ?? 'Orçamento de IA esgotado hoje.',
-        safety_flag: 'safe',
-        source: 'fallback' as const,
-      };
-    }
-  }
+  // === Gate atômico (rate + cost + record) com lock per-user ===
+  // Antes esse bloco era read-decide-write SEM lock — taps paralelos do mesmo
+  // user passavam todos no gate e burlavam o limite. Lock per-user serializa
+  // a sequência inteira, preservando paralelismo entre users distintos.
+  // `skipGuards: true` evita re-checagem dentro de `baseGenerateReply` (e
+  // evita lock reentrante na mesma chave `ai_gate:<uid>`).
+  const uid = options?.userId;
 
-  try {
-    const result = await baseGenerateReply(personality, userMessage, options);
-    if (options?.userId && result.source !== 'fallback') {
-      await recordAiUsage(options.userId);
+  const runGated = async (): Promise<Awaited<ReturnType<typeof baseGenerateReply>>> => {
+    // Storage falho NÃO bloqueia resposta — fail-open mantém UX viva, mas
+    // pula record quando o gate falhou (sem números coerentes pra incrementar).
+    let gateOk = true;
+    if (uid) {
+      try {
+        const rate = await checkAiRateLimit(uid, tier);
+        if (!rate.allowed) {
+          return {
+            reply: rate.reason ?? 'Limite diário atingido.',
+            safety_flag: 'safe',
+            source: 'fallback' as const,
+          };
+        }
+        const cost = await checkAiCostBudget(uid, tier);
+        if (!cost.allowed) {
+          return {
+            reply: cost.reason ?? 'Orçamento de IA esgotado hoje.',
+            safety_flag: 'safe',
+            source: 'fallback' as const,
+          };
+        }
+      } catch {
+        gateOk = false;
+      }
+    }
+    // skipGuards evita que `generateReply` re-aplique o gate (mesma chave
+    // de lock causaria deadlock). Wrapper já é o source-of-truth aqui.
+    const result = await baseGenerateReply(personality, userMessage, {
+      ...(options ?? {}),
+      skipGuards: true,
+    });
+    if (gateOk && uid && result.source !== 'fallback') {
       // Usa token count real quando o provider devolveu (OpenAI/Proxy);
       // estimativa fixa só pra paths que não retornam usage.
-      await recordAiCost(options.userId, result.usage?.totalTokens);
+      try {
+        await recordAiUsage(uid);
+        await recordAiCost(uid, result.usage?.totalTokens);
+      } catch {
+        // record falhar não bloqueia entrega — best effort.
+      }
     }
+    return result;
+  };
+
+  try {
+    const result = uid
+      ? await withLock(`ai_gate:${uid}`, runGated)
+      : await runGated();
+
+    // Gate negado: emite local request+succeeded como antes do refactor.
+    if (uid && result.source === 'fallback' && /Limite|Orçamento/i.test(result.reply)) {
+      trackAiReplyRequested(tier, 'local');
+      trackAiReplySucceeded(tier, 'local', Date.now() - startedAt);
+      return result;
+    }
+
     // Happy path: emite request + succeeded com source real. Antes só os
     // ramos de safety/rate/cost/catch emitiam, então `ai_reply_succeeded`
     // não cobria justamente as respostas que funcionaram.

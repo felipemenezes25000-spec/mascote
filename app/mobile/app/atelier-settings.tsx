@@ -9,7 +9,7 @@
  * cada toggle persiste imediato.
  */
 
-import { router, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,13 +19,12 @@ import { HideToggleRow } from '@/components/atelier/HideToggleRow';
 import { SectionHeader, Typography } from '@/components/ui';
 import { settings as settingsDb } from '@/lib/db';
 import { useStore } from '@/store';
-import { useStyles, useTheme } from '@/lib/useTheme';
+import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
 const ONBOARDED_KEY = 'mascote:atelier_onboarded:v1';
 
 export default function AtelierSettings() {
-  const theme = useTheme();
   const styles = useStyles(makeStyles);
   const profile = useStore(s => s.profile);
   const settings = useStore(s => s.settings);

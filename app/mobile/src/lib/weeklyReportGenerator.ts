@@ -5,7 +5,7 @@
 import { generateWeeklyNarrative, type NarrativeReport, type WeeklyData } from '@/lib/narrative';
 import { buildEvolutionState } from '@/game/evolution/EvolutionEngine';
 import type { Checkin, Mascot, Streak } from '@/types';
-import type { PersonalizationInput } from '@/game/evolution/EvolutionTypes';
+import type { MicroEvolution, PersonalizationInput } from '@/game/evolution/EvolutionTypes';
 
 export interface WeeklyReportInput {
   mascot: Mascot;
@@ -14,6 +14,12 @@ export interface WeeklyReportInput {
   allCheckins: Checkin[];
   streak: Streak | null;
   personalization?: Partial<PersonalizationInput>;
+  /**
+   * Microevoluções já persistidas (com `unlockedAt` original). Opcional, mas
+   * recomendado: sem isso, buildEvolutionState re-stampa todos micros com
+   * `now()` perdendo a data histórica.
+   */
+  persistedMicroEvolutions?: readonly MicroEvolution[];
 }
 
 export interface WeeklyReportOutput extends NarrativeReport {
@@ -50,6 +56,7 @@ function evolutionNoteForWeek(
   streak: Streak | null,
   weekCheckins: Checkin[],
   personalization?: Partial<PersonalizationInput>,
+  persistedMicroEvolutions?: readonly MicroEvolution[],
 ): { note: string; microCount: number } {
   try {
     const state = buildEvolutionState({
@@ -57,6 +64,9 @@ function evolutionNoteForWeek(
       checkins: allCheckins,
       streak,
       personalization,
+      // Preserva timestamp histórico das micros já persistidas (caso contrário,
+      // `unlockedAt` é re-stampado com now() toda vez que o relatório roda).
+      persistedMicroEvolutions: persistedMicroEvolutions ?? [],
     });
     const microCount = state.microEvolutions.length;
     const dominant = state.behaviorHistory.dominantHabits[0];
@@ -111,6 +121,7 @@ export function generateWeeklyReport(input: WeeklyReportInput): WeeklyReportOutp
     input.streak,
     input.checkins,
     input.personalization,
+    input.persistedMicroEvolutions,
   );
 
   return {

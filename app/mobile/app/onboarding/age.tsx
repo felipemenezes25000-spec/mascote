@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { setOnboardingDraft } from '@/lib/onboarding-draft';
 import { stepLabel } from '@/lib/onboarding-flow';
-import { useStyles, useTheme } from '@/lib/useTheme';
+import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { Profile } from '@/types';
 
@@ -20,7 +20,6 @@ const options: { id: AgeBand; label: string; allowed: boolean }[] = [
 ];
 
 export default function Age() {
-  const theme = useTheme();
   const styles = useStyles(makeStyles);
   const params = useLocalSearchParams<{ display_name?: string; express?: string }>();
   const [selected, setSelected] = useState<AgeBand | null>(null);

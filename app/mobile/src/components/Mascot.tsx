@@ -25,7 +25,6 @@ import type {
 import { detectCapabilities } from '@/lib/deviceCapabilities';
 import { useStore } from '@/store';
 import { Mascot2D, type AccessoryId } from '@/components/Mascot2D';
-import { Mascot3DLazy } from '@/components/Mascot3DLazy';
 import { Mascot3DLazyAsset } from '@/components/Mascot3DLazyAsset';
 import { Mascot3DBoundary } from '@/components/Mascot3DBoundary';
 import type { MascotEvolutionVisuals } from '@/game/evolution/PhenotypeRenderer';
@@ -124,9 +123,10 @@ function MascotImpl(props: Props) {
           fallback={<Mascot2D {...props} />}
           onFallback={() => setBoundaryFallback(true)}
         >
-          {/* Mascot3DLazyAsset: GLB modelado em Blender (default) ou cai pro
-              Mascot3DLazy procedural se EXPO_PUBLIC_USE_GLB_ASSETS=false
-              ou se asset falha em runtime. */}
+          {/* Mascot3DLazyAsset: GLB modelado em Blender (default) com fallback
+              interno pro procedural Mascot3DLazy se EXPO_PUBLIC_USE_GLB_ASSETS=false
+              ou se o asset falha em runtime (load error, parse, WebGL crash).
+              Se até o procedural falhar, o Mascot3DBoundary externo cai pro 2D. */}
           <Mascot3DLazyAsset
             personality={props.personality}
             dna={dna as MascotDNA}

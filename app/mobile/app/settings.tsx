@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
-import { Mascot } from '@/components/Mascot';
 import { personalities, getPersonality } from '@/content/personalities';
 import { addDays, exportAll, importAll, mascots as mascotsDb, profiles, resetAll, settings as settingsDb, todayLocal } from '@/lib/db';
 import { useStore } from '@/store';

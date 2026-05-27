@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +10,7 @@ import type { Personality } from '@/types';
 import { getTier } from '@/content/billing';
 import { modifiersToVisuals } from '@/game/evolution/PhenotypeRenderer';
 import { buildEvolutionState } from '@/game/evolution/EvolutionEngine';
+import { loadEvolutionState } from '@/game/evolution/EvolutionPersistence';
 import { checkins as checkinsDb } from '@/lib/db';
 import { copyFor, type PaywallTrigger } from '@/lib/paywall-triggers';
 import { validateBillingEnv } from '@/lib/billing-config';
@@ -17,7 +18,7 @@ import { isAiProxyConfigured } from '@/ai/ProxyMascotAI';
 import { subscriptionService } from '@/services/subscription';
 import { useStore } from '@/store';
 import { safeBack } from '@/lib/router-utils';
-import { useStyles, useTheme } from '@/lib/useTheme';
+import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { BillingTierId } from '@/content/billing';
 
@@ -29,7 +30,6 @@ const PERSONALITY_TO_ARCHETYPE: Record<Personality, ArchetypeKey> = {
 };
 
 export default function Paywall() {
-  const theme = useTheme();
   const styles = useStyles(makeStyles);
   const { trigger: triggerParam } = useLocalSearchParams<{ trigger?: string }>();
   const profile = useStore(s => s.profile);
@@ -65,8 +65,15 @@ export default function Paywall() {
     let alive = true;
     void (async () => {
       const all = await checkinsDb.listAll(profile.id);
+      const persistedEvolution = await loadEvolutionState(profile.id);
       if (!alive) return;
-      const state = buildEvolutionState({ mascot, checkins: all, streak });
+      const state = buildEvolutionState({
+        mascot,
+        checkins: all,
+        streak,
+        // Preserva `unlockedAt` histórico ao hidratar micros.
+        persistedMicroEvolutions: persistedEvolution?.microEvolutions ?? [],
+      });
       setBeforeVisuals(modifiersToVisuals(state.phenotype.displayModifiers));
       setAfterVisuals(modifiersToVisuals({
         ...state.phenotype.displayModifiers,
@@ -167,7 +174,7 @@ export default function Paywall() {
           </View>
         ) : null}
 
-        <Text style={styles.kicker}>BIPO PLUS</Text>
+        <Text style={styles.kicker}>MASCOTE PLUS</Text>
         <Text style={styles.title}>{triggerCopy.title}</Text>
         <Text style={styles.sub}>{triggerCopy.body}</Text>
         <View style={styles.honestyBox}>

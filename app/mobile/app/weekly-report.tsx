@@ -10,7 +10,9 @@ import { Mascot } from '@/components/Mascot';
 import { PremiumFeatureGuard } from '@/components/PremiumFeatureGuard';
 import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
 import { addDays, checkins, messages as messagesDb, todayLocal } from '@/lib/db';
+import { loadEvolutionState } from '@/game/evolution/EvolutionPersistence';
 import { generateWeeklyReport } from '@/lib/weeklyReportGenerator';
+import type { MicroEvolution } from '@/game/evolution/EvolutionTypes';
 import { computeInsights, type Insight } from '@/lib/insights';
 import { loadStoredPersonalization, storedToPartial } from '@/lib/personalization-service';
 import { analytics } from '@/analytics';
@@ -31,6 +33,7 @@ export default function WeeklyReport() {
   const [personalization, setPersonalization] = useState<ReturnType<typeof storedToPartial>>(undefined);
   const [allMessages, setAllMessages] = useState<Message[]>([]);
   const [countsByDate, setCountsByDate] = useState<Record<string, number>>({});
+  const [persistedMicros, setPersistedMicros] = useState<MicroEvolution[]>([]);
 
   useEffect(() => {
     if (!profile) return;
@@ -45,12 +48,14 @@ export default function WeeklyReport() {
 
   async function load() {
     if (!profile) return;
-    const [allCheckins, msgs] = await Promise.all([
+    const [allCheckins, msgs, persistedEvolution] = await Promise.all([
       checkins.listAll(profile.id),
       messagesDb.listAll(profile.id),
+      loadEvolutionState(profile.id),
     ]);
     setAll(allCheckins);
     setAllMessages(msgs);
+    setPersistedMicros(persistedEvolution?.microEvolutions ?? []);
     const today = todayLocal();
     const start84 = addDays(today, -83);
     const grouped: Record<string, number> = {};
@@ -104,6 +109,8 @@ export default function WeeklyReport() {
     allCheckins: all,
     streak,
     personalization,
+    // Preserva `unlockedAt` histórico das microevoluções já persistidas.
+    persistedMicroEvolutions: persistedMicros,
   });
 
   const fullReport = entitlementService.canViewFullWeeklyReport(tier);

@@ -13,7 +13,6 @@ import { Heatmap } from '@/components/Heatmap';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
 import { StaggeredView } from '@/components/StaggeredView';
-import { habitMeta } from '@/content/missions';
 import { addDays, checkins, todayLocal, xpEvents } from '@/lib/db';
 import { isStreakMilestone, nextMilestone } from '@/lib/share';
 import { Button } from '@/components/Button';

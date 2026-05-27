@@ -59,7 +59,6 @@ export function CreatureHero({
       {/* Halo decorativo — sutil aura atrás do mascote. */}
       {halo ? (
         <View
-          pointerEvents="none"
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
           style={{
@@ -67,6 +66,7 @@ export function CreatureHero({
             top: vGap,
             width: 220,
             height: 220,
+            pointerEvents: 'none',
             borderRadius: theme.radius.pill,
             backgroundColor: theme.colors.primary,
             opacity: 0.08,

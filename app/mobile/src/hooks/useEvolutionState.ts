@@ -42,26 +42,47 @@ export function useEvolutionState(
     [personalizationKey],
   );
 
+  // IDs primitivos no deps — refs de objeto do Zustand mudam toda render
+  // (set() reemite mesmo se conteúdo é igual), e isso recriava `refresh`
+  // a cada hidratação parcial do store, alimentando loop "Maximum update
+  // depth exceeded" detectado via Playwright em 2026-05-27.
+  const profileId = profile?.id;
+  const mascotId = mascot?.id;
+  const mascotXp = mascot?.xp;
+  const mascotPhase = mascot?.phase;
+  const mascotMood = mascot?.mood;
+  const streakDays = streak?.current_streak;
+
   const refresh = useCallback(async () => {
-    if (!profile || !mascot) {
-      setState(null);
-      setError(null);
-      setLoading(false);
+    // Captura snapshot atual fora do closure pra evitar stale data depois
+    // do early-return.
+    const currentProfile = useStore.getState().profile;
+    const currentMascot = useStore.getState().mascot;
+    const currentStreak = useStore.getState().streak;
+    if (!currentProfile || !currentMascot) {
+      // setState idempotente: só dispara se mudou. Evita loop quando hydrate
+      // reemite null repetidamente.
+      setState(prev => (prev === null ? prev : null));
+      setError(prev => (prev === null ? prev : null));
+      setLoading(prev => (prev === false ? prev : false));
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const stored = await loadStoredPersonalization(profile.id);
+      const stored = await loadStoredPersonalization(currentProfile.id);
       const merged = { ...storedToPartial(stored), ...stablePersonalization };
-      const allCheckins = await checkinsDb.listAll(profile.id);
-      const persistedEvolution = await loadEvolutionState(profile.id);
+      const allCheckins = await checkinsDb.listAll(currentProfile.id);
+      const persistedEvolution = await loadEvolutionState(currentProfile.id);
       const built = buildEvolutionState({
-        mascot,
+        mascot: currentMascot,
         checkins: allCheckins,
-        streak,
-        unlockedMicroIds: persistedEvolution?.microEvolutions.map(m => m.id) ?? [],
-        mood: mascot.mood,
+        streak: currentStreak,
+        // Passa array completo (com unlockedAt original) em vez de só IDs —
+        // assim buildEvolutionState preserva o timestamp histórico de cada
+        // micro em vez de re-stampar com `now()` toda hidratação.
+        persistedMicroEvolutions: persistedEvolution?.microEvolutions ?? [],
+        mood: currentMascot.mood,
         personalization: Object.keys(merged).length > 0 ? merged : undefined,
       });
       setState(built);
@@ -71,7 +92,7 @@ export function useEvolutionState(
     } finally {
       setLoading(false);
     }
-  }, [profile?.id, mascot, streak, stablePersonalization]);
+  }, [profileId, mascotId, mascotXp, mascotPhase, mascotMood, streakDays, stablePersonalization]);
 
   useEffect(() => {
     void refresh();

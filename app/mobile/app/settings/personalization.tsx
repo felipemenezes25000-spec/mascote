@@ -67,7 +67,6 @@ const PRONOUNS: { id: MascotPronoun; label: string }[] = [
 ];
 
 export default function PersonalizationSettings() {
-  const theme = useTheme();
   const styles = useStyles(makeStyles);
   const profile = useStore(s => s.profile);
   const mascot = useStore(s => s.mascot);

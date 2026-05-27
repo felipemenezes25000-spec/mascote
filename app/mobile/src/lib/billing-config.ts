@@ -36,7 +36,7 @@ export function validateBillingEnv(): BillingEnvValidation {
       mode: 'demo',
       canPurchase: true,
       label: 'Modo demo',
-      detail: 'Compras simuladas localmente — ideal para desenvolvimento e QA.',
+      detail: 'Compras simuladas localmente. Nenhum valor é cobrado.',
       revenueCat,
     };
   }

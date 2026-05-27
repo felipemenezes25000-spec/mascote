@@ -51,7 +51,7 @@ export function ProgressRing({
         />
       </Svg>
       {label ? (
-        <View style={styles.center} pointerEvents="none">
+        <View style={[styles.center, { pointerEvents: 'none' }]}>
           <Text style={[theme.text.bodyBold, { color: theme.colors.text }]}>{label}</Text>
         </View>
       ) : null}

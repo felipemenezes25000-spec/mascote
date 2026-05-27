@@ -1,11 +1,10 @@
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useStyles, useTheme } from '@/lib/useTheme';
+import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
 export default function Privacy() {
-  const theme = useTheme();
   const styles = useStyles(makeStyles);
   return (
     <SafeAreaView style={styles.safe}>

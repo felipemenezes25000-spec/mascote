@@ -1,4 +1,4 @@
-import { listMemories, recall, rememberExplicit, type MemoryItem } from '@/lib/memory';
+import { listMemories, recall, rememberExplicit, type MemoryItem } from '../memory';
 import type { SimulationEvent } from '@/sim/types';
 
 const MEMORY_WINDOW_MS = 12 * 60 * 60 * 1000;

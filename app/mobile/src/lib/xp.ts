@@ -103,7 +103,13 @@ export function applyXp(mascot: Mascot, deltaRaw: number, dailyXpAlready: number
     level: nextLevel,
     phase: nextPhase,
     energy: nextEnergy,
-    mood: deriveMoodFromEnergy(nextEnergy),
+    // Bug-fix 2026-05-27: humor 'exausto' (setado após pausa longa pelo
+    // deriveReflectiveMood) era jogado direto pra 'feliz' / 'empolgado' no
+    // primeiro check-in após a pausa, quebrando a sensação de "recuperação
+    // gradual". Agora se prevMood='exausto' transicionamos pra 'ok' como passo
+    // intermediário — próximos check-ins (com prevMood='ok') seguem fluxo
+    // normal e evoluem pra feliz/empolgado.
+    mood: transitionMoodAfterCheckin(mascot.mood, nextEnergy),
     last_seen_at: new Date().toISOString(),
   };
   return {
@@ -142,6 +148,27 @@ function deriveMoodFromEnergy(energy: number): Mascot['mood'] {
   if (energy >= 80) return 'empolgado';
   if (energy >= 50) return 'feliz';
   return 'ok';
+}
+
+/**
+ * Aplica transição gradual quando o mascote estava 'exausto'.
+ *
+ * Sem isso, o primeiro check-in após uma pausa longa (≥72h, que setou
+ * mood='exausto' via deriveReflectiveMood) pulava DIRETO pra 'feliz'/'empolgado',
+ * quebrando a sensação de recuperação gradual e a narrativa de cuidado.
+ *
+ * Com isso: 1º check-in pós-exausto → 'ok' (recuperando). Próximos check-ins
+ * já partem de prevMood='ok' e seguem o fluxo normal por energy.
+ */
+export function transitionMoodAfterCheckin(
+  prevMood: Mascot['mood'],
+  nextEnergy: number,
+): Mascot['mood'] {
+  const derived = deriveMoodFromEnergy(nextEnergy);
+  if (prevMood === 'exausto' && (derived === 'feliz' || derived === 'empolgado')) {
+    return 'ok';
+  }
+  return derived;
 }
 
 export function deriveMoodFromState(mascot: Mascot, hoursSinceCheckin: number): Mascot['mood'] {

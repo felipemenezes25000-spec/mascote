@@ -17,7 +17,7 @@ import type { BondType, CommunicationTone, UserGoal } from '@/game/evolution/Evo
 import { getOnboardingDraft } from '@/lib/onboarding-draft';
 import { stepLabel } from '@/lib/onboarding-flow';
 import { useStore } from '@/store';
-import { useStyles, useTheme } from '@/lib/useTheme';
+import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { MascotMood, Personality } from '@/types';
 
@@ -36,7 +36,6 @@ function parseAgeBand(raw: unknown): AgeBand | null {
 }
 
 export default function NameStep() {
-  const theme = useTheme();
   const styles = useStyles(makeStyles);
   const params = useLocalSearchParams<{
     personality: Personality;

@@ -56,12 +56,12 @@ function FpsCounterImpl({ top, right }: FpsCounterProps) {
 
   return (
     <View
-      pointerEvents="none"
       style={[
         styles.box,
         {
           top,
           right,
+          pointerEvents: 'none' as const,
           backgroundColor: theme.colors.bg + 'CC',
           borderColor: theme.colors.border,
         },

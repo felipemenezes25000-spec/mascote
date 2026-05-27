@@ -15,6 +15,8 @@ import { isAiProxyConfigured, proxyMascotReply } from '@/ai/ProxyMascotAI';
 import { buildMascotSystemPrompt } from '@/ai/MascotPrompt';
 import { validateAiResponse } from '@/ai/AIResponseValidator';
 import { rememberReply, shouldRetryForVariety } from '@/ai/AntiRepeatCache';
+import { checkAiRateLimit, recordAiUsage } from '@/ai/AIRateLimiter';
+import { checkAiCostBudget, recordAiCost } from '@/ai/AICostGuard';
 import {
   aiSourceFromResponse,
   trackAiReplyFailed,
@@ -22,6 +24,7 @@ import {
   trackAiReplySucceeded,
 } from '@/analytics/trackAiReply';
 import { localSubscriptionRepo } from '@/repositories/local';
+import { withLock } from '@/lib/db';
 import type { BillingTierId } from '@/content/billing';
 
 export interface AiResponse {
@@ -49,6 +52,13 @@ export interface GenerateReplyOptions {
    * (ex: "criatura com presença expansiva"). Garantia em tests/security/dna-privacy.
    */
   dna?: MascotDNA;
+  /**
+   * Wrapper interno (`MascotAI.mascotReply`) seta isso pra true quando já
+   * checou rate/cost por fora — evita lock reentrante e dupla-cobrança.
+   * Callers externos NÃO devem setar — guardrails são a defesa de produção
+   * contra burn de token (chat.tsx chamava direto e bypassava o gate).
+   */
+  skipGuards?: boolean;
 }
 
 export async function generateReply(
@@ -62,6 +72,7 @@ export async function generateReply(
   let mascotName: string | undefined;
   let userId: string | undefined;
   let dna: MascotDNA | undefined;
+  let skipGuards = false;
   if (typeof apiKeyOrOptions === 'string' || apiKeyOrOptions === undefined) {
     apiKey = apiKeyOrOptions;
   } else {
@@ -70,8 +81,66 @@ export async function generateReply(
     userId = apiKeyOrOptions.userId;
     history = apiKeyOrOptions.history ?? history;
     dna = apiKeyOrOptions.dna;
+    skipGuards = apiKeyOrOptions.skipGuards === true;
   }
-  return generateReplyInternal(personality, userMessage, apiKey, history, mascotName, userId, dna);
+
+  // Sem userId → não dá pra contabilizar; guards aplicam só com user identificado.
+  // Com skipGuards (wrapper já guardou) → segue direto pra interna.
+  if (!userId || skipGuards) {
+    return generateReplyInternal(personality, userMessage, apiKey, history, mascotName, userId, dna);
+  }
+
+  // === GATE COM LOCK ===
+  // Wrappa check→delegate→record num lock per-user pra eliminar TOCTOU.
+  // Sem lock, taps paralelos do mesmo user lêem todos o contador antigo,
+  // todos passam o gate, todos chamam OpenAI — burlando rate/cost limit.
+  // Lock per-user (não global) preserva paralelismo entre users distintos.
+  const uid = userId;
+  return withLock(`ai_gate:${uid}`, async () => {
+    // Storage falho NÃO deve bloquear resposta — fail-open mantém UX viva.
+    // Em produção, o backend proxy aplica limite real; cliente é só camada
+    // adicional. Erro aqui (AsyncStorage cheio/corrompido) é não-fatal:
+    // segue pra gerar, mas pula record (sem stats coerentes pra contar).
+    let gateOk = true;
+    try {
+      const tier = await resolveAiTier(uid);
+      const rate = await checkAiRateLimit(uid, tier);
+      if (!rate.allowed) {
+        return {
+          reply: rate.reason ?? 'Limite diário atingido.',
+          safety_flag: 'safe' as SafetyFlag,
+          source: 'fallback' as const,
+        };
+      }
+      const cost = await checkAiCostBudget(uid, tier);
+      if (!cost.allowed) {
+        return {
+          reply: cost.reason ?? 'Orçamento de IA esgotado hoje.',
+          safety_flag: 'safe' as SafetyFlag,
+          source: 'fallback' as const,
+        };
+      }
+    } catch {
+      // Storage indisponível: fail-open mas marca pra pular record depois.
+      gateOk = false;
+    }
+
+    const result = await generateReplyInternal(personality, userMessage, apiKey, history, mascotName, uid, dna);
+    // Contabiliza só quando saiu IA real (mock/fallback não consome budget)
+    // e o gate inicial funcionou (sem fail-open). recordAiUsage/recordAiCost
+    // já têm withLock interno (defense-in-depth pra qualquer caller que
+    // escape o ai_gate — sem deadlock pois usam chaves distintas:
+    // 'ai_usage:<uid>' e 'ai_cost:<uid>').
+    if (gateOk && result.source === 'openai') {
+      try {
+        await recordAiUsage(uid);
+        await recordAiCost(uid, result.usage?.totalTokens);
+      } catch {
+        // record falhar não bloqueia entrega da resposta — best effort.
+      }
+    }
+    return result;
+  });
 }
 
 async function resolveAiTier(userId: string | undefined): Promise<BillingTierId> {

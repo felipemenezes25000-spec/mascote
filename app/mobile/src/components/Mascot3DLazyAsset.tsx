@@ -9,11 +9,13 @@
  *  3. Capability device suporta drei native loaders
  *
  * Fallback graceful: se Mascot3DAsset falha em runtime (load error, missing
- * material), boundary captura e retorna Mascot3DLazy procedural. User nunca
- * vê tela quebrada — só "downgrade" silencioso.
+ * material, parse, WebGL context lost), o ErrorBoundary interno captura e
+ * troca silenciosamente pro Mascot3DLazy procedural. User nunca vê tela
+ * quebrada — só "downgrade" silencioso. Se o procedural TAMBÉM falhar, o
+ * Mascot3DBoundary externo (Mascot.tsx) cai pro 2D — fallback final.
  */
 
-import { Suspense, useEffect, useState } from 'react';
+import { Component, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import type {
   MascotCustomization,
@@ -26,6 +28,7 @@ import { PERSONALITY_TO_GLB, type UserAgeBand } from '@/lib/dna/bindings';
 import type { MascotEvolutionVisuals } from '@/game/evolution/PhenotypeRenderer';
 import type { MascotAnimationKind } from '@/lib/animation-triggers';
 import { Mascot3DLazy } from '@/components/Mascot3DLazy';
+import { logger } from '@/lib/logger';
 
 // Feature flag — default true após Blender pipeline + scale tuning v3 final.
 // Pode ser overridden via env var EXPO_PUBLIC_USE_GLB_ASSETS=false pra rollback.
@@ -49,7 +52,8 @@ interface Props {
 
 /**
  * Carrega Mascot3DAsset lazy. Se carregamento falha (Metro asset error,
- * drei missing, GLTFLoader erro), boundary cai pro procedural Mascot3DLazy.
+ * drei missing, GLTFLoader erro, WebGL crash), o AssetErrorBoundary interno
+ * captura e re-renderiza com procedural Mascot3DLazy.
  */
 export function Mascot3DLazyAsset(props: Props) {
   const [assetFailed, setAssetFailed] = useState(false);
@@ -59,19 +63,7 @@ export function Mascot3DLazyAsset(props: Props) {
     !assetFailed &&
     !!PERSONALITY_TO_GLB[props.personality];
 
-  // Wrapper que captura erros do useGLTF (Suspense throws promises)
-  // e marca assetFailed=true pra próximo render usar procedural.
-  if (useAsset) {
-    return (
-      <AssetWithFallback
-        {...props}
-        onFail={() => setAssetFailed(true)}
-      />
-    );
-  }
-
-  // Legacy procedural path
-  return (
+  const proceduralFallback = (
     <Mascot3DLazy
       dna={props.dna}
       seed={props.seed ?? 0}
@@ -84,16 +76,84 @@ export function Mascot3DLazyAsset(props: Props) {
       evolutionVisuals={props.evolutionVisuals}
     />
   );
+
+  if (useAsset) {
+    return (
+      <AssetWithFallback
+        {...props}
+        proceduralFallback={proceduralFallback}
+        onFail={() => setAssetFailed(true)}
+      />
+    );
+  }
+
+  // Legacy procedural path (também usado quando assetFailed=true após erro
+  // capturado pelo AssetErrorBoundary).
+  return proceduralFallback;
+}
+
+/**
+ * AssetErrorBoundary — captura QUALQUER erro de render dentro da subárvore
+ * (incluindo erros lançados pelo Suspense quando useGLTF rejeita a promise
+ * de carregamento) e re-renderiza o fallback procedural.
+ *
+ * Por que precisamos disto: ErrorBoundary só captura erros em render, NÃO
+ * em effects ou em promises async não-Suspense. Mas useGLTF (drei) integra
+ * com Suspense — quando o load falha, a promise é REJEITADA e Suspense
+ * re-lança como erro de render. Portanto este boundary captura.
+ *
+ * Após capturar, chamamos onFail() em componentDidCatch pra sinalizar ao
+ * parent que o asset falhou, e a partir do próximo render do parent o
+ * caminho do asset não é mais tentado (evita loop de re-render-erro).
+ */
+interface BoundaryProps {
+  children: ReactNode;
+  fallback: ReactNode;
+  onFail: (error: Error) => void;
+}
+
+interface BoundaryState {
+  failed: boolean;
+}
+
+class AssetErrorBoundary extends Component<BoundaryProps, BoundaryState> {
+  state: BoundaryState = { failed: false };
+
+  static getDerivedStateFromError(): BoundaryState {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error, info: { componentStack?: string | null }): void {
+    logger.warn('[Mascot3DAsset] GLB asset failed, falling back to procedural', {
+      message: error.message,
+      stack: error.stack,
+      componentStack: info.componentStack ?? undefined,
+    });
+    this.props.onFail(error);
+  }
+
+  render() {
+    if (this.state.failed) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
 }
 
 /**
  * Wrapper que dynamic-imports Mascot3DAsset. Mantém o import "perdoável"
  * (se @react-three/drei ou GLB load falha, cai pro procedural sem crash).
  *
- * Implementação simples: try/catch via ErrorBoundary-like state. Em produção
- * idealmente seria React.ErrorBoundary mas pra mobile-only é overkill.
+ * Camadas de defesa:
+ *  1. try/catch em require() — captura falha de import síncrono do módulo.
+ *  2. AssetErrorBoundary em volta de <Mascot3DAsset> — captura erros de
+ *     render, incluindo rejeições do Suspense quando useGLTF falha.
+ *  3. Suspense fallback enquanto carrega — placeholder vazio enquanto
+ *     o GLB baixa/parseia.
  */
-function AssetWithFallback(props: Props & { onFail: () => void }) {
+function AssetWithFallback(
+  props: Props & { onFail: () => void; proceduralFallback: ReactNode },
+) {
   // Lazy require pra evitar drei carregar em web Expo (causa canvas vazio).
   // Capturamos o resultado UMA vez via useState initializer — setState durante
   // render do parent é proibido, então sinalizamos a falha via useEffect.
@@ -111,35 +171,25 @@ function AssetWithFallback(props: Props & { onFail: () => void }) {
   }, [resolved.failed, onFail]);
 
   if (resolved.failed || !resolved.Cmp) {
-    return (
-      <Mascot3DLazy
-        dna={props.dna}
-        seed={props.seed ?? 0}
-        size={props.size ?? 220}
-        reduceMotion={props.reduceMotion}
-        customization={props.customization}
-        mutationIds={props.mutationIds}
-        mood={props.mood}
-        action={props.action}
-        evolutionVisuals={props.evolutionVisuals}
-      />
-    );
+    return <>{props.proceduralFallback}</>;
   }
   const Mascot3DAsset = resolved.Cmp;
 
   return (
-    <Suspense fallback={<View />}>
-      <Mascot3DAsset
-        personality={props.personality}
-        dna={props.dna}
-        seed={props.seed ?? 0}
-        phase={props.phase}
-        mood={props.mood ?? 'ok'}
-        userBand={props.userBand}
-        reduceMotion={props.reduceMotion}
-        customization={props.customization}
-        mutationIds={props.mutationIds}
-      />
-    </Suspense>
+    <AssetErrorBoundary fallback={props.proceduralFallback} onFail={onFail}>
+      <Suspense fallback={<View />}>
+        <Mascot3DAsset
+          personality={props.personality}
+          dna={props.dna}
+          seed={props.seed ?? 0}
+          phase={props.phase}
+          mood={props.mood ?? 'ok'}
+          userBand={props.userBand}
+          reduceMotion={props.reduceMotion}
+          customization={props.customization}
+          mutationIds={props.mutationIds}
+        />
+      </Suspense>
+    </AssetErrorBoundary>
   );
 }

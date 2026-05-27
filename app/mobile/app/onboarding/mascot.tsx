@@ -19,7 +19,6 @@ import { SceneBackground } from '@/components/SceneBackground';
 import { getPersonality } from '@/content/personalities';
 import { modifiersToVisuals } from '@/game/evolution/PhenotypeRenderer';
 import {
-  buildPersonalizationInput,
   formatRareTrait,
   generateOnboardingPreview,
   hatchDurationMs,

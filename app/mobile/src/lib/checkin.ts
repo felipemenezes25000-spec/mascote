@@ -285,7 +285,8 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
       mascot: finalMascot,
       checkins: allCheckins,
       streak: streakResult.streak,
-      unlockedMicroIds: persistedEvolution?.microEvolutions.map(m => m.id) ?? [],
+      // Preserva `unlockedAt` histórico (vs re-stampar com now()).
+      persistedMicroEvolutions: persistedEvolution?.microEvolutions ?? [],
     });
     const { newMicro } = await processEvolutionAfterCheckin(profile.id, baseState);
     newMicroEvolutions = newMicro;

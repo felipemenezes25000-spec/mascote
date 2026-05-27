@@ -17,7 +17,15 @@
 import type { AtelierLook } from '@/lib/db';
 import { exportLook } from '@/lib/dna/lookShare';
 
-export const DEFAULT_GALLERY_BASE = 'http://localhost:4174';
+// EXPO_PUBLIC_GALLERY_BASE override permite apontar pra staging/prod sem patch
+// no código. process.env.EXPO_PUBLIC_* é estaticamente inlined pelo Metro/Babel,
+// então o valor está congelado no bundle final — qualquer build com env diferente
+// renasce com uma URL diferente, sem leak entre ambientes.
+const ENV_GALLERY_BASE =
+  typeof process !== 'undefined' && typeof process.env?.EXPO_PUBLIC_GALLERY_BASE === 'string'
+    ? process.env.EXPO_PUBLIC_GALLERY_BASE.trim()
+    : '';
+export const DEFAULT_GALLERY_BASE = ENV_GALLERY_BASE || 'http://localhost:4174';
 
 export interface GalleryEntry {
   id: string;

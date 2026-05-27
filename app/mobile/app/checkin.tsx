@@ -2,7 +2,6 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button } from '@/components/Button';
 import { habitMeta } from '@/content/missions';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';

@@ -13,7 +13,7 @@
 
 import { router, useFocusEffect, Redirect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/Icon';
 import { MascotRenderer } from '@/components/MascotRenderer';
@@ -22,7 +22,6 @@ import { PressableScale } from '@/components/PressableScale';
 import { SceneBackground } from '@/components/SceneBackground';
 import { StaggeredView } from '@/components/StaggeredView';
 import { XPBar } from '@/components/XPBar';
-import { getAccessory } from '@/content/accessories';
 import { getPersonality } from '@/content/personalities';
 import {
   checkins as checkinsDb,
@@ -33,11 +32,9 @@ import {
 } from '@/lib/db';
 import {
   GENE_KEYS,
-  GENE_META,
   MUTATION_CATALOG,
   dnaDescriptors,
   evaluateCondition,
-  findNewlyUnlockedMutations,
   getMutationById,
   morphologySummary,
   sanitizeGenome,
@@ -142,8 +139,9 @@ export default function EvolutionTab() {
         setActiveSceneId(sceneId);
         setUnlockedMutations(mutations);
         setCustomState(custom);
-        // Conta checkins por hábito pra alimentar findNewlyUnlockedMutations
-        // (preview do próximo marco)
+        // Conta checkins por hábito pra alimentar o MutationContext usado no
+        // cálculo do "próximo marco" (preview da mutation mais próxima de
+        // unlock — iteração manual com evaluateCondition mais abaixo).
         const counts: Partial<Record<HabitKind, number>> = {};
         for (const c of allCheckins) {
           counts[c.habit_kind] = (counts[c.habit_kind] ?? 0) + 1;
@@ -184,10 +182,11 @@ export default function EvolutionTab() {
       .filter((x): x is { mutation: Mutation; unlocked_at: string } => x !== null)
       .sort((a, b) => b.unlocked_at.localeCompare(a.unlocked_at));
 
-  // Próximo marco previsto — usa findNewlyUnlockedMutations com contexto atual
-  // PROJETADO um pouco pra frente (simula 1 checkin a mais por hábito frequente
-  // pra detectar marco "quase lá"). Estratégia simples: o próximo marco é o
-  // que tem mais condições SATISFEITAS, e o menor número de condições faltando.
+  // Próximo marco previsto — itera MUTATION_CATALOG e usa evaluateCondition
+  // pra filtrar mutations já desbloqueáveis (puladas), depois calcula
+  // score = (sub-condições satisfeitas / total de sub-condições) e seleciona
+  // o maior. Estratégia simples: o próximo marco é o que tem mais condições
+  // SATISFEITAS, com o menor número de condições faltando.
   const daysSinceCreated = Math.floor(
     (Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24),
   );

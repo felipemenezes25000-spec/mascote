@@ -121,6 +121,12 @@ export interface BuildEvolutionInput {
   unlockedMutations?: UnlockedMutation[];
   /** IDs de microevoluções já desbloqueadas (persistidas). */
   unlockedMicroIds?: readonly string[];
+  /**
+   * Microevoluções já persistidas COM `unlockedAt` original.
+   * Quando presente, prefere-se este campo sobre `unlockedMicroIds` para
+   * preservar o timestamp histórico. IDs aqui também contam como desbloqueados.
+   */
+  persistedMicroEvolutions?: readonly MicroEvolution[];
   mood?: MascotMood;
   personalization?: Partial<PersonalizationInput>;
 }
@@ -143,17 +149,30 @@ export function buildEvolutionState(input: BuildEvolutionInput): EvolutionState 
 
   const genotype = generateGenotype(personalization);
   const behaviorHistory = buildBehaviorHistory({ checkins, streak, mood });
-  const unlockedSet = new Set(input.unlockedMicroIds ?? []);
+  // Bug-fix 2026-05-27: re-marcava todos micros com `stamp = now()` a cada
+  // hidratação, perdendo o `unlockedAt` original. Agora caller pode passar
+  // `persistedMicroEvolutions` (com timestamp histórico) e fazemos override
+  // só para IDs sem registro persistido. Fallback ao stamp atual permanece
+  // para callers legados que só passam `unlockedMicroIds`.
+  const persistedById = new Map<string, MicroEvolution>();
+  for (const m of input.persistedMicroEvolutions ?? []) {
+    persistedById.set(m.id, m);
+  }
+  const unlockedSet = new Set<string>(input.unlockedMicroIds ?? []);
+  for (const id of persistedById.keys()) unlockedSet.add(id);
   const stamp = new Date().toISOString();
   const microEvolutions: MicroEvolution[] = MICRO_EVOLUTION_CATALOG.filter(e =>
     unlockedSet.has(e.id),
-  ).map(e => ({
-    id: e.id,
-    label: e.label,
-    magnitude: e.magnitude,
-    habitAffinity: e.habitAffinity,
-    unlockedAt: stamp,
-  }));
+  ).map(e => {
+    const persisted = persistedById.get(e.id);
+    return {
+      id: e.id,
+      label: e.label,
+      magnitude: e.magnitude,
+      habitAffinity: e.habitAffinity,
+      unlockedAt: persisted?.unlockedAt ?? stamp,
+    };
+  });
   const microLevel = microEvolutions.length;
 
   let phenotype = generatePhenotype(

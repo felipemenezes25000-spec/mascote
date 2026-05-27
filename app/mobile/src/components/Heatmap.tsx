@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
-import { addDays, dateLocal, todayLocal } from '@/lib/db';
+import { dateLocal, todayLocal } from '@/lib/db';
 
 interface Props {
   countsByDate: Record<string, number>; // YYYY-MM-DD -> count
