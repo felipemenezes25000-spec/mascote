@@ -20,11 +20,11 @@ import { buildGraph, rerankByGraph, type RerankItem } from '@/lib/memory/graph';
 import { withLock } from '@/lib/db';
 
 export type MemoryKind =
-  | 'event'      // "tenho prova quarta", "vou viajar"
-  | 'feeling'    // "tô ansiosa", "feliz hoje"
-  | 'person'     // "minha mãe", "Lucas"
+  | 'event'      // "tenho prova quarta", "vou viajar", "quero X" (aspiração)
+  | 'feeling'    // "tô ansiosa", "feliz hoje", "tenho medo de X"
+  | 'person'     // "minha mãe", "Lucas", "meu filho é o Lucas"
   | 'preference' // "gosto de chá", "odeio acordar cedo"
-  | 'fact';      // qualquer outro
+  | 'fact';      // qualquer outro (incl. identidade profissional, contexto atual)
 
 export interface MemoryItem {
   id: string;
@@ -107,6 +107,47 @@ const PATTERNS: Array<{
     kind: 'feeling',
     pattern: /\b(?:me sinto|tô|estou|to)\s+(ansios[oa]|deprimid[oa]|esgotad[oa]|exaust[oa]|sozinh[oa]|culpad[oa]|grato|grata|feliz|triste|empolgad[oa])\b/i,
     summarize: m => `falou que se sentiu ${m[1].toLowerCase()}`,
+  },
+  // Preferências curto-formato: "gosto de X" — complementa o pattern
+  // longo (gosto muito de | amo | adoro) sem overlap.
+  // NÃO inclui "amo|adoro" pq esses já são cobertos pelo pattern acima e
+  // dupla-extração quebra o dedup por summary (gera 2 memórias da mesma frase).
+  {
+    kind: 'preference',
+    pattern: /\bgosto\s+de\s+([a-záàâãéèêíïóôõöúçñ\s]{3,30}?)(?:\.|,|!|$)/i,
+    summarize: m => `curte ${m[1].trim().toLowerCase()}`,
+  },
+  // Identidade profissional/temporal: "trabalho como designer há 5 anos"
+  // Mapeado em 'fact' (não inventamos kind novo: o Record<MemoryKind, …> em
+  // app/diary.tsx exigiria atualização de todos consumidores).
+  {
+    kind: 'fact',
+    pattern: /\b(?:trabalho como|sou)\s+([a-záàâãéèêíïóôõöúçñ\s]{3,30}?)\s+(?:há|faz|tem)\s+(\d+)\s*(anos?|meses?)\b/i,
+    summarize: m => `é ${m[1].trim().toLowerCase()} há ${m[2]} ${m[3].toLowerCase()}`,
+  },
+  // Contexto atual: "tô no trampo agora / na faculdade hoje" — mapeado em 'fact'.
+  {
+    kind: 'fact',
+    pattern: /\b(?:tô|estou|to)\s+(?:no|na|em)\s+([a-záàâãéèêíïóôõöúçñ\s]{3,30}?)\s+(?:agora|hoje|essa semana|essa noite)\b/i,
+    summarize: m => `está em ${m[1].trim().toLowerCase()} agora`,
+  },
+  // Relações próximas nomeadas: "minha esposa chama Ana / meu filho é o Lucas"
+  {
+    kind: 'person',
+    pattern: /\b(?:meu|minha)\s+(filho|filha|esposa|marido|companheir[oa]|namorad[oa]|m[ãa]e|pai|amig[oa]\s+mais\s+pr[óo]xim[oa])\s+(?:chama-se|chama|é\s+o|é\s+a|é)\s+([A-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑa-záàâãéèêíïóôõöúçñ\s]{2,30}?)(?:\.|,|!|$)/i,
+    summarize: m => `${m[1].toLowerCase()}: ${m[2].trim()}`,
+  },
+  // Aspirações / sonhos — mapeadas em 'event' (orientado a futuro).
+  {
+    kind: 'event',
+    pattern: /\b(?:quero|sonho em|gostaria de|queria)\s+([a-záàâãéèêíïóôõöúçñ\s]{3,40}?)(?:\.|,|!|$)/i,
+    summarize: m => `sonha em ${m[1].trim().toLowerCase()}`,
+  },
+  // Medos / desconfortos — mapeados em 'feeling' (estado emocional persistente).
+  {
+    kind: 'feeling',
+    pattern: /\b(?:tô\s+com\s+medo\s+de|tenho\s+medo\s+de|me\s+assusta)\s+([a-záàâãéèêíïóôõöúçñ\s]{3,40}?)(?:\.|,|!|$)/i,
+    summarize: m => `tem medo de ${m[1].trim().toLowerCase()}`,
   },
 ];
 

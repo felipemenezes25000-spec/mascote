@@ -39,6 +39,44 @@ export interface DiaryEntry {
 const ABSENCE_THRESHOLD_DAYS = 3;
 const STREAK_MILESTONES = [7, 14, 30, 60, 100];
 
+/**
+ * Pool de aberturas pras cartas de mutação. ANTES: 100% das cartas começavam
+ * com "Algo mudou em mim hoje." — feed virava monocórdico depois de 3-4
+ * mutações. Agora a mesma mutationId sempre escolhe o MESMO opener
+ * (determinismo via hash), mas mutationIds diferentes pegam openers
+ * diferentes — variedade sem perda de idempotência do diário.
+ */
+export const DIARY_OPENERS = [
+  'Algo mudou em mim hoje.',
+  'Notei uma coisa nova em mim hoje.',
+  'Hoje tive um pensamento estranho.',
+  'Acordei diferente.',
+  'Tive um sonho — não lembro direito, mas ficou.',
+  'Senti algo que nunca tinha sentido.',
+  'Um pedaço meu virou outra coisa.',
+  'Hoje vi a luz de um ângulo novo.',
+  'O dia chegou pequeno e foi crescendo.',
+  'Tem uma palavra nova no meu peito.',
+  'Hoje uma parte minha ficou quieta. Outra acordou.',
+  'Tive um silêncio bom hoje.',
+];
+
+// Hash determinístico não-criptográfico (djb2-ish). Math.abs evita índice
+// negativo quando o XOR shift estoura int32. Mesma string → mesmo hash em
+// todas as plataformas (RN/Web/Node) — crucial pra o diário ser idempotente.
+function hashString(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) - h) + s.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h);
+}
+
+function pickOpener(mutationId: string): string {
+  return DIARY_OPENERS[hashString(mutationId) % DIARY_OPENERS.length];
+}
+
 interface BuildArgs {
   mascot: Mascot;
   userId: string;
@@ -64,7 +102,7 @@ export async function buildMascotDiary(args: BuildArgs): Promise<DiaryEntry[]> {
       id: `mut:${m.mutation_id}`,
       kind: 'mutation',
       occurred_at: m.unlocked_at,
-      body: buildMutationBody(meta.name, meta.description, mascot.name, displayName),
+      body: buildMutationBody(m.mutation_id, meta.name, meta.description, mascot.name, displayName),
       hint: meta.name,
     });
   }
@@ -97,17 +135,24 @@ function buildBirthEntry(mascot: Mascot, displayName?: string): DiaryEntry {
   };
 }
 
-function buildMutationBody(
+/**
+ * Exportado pra ser testável e reaproveitável fora da builder principal.
+ * O opener varia com mutationId — mesma mutação sempre tem mesma carta
+ * (idempotência); mutações diferentes pegam aberturas diferentes (variedade).
+ */
+export function buildMutationBody(
+  mutationId: string,
   mutationName: string,
   mutationDesc: string,
   mascotName: string,
   displayName?: string,
 ): string {
   const user = displayName ?? 'você';
-  // Frase no estilo "Algo mudou em mim hoje. {desc do efeito}. Acho que foi
+  const opener = pickOpener(mutationId);
+  // Frase no estilo "{opener} {desc do efeito}. Acho que foi
   // {explicação do user}." — mantém autoria do mascote.
   return (
-    `Algo mudou em mim hoje. ${mutationDesc} ` +
+    `${opener} ${mutationDesc} ` +
     `Acho que foi ${user} cuidando do que precisava — não disse, mas eu percebi. ` +
     `Vou levar isso comigo como "${mutationName}".`
   );
