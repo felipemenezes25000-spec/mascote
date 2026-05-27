@@ -181,6 +181,15 @@ async function handle(req, res) {
 }
 
 async function main() {
+  // Guard explicito: este servidor e DEV-ONLY (sem auth, CORS=*, DELETE
+  // publico). Subir em producao = qualquer um deleta looks de qualquer um.
+  // Para deploy em qualquer ambiente nao-local, exigir opt-in explicito.
+  const nodeEnv = (process.env.NODE_ENV || '').toLowerCase();
+  if (nodeEnv === 'production' && process.env.ATELIER_GALLERY_ALLOW_PROD !== '1') {
+    console.error('[gallery] refusing to start in production: this server has no auth/rate-limit.');
+    console.error('[gallery] set ATELIER_GALLERY_ALLOW_PROD=1 to override (NOT recommended).');
+    process.exit(1);
+  }
   await ensureData();
   const server = http.createServer((req, res) => {
     handle(req, res).catch(err => {
@@ -188,8 +197,13 @@ async function main() {
       json(res, 500, { error: 'internal error' });
     });
   });
-  server.listen(PORT, () => {
-    console.log(`[gallery] listening on http://localhost:${PORT}`);
+  // Bind em 127.0.0.1 (loopback) por padrao em vez de 0.0.0.0 — sem isso o
+  // server escutava em todas as interfaces e ficava acessivel da rede local
+  // (ex.: outros devices na mesma Wi-Fi podiam deletar looks). Override via
+  // ATELIER_GALLERY_HOST se precisar expor (raramente o caso).
+  const host = process.env.ATELIER_GALLERY_HOST || '127.0.0.1';
+  server.listen(PORT, host, () => {
+    console.log(`[gallery] listening on http://${host}:${PORT}`);
     console.log(`[gallery] data file: ${DATA_FILE}`);
   });
 }

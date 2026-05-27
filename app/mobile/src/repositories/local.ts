@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { BillingTierId } from '@/content/billing';
 import { profiles, mascots, missions as missionsDb, achievements as achievementsDb, withLock } from '@/lib/db';
 import { loadEvolutionState, saveEvolutionState } from '@/game/evolution/EvolutionPersistence';
+import { logger } from '@/lib/logger';
 import type {
   UserProfileRepository,
   MascotRepository,
@@ -80,15 +81,24 @@ export const localSubscriptionRepo: SubscriptionRepository = {
     const raw = await AsyncStorage.getItem(SUB_KEY(uid));
     if (!raw) return 'free';
     try {
-      const parsed = JSON.parse(raw) as { tier?: string };
-      if (parsed.tier === 'plus_monthly' || parsed.tier === 'plus_annual') return parsed.tier;
+      const parsed = JSON.parse(raw) as { tier?: unknown };
+      // typeof guard impede que payload corrompido (ex.: { tier: 42 })
+      // chegue como comparação de string e retorne valor inesperado.
+      if (typeof parsed?.tier === 'string' && (parsed.tier === 'plus_monthly' || parsed.tier === 'plus_annual')) {
+        return parsed.tier;
+      }
     } catch { /* ignore */ }
     return 'free';
   },
   // Lock previne torn state quando upgrade + restorePurchases racem
   // (RevenueCat dispara ambos no foreground).
   async setTier(uid, tier: BillingTierId) {
-    if (tier !== 'free' && tier !== 'plus_monthly' && tier !== 'plus_annual') return;
+    if (tier !== 'free' && tier !== 'plus_monthly' && tier !== 'plus_annual') {
+      // Antes: silenciosamente ignorava. Agora warn → bug em caller
+      // (typo no tier id, payload corrompido) vira visível em telemetry.
+      logger.warn('[subscription] setTier rejected invalid tier', { tier: String(tier) });
+      return;
+    }
     await withLock(`subscription:${uid}`, async () => {
       await AsyncStorage.setItem(SUB_KEY(uid), JSON.stringify({ tier, updatedAt: new Date().toISOString() }));
     });

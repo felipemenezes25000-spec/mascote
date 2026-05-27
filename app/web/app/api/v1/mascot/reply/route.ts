@@ -85,14 +85,21 @@ function pickClientIp(req: NextRequest): string {
 
 const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' } as const;
 
-function json<T>(body: T, status = 200): NextResponse {
-  return NextResponse.json(body, { status, headers: NO_STORE_HEADERS });
+function json<T>(body: T, status = 200, extraHeaders?: Record<string, string>): NextResponse {
+  return NextResponse.json(body, {
+    status,
+    headers: extraHeaders ? { ...NO_STORE_HEADERS, ...extraHeaders } : NO_STORE_HEADERS,
+  });
 }
+
+// RFC 9110 § 10.2.3 — clientes (mobile AIRateLimiter) usam pra backoff
+// correto em vez de retry imediato.
+const RATE_LIMIT_RETRY_AFTER_SECONDS = Math.ceil(RATE_WINDOW_MS / 1000);
 
 export async function POST(req: NextRequest) {
   const ip = pickClientIp(req);
   if (!rateLimit(ip)) {
-    return json({ error: 'rate_limit' }, 429);
+    return json({ error: 'rate_limit' }, 429, { 'Retry-After': String(RATE_LIMIT_RETRY_AFTER_SECONDS) });
   }
 
   const apiKey = process.env.OPENAI_API_KEY?.trim();
@@ -170,8 +177,16 @@ export async function POST(req: NextRequest) {
       // Log mínimo (sem PII / sem header de auth) pra observabilidade. Em
       // serverless, console.warn vai parar nos logs da plataforma (Vercel).
       console.warn('[mascot/reply] upstream non-ok', { status: res.status });
-      // Pass-through de 429 ajuda o mobile a backoff específico.
-      if (res.status === 429) return json({ error: 'upstream_rate_limit' }, 429);
+      // Pass-through de 429 ajuda o mobile a backoff específico. Reflete
+      // Retry-After do upstream (OpenAI manda) se presente — caso contrário
+      // usamos um default conservador.
+      if (res.status === 429) {
+        const upstreamRetryAfter = res.headers.get('retry-after')?.trim();
+        const retryAfter = upstreamRetryAfter && /^\d+$/.test(upstreamRetryAfter)
+          ? upstreamRetryAfter
+          : String(RATE_LIMIT_RETRY_AFTER_SECONDS);
+        return json({ error: 'upstream_rate_limit' }, 429, { 'Retry-After': retryAfter });
+      }
       return json({ error: 'upstream_error' }, 502);
     }
 

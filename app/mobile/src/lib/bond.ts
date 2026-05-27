@@ -16,6 +16,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { MascotGestureKind } from '@/analytics';
 import { todayLocal, withLock } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 const TOTAL_KEY = (userId: string) => `mascote:bond:total:${userId}`;
 const BY_KIND_KEY = (userId: string) => `mascote:bond:by_kind:${userId}`;
@@ -104,8 +105,13 @@ export async function incrementBond(
       const byKind = (await readObject<Partial<Record<MascotGestureKind, number>>>(BY_KIND_KEY(userId))) ?? {};
       byKind[kind] = (byKind[kind] ?? 0) + 1;
       await AsyncStorage.setItem(BY_KIND_KEY(userId), JSON.stringify(byKind));
-    } catch {
-      /* persistência é otimização — não trava UX */
+    } catch (err) {
+      // Persistência é otimização — não trava UX. Mas falhas recorrentes
+      // (storage cheio, permissions) viram invisíveis sem log. Caller já
+      // recebeu `added` correto; só logamos pra telemetry pegar o sinal.
+      logger.warn('[bond] persist failed (non-fatal)', {
+        reason: err instanceof Error ? err.message : 'unknown',
+      });
     }
     return { added, capped };
   });
