@@ -21,6 +21,7 @@ export { StatPill } from './StatPill';
 export { WalletMini } from './WalletMini';
 export { MemoryCard, type MemoryCardData } from './MemoryCard';
 export { PaywallCard } from './PaywallCard';
+export { UniqueMascotPaywallCard } from './UniqueMascotPaywallCard';
 export { AccessibilityButton } from './AccessibilityButton';
 export { MascotStatusBubble } from './MascotStatusBubble';
 export { PrimaryActionCard } from './PrimaryActionCard';

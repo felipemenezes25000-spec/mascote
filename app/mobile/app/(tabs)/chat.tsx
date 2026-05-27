@@ -17,6 +17,10 @@ import { sendChatMessage } from '@/lib/ai/chat-engine';
 import { logger } from '@/lib/logger';
 import { rememberFromMessage } from '@/lib/memory';
 import { creatureMoments } from '@/lib/moments';
+import {
+  isCrisisBannerOnCooldown,
+  markCrisisBannerDismissed,
+} from '@/lib/crisisBannerCooldown';
 import { entitlementService } from '@/services/subscription/EntitlementService';
 import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
 import { useStore } from '@/store';
@@ -44,7 +48,21 @@ export default function ChatTab() {
   const [list, setList] = useState<Message[]>([]);
   const [sending, setSending] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
-  const [showCvvBanner, setShowCvvBanner] = useState(true);
+  // Começa escondido até confirmar via AsyncStorage que NÃO está em cooldown.
+  // Anti-flash: melhor banner aparecer 50ms depois do que piscar pra fechar
+  // logo após em sessão recém-dismissed.
+  const [showCvvBanner, setShowCvvBanner] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const onCooldown = await isCrisisBannerOnCooldown();
+      if (!cancelled) setShowCvvBanner(!onCooldown);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [ratedMessageIds, setRatedMessageIds] = useState<Set<string>>(() => new Set());
   // Mapa msg.id -> 'openai' | 'local'. Persistido SO em memoria (efemero):
   // o source nao vai pra DB pra nao virar artefato historico — o user pode
@@ -349,7 +367,14 @@ export default function ChatTab() {
             <Icon name="shield" size={14} color="#8C4F1F" strokeWidth={2} />
             <Typography variant="body" style={styles.cvvText}>Tô em momento ruim · só presença</Typography>
           </Pressable>
-          <Pressable onPress={() => setShowCvvBanner(false)} hitSlop={8} accessibilityLabel="Fechar">
+          <Pressable
+            onPress={() => {
+              setShowCvvBanner(false);
+              void markCrisisBannerDismissed();
+            }}
+            hitSlop={8}
+            accessibilityLabel="Fechar"
+          >
             <Icon name="x" size={14} color="#8C4F1F" strokeWidth={2.2} />
           </Pressable>
         </View>

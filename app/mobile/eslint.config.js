@@ -124,7 +124,7 @@ module.exports = [
       'react/display-name': 'off',
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
-      'react/no-unknown-property': 'off', // R3F (`@react-three/fiber`) usa props custom (position, args, intensity, …)
+      'react/no-unknown-property': 'off',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'off', // animated values via useRef são estáveis; demasiado ruído
       '@typescript-eslint/no-var-requires': 'off',

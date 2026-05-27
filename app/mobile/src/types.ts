@@ -63,8 +63,69 @@ export interface Mascot {
   dna?: MascotDNA;
   /** Seed usado pra gerar variação procedural inicial. Imutável. */
   dna_seed?: number;
+  /**
+   * Genome procedural IA-gerado. Quando presente, Mascot2D usa pra desenhar
+   * em vez do DNA puro. Atualizado em milestones (evolução, streak, etc.).
+   * Ver `docs/superpowers/specs/2026-05-27-mascote-2d-procedural-ia-design.md`.
+   */
+  procedural_genome?: ProceduralGenome | null;
   last_seen_at: string;
   created_at: string;
+}
+
+/** HSL color tuple [h: 0-360, s: 0-100, l: 0-100]. */
+export type HSL = [number, number, number];
+
+export type MilestoneTrigger =
+  | `evolution:${MascotPhase}`
+  | `streak:${number}d`
+  | `achievement:${string}`
+  | `messages:${number}`
+  | 'onboarding';
+
+export type MarkKind = 'spot' | 'stripe' | 'scar' | 'star' | 'crescent' | 'leaf' | 'rune';
+export type MarkPlacement = 'cheek' | 'forehead' | 'body' | 'tail';
+export type MarkColor = 'accent' | 'deep' | 'gold';
+
+export type HeadShape = 'round' | 'oval' | 'square' | 'teardrop' | 'crystal' | 'cloud';
+export type BodyShape = 'pebble' | 'capsule' | 'orb' | 'leaf' | 'stone';
+
+export interface ProceduralGenome {
+  version: 1;
+  generatedAt: string;
+  trigger: MilestoneTrigger;
+  palette: { body: HSL; accent: HSL; deep: HSL; eye: HSL };
+  silhouette: {
+    headShape: HeadShape;
+    headRx: number;
+    headRy: number;
+    bodyShape: BodyShape;
+    proportions: { headBody: number; eyeSize: number };
+  };
+  marks: Array<{
+    kind: MarkKind;
+    placement: MarkPlacement;
+    color: MarkColor;
+    seed: number;
+  }>;
+  accessories: Array<{
+    id: string;
+    customSvg?: string;
+    origin: string;
+  }>;
+  expression: {
+    mouthCurve: number;
+    eyeTilt: number;
+    cheekAlways: boolean;
+  };
+  story: string;
+  /** Overrides manuais do user via /mascot-editor. Aplicados depois do IA. */
+  userOverrides?: {
+    bodyHue?: number;
+    accentSaturation?: number;
+    markCount?: number;
+    disabledAccessories?: string[];
+  };
 }
 
 export interface Checkin {

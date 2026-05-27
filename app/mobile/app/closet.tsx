@@ -1,4 +1,4 @@
-import { router, Redirect } from 'expo-router';
+import { router, useLocalSearchParams, Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { MascotRenderer, type AccessoryId } from '@/components/MascotRenderer';
 import { MascotAmbient } from '@/components/MascotAmbient';
 import { PressableScale } from '@/components/PressableScale';
 import { SceneBackground } from '@/components/SceneBackground';
+import { ShareMascotButton } from '@/components/mascot/ShareMascotButton';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { accessoryCatalog, checkUnlock as checkAccUnlock, getAccessory } from '@/content/accessories';
 import { checkSceneUnlock, scenesCatalog } from '@/content/scenes';
@@ -63,7 +64,12 @@ export default function Closet() {
   const [equippedId, setEquippedId] = useState<string | null>(null);
   const [ownedSceneIds, setOwnedSceneIds] = useState<Set<string>>(new Set());
   const [activeSceneId, setActiveSceneId] = useState<string>('room');
-  const [tab, setTab] = useState<'accessories' | 'scenes'>('accessories');
+  // Aceita `?tab=scenes` quando vindo do badge de cenário na Home — abre direto
+  // na aba certa em vez de cair em "acessórios" e forçar troca manual.
+  const initialTabParam = useLocalSearchParams<{ tab?: string }>().tab;
+  const [tab, setTab] = useState<'accessories' | 'scenes'>(
+    initialTabParam === 'scenes' ? 'scenes' : 'accessories',
+  );
 
   useEffect(() => {
     if (!profile) return;
@@ -218,14 +224,19 @@ export default function Closet() {
       <View style={styles.preview}>
         <SceneBackground sceneId={activeSceneId} height={220}>
           <MascotAmbient size={170}>
-            <MascotRenderer
-              personality={mascot.personality}
-              phase={mascot.phase}
-              mood="feliz"
-              size={170}
-              accessory={(equippedId as AccessoryId | null) ?? null}
-              unityContext={{ sceneId: activeSceneId, equippedAccessoryIds: equippedId ? [equippedId] : [] }}
-            />
+            <ShareMascotButton
+              caption={`Conheça ${mascot.name}, meu mascote único — feito de hábitos.`}
+              label="Compartilhar"
+            >
+              <MascotRenderer
+                personality={mascot.personality}
+                phase={mascot.phase}
+                mood="feliz"
+                size={170}
+                accessory={(equippedId as AccessoryId | null) ?? null}
+                proceduralGenome={mascot.procedural_genome ?? null}
+              />
+            </ShareMascotButton>
           </MascotAmbient>
         </SceneBackground>
       </View>

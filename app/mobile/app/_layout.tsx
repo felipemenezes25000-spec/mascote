@@ -16,8 +16,6 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { HomeSkeleton } from '@/components/HomeSkeleton';
 import { UnlockToast } from '@/components/UnlockToast';
 import { WebFrame } from '@/components/WebFrame';
-import { registerUnityMomentSubscriber } from '@/components/unity/unityMomentSubscriber';
-import { resolveEffectiveRendererMode } from '@/core/mascot-render-contract/rendererConfig';
 import { getProductionViolations, type ProductionConfigViolation } from '@/lib/env/runtime-config';
 import { installTelemetry } from '@/lib/telemetry';
 import { logger } from '@/lib/logger';
@@ -92,14 +90,6 @@ export default function RootLayout() {
     if (!profile?.id) return;
     void initRevenueCatSdk(profile.id);
   }, [profile?.id]);
-
-  // Unity bridge — só registra subscriber se renderer ativo for Unity.
-  // No-op em three/2D pra evitar overhead em produção.
-  useEffect(() => {
-    if (resolveEffectiveRendererMode() !== 'unity') return;
-    const unsub = registerUnityMomentSubscriber();
-    return unsub;
-  }, []);
 
   if (BOOT_VIOLATIONS.length > 0) {
     return (
@@ -207,6 +197,7 @@ export default function RootLayout() {
           <Stack.Screen name="evolution" />
           <Stack.Screen name="mascot" options={{ presentation: 'modal' }} />
           <Stack.Screen name="mascot-room" />
+          <Stack.Screen name="mascot-editor" options={{ presentation: 'modal' }} />
           <Stack.Screen name="dna" options={{ presentation: 'modal' }} />
           <Stack.Screen name="diary" options={{ presentation: 'modal' }} />
           <Stack.Screen name="streak" />

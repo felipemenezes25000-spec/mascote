@@ -66,6 +66,11 @@ interface AppState {
   driftDnaFromHabit: (habit: HabitKind, intensity?: number) => Promise<void>;
   /** Sobrescreve DNA arbitrariamente (debug/preset). Sanitiza na borda. */
   setDna: (dna: MascotDNA) => Promise<void>;
+  /**
+   * Atualiza ProceduralGenome (IA-procedural ou userOverrides do editor).
+   * Persiste em AsyncStorage e atualiza store. Não toca last_seen_at.
+   */
+  updateProceduralGenome: (genome: import('@/types').ProceduralGenome | null) => Promise<void>;
   /** Limpa estado em memória após reset/exclusão de conta. */
   reset: () => void;
   /** Roda tick de simulação offline/online e atualiza mascot + life state. */
@@ -204,6 +209,13 @@ export const useStore = create<AppState>((set, get) => ({
     if (!p) return;
     const m = await mascots.forUser(p.id);
     set({ mascot: m });
+  },
+
+  async updateProceduralGenome(genome) {
+    const p = get().profile;
+    if (!p) return;
+    const updated = await mascots.updateProceduralGenome(p.id, genome);
+    if (updated) set({ mascot: updated });
   },
 
   async refreshStreak() {

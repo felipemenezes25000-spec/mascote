@@ -10,6 +10,7 @@ import { BrandLogo } from '@/components/BrandLogo';
 import { NotificationBell } from '@/components/NotificationBell';
 import { WalletPills } from '@/components/WalletPills';
 import { greetingForCompact } from '@/features/home/helpers';
+import { sanitizeDisplayName } from '@/lib/identity/displayName';
 import type { Profile, Streak, Wallet } from '@/types';
 
 interface Props {
@@ -29,7 +30,11 @@ export function HomeHeader({ profile, wallet, streak, notifKey, greet, showBrand
   // saudação completa em tablets (>= 768).
   const narrow = width < 412;
   const displayGreet = narrow ? greetingForCompact(new Date().getHours()) : greet;
-  const firstName = profile.display_name?.split(' ')[0] ?? 'Você';
+  // Sanitiza antes de extrair o primeiro nome: nomes como "hm,mjh" (vírgula
+  // + texto sem sentido — auditoria reportada) caem pra "Você" em vez de
+  // vazar o lixo no header. Sanitização também já é usada em diary/copy.
+  const sanitized = sanitizeDisplayName(profile.display_name);
+  const firstName = sanitized?.split(' ')[0] ?? 'Você';
 
   return (
     <View style={styles.wrap}>

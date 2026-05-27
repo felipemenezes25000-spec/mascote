@@ -67,9 +67,6 @@ import { mascotMemoryService } from '@/game/memory/MascotMemoryService';
 import { useHomeActions, createAnimationAction } from '@/features/home/hooks/useHomeActions';
 import { useHomeBootstrap } from '@/features/home/hooks/useHomeBootstrap';
 import { useHomeBehavior } from '@/features/home/hooks/useHomeBehavior';
-import { isUnityDebugPanelEnabled } from '@/core/mascot-render-contract/rendererConfig';
-import { unityMascotBridge } from '@/components/unity/UnityMascotBridge';
-import { UnityDebugPanel } from '@/components/unity/UnityDebugPanel';
 import {
   HOME_HABITS,
   buildMascotStatusFallback,
@@ -126,11 +123,6 @@ export default function Home() {
     | undefined
   >(undefined);
   const [memoryRefreshKey, setMemoryRefreshKey] = useState(0);
-  const [unityReady, setUnityReady] = useState(false);
-  const [unityVersion, setUnityVersion] = useState<string | null>(null);
-  const [unityLastError, setUnityLastError] = useState<string | null>(null);
-  const [unityLastMessage, setUnityLastMessage] = useState<string | null>(null);
-  const [ackTick, setAckTick] = useState(0);
 
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -153,26 +145,6 @@ export default function Home() {
   useEffect(() => () => {
     if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
     if (confettiTimerRef.current) clearTimeout(confettiTimerRef.current);
-  }, []);
-
-  useEffect(() => {
-    if (!isUnityDebugPanelEnabled()) return;
-    const unsub = unityMascotBridge.subscribe(msg => {
-      setUnityLastMessage(msg.type);
-      if (msg.type === 'ready') {
-        setUnityReady(true);
-        setUnityVersion(msg.version);
-      } else if (msg.type === 'error') {
-        setUnityLastError(msg.message);
-      } else if (msg.type === 'ack') {
-        setAckTick(v => v + 1);
-      }
-    });
-    const timer = setInterval(() => setAckTick(v => v + 1), 600);
-    return () => {
-      unsub();
-      clearInterval(timer);
-    };
   }, []);
 
   useHomeBehavior({
@@ -425,7 +397,6 @@ export default function Home() {
     () => (mascot ? xpToNextLevel(mascot.xp) : { current: 0, needed: 50, progress: 0 }),
     [mascot]
   );
-  const unityAckStats = useMemo(() => unityMascotBridge.getAckStats(), [ackTick]);
   // bannerActive precisa vir ANTES do early-return abaixo: hooks devem ser
   // chamados na mesma ordem em todo render (rules-of-hooks). seasonalEvent e
   // showNightWarning já estão no escopo (declarados acima).
@@ -505,7 +476,7 @@ export default function Home() {
               celebrationActive={lifeReturnCelebration}
               onPrev={() => void cycleScene(-1)}
               onNext={() => void cycleScene(1)}
-              onSceneBadge={() => router.push('/closet')}
+              onSceneBadge={() => router.push({ pathname: '/closet', params: { tab: 'scenes' } })}
               onIdentityPress={() => router.push('/mascot')}
               onGesture={(kind) => {
                 setReactBeat(v => v + 1);
@@ -725,19 +696,6 @@ export default function Home() {
       )}
 
       {showTour && <Tour visible={showTour} onDone={finishTour} />}
-      {isUnityDebugPanelEnabled() ? (
-        <UnityDebugPanel
-          version={unityVersion}
-          ready={unityReady}
-          lastError={unityLastError}
-          lastMessage={unityLastMessage}
-          native={unityMascotBridge.isNativeAvailable()}
-          ackLatencyMs={unityAckStats.lastAckLatencyMs}
-          ackRetryCount={unityAckStats.retryCount}
-          ackLastSeq={unityAckStats.lastAckSeq}
-          ackTimeoutCount={unityAckStats.timeoutCount}
-        />
-      ) : null}
     </SafeAreaView>
   );
 }

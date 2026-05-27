@@ -183,6 +183,23 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
           to: out.mascot.phase,
         });
         opts.onEvolution({ fromPhase: out.prevPhase, mascot: out.mascot, story });
+
+        // Auto-update do ProceduralGenome em phase change. Fire-and-forget:
+        // não bloqueia o reveal modal — quando responde, atualiza o store via
+        // refreshMascot na próxima leitura. Rate-limit interno (24h) garante
+        // que não vai gerar de novo se já gerou hoje.
+        void (async () => {
+          try {
+            const { maybeAutoUpdateGenome } = await import('@/lib/procedural/autoUpdate');
+            await maybeAutoUpdateGenome({
+              mascot: out.mascot,
+              prevPhase: out.prevPhase,
+              streak: out.streak.current_streak,
+            });
+          } catch {
+            // logger em autoUpdate já cobre; aqui é só engolir pra não quebrar UI
+          }
+        })();
       } else if (out.leveledUp) {
         haptic('success');
         opts.onLevelUp(out.mascot);

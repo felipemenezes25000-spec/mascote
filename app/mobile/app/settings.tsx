@@ -6,6 +6,7 @@ import { Button } from '@/components/Button';
 import { personalities, getPersonality } from '@/content/personalities';
 import { addDays, exportAll, importAll, mascots as mascotsDb, profiles, resetAll, settings as settingsDb, todayLocal } from '@/lib/db';
 import { clearApiKey, getApiKey, setApiKey } from '@/lib/ai/credentials';
+import { sanitizeDisplayName } from '@/lib/identity/displayName';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -56,8 +57,18 @@ export default function SettingsScreen() {
   if (!profile || !mascot || !settings) return <Redirect href="/splash" />;
 
   async function saveUserName() {
-    if (!userNameDraft.trim()) return;
-    const updated = await profiles.upsert({ display_name: userNameDraft.trim() });
+    // Sanitiza antes de persistir: rejeita lixo tipo "hm,mjh" ou ",,," que
+    // depois vaza em copy poética do mascote/diário/header. Helper já é
+    // shared com diary (mascotDiary.ts) e HomeHeader.
+    const sanitized = sanitizeDisplayName(userNameDraft);
+    if (!sanitized) {
+      Alert.alert(
+        'Nome inválido',
+        'Use ao menos 2 letras. Pode incluir espaços, hífen ou apóstrofo.',
+      );
+      return;
+    }
+    const updated = await profiles.upsert({ display_name: sanitized });
     setProfile(updated);
     setEditingName(false);
   }

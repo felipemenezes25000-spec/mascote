@@ -6,6 +6,18 @@
 > **Atualização 2026-05-19 (DLI-v3)**: 5/5 SPECs entregues. Todos os bloqueadores
 > da identidade DLI estão satisfeitos. Próximas fases viram trabalho de infra
 > (backend, push, billing) e refinamento (voz, shaders, memory graph).
+>
+> ## ⚠️ Pivô 2026-05-27 — 3D/Unity DESCONTINUADOS
+>
+> Mascot3D (R3F + three.js) e Unity foram removidos do projeto. O app é
+> 100% Mascot2D (SVG paramétrico). A visão de "criatura única por pessoa"
+> agora é executada via **IA-procedural 2D** — LLM gera `ProceduralGenome`
+> em milestones (evolução, streak, conversas), Mascot2D consome esse genome
+> pra desenhar marcas/silhueta/paleta únicas por user.
+>
+> Linhas abaixo marcadas "✅ 3D" devem ser lidas como **rescindidas**.
+> Ver `docs/superpowers/specs/2026-05-27-mascote-2d-procedural-ia-design.md`
+> para a arquitetura nova.
 
 Documento honesto: separa o que **já está construído** do que **falta**, com
 estimativas de esforço e dependências. Atualizar à medida que se executa.
@@ -21,8 +33,8 @@ estimativas de esforço e dependências. Atualizar à medida que se executa.
 | 4 personalidades-preset (Calmo, Motivador, Fofo, Sábio) com bias gênico | ✅ | [src/lib/dna/personalities.ts](app/mobile/src/lib/dna/personalities.ts) |
 | Drift de hábitos → genes (9 hábitos × 11 genes, sempre não-negativo) | ✅ | [src/lib/dna/habitToGene.ts](app/mobile/src/lib/dna/habitToGene.ts) |
 | Decay temporal não-punitivo (nunca atravessa 0.5) | ✅ (corrigido nesta sessão) | `applyDecay` |
-| Renderer 3D (R3F + three.js, body procedural icosahedron + olhos + paleta DNA-driven) | ✅ | [src/components/Mascot3D.tsx](app/mobile/src/components/Mascot3D.tsx) |
-| Fallback 2D para devices fracos (deviceCapabilities heurística) | ✅ | [src/lib/deviceCapabilities.ts](app/mobile/src/lib/deviceCapabilities.ts) |
+| ~~Renderer 3D (R3F + three.js)~~ DESCONTINUADO 2026-05-27 — ver pivô acima | 🚫 | removido |
+| Mascot2D (SVG paramétrico DNA-driven + ProceduralGenome IA) | ✅ | [src/components/Mascot2D.tsx](app/mobile/src/components/Mascot2D.tsx) |
 | Paleta + morphology + mood derivados do genoma | ✅ | `palette.ts`, `morphology.ts`, `mood.ts` |
 | Narrativa procedural ("Bipo ganhou olhar mais atento") | ✅ | [src/lib/dna/stories.ts](app/mobile/src/lib/dna/stories.ts) |
 | Persistência local AsyncStorage + migrations versionadas (DNA é v2) | ✅ | [src/lib/db.ts](app/mobile/src/lib/db.ts) |

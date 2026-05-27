@@ -1,22 +1,16 @@
 /**
- * MascotRenderer — roteador three | unity | fallback2d.
+ * MascotRenderer — passthrough pro Mascot2D.
  *
- * Default permanece `three` (Mascot.tsx / R3F). Unity é opt-in via env.
- * Cadeia de fallback: unity falha → three → 2d (via Mascot interno).
+ * Mantém a API legada (props como `preferUnity`, `unityState`, `unityContext`)
+ * pra zero quebra nas 10 telas consumidoras. Tudo isso é ignorado — o renderer
+ * é 100% Mascot2D após o cleanup big-bang 2026-05-27.
+ *
+ * Ver `docs/superpowers/specs/2026-05-27-mascote-2d-procedural-ia-design.md`.
  */
 
-import { memo, useMemo, useState } from 'react';
-import { Mascot } from '@/components/Mascot';
+import { memo } from 'react';
 import { Mascot2D, type AccessoryId } from '@/components/Mascot2D';
-import { UnityMascotView } from '@/components/unity/UnityMascotView';
-import {
-  buildUnityMascotState,
-  resolveRendererMode,
-  type BuildUnityMascotStateContext,
-} from '@/core/mascot-render-contract';
-import type { UnityMascotState } from '@/core/mascot-render-contract';
-import { useStore } from '@/store';
-import type { MascotCustomization, MascotMood, MascotPhase, Personality, MascotDNA } from '@/types';
+import type { MascotCustomization, MascotMood, MascotPhase, Personality, MascotDNA, ProceduralGenome } from '@/types';
 import type { MascotEvolutionVisuals } from '@/game/evolution/PhenotypeRenderer';
 import type { MascotAnimationKind } from '@/lib/animation-triggers';
 
@@ -37,90 +31,24 @@ export interface MascotRendererProps {
     | null;
   reduceMotion?: boolean;
   force2D?: boolean;
-  force3D?: boolean;
+  force3D?: boolean;  // ignorado — kept for backwards compat
   style?: import('react-native').StyleProp<import('react-native').ViewStyle>;
   evolutionVisuals?: MascotEvolutionVisuals | null;
   dnaOverride?: MascotDNA;
   seedOverride?: number;
-  /** Estado Unity pré-montado (evita rebuild). */
-  unityState?: UnityMascotState | null;
-  /** Contexto extra pro builder quando unityState não é passado. */
-  unityContext?: BuildUnityMascotStateContext;
-  /** Rotas premium (/mascot-room): Unity quando EXPO_PUBLIC_UNITY_ENABLED=true. */
+  /** ProceduralGenome opcional — quando presente, sobrescreve render via IA-procedural. */
+  proceduralGenome?: ProceduralGenome | null;
+  /** Legacy props (Unity descontinuado). Aceitos pra evitar quebra de imports. */
+  unityState?: unknown;
+  unityContext?: unknown;
   preferUnity?: boolean;
 }
 
-function readSimulateUnityFailure(): boolean {
-  const v = process.env.EXPO_PUBLIC_UNITY_SIMULATE_FAILURE;
-  return v === 'true' || v === '1';
-}
-
 function MascotRendererImpl(props: MascotRendererProps) {
-  const { unityState: unityStateProp, unityContext, preferUnity, size = 220 } = props;
-  const mode = resolveRendererMode({ preferUnity });
-  const mascot = useStore(s => s.mascot);
-  const profile = useStore(s => s.profile);
-  const lifeState = useStore(s => s.lifeState);
-  const settings = useStore(s => s.settings);
-  const [unityFailed, setUnityFailed] = useState(false);
-
-  // Skip Unity state build em modo three/fallback2d — operação não-trivial
-  // (sanitizeGenome + materials + bones + morphology + accessories) que no
-  // caminho dominante (Three.js default) seria computada e descartada.
-  // Unity é opt-in via EXPO_PUBLIC_UNITY_ENABLED.
-  const builtUnityState = useMemo(() => {
-    if (mode !== 'unity') return null;
-    if (unityStateProp !== undefined) return unityStateProp;
-    if (!mascot) return null;
-    const equipped =
-      props.accessory && typeof props.accessory === 'string' && props.accessory !== 'none'
-        ? [props.accessory]
-        : props.accessory && typeof props.accessory === 'object' && props.accessory.id
-          ? [props.accessory.id]
-          : [];
-    return buildUnityMascotState(mascot, {
-      profile,
-      reduceMotion: props.reduceMotion ?? settings?.reduce_motion,
-      mutationIds: props.mutationIds,
-      evolutionVisuals: props.evolutionVisuals,
-      equippedAccessoryIds: equipped,
-      unlockedAccessoryIds: equipped,
-      simEnergy: lifeState?.energy,
-      simMood: lifeState?.mood,
-      sceneHour: new Date().getHours(),
-      ...unityContext,
-    });
-  }, [
-    mode,
-    unityStateProp,
-    mascot,
-    profile,
-    settings?.reduce_motion,
-    props.accessory,
-    props.mutationIds,
-    props.evolutionVisuals,
-    props.reduceMotion,
-    unityContext,
-    lifeState?.energy,
-    lifeState?.mood,
-  ]);
-
-  if (mode === 'fallback2d') {
-    return <Mascot2D {...props} />;
-  }
-
-  if (mode === 'unity' && !unityFailed) {
-    return (
-      <UnityMascotView
-        state={builtUnityState}
-        size={size}
-        simulateFailure={readSimulateUnityFailure()}
-        onFallback={() => setUnityFailed(true)}
-      />
-    );
-  }
-
-  return <Mascot {...props} />;
+  // Discarda props legadas (unityState/unityContext/preferUnity/force3D)
+  const { unityState: _u1, unityContext: _u2, preferUnity: _u3, force3D: _u4, ...mascot2dProps } = props;
+  void _u1; void _u2; void _u3; void _u4;
+  return <Mascot2D {...mascot2dProps} />;
 }
 
 export const MascotRenderer = memo(MascotRendererImpl);

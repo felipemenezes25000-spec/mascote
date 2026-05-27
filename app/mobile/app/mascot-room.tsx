@@ -1,268 +1,118 @@
-import { Typography } from '@/components/ui';
 /**
- * /mascot-room — quarto vivo do mascote (Unity Mascot Room).
+ * /mascot-room — quarto vivo do mascote (2D, sem Unity).
  *
- * Esta rota é o destino premium da experiência: Unity render do mascote em
- * cena 3D dedicada, com debug panel, botões de teste e fallback automático
- * para Three.js se Unity falhar.
+ * Pré-cleanup 2026-05-27 esta rota era 100% Unity (rendering nativo de
+ * "destino premium"). Após o big-bang, é uma tela 2D simples que mostra o
+ * Mascot2D em destaque com gestos manuais (carinho/jogar/cantar).
  *
- * Diferente de /mascot (identidade — DNA/afinidades/marcos), esta tela é
- * sobre a CRIATURA viva e interativa.
+ * Ver `docs/superpowers/specs/2026-05-27-mascote-2d-procedural-ia-design.md`.
  */
 
-import { router, Redirect } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
+import { router } from 'expo-router';
+import { useCallback } from 'react';
+import { ScrollView, StyleSheet, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Icon } from '@/components/Icon';
 import { MascotRenderer } from '@/components/MascotRenderer';
-import {
-  buildUnityMascotState,
-  isUnityEnabled,
-  resolveRendererMode,
-} from '@/core/mascot-render-contract';
-import type { UnityHabitKind, UnityMascotState } from '@/core/mascot-render-contract';
-import { unityMascotBridge } from '@/components/unity/UnityMascotBridge';
-import { sendEventPlay, sendGesture } from '@/components/unity/unityMessageMapper';
+import { MascotInteractive, type MascotGestureKind } from '@/components/MascotInteractive';
+import { SceneBackground } from '@/components/SceneBackground';
+import { Typography } from '@/components/ui';
 import { useStore } from '@/store';
-import { useStyles, useTheme } from '@/lib/useTheme';
-import type { Theme } from '@/lib/themes';
+import { useTheme } from '@/lib/useTheme';
+import * as Haptics from 'expo-haptics';
+import type { HabitKind } from '@/types';
 
-const TEST_HABITS: UnityHabitKind[] = ['water', 'sleep', 'exercise', 'meditation', 'reading'];
+const TEST_HABITS: HabitKind[] = ['water', 'sleep', 'exercise', 'meditation', 'reading'];
 
 export default function MascotRoom() {
   const theme = useTheme();
-  const styles = useStyles(makeStyles);
-  const profile = useStore(s => s.profile);
   const mascot = useStore(s => s.mascot);
   const settings = useStore(s => s.settings);
-  const [debugLog, setDebugLog] = useState<string[]>([]);
-  const [reduceMotion, setReduceMotion] = useState<boolean>(settings?.reduce_motion ?? false);
-  const [ackTick, setAckTick] = useState(0);
 
-  const appendLog = useCallback((line: string) => {
-    setDebugLog(prev => [...prev.slice(-7), `${new Date().toLocaleTimeString()} ${line}`]);
+  const handleGesture = useCallback((kind: MascotGestureKind) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void kind;
   }, []);
 
-  useEffect(() => {
-    const unsub = unityMascotBridge.subscribe(msg => {
-      if (msg.type === 'ack') setAckTick(v => v + 1);
-      appendLog(`← ${msg.type}${'message' in msg ? ` (${msg.message})` : ''}`);
-    });
-    return unsub;
-  }, [appendLog]);
-
-  useEffect(() => {
-    const timer = setInterval(() => setAckTick(v => v + 1), 600);
-    return () => clearInterval(timer);
+  const handleHabitTap = useCallback((habit: HabitKind) => {
+    void Haptics.selectionAsync();
+    router.push({ pathname: '/checkin', params: { habit } });
   }, []);
 
-  const rendererMode = resolveRendererMode({ preferUnity: true });
-  const ackStats = useMemo(() => unityMascotBridge.getAckStats(), [ackTick]);
-
-  const unityState: UnityMascotState | null = useMemo(() => {
-    if (!mascot) return null;
-    return buildUnityMascotState(mascot, {
-      profile,
-      reduceMotion,
-      quality: 'auto',
-    });
-  }, [mascot, profile, reduceMotion]);
-
-  const handleHabitTest = useCallback(
-    (habit: UnityHabitKind) => {
-      sendEventPlay({ kind: 'habit', habit, intensity: 1 });
-      appendLog(`→ event.play habit:${habit}`);
-    },
-    [appendLog],
-  );
-
-  const handleGesture = useCallback(
-    (gesture: 'tap' | 'pet' | 'poke') => {
-      sendGesture(gesture);
-      appendLog(`→ gesture ${gesture}`);
-    },
-    [appendLog],
-  );
-
-  const handleLevelUp = useCallback(() => {
-    sendEventPlay({ kind: 'phase.advanced', from: 'baby', to: 'child' });
-    appendLog('→ event.play phase.advanced');
-  }, [appendLog]);
-
-  if (!profile || !mascot) return <Redirect href="/splash" />;
+  if (!mascot) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.bg }]}>
+        <Typography variant="body" style={{ color: theme.colors.textSecondary, padding: 16 }}>
+          Mascote ainda não carregou.
+        </Typography>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={10} accessibilityLabel="Voltar">
-          <Icon name="arrow-left" size={22} color={theme.colors.text} strokeWidth={2.2} />
-        </Pressable>
-        <Typography variant="title" style={styles.headerTitle}>Quarto do mascote</Typography>
-        <View style={{ width: 22 }} />
-      </View>
-
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.bg }]}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.stage}>
-          <MascotRenderer
-            personality={mascot.personality}
-            phase={mascot.phase}
-            mood={mascot.mood}
-            size={260}
-            reduceMotion={reduceMotion}
-            unityState={unityState}
-            preferUnity
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Typography variant="title" style={styles.sectionTitle}>Interagir</Typography>
-          <View style={styles.row}>
-            <TestButton label="Tap" onPress={() => handleGesture('tap')} />
-            <TestButton label="Pet" onPress={() => handleGesture('pet')} />
-            <TestButton label="Poke" onPress={() => handleGesture('poke')} />
+        <SceneBackground sceneId="room" height={420}>
+          <View style={styles.heroWrap}>
+            <MascotInteractive onGesture={handleGesture} reduceMotion={settings?.reduce_motion}>
+              <MascotRenderer
+                personality={mascot.personality}
+                phase={mascot.phase}
+                mood={mascot.mood}
+                size={260}
+                proceduralGenome={mascot.procedural_genome ?? null}
+              />
+            </MascotInteractive>
           </View>
+        </SceneBackground>
+
+        <View style={styles.identityRow}>
+          <Typography variant="body" style={[styles.name, { color: theme.colors.text }]}>
+            {mascot.name}
+          </Typography>
+          <Typography variant="body" style={{ color: theme.colors.textSecondary }}>
+            Fase: {mascot.phase} · Humor: {mascot.mood}
+          </Typography>
         </View>
 
-        <View style={styles.section}>
-          <Typography variant="title" style={styles.sectionTitle}>Disparar reação por hábito</Typography>
-          <View style={styles.row}>
+        <View style={styles.actions}>
+          <Typography variant="body" style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            O que vamos fazer agora?
+          </Typography>
+          <View style={styles.habitsRow}>
             {TEST_HABITS.map(h => (
-              <TestButton key={h} label={h} onPress={() => handleHabitTest(h)} />
+              <Pressable
+                key={h}
+                onPress={() => handleHabitTap(h)}
+                style={({ pressed }) => [
+                  styles.habitBtn,
+                  {
+                    backgroundColor: pressed ? theme.colors.primary : theme.colors.surface,
+                    borderColor: theme.colors.border,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={`Registrar hábito ${h}`}
+              >
+                <Typography variant="body" style={{ color: theme.colors.text, fontSize: 13 }}>
+                  {h}
+                </Typography>
+              </Pressable>
             ))}
           </View>
         </View>
-
-        {__DEV__ && (
-          <>
-            <View style={styles.section} testID="mascot-room-eventos">
-              <Typography variant="title" style={styles.sectionTitle}>Eventos</Typography>
-              <View style={styles.row}>
-                <TestButton label="Phase advance" onPress={handleLevelUp} />
-                <TestButton
-                  label={reduceMotion ? 'Reduce motion ON' : 'Reduce motion OFF'}
-                  onPress={() => {
-                    setReduceMotion(v => !v);
-                    appendLog(`→ reduceMotion=${!reduceMotion}`);
-                  }}
-                />
-              </View>
-            </View>
-
-            <View style={styles.section} testID="mascot-room-debug">
-              <Typography variant="title" style={styles.sectionTitle}>Debug</Typography>
-              <Typography variant="mono" tone="secondary" style={styles.debugStatus}>
-                renderer: {rendererMode} · unityFlag: {String(isUnityEnabled())} · nativeEmbedded: {String(unityMascotBridge.isNativeEmbedded())} · mascot: {mascot.name} · phase: {mascot.phase}
-              </Typography>
-              <Typography variant="mono" tone="secondary" style={styles.debugStatus}>
-                ack ms: {ackStats.lastAckLatencyMs ?? '-'} · retry: {ackStats.retryCount} · ack seq: {ackStats.lastAckSeq ?? '-'} · timeout: {ackStats.timeoutCount}
-              </Typography>
-              <View style={styles.debugBox}>
-                {debugLog.length === 0 ? (
-                  <Typography variant="mono" tone="dim">aguardando mensagens…</Typography>
-                ) : (
-                  debugLog.map((line, i) => (
-                    <Typography key={i} variant="mono" tone="secondary" style={styles.debugLine}>{line}</Typography>
-                  ))
-                )}
-              </View>
-            </View>
-          </>
-        )}
-
-        <View style={{ height: 32 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-interface TestButtonProps {
-  label: string;
-  onPress: () => void;
-  style?: ViewStyle;
-}
-
-function TestButton({ label, onPress, style }: TestButtonProps) {
-  const styles = useStyles(makeStyles);
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.button, style, pressed && styles.buttonPressed]}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-    >
-      <Typography variant="mono" style={styles.buttonLabel}>{label}</Typography>
-    </Pressable>
-  );
-}
-
-function makeStyles(theme: Theme) {
-  return StyleSheet.create({
-    safe: { flex: 1, backgroundColor: theme.colors.bg },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.md,
-    },
-    headerTitle: {},
-    scroll: { paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xl },
-    stage: {
-      alignItems: 'center',
-      paddingVertical: theme.spacing.lg,
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.radius.lg,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      marginBottom: theme.spacing.md,
-    },
-    section: {
-      marginTop: theme.spacing.md,
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.radius.lg,
-      padding: theme.spacing.md,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-    },
-    sectionTitle: {
-      fontSize: 16,
-      lineHeight: 22,
-      marginBottom: theme.spacing.sm,
-    },
-    row: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: theme.spacing.sm,
-    },
-    button: {
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: 10,
-      borderRadius: theme.radius.pill,
-      backgroundColor: theme.colors.primary,
-    },
-    buttonPressed: { opacity: 0.7 },
-    buttonLabel: {
-      color: theme.tokens.semantic.inkOnBrand,
-      fontSize: 12,
-      letterSpacing: 0.3,
-    },
-    debugStatus: {
-      fontSize: 11,
-      marginBottom: theme.spacing.sm,
-    },
-    debugBox: {
-      backgroundColor: theme.colors.bg,
-      borderRadius: theme.radius.md,
-      padding: theme.spacing.sm,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      minHeight: 80,
-    },
-    debugLine: {
-      fontSize: 11,
-      lineHeight: 16,
-    },
-  });
-}
-
+const styles = StyleSheet.create({
+  safe: { flex: 1 },
+  scroll: { paddingBottom: 32 },
+  heroWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  identityRow: { padding: 20, alignItems: 'center', gap: 4 },
+  name: { fontSize: 22, fontWeight: '800' },
+  actions: { padding: 20, gap: 12 },
+  sectionTitle: { fontSize: 16, fontWeight: '700' },
+  habitsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  habitBtn: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1 },
+});

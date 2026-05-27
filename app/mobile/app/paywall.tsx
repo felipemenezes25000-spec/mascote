@@ -20,7 +20,7 @@ import { safeBack } from '@/lib/router-utils';
 import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { BillingTierId } from '@/content/billing';
-import { PaywallCard, Typography } from '@/components/ui';
+import { PaywallCard, Typography, UniqueMascotPaywallCard } from '@/components/ui';
 
 const PERSONALITY_TO_ARCHETYPE: Record<Personality, ArchetypeKey> = {
   calmo: 'contemplativo',
@@ -198,6 +198,17 @@ export default function Paywall() {
           </Typography>
         </View>
 
+        {/* Card que ancora a venda na unicidade do mascote do user.
+            Mostra o ProceduralGenome se houver, senão copy fallback. */}
+        {mascot ? (
+          <UniqueMascotPaywallCard
+            mascot={mascot}
+            onCtaPress={() => void handleSubscribe('plus_annual')}
+            ctaLabel={isPremium ? 'Continuar como Plus' : `Começar ${annual.trialDays} dias grátis`}
+            disabled={loading || isPremium || purchaseBlocked}
+          />
+        ) : null}
+
         {/* PaywallCard emocional alinhado a arquétipo da personalidade —
             mostra "antes/depois" em duas colunas com CTA destacado. */}
         <PaywallCard
@@ -205,7 +216,7 @@ export default function Paywall() {
           beforeTitle="Hoje"
           beforeBody="Cuidados básicos, evolução natural."
           afterTitle="Com Plus"
-          afterBody="Mascote 3D completo, mutações raras, IA emocional, sem limite."
+          afterBody="Mascote único, marcas próprias, IA emocional, sem limite."
           ctaLabel={isPremium ? 'Continuar como Plus' : `Começar ${annual.trialDays} dias grátis`}
           onPress={() => void handleSubscribe('plus_annual')}
           helper={purchaseBlocked ? 'Configure RevenueCat antes de cobrar.' : undefined}

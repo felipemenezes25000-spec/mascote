@@ -29,9 +29,11 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, RadialGradient, Rect, Stop, SvgXml } from 'react-native-svg';
 import { useTheme } from '@/lib/useTheme';
-import type { MascotCustomization, MascotDNA, MascotMood, MascotPhase, Personality } from '@/types';
+import type { MascotCustomization, MascotDNA, MascotMood, MascotPhase, Personality, ProceduralGenome } from '@/types';
+import { hslToHex, applyUserOverrides } from '@/lib/procedural';
+import { ProceduralMarks } from '@/components/mascot/ProceduralMarks';
 import { getPersonality } from '@/content/personalities';
 import { paletteFromGenome, type Genome } from '@/lib/dna';
 import { applyCustomization } from '@/lib/dna/customization';
@@ -93,6 +95,13 @@ interface Props {
   customization?: MascotCustomization | null;
   /** Mutations desbloqueadas — contribuem boosts de morphInfluences. */
   mutationIds?: readonly string[];
+  /**
+   * Genome procedural IA-gerado. Quando presente, sobrescreve palette + silhueta
+   * + marks vindos de DNA/personality. UserOverrides são aplicados em cima do IA.
+   *
+   * Ver `docs/superpowers/specs/2026-05-27-mascote-2d-procedural-ia-design.md`.
+   */
+  proceduralGenome?: ProceduralGenome | null;
 }
 
 /**
@@ -174,11 +183,18 @@ function MascotImpl({
   dna,
   customization,
   mutationIds = [],
+  proceduralGenome,
 }: Props) {
   const theme = useTheme();
   const meta = getPersonality(personality);
   const stage = phaseToStage[phase];
   const hMood = moodMap[mood];
+
+  // Aplica userOverrides em cima do genome IA (overrides sempre vencem).
+  const effectiveGenome = useMemo(
+    () => (proceduralGenome ? applyUserOverrides(proceduralGenome) : null),
+    [proceduralGenome]
+  );
   const accessoryId = resolveAccessoryId(accessory);
 
   const breath = useSharedValue(1);
@@ -352,14 +368,22 @@ function MascotImpl({
     ? identityFromHSL(dnaPalette.bodyHSL)
     : DEFAULT_IDENTITY;
   // Corpo: identidade + tint de mood (sutil).
-  const brand = tintIdentity(identity, mood);
+  const dnaBrand = tintIdentity(identity, mood);
   // Identidade pura (sem mood) — usada em acentos pra ficarem estáveis.
   const identityFixed = tintIdentity(identity, 'ok');
   // Fallback de "deep"/accent: paleta DNA tem accent próprio (matiz +22°),
   // se ausente cai no preset por personality (legado).
-  const brandDeep = dnaPalette?.accent ?? meta.accentColor;
-  const accent = dnaPalette?.accent ?? meta.accentColor;
-  const accentDeep = dnaPalette?.body ? identityFixed : meta.primaryColor;
+  const dnaBrandDeep = dnaPalette?.accent ?? meta.accentColor;
+  const dnaAccent = dnaPalette?.accent ?? meta.accentColor;
+  const dnaAccentDeep = dnaPalette?.body ? identityFixed : meta.primaryColor;
+
+  // ProceduralGenome SOBRESCREVE palette quando presente — visão IA-procedural.
+  // Sem genome, paleta DNA-driven legada continua valendo (zero regressão).
+  const brand = effectiveGenome ? hslToHex(effectiveGenome.palette.body) : dnaBrand;
+  const accent = effectiveGenome ? hslToHex(effectiveGenome.palette.accent) : dnaAccent;
+  const brandDeep = effectiveGenome ? hslToHex(effectiveGenome.palette.deep) : dnaBrandDeep;
+  const accentDeep = effectiveGenome ? hslToHex(effectiveGenome.palette.deep) : dnaAccentDeep;
+  const eyeFill = effectiveGenome ? hslToHex(effectiveGenome.palette.eye) : '#1F1A14';
 
   // Morfologia por fase — cada fase adiciona elementos NOVOS visíveis.
   //  ovo (1):       só casca, sem cabeça
@@ -378,7 +402,16 @@ function MascotImpl({
   const showHalo = stage >= 6;
   const showWings = stage >= 6;
   const showAura = stage >= 6;
-  const shape = personalityShapes[personality] ?? personalityShapes.calmo;
+  // Silhueta: ProceduralGenome.silhouette sobrescreve personalityShapes default.
+  const personalityShape = personalityShapes[personality] ?? personalityShapes.calmo;
+  const shape: PersonalityShape = effectiveGenome
+    ? {
+        headRx: effectiveGenome.silhouette.headRx,
+        headRy: effectiveGenome.silhouette.headRy,
+        headTopOffset: personalityShape.headTopOffset,
+        cheekAlways: effectiveGenome.expression.cheekAlways,
+      }
+    : personalityShape;
   const scaleFactor = isEgg ? 0.7 : (0.74 + stage * 0.04);
   const eyeWide = hMood === 'proud' || hMood === 'happy';
   const smileSign = hMood === 'sad' ? -1 : hMood === 'sleepy' ? 0 : 1;
@@ -580,6 +613,28 @@ function MascotImpl({
               sage={theme.colors.sage}
               sageDeep={theme.colors.sageDeep}
             />
+
+            {/* MARKS — ProceduralGenome. Único por usuário. */}
+            {effectiveGenome && effectiveGenome.marks.length > 0 && (
+              <ProceduralMarks
+                marks={effectiveGenome.marks}
+                accent={accent}
+                deep={brandDeep}
+                gold={theme.colors.gold}
+                reduceMotion={reduceMotion}
+              />
+            )}
+
+            {/* CUSTOM ACCESSORIES — SVG sanitizado vindo do LLM. */}
+            {effectiveGenome && effectiveGenome.accessories.length > 0 && (
+              <>
+                {effectiveGenome.accessories
+                  .filter(a => typeof a.customSvg === 'string' && a.customSvg.length > 0)
+                  .map((a, idx) => (
+                    <SvgXml key={`custom-${a.id}-${idx}`} xml={a.customSvg!} width={60} height={60} x={70} y={50} />
+                  ))}
+              </>
+            )}
 
             {/* proud sparkles */}
             {hMood === 'proud' && (

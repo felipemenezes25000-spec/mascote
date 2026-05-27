@@ -44,6 +44,7 @@ export const mascots = {
         health: m.health ?? existing?.health ?? 100,
         dna,
         dna_seed,
+        procedural_genome: m.procedural_genome ?? existing?.procedural_genome ?? null,
         // Respeita last_seen_at explícito (testes/sync/simulação) e evita
         // "tocar" presença ao fazer upsert genérico.
         last_seen_at: m.last_seen_at ?? existing?.last_seen_at ?? new Date().toISOString(),
@@ -93,6 +94,24 @@ export const mascots = {
         energy: vitals.energy,
         mood: vitals.mood,
       };
+      const updated = rows.map(r => (r.id === next.id ? next : r));
+      await write<Mascot>('mascots', updated);
+      return next;
+    });
+  },
+  /**
+   * Atualiza o ProceduralGenome (IA-procedural ou userOverrides do editor).
+   * Não toca last_seen_at — gen é evento de milestone, não presença.
+   */
+  async updateProceduralGenome(
+    user_id: string,
+    genome: Mascot['procedural_genome'],
+  ): Promise<Mascot | null> {
+    return withLock('mascots', async () => {
+      const rows = await read<Mascot>('mascots');
+      const idx = rows.findIndex(r => r.user_id === user_id);
+      if (idx === -1) return null;
+      const next: Mascot = { ...rows[idx], procedural_genome: genome ?? null };
       const updated = rows.map(r => (r.id === next.id ? next : r));
       await write<Mascot>('mascots', updated);
       return next;

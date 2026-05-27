@@ -397,15 +397,6 @@ vi.mock('@/components/brandLogoAsset', () => ({
   LOGO_SOURCE: 1,
 }));
 
-// ============= Mascot3D (R3F + three) =============
-// Mascot3D usa @react-three/fiber/native + three; ambos têm source não-TS que
-// o transformer oxc do vitest não digere (token `typeof` em runtime modules).
-// Como WebGL não existe em jsdom, mockamos o componente — testes de lógica do
-// wrapper Mascot.tsx (que decide 2D vs 3D) continuam exercitando a árvore.
-vi.mock('@/components/Mascot3D', () => ({
-  Mascot3D: makeHostComponent('mascot-3d'),
-}));
-
 vi.mock('react-native-purchases', () => ({
   default: {
     configure: vi.fn(),
@@ -419,6 +410,21 @@ vi.mock('react-native-purchases', () => ({
     })),
   },
 }));
+
+// react-native-view-shot tem código nativo (ViewShot.android.js etc); o
+// transformer do vitest não digere. Mock com componente passthrough que
+// expõe método `capture` retornando uma URI fake.
+vi.mock('react-native-view-shot', () => {
+  const React = require('react');
+  const { forwardRef, useImperativeHandle } = React;
+  const ViewShot = forwardRef(function ViewShot(props: { children?: unknown }, ref: unknown) {
+    useImperativeHandle(ref, () => ({
+      capture: async () => 'file:///tmp/mock-mascot.png',
+    }));
+    return React.createElement('view-shot-mock', null, props.children);
+  });
+  return { default: ViewShot, __esModule: true };
+});
 
 // expose helpers pra tests
 (globalThis as any).__asyncStorageReset = () => store.clear();

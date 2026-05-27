@@ -4,7 +4,6 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { MascotRenderer } from '@/components/MascotRenderer';
-import { buildMomentPendingEvent } from '@/core/mascot-render-contract';
 import { SceneBackground } from '@/components/SceneBackground';
 import { ConfettiBurst } from '@/components/ConfettiBurst';
 import { getPersonality } from '@/content/personalities';
@@ -127,11 +126,6 @@ export default function CheckInResult() {
     return v > 0;
   }).length;
 
-  const firstHabit = Object.keys(answers)[0] as HabitKind | undefined;
-  const pendingEvent = firstHabit
-    ? buildMomentPendingEvent({ habitKind: firstHabit, xpGained: persistedXp })
-    : undefined;
-
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
@@ -141,7 +135,6 @@ export default function CheckInResult() {
             phase={mascot.phase}
             mood={goodCount >= 3 ? 'empolgado' : 'feliz'}
             size={150}
-            unityContext={{ pendingEvent, sceneId: 'room' }}
           />
         </SceneBackground>
 

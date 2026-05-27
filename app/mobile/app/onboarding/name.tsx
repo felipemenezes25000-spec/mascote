@@ -7,6 +7,7 @@ import { Mascot } from '@/components/Mascot';
 import { getPersonality } from '@/content/personalities';
 import { readSystemReduceMotion } from '@/lib/accessibility';
 import { mascots, profiles, settings as settingsDb, streaks, wallet as walletDb } from '@/lib/db';
+import { sanitizeDisplayName } from '@/lib/identity/displayName';
 import { seedFromOnboardingAnswers, mapMoodToMascot, type OnboardingAnswers, type StylePreset } from '@/lib/onboarding-evolution';
 import { buildPersonalizationInput } from '@/lib/onboarding-evolution';
 import { persistOnboardingPersonalization } from '@/lib/personalization-service';
@@ -74,10 +75,22 @@ export default function NameStep() {
     // settings, Promise.all de 3 reads, set state). Sem o flag, double-tap
     // cria 2 perfis duplicados antes do botão atualizar via `disabled`.
     if (saving || !userName.trim()) return;
+    // Sanitiza antes de salvar profile: "hm,mjh" e similares são rejeitados
+    // aqui em vez de vazar pro diário/header. Helper compartilhado com
+    // settings e HomeHeader pra coerência.
+    const sanitizedName = sanitizeDisplayName(userName);
+    if (!sanitizedName) {
+      const { Alert } = await import('react-native');
+      Alert.alert(
+        'Nome inválido',
+        'Use ao menos 2 letras. Pode incluir espaços, hífen ou apóstrofo.',
+      );
+      return;
+    }
     setSaving(true);
     try {
     const profile = await profiles.upsert({
-      display_name: userName.trim(),
+      display_name: sanitizedName,
       age_band: ageBand,
     });
     // O mood selecionado no onboarding (mood.tsx) ESPELHA o user inicialmente.

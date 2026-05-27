@@ -18,7 +18,6 @@ import { color } from '@/design-system/tokens';
 import type { Theme } from '@/lib/themes';
 import { HeroSwipeable } from '@/components/HeroSwipeable';
 import { MascotRenderer, type AccessoryId } from '@/components/MascotRenderer';
-import { isUnityHomeEnabled } from '@/core/mascot-render-contract';
 import { MascotAmbient } from '@/components/MascotAmbient';
 import { MascotInteractive, type MascotGestureKind } from '@/components/MascotInteractive';
 import { PressableScale } from '@/components/PressableScale';
@@ -94,7 +93,6 @@ export function HomeHero({
   const styles = useStyles(makeStyles);
   const displayMood = reflectiveMood ?? mascot.mood;
   const hour = sceneHour ?? new Date().getHours();
-  const preferUnity = isUnityHomeEnabled();
   return (
     <View style={styles.sceneWrap}>
       <HeroSwipeable onPrev={onPrev} onNext={onNext}>
@@ -134,7 +132,6 @@ export function HomeHero({
                 customization={customState}
                 mutationIds={mutationIds}
                 evolutionVisuals={evolutionVisuals}
-                preferUnity={preferUnity}
                 unityContext={{
                   sceneId: (scene as { id?: string }).id ?? 'room',
                   equippedAccessoryIds: equippedAccId !== 'none' ? [equippedAccId] : [],

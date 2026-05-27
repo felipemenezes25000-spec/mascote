@@ -11,6 +11,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { StaggeredView } from '@/components/StaggeredView';
 import { getPersonality } from '@/content/personalities';
 import { checkins as checkinsDb, todayLocal, userScenes } from '@/lib/db';
+import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import {
   buildInviteLink,
   buildInvitePayload,
@@ -144,7 +145,7 @@ export default function ShareScreen() {
                   </Typography>
                   <Typography variant="body" style={styles.cardName}>{mascot.name}</Typography>
                   <Typography variant="body" style={styles.cardLine}>
-                    nível {mascot.level} · {mascot.phase}
+                    nível {mascot.level} · {emergentPhaseLabels[mascot.phase]}
                   </Typography>
                   <View style={styles.cardStats}>
                     <View style={styles.statBox}>
