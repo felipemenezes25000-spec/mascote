@@ -1,16 +1,7 @@
 import { router, Redirect } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+  FlatList, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChatBubble } from '@/components/ChatBubble';
 import { ChatReplyRating } from '@/components/ChatReplyRating';
@@ -22,6 +13,7 @@ import { chatSuggestions } from '@/content/replies';
 import { getPersonality } from '@/content/personalities';
 import { dateLocal, messages as messagesDb, todayLocal } from '@/lib/db';
 import { generateReply } from '@/lib/ai';
+import { sendChatMessage } from '@/lib/ai/chat-engine';
 import { logger } from '@/lib/logger';
 import { rememberFromMessage } from '@/lib/memory';
 import { creatureMoments } from '@/lib/moments';
@@ -33,6 +25,7 @@ import { color as dsColor } from '@/design-system/tokens';
 import type { Theme } from '@/lib/themes';
 import type { Message } from '@/types';
 
+import { Typography } from '@/components/ui';
 interface ListItem {
   kind: 'message' | 'date' | 'system';
   id: string;
@@ -53,6 +46,12 @@ export default function ChatTab() {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [showCvvBanner, setShowCvvBanner] = useState(true);
   const [ratedMessageIds, setRatedMessageIds] = useState<Set<string>>(() => new Set());
+  // Mapa msg.id -> 'openai' | 'local'. Persistido SO em memoria (efemero):
+  // o source nao vai pra DB pra nao virar artefato historico — o user pode
+  // ter trocado modo entre sessoes e o badge "modo local" so faz sentido
+  // pra mensagens da sessao atual. Em cold start o map fica vazio — bubbles
+  // antigos nao mostram badge (comportamento esperado, sem ruido visual).
+  const [messageSources, setMessageSources] = useState<Map<string, 'openai' | 'local'>>(() => new Map());
   const listRef = useRef<FlatList<ListItem>>(null);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Guard contra duplo-greeting: StrictMode roda effects 2x em dev e o
@@ -186,6 +185,16 @@ export default function ChatTab() {
         cached: false,
       });
       setList(prev => [...prev, reply]);
+      // Plumba source pra UI exibir badge "modo local" em mensagens nao-IA.
+      // Mapeamento: 'openai' -> cloud; 'mock' | 'fallback' -> local. fallback
+      // inclui safety overrides (crisis_reply, diagnosis_redirect) e budget
+      // exceeded — todos casos onde a IA real NAO foi quem respondeu.
+      const uiSource: 'openai' | 'local' = result.source === 'openai' ? 'openai' : 'local';
+      setMessageSources(prev => {
+        const next = new Map(prev);
+        next.set(reply.id, uiSource);
+        return next;
+      });
       // Emite moment — outros sistemas (analytics, animação, voz) podem reagir.
       creatureMoments.emit('chat.reply_received', {
         source: result.source as 'mock' | 'fallback' | 'openai' | 'proxy',
@@ -194,10 +203,39 @@ export default function ChatTab() {
       scheduleScrollToEnd(80);
     } catch (err) {
       // Algo falhou no pipeline (persist user msg, gerar resposta, persist
-      // resposta). Avisa o usuário em vez de deixar a mensagem sumir silente.
+      // resposta). Tenta sendChatMessage como ultimo recurso — ele tem
+      // fallback interno pro mock local e nao consome o pipeline de safety
+      // (entao so chamamos quando o erro ja aconteceu depois do user msg
+      // ter sido persistido com sucesso).
       logger.warn('[chat] send failed', {
         reason: err instanceof Error ? err.message : 'unknown',
       });
+      // Se o userMsg conseguiu ser persistido, vale tentar uma resposta
+      // best-effort via sendChatMessage (que cai pro mockReply local).
+      if (userMsg) {
+        try {
+          const fb = await sendChatMessage(text, {
+            personality: mascot.personality,
+            mascotName: mascot.name,
+          });
+          const fbReply = await messagesDb.add({
+            conversation_id: profile.id,
+            role: 'mascot',
+            content: fb.content,
+            safety_flag: 'safe',
+            cached: false,
+          });
+          setList(prev => [...prev, fbReply]);
+          setMessageSources(prev => {
+            const next = new Map(prev);
+            next.set(fbReply.id, fb.source);
+            return next;
+          });
+          return;
+        } catch {
+          /* segue pro system msg padrao abaixo */
+        }
+      }
       try {
         const sysMsg = await messagesDb.add({
           conversation_id: profile.id,
@@ -229,6 +267,7 @@ export default function ChatTab() {
     setList([greeting]);
     setShowSuggestions(true);
     setRatedMessageIds(new Set());
+    setMessageSources(new Map());
   }
 
   function shouldShowRating(message: Message): boolean {
@@ -277,13 +316,13 @@ export default function ChatTab() {
           <View style={[styles.dot, { backgroundColor: meta.primaryColor }]} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text accessibilityRole="header" style={styles.headerTitle}>{mascot.name}</Text>
+          <Typography variant="body" accessibilityRole="header" style={styles.headerTitle}>{mascot.name}</Typography>
           <View style={styles.headerSubRow}>
             <View style={[styles.statusDot, { backgroundColor: apiKey ? theme.colors.success : theme.colors.textDim }]} />
-            <Text style={styles.headerSub}>
+            <Typography variant="body" style={styles.headerSub}>
               {meta.label} · {apiKey ? 'IA conectada' : 'modo offline'}
               {!isPremium && dailyLimit !== null ? ` · ${dailyLimit} msgs/dia` : ''}
-            </Text>
+            </Typography>
           </View>
         </View>
         <PressableScale style={styles.iconBtn} onPress={clearHistory} hitSlop={6} accessibilityLabel="Nova conversa">
@@ -302,7 +341,7 @@ export default function ChatTab() {
         <View style={styles.cvvBanner}>
           <Pressable style={styles.cvvMain} onPress={() => router.push('/safe-night')}>
             <Icon name="shield" size={14} color="#8C4F1F" strokeWidth={2} />
-            <Text style={styles.cvvText}>Tô em momento ruim · só presença</Text>
+            <Typography variant="body" style={styles.cvvText}>Tô em momento ruim · só presença</Typography>
           </Pressable>
           <Pressable onPress={() => setShowCvvBanner(false)} hitSlop={8} accessibilityLabel="Fechar">
             <Icon name="x" size={14} color="#8C4F1F" strokeWidth={2.2} />
@@ -323,8 +362,8 @@ export default function ChatTab() {
           ListEmptyComponent={
             !sending ? (
               <View style={styles.emptyWrap}>
-                <Text style={styles.emptyTitle}>Conversa vazia por enquanto</Text>
-                <Text style={styles.emptyBody}>Escolha uma sugestão ou escreva como você está agora.</Text>
+                <Typography variant="body" style={styles.emptyTitle}>Conversa vazia por enquanto</Typography>
+                <Typography variant="body" style={styles.emptyBody}>Escolha uma sugestão ou escreva como você está agora.</Typography>
               </View>
             ) : null
           }
@@ -335,7 +374,7 @@ export default function ChatTab() {
               return (
                 <View style={styles.dateSep}>
                   <View style={styles.dateLine} />
-                  <Text style={styles.dateText}>{formatDate(item.date!)}</Text>
+                  <Typography variant="body" style={styles.dateText}>{formatDate(item.date!)}</Typography>
                   <View style={styles.dateLine} />
                 </View>
               );
@@ -343,12 +382,14 @@ export default function ChatTab() {
             if (item.kind === 'system') {
               return (
                 <View style={styles.systemWrap}>
-                  <Text style={styles.systemText}>{item.message!.content}</Text>
+                  <Typography variant="body" style={styles.systemText}>{item.message!.content}</Typography>
                 </View>
               );
             }
             const msg = item.message!;
             const isMascot = msg.role === 'mascot';
+            const msgSource = messageSources.get(msg.id);
+            const showLocalBadge = isMascot && msgSource === 'local';
             return (
               <View>
                 <ChatBubble
@@ -357,6 +398,17 @@ export default function ChatTab() {
                   mascotColor={meta.primaryColor}
                   safetyFlag={msg.safety_flag}
                 />
+                {showLocalBadge ? (
+                  <View style={styles.localBadgeWrap}>
+                    <Typography
+                      variant="body"
+                      style={styles.localBadge}
+                      accessibilityLabel="Resposta local sem IA na nuvem"
+                    >
+                      modo local
+                    </Typography>
+                  </View>
+                ) : null}
                 {isMascot && shouldShowRating(msg) ? (
                   <ChatReplyRating
                     onRate={(helpful, repetition) => handleReplyRated(msg.id, helpful, repetition)}
@@ -373,7 +425,7 @@ export default function ChatTab() {
             onPress={() => setShowSuggestions(true)}
             accessibilityLabel="Mostrar sugestões de conversa"
           >
-            <Text style={styles.suggestionsToggleText}>Sugestões ▸</Text>
+            <Typography variant="body" style={styles.suggestionsToggleText}>Sugestões ▸</Typography>
           </PressableScale>
         ) : null}
         {showSuggestions ? (
@@ -384,7 +436,7 @@ export default function ChatTab() {
                 onPress={() => setShowSuggestions(false)}
                 accessibilityLabel="Ocultar sugestões"
               >
-                <Text style={styles.suggestionsToggleText}>Sugestões ▾</Text>
+                <Typography variant="body" style={styles.suggestionsToggleText}>Sugestões ▾</Typography>
               </PressableScale>
             ) : null}
             <ScrollView
@@ -399,7 +451,7 @@ export default function ChatTab() {
                   style={styles.suggestionChip}
                   onPress={() => send(s.text)}
                 >
-                  <Text style={styles.suggestionText}>{s.label}</Text>
+                  <Typography variant="body" style={styles.suggestionText}>{s.label}</Typography>
                 </PressableScale>
               ))}
             </ScrollView>
@@ -436,7 +488,7 @@ export default function ChatTab() {
             hitSlop={8}
           >
             {sending ? (
-              <Text style={styles.sendText}>…</Text>
+              <Typography variant="body" style={styles.sendText}>…</Typography>
             ) : (
               <Icon name="arrow-right" size={20} color="#fff" strokeWidth={2.6} />
             )}
@@ -624,5 +676,25 @@ function makeStyles(theme: Theme) {
       ...theme.shadow.sm,
     },
     sendText: { color: '#fff', fontSize: 22, lineHeight: 24, fontWeight: '700' },
+    // Chip "modo local" embaixo de bubbles do mascote quando a resposta
+    // veio do mockReply (sem chave OpenAI ou fallback de safety). Texto
+    // pequeno, monoespaco, alinhado com o bubble do mascote (esquerda).
+    localBadgeWrap: {
+      flexDirection: 'row',
+      paddingHorizontal: theme.spacing.md,
+      marginTop: -2,
+      marginBottom: 4,
+    },
+    localBadge: {
+      ...theme.text.xs,
+      color: theme.colors.textDim,
+      fontSize: 10,
+      fontFamily: 'JetBrainsMono_400Regular',
+      letterSpacing: 0.4,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: theme.radius.pill,
+      backgroundColor: theme.colors.border + '40',
+    },
   });
 }
