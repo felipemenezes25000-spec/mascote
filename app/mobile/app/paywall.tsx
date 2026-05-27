@@ -175,15 +175,17 @@ export default function Paywall() {
           <Typography variant="body" style={styles.modeDetail}>{billingEnv.detail}</Typography>
         </View>
 
-        {/* Disclosure honesto: se o proxy de IA ainda não foi configurado nessa
-            build, falamos isso na cara. Promessa "IA emocional ilimitada"
-            sem proxy = IA local. Honestidade > conversão suja. */}
+        {/* Disclosure honesto: o proxy de chat ainda não foi configurado, mas
+            a IA-procedural visual (geração de forma/marcas/paleta) já roda
+            via OpenAI direto quando há chave. Promessa explícita do que existe
+            hoje vs o que vem depois. Honestidade > conversão suja. */}
         {!isAiProxyConfigured() ? (
           <View style={styles.disclosure} accessibilityRole="text">
             <Typography variant="body" style={styles.disclosureLabel}>Sobre a IA Plus nesta build</Typography>
             <Typography variant="body" style={styles.disclosureDetail}>
-              Esta versão usa IA local (sem cloud). A IA cloud com personalidade chega
-              na próxima atualização — sem custo extra pra quem já é Plus.
+              Seu mascote já é desenhado pela IA (forma, marcas, paleta únicas). Respostas
+              de chat usam IA local ou sua chave OpenAI; persistência cloud chega na
+              próxima atualização — sem custo extra pra quem já é Plus.
             </Typography>
           </View>
         ) : null}

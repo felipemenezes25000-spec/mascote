@@ -22,6 +22,7 @@ import type {
 import { logger } from '@/lib/logger';
 import { getAiProxyUrl } from '@/ai/ProxyMascotAI';
 import { validateProceduralGenome } from './schema';
+import { canCallOpenAIDirect, generateViaOpenAIDirect } from './openaiDirect';
 
 const PROXY_TIMEOUT_MS = 25_000;
 const REGEN_COOLDOWN_MS = 24 * 60 * 60 * 1000;
@@ -54,15 +55,28 @@ export function shouldRegenerate(current: ProceduralGenome | null | undefined): 
  * fallback determinístico. Nunca lança — sempre retorna um genome.
  */
 export async function generateProceduralGenome(input: GenerateInput): Promise<ProceduralGenome> {
+  // 1. Proxy backend (recomendado em produção)
   const base = getAiProxyUrl();
   if (base) {
     try {
       const proxyGenome = await fetchFromProxy(base, input);
       if (proxyGenome) return proxyGenome;
     } catch (err) {
-      logger.warn('[procedural] proxy falhou, usando fallback', { err: String(err) });
+      logger.warn('[procedural] proxy falhou, tentando próximo caminho', { err: String(err) });
     }
   }
+
+  // 2. OpenAI direto (DEV-only, gated por canCallOpenAIDirect — nunca em prod)
+  if (canCallOpenAIDirect()) {
+    try {
+      const direct = await generateViaOpenAIDirect(input);
+      if (direct) return direct;
+    } catch (err) {
+      logger.warn('[procedural] openai-direct falhou, usando fallback', { err: String(err) });
+    }
+  }
+
+  // 3. Fallback determinístico (mulberry32 seeded — sem rede)
   return fallbackGenome(input);
 }
 

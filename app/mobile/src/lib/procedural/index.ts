@@ -25,3 +25,4 @@ export {
 } from './triggers';
 export { hslToHex, applyUserOverrides } from './palette';
 export { maybeAutoUpdateGenome, type AutoUpdateContext } from './autoUpdate';
+export { canCallOpenAIDirect, generateViaOpenAIDirect } from './openaiDirect';
