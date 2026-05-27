@@ -26,7 +26,9 @@ describe('classifyIntent', () => {
     { text: 'exausta', expect: 'cansaco' },
     { text: 'tô ansiosa', expect: 'ansiedade' },
     { text: 'em pânico', expect: 'ansiedade' },
-    { text: 'me sinto sozinho', expect: 'solidao' },
+    // Wave 2: "me sinto sozinho" passou a cair em 'expressa_solidao' (intent
+    // narrativa mais especifica). "isolado" continua em 'solidao' generica.
+    { text: 'me sinto sozinho', expect: 'expressa_solidao' },
     { text: 'isolado', expect: 'solidao' },
     { text: 'tô brava', expect: 'raiva' },
     { text: 'gratidão pelo dia', expect: 'gratidao' },

@@ -173,7 +173,19 @@ const TRIGGERS: TriggerDef[] = [
     async test(ctx) {
       const last3 = ctx.recentUserMessages.slice(-3);
       if (last3.length < 3) return { fire: false };
-      const sadIntents = new Set(['tristeza', 'cansaco', 'ansiedade', 'solidao', 'culpa']);
+      // Wave 2 split 'solidao' em duas intents mais especificas:
+      // 'expressa_solidao' ("me sinto sozinho") e 'pede_companhia' ("preciso
+      // de companhia") — ambas pertencem ao cluster triste e devem disparar
+      // o check-in carinhoso junto com a versao generica 'solidao'.
+      const sadIntents = new Set([
+        'tristeza',
+        'cansaco',
+        'ansiedade',
+        'solidao',
+        'expressa_solidao',
+        'pede_companhia',
+        'culpa',
+      ]);
       const sadCount = last3.filter(m => sadIntents.has(classifyIntent(m.content))).length;
       if (sadCount < 3) return { fire: false };
       return {
