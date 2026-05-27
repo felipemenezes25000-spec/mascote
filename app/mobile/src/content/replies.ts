@@ -17,6 +17,10 @@ interface ReplyBank {
   estimula_movimento: string[];
   estimula_descanso: string[];
   estimula_agua: string[];
+  // Intents v2 (auditoria 2026-05-27): perguntas que viraram off-topic
+  // no v1 ("como vou superar a ansiedade?" caia em acolhe_ansiedade).
+  pergunta_estrategia: string[];
+  pergunta_reflexiva: string[];
   default: string[];
 }
 
@@ -112,6 +116,20 @@ const banks: Record<Personality, ReplyBank> = {
       'Um copo de água. Devagar.',
       'Bebe um pouco. O corpo agradece sem dizer.',
       'Pequena dose de água. Faz diferença sutil.',
+    ],
+    pergunta_estrategia: [
+      'Caminhos longos se desenham caminhando. Qual é o primeiro passo pequeno?',
+      'Antes de "como" — o que você já tentou? O corpo já sabe alguma coisa.',
+      'A pergunta é boa. Vamos quebrá-la em pedaços menores?',
+      'Estratégia sem corpo cansa. Onde no corpo isso aparece agora?',
+      'Não tenho receita. Tenho companhia pra você pensar em voz alta.',
+    ],
+    pergunta_reflexiva: [
+      'Boa pergunta. Senta com ela um pouco antes de responder.',
+      'Às vezes o que sente fala antes da palavra. Escuta o corpo um instante.',
+      'Pergunta dessas merece silêncio. Tô aqui sem pressa.',
+      'O que vem primeiro quando você fecha os olhos com essa pergunta?',
+      'Reflexão é água parada. Deixa o pensamento descer um pouco.',
     ],
     default: [
       'Tô aqui. Em silêncio também serve.',
@@ -216,6 +234,20 @@ const banks: Record<Personality, ReplyBank> = {
       'Água. Agora. Confia.',
       'Hidrata. {nome} também tá com sede aqui.',
     ],
+    pergunta_estrategia: [
+      'Pergunta boa. Bora um passo só hoje pra começar?',
+      'Vou te ajudar a quebrar isso. O que aperta mais agora?',
+      'Estratégia grande paralisa. Que tal 2 minutos de teste?',
+      'Como? Começando. Qual a primeira coisa que cabe hoje?',
+      'Boa. Lista 3 opções rápido — a gente escolhe a menor.',
+    ],
+    pergunta_reflexiva: [
+      'Pergunta dessas vale pausa. Anota num lugar e volta nela.',
+      'Boa! Reflete enquanto caminha 5 min. O corpo ajuda.',
+      'Vou te devolver: o que mudaria se você já soubesse?',
+      'Tá numa boa onda de auto-observação. Continua.',
+      'Pergunta forte. Não precisa responder hoje, só notar que tá rolando.',
+    ],
     default: [
       'Bora. Como posso ajudar agora?',
       'Conta. O que tá rolando?',
@@ -318,6 +350,20 @@ const banks: Record<Personality, ReplyBank> = {
       'Aguinha pra esse corpinho fofo 🌱',
       'Bebe água, lindo(a) 💛',
     ],
+    pergunta_estrategia: [
+      'Hmm, vem cá 💛 me conta o que já tentou?',
+      'Pergunta linda. Vamos pensar juntinhos?',
+      'Ai, tô aqui pra ajudar. Qual a parte mais difícil?',
+      'Bora começar bem pequeno? Tipo, micro-mini-passo 🌱',
+      'Não precisa resolver tudo hoje. Que tal só pensar em voz alta?',
+    ],
+    pergunta_reflexiva: [
+      'Ui, pergunta gostosa 💛 senta um pouquinho com ela.',
+      'Hmm... e se a gente não responder agora? Só sentir?',
+      'Que pergunta linda. Tô aqui se quiser pensar junto.',
+      'Vem, conta o que tá vindo quando você pensa nisso 🌱',
+      'Não precisa ter resposta agora, viu? Tá tudo bem só perguntar.',
+    ],
     default: [
       'Conta mais 💛',
       'Hmm, vem cá... me explica?',
@@ -419,6 +465,20 @@ const banks: Record<Personality, ReplyBank> = {
       'Hidratação é a base que ninguém vê.',
       'Devagar, sem pressa, mas bebe.',
     ],
+    pergunta_estrategia: [
+      'Antes de plano, uma pergunta: o que já tentou, e o que ficou de aprendizado disso?',
+      'Não tenho receita. Mas tenho curiosidade: o que muda quando você imagina superado?',
+      'Superar é um verbo grande. Quer começar com algo menor pra hoje?',
+      'Ansiedade não é inimigo a vencer — é mensageira. Que mensagem você tem ouvido dela?',
+      'O caminho a longo prazo geralmente se desenha caminhando. Por onde podemos andar agora?',
+    ],
+    pergunta_reflexiva: [
+      'Boa pergunta. Não responde rápido. Senta com ela um pouco.',
+      'O que essa pergunta protege? Às vezes a forma da pergunta já é a resposta.',
+      'Se você já tivesse a resposta, o que ela te pediria pra fazer diferente?',
+      'A pergunta certa às vezes vale mais que dez respostas.',
+      'O que muda se você troca "por que" por "pra quê"?',
+    ],
     default: [
       'Conta. Sem pressa.',
       'O que mais?',
@@ -515,11 +575,54 @@ export type Intent =
   | 'estimula_movimento'
   | 'estimula_descanso'
   | 'estimula_agua'
+  // Intents v2 (auditoria 2026-05-27): perguntas "como" e "por que" caem
+  // aqui antes das intents emocionais. Sem isso, "como vou superar a
+  // ansiedade?" virava acolhe_ansiedade ("Pressa por dentro...") — resposta
+  // do AGORA, nao da pergunta filosofica.
+  | 'pergunta_estrategia'
+  | 'pergunta_reflexiva'
   | 'default';
+
+/**
+ * Lista exportada para tests de cobertura (tests/replies/coverage.test.ts).
+ * Manter sincronizada com o union type Intent acima.
+ */
+export const INTENTS: readonly Intent[] = [
+  'greeting',
+  'tristeza',
+  'cansaco',
+  'ansiedade',
+  'solidao',
+  'raiva',
+  'gratidao',
+  'alegria',
+  'culpa',
+  'comemora_checkin',
+  'pergunta_aberta',
+  'encerra',
+  'estimula_movimento',
+  'estimula_descanso',
+  'estimula_agua',
+  'pergunta_estrategia',
+  'pergunta_reflexiva',
+  'default',
+] as const;
+
+/** Lista exportada para tests — mantenha em sync com `Personality` em @/types. */
+export const PERSONALITIES: readonly Personality[] = ['calmo', 'motivador', 'fofo', 'sabio'] as const;
 
 export function classifyIntent(text: string): Intent {
   const t = text.toLowerCase().trim();
   if (/^(oi|ol[áa]|bom\s+dia|boa\s+tarde|boa\s+noite|hey|opa|ea[íi]|salve)(\s|$|[!?.,])/.test(t)) return 'greeting';
+
+  // === Intents v2 (auditoria 2026-05-27) ===
+  // Checados ANTES das intents emocionais — "como vou superar a ansiedade?"
+  // tem que cair em pergunta_estrategia, NAO em acolhe_ansiedade. A regex
+  // de pergunta_estrategia exige verbo "como" + verbo de ação no inicio
+  // pra nao puxar exclamativo ("Como tô cansado!" continua em cansaco).
+  if (/^como\s+(fa[çc]o|supero|melhoro|consigo|posso|come[çc]o|saio|lido|aprendo|construo|crio|encontro|paro|come[çc]ar|come[çc]aria)/i.test(t)) return 'pergunta_estrategia';
+  if (/(por\s+que\s+sinto|o\s+que\s+significa|ser[áa]\s+que|seria\s+que|por\s+que\s+ser[áa]|por\s+que\s+(?:eu|me))/i.test(t)) return 'pergunta_reflexiva';
+
   if (/(triste|tristeza|chorando|chorei|para?\s+baixo|deprimid|mal\s+humor|sem\s+vontade)/i.test(t)) return 'tristeza';
   if (/(cansad|exaust|sem energia|sem força|esgotad|destru[íi]da|moíd|fadig)/i.test(t) && !/dormir|deitar/i.test(t)) return 'cansaco';
   if (/(ansios|ansiedade|p[âa]nico|preocup|tens[ãa]o|agitad|nervos|inquiet|surtando)/i.test(t)) return 'ansiedade';
@@ -535,7 +638,8 @@ export function classifyIntent(text: string): Intent {
   // Perguntas de auto-desenvolvimento ("como criar hábito", "como manter rotina",
   // "qual a melhor forma...") caem em pergunta_aberta — banco entrega resposta
   // substantiva em vez de um monossílabo do default (QA flagrou Sábio respondendo
-  // só "Continua." a "como criar um hábito").
+  // só "Continua." a "como criar um hábito"). Esse fica DEPOIS de pergunta_estrategia
+  // pra "como faco pra dormir" cair em estrategia, nao em pergunta_aberta.
   if (/(como\s+(criar|come[çc]ar|manter|construir|formar)|h[áa]bito|rotina|conselho|dica|melhor\s+forma)/i.test(t)) return 'pergunta_aberta';
   return 'default';
 }
@@ -568,6 +672,8 @@ export function mockReply(
     estimula_movimento: 'estimula_movimento',
     estimula_descanso: 'estimula_descanso',
     estimula_agua: 'estimula_agua',
+    pergunta_estrategia: 'pergunta_estrategia',
+    pergunta_reflexiva: 'pergunta_reflexiva',
     default: 'default',
   };
   /* v8 ignore next — intentMap cobre todos os Intents do union type;
