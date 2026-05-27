@@ -222,59 +222,109 @@ function buildTimeMutations(): Mutation[] {
   }));
 }
 
+/**
+ * Descrições por combo gênico — chaveadas pelos genes que compõem o combo
+ * (ordem alfabética, separados por '+').
+ *
+ * Cada combo tem nome + descrição únicos na voz do Pip: curta, sensorial,
+ * presente, sem clichê e sem emoji. Substituiu a string compartilhada
+ * "Genes em harmonia — uma forma nova emergiu, só sua." (auditoria 2026-05-27).
+ */
+const COMBO_DESCRIPTIONS: Record<string, { name: string; description: string }> = {
+  // adaptability + emotionalDepth → calm_mind
+  'adaptability+emotionalDepth': {
+    name: 'Mente serena',
+    description: 'Fluidez e profundidade se encontraram — Pip pensa devagar agora, como água passando entre pedras.',
+  },
+  // curiosity + socialEnergy → spark
+  'curiosity+socialEnergy': {
+    name: 'Centelha social',
+    description: 'A curiosidade ganhou calor — Pip se aproxima do mundo com aura aberta, sem perder o brilho.',
+  },
+  // discipline + intelligence → focus
+  'discipline+intelligence': {
+    name: 'Foco cristalino',
+    description: 'Mineral e raciocínio se fundiram — Pip ficou denso, paciente, como pedra que sabe esperar a chuva.',
+  },
+  // chaos + creativity → wild
+  'chaos+creativity': {
+    name: 'Caos criativo',
+    description: 'Desordem e invenção se cruzam — Pip cresce pra direções inesperadas, e cada galho é uma resposta nova.',
+  },
+  // discipline + empathy + resilience → guardian
+  'discipline+empathy+resilience': {
+    name: 'Guardião resiliente',
+    description: 'Três forças se assentaram no peito do Pip — corpo denso, olhar acolhedor, postura firme sem rigidez.',
+  },
+};
+
+/**
+ * Resolve nome + descrição únicos pra um combo gênico, chaveado pelos
+ * genes (ordem alfabética). Fallback acolhedor em vez de erro.
+ */
+export function getComboDescription(
+  ...genes: GeneKey[]
+): { name: string; description: string } {
+  const key = [...genes].sort().join('+');
+  return (
+    COMBO_DESCRIPTIONS[key] ?? {
+      name: 'Forma inédita',
+      description: 'Algo novo emergiu — Pip ainda está aprendendo o nome dessa mutação.',
+    }
+  );
+}
+
 function buildGeneComboMutations(): Mutation[] {
   const combos: {
     id: string;
-    name: string;
     genes: Partial<Record<GeneKey, number>>;
     impact: VisualImpact;
     rarity: MutationRarity;
   }[] = [
     {
       id: 'mut.combo.calm_mind',
-      name: 'Mente serena',
       genes: { adaptability: 0.65, emotionalDepth: 0.6 },
       impact: { morphologyMultipliers: { auraOpacity: 1.2 }, pattern: 'cells' },
       rarity: 'rare',
     },
     {
       id: 'mut.combo.spark',
-      name: 'Centelha social',
       genes: { socialEnergy: 0.7, curiosity: 0.65 },
       impact: { auraParticleMultiplier: 1.35, glowBoost: 0.08 },
       rarity: 'rare',
     },
     {
       id: 'mut.combo.focus',
-      name: 'Foco cristalino',
       genes: { intelligence: 0.72, discipline: 0.68 },
       impact: { morphologyMultipliers: { pupilEmissive: 1.4 } },
       rarity: 'epic',
     },
     {
       id: 'mut.combo.wild',
-      name: 'Caos criativo',
       genes: { creativity: 0.7, chaos: 0.65 },
       impact: { pattern: 'fractal', morphologyMultipliers: { antennaWiggle: 1.5 } },
       rarity: 'epic',
     },
     {
       id: 'mut.combo.guardian',
-      name: 'Guardião resiliente',
       genes: { resilience: 0.75, empathy: 0.7, discipline: 0.65 },
       impact: { bioluminescent: true, glowBoost: 0.18, morphologyMultipliers: { bodyBottomBias: 1.2 } },
       rarity: 'legendary',
     },
   ];
-  return combos.map(c => ({
-    id: c.id,
-    name: c.name,
-    description: 'Genes em harmonia — uma forma nova emergiu, só sua.',
-    dominantGene: Object.keys(c.genes)[0] as GeneKey,
-    condition: { geneAbove: c.genes },
-    visualImpact: c.impact,
-    rarity: c.rarity,
-  }));
+  return combos.map(c => {
+    const geneKeys = Object.keys(c.genes) as GeneKey[];
+    const meta = getComboDescription(...geneKeys);
+    return {
+      id: c.id,
+      name: meta.name,
+      description: meta.description,
+      dominantGene: geneKeys[0],
+      condition: { geneAbove: c.genes },
+      visualImpact: c.impact,
+      rarity: c.rarity,
+    };
+  });
 }
 
 /** 44+ mutações além do núcleo MVP em mutations.ts */
