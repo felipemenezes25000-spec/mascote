@@ -15,8 +15,8 @@ import { PersonalTicker } from '@/components/PersonalTicker';
 import { PressableScale } from '@/components/PressableScale';
 import { StaggeredView } from '@/components/StaggeredView';
 import { Tour } from '@/components/Tour';
-import { Typography, PrimaryActionCard } from '@/components/ui';
 import { activeSeasonalEvent, isLateNight } from '@/content/seasonal';
+import { activeLimitedEvent } from '@/lib/events';
 import { getScene } from '@/content/scenes';
 import {
   comboXpBonus,
@@ -26,6 +26,7 @@ import {
   userScenes,
   checkins as checkinsDb,
 } from '@/lib/db';
+import { PrimaryActionCard, Typography } from '@/components/ui';
 import { isNightBannerOnCooldown, markNightBannerDismissed } from '@/lib/nightBannerCooldown';
 import { maybeNotifyStreakAtRisk, notifyMascotBirthday } from '@/lib/notify';
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
@@ -442,251 +443,287 @@ export default function Home() {
     mascotLine;
   const sceneHour = new Date().getHours();
 
+  // selectActiveBanner — escolhe 1 banner por vez para a above-fold.
+  // Prioridade: noite difícil > evento limitado > sazonal.
+  // O HomeBanner já encapsula essa lógica internamente; aqui apenas
+  // calculamos se há *algum* banner ativo, para evitar criar o nó React quando
+  // não há banner — preservando peso da first-paint.
+  const bannerActive = useMemo(
+    () => showNightWarning || !!activeLimitedEvent() || !!seasonalEvent,
+    [showNightWarning, seasonalEvent],
+  );
+  const missionActive = mission !== null;
+  const rewardAvailable = !snapshot.dailyClaimedToday;
+  const awayHours = mascot.last_seen_at ? hoursAway(mascot.last_seen_at) : 0;
+  const awayMoreThan24h =
+    awayHours >= 24 || lifeEvents.some(
+      e => e.kind === 'while_away_living_moment' || e.kind === 'return_summary',
+    );
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView style={styles.scrollOuter} contentContainerStyle={styles.scroll}>
-        <StaggeredView index={0}>
-          <HomeHeader
-            profile={profile}
-            wallet={wallet}
-            streak={streak}
-            notifKey={notifKey}
-            greet={greet}
-            showBrand={vw > 360}
-          />
-        </StaggeredView>
+        {/* ----- Above the fold: hero + 1 banner + stats + 1 CTA ----- */}
+        <View style={styles.aboveFold}>
+          <StaggeredView index={0}>
+            <HomeHeader
+              profile={profile}
+              wallet={wallet}
+              streak={streak}
+              notifKey={notifKey}
+              greet={greet}
+              showBrand={vw > 360}
+            />
+          </StaggeredView>
 
-        <StaggeredView index={1}>
-          <View style={{ paddingHorizontal: theme.spacing.lg }}>
-            <PersonalTicker
-              source={{
-                streakCurrent: streak?.current_streak ?? 0,
-                streakLongest: streak?.longest_streak ?? 0,
-                totalCheckins: snapshot.totalCheckinsAll,
-                level: mascot.level,
-                phaseLabel: emergentPhaseLabels[mascot.phase],
-                mascotName: mascot.name,
+          {bannerActive && (
+            <HomeBanner
+              showNightWarning={showNightWarning}
+              onDismissNight={() => {
+                setShowNightWarning(false);
+                void markNightBannerDismissed();
               }}
+              seasonalEvent={seasonalEvent}
             />
-          </View>
-        </StaggeredView>
+          )}
 
-        <HomeBanner
-          showNightWarning={showNightWarning}
-          onDismissNight={() => {
-            setShowNightWarning(false);
-            void markNightBannerDismissed();
-          }}
-          seasonalEvent={seasonalEvent}
-        />
+          <StaggeredView index={1} initialDelay={20}>
+            <HomeHero
+              mascot={mascot}
+              scene={scene}
+              sceneHeight={sceneHeight}
+              mascotSize={mascotSize}
+              reduceMotion={settings?.reduce_motion}
+              reactBeat={reactBeat}
+              reflectiveMood={reflective}
+              equippedAccId={snapshot.equippedAccId}
+              customState={snapshot.customState}
+              mutationIds={snapshot.mutationIds}
+              evolutionVisuals={evolutionVisuals}
+              behaviorAction={behaviorAction}
+              unlockedSceneCount={snapshot.unlockedSceneIds.length}
+              statusLine={displayLine}
+              emotionKey={emotion}
+              sceneHour={sceneHour}
+              celebrationActive={lifeReturnCelebration}
+              onPrev={() => void cycleScene(-1)}
+              onNext={() => void cycleScene(1)}
+              onSceneBadge={() => router.push('/closet')}
+              onIdentityPress={() => router.push('/mascot')}
+              onGesture={(kind) => {
+                setReactBeat(v => v + 1);
+                const reasonMap = {
+                  tap: 'touch',
+                  double: 'mission_complete',
+                  long: 'saudade',
+                  pet: 'touch',
+                } as const;
+                setBehaviorAction(createAnimationAction(reasonMap[kind]));
+                if (kind === 'pet') creatureMoments.emit('gesture.pet', { intensity: 1 });
+                if (kind === 'double') creatureMoments.emit('gesture.double', {});
+                if (mascot.dna) {
+                  const profileVoice = voiceProfileFromGenome(sanitizeGenome(mascot.dna));
+                  const voiceKind = kind === 'double' ? 'celebrate' : kind === 'long' ? 'sleepy' : 'react';
+                  const emotion = kind === 'double' ? 0.85 : kind === 'long' ? 0.4 : 0.6;
+                  playVoiceLine(profileVoice, { kind: voiceKind, emotion });
+                }
+                // Vínculo persistido: gesto efêmero vira história gravada.
+                // Cap diário no bond.ts evita grind; fire-and-forget pra não travar UX.
+                if (profile?.id) void incrementBond(profile.id, kind);
+              }}
+              flash={flash}
+            />
+          </StaggeredView>
 
-        <StaggeredView index={2} initialDelay={20}>
-          <HomeHero
-            mascot={mascot}
-            scene={scene}
-            sceneHeight={sceneHeight}
-            mascotSize={mascotSize}
-            reduceMotion={settings?.reduce_motion}
-            reactBeat={reactBeat}
-            reflectiveMood={reflective}
-            equippedAccId={snapshot.equippedAccId}
-            customState={snapshot.customState}
-            mutationIds={snapshot.mutationIds}
-            evolutionVisuals={evolutionVisuals}
-            behaviorAction={behaviorAction}
-            unlockedSceneCount={snapshot.unlockedSceneIds.length}
-            statusLine={displayLine}
-            emotionKey={emotion}
-            sceneHour={sceneHour}
-            celebrationActive={lifeReturnCelebration}
-            onPrev={() => void cycleScene(-1)}
-            onNext={() => void cycleScene(1)}
-            onSceneBadge={() => router.push('/closet')}
-            onIdentityPress={() => router.push('/mascot')}
-            onGesture={(kind) => {
-              setReactBeat(v => v + 1);
-              const reasonMap = {
-                tap: 'touch',
-                double: 'mission_complete',
-                long: 'saudade',
-                pet: 'touch',
-              } as const;
-              setBehaviorAction(createAnimationAction(reasonMap[kind]));
-              if (kind === 'pet') creatureMoments.emit('gesture.pet', { intensity: 1 });
-              if (kind === 'double') creatureMoments.emit('gesture.double', {});
-              if (mascot.dna) {
-                const profileVoice = voiceProfileFromGenome(sanitizeGenome(mascot.dna));
-                const voiceKind = kind === 'double' ? 'celebrate' : kind === 'long' ? 'sleepy' : 'react';
-                const emotion = kind === 'double' ? 0.85 : kind === 'long' ? 0.4 : 0.6;
-                playVoiceLine(profileVoice, { kind: voiceKind, emotion });
-              }
-              // Vínculo persistido: gesto efêmero vira história gravada.
-              // Cap diário no bond.ts evita grind; fire-and-forget pra não travar UX.
-              if (profile?.id) void incrementBond(profile.id, kind);
-            }}
-            flash={flash}
-          />
-        </StaggeredView>
+          <StaggeredView index={2}>
+            <HomeStatsBars mascot={mascot} toNext={toNext} />
+          </StaggeredView>
 
-        <HomeAwayStrip events={lifeEvents} summaryLine={lifeSummaryLine} />
-
-        <StaggeredView index={3} initialDelay={30}>
-          <View style={{ paddingHorizontal: theme.spacing.lg }}>
-            {snapshot.firstMissionPending ? (
-              <PrimaryActionCard
-                title={`Beber água com ${mascot.name}`}
-                subtitle={FIRST_MISSION.description}
-                ctaLabel="Bebi 1 copo"
-                icon="droplet"
-                onPress={() => void actions.handleCheckin('water')}
-                accessibilityHint="Marca primeiro check-in de água"
-              />
-            ) : mission ? (
-              <PrimaryActionCard
-                title={mission.title}
-                subtitle={mission.status === 'completed' ? 'Feito hoje · valeu' : mission.description}
-                ctaLabel={mission.status === 'completed' ? 'Ver detalhes' : 'Cuidar agora'}
-                icon="sparkles"
-                onPress={() => router.push('/mission')}
-                accessibilityHint="Abre a missão do dia"
-              />
-            ) : (
-              <PrimaryActionCard
-                title="Check-in de 2 min"
-                subtitle="Anote como você está em 2 minutos."
-                ctaLabel="Começar"
-                icon="sparkles"
-                onPress={() => router.push('/checkin')}
-              />
-            )}
-          </View>
-        </StaggeredView>
-
-        {undoData && undoData.checkin && (
-          <View style={styles.undoWrap}>
-            <Typography variant="caption" tone="secondary">
-              +{undoData.xpGained} XP · +{undoData.coinsGained} 🪙 anotado
-            </Typography>
-            <Pressable
-              onPress={() => void actions.handleUndoCheckin(undoData)}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Desfazer último check-in"
-              style={styles.undoBtn}
-            >
-              <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>Desfazer</Typography>
-            </Pressable>
-          </View>
-        )}
-
-        <StaggeredView index={4}>
-          <HomeQuickActions
-            habits={HABITS}
-            todayCheckins={snapshot.todayCheckins}
-            onPress={(kind) => void actions.handleCheckin(kind)}
-            onLongPress={(kind) => setHabitDetailKind(kind)}
-          />
-        </StaggeredView>
-
-        <StaggeredView index={4} initialDelay={20}>
-          <HomeMemoriesStrip userId={profile.id} refreshKey={memoryRefreshKey} />
-        </StaggeredView>
-
-        <StaggeredView index={5}>
-          <HomeStatsBars mascot={mascot} toNext={toNext} />
-        </StaggeredView>
-
-        <StaggeredView index={6}>
-          <View style={styles.section}>
-            <DailyRewardStrip
-              currentDay={snapshot.dailyCurrentDay}
-              claimedToday={snapshot.dailyClaimedToday}
-              onClaim={() => void actions.claimDailyReward(
-                { day: snapshot.dailyCurrentDay, claimedToday: snapshot.dailyClaimedToday },
-                () => void reload(),
+          <StaggeredView index={3} initialDelay={30}>
+            <View style={{ paddingHorizontal: theme.spacing.lg }}>
+              {snapshot.firstMissionPending ? (
+                <PrimaryActionCard
+                  title={`Beber água com ${mascot.name}`}
+                  subtitle={FIRST_MISSION.description}
+                  ctaLabel="Bebi 1 copo"
+                  icon="droplet"
+                  onPress={() => void actions.handleCheckin('water')}
+                  accessibilityHint="Marca primeiro check-in de água"
+                />
+              ) : missionActive && mission ? (
+                <PrimaryActionCard
+                  title={mission.title}
+                  subtitle={mission.status === 'completed' ? 'Feito hoje · valeu' : mission.description}
+                  ctaLabel={mission.status === 'completed' ? 'Ver detalhes' : 'Cuidar agora'}
+                  icon="sparkles"
+                  onPress={() => router.push('/mission')}
+                  accessibilityHint="Abre a missão do dia"
+                />
+              ) : (
+                <PrimaryActionCard
+                  title="Cuidar agora"
+                  subtitle="Anote como você está em 2 minutos."
+                  ctaLabel="Começar"
+                  icon="sparkles"
+                  onPress={() => router.push('/checkin')}
+                />
               )}
-            />
-          </View>
-        </StaggeredView>
-
-        {snapshot.comboLevel >= 2 && (
-          <StaggeredView index={7}>
-            <View style={styles.section}>
-              <Card variant="elevated" padding="md">
-                <ComboRing combo={snapshot.comboLevel} bonusPct={comboXpBonus(snapshot.comboLevel)} />
-              </Card>
             </View>
           </StaggeredView>
-        )}
+        </View>
 
-        <StaggeredView index={8}>
-          <HomeMissionCard
-            mission={mission}
-            onPressMission={() => router.push('/mission')}
-            boxAvailable={snapshot.boxAvailable}
-            onOpenBox={() => void actions.openMysteryBox(snapshot.boxAvailable, () => void reload())}
-          />
-        </StaggeredView>
+        {/* ----- Below the fold: revelado em scroll ----- */}
+        <View style={styles.belowFold}>
+          {undoData && undoData.checkin && (
+            <View style={styles.undoWrap}>
+              <Typography variant="caption" tone="secondary">
+                +{undoData.xpGained} XP · +{undoData.coinsGained} 🪙 anotado
+              </Typography>
+              <Pressable
+                onPress={() => void actions.handleUndoCheckin(undoData)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Desfazer último check-in"
+                style={styles.undoBtn}
+              >
+                <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>Desfazer</Typography>
+              </Pressable>
+            </View>
+          )}
 
-        {snapshot.totalCheckinsAll >= 7 && (
-          <StaggeredView index={9}>
-            <EndowmentRow
-              items={[
-                { icon: 'check', value: `${snapshot.totalCheckinsAll}`, label: 'check-ins' },
-                { icon: 'flame', value: `${streak?.longest_streak ?? 0}`, label: 'recorde' },
-                { icon: 'star', value: `${mascot.level}`, label: 'nível' },
-              ]}
+          {missionActive && (
+            <StaggeredView index={4}>
+              <HomeMissionCard
+                mission={mission}
+                onPressMission={() => router.push('/mission')}
+                boxAvailable={snapshot.boxAvailable}
+                onOpenBox={() => void actions.openMysteryBox(snapshot.boxAvailable, () => void reload())}
+              />
+            </StaggeredView>
+          )}
+
+          <StaggeredView index={5} initialDelay={20}>
+            <HomeMemoriesStrip userId={profile.id} refreshKey={memoryRefreshKey} />
+          </StaggeredView>
+
+          <StaggeredView index={6}>
+            <HomeQuickActions
+              habits={HABITS}
+              todayCheckins={snapshot.todayCheckins}
+              onPress={(kind) => void actions.handleCheckin(kind)}
+              onLongPress={(kind) => setHabitDetailKind(kind)}
             />
           </StaggeredView>
-        )}
 
-        <StaggeredView index={10}>
-          <View style={styles.linkRow}>
-            <PressableScale
-              onPress={() => router.push('/checkin')}
-              accessibilityRole="button"
-              accessibilityLabel="Check-in completo guiado"
-            >
-              <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>Check-in guiado →</Typography>
-            </PressableScale>
-            <PressableScale
-              onPress={() => router.push('/safe-night')}
-              accessibilityRole="button"
-              accessibilityLabel="Modo noite difícil"
-            >
-              <Typography variant="caption" tone="secondary" style={{ textDecorationLine: 'underline' }}>
-                Tô em momento ruim
-              </Typography>
-            </PressableScale>
-          </View>
-        </StaggeredView>
+          {rewardAvailable && (
+            <StaggeredView index={7}>
+              <View style={styles.section}>
+                <DailyRewardStrip
+                  currentDay={snapshot.dailyCurrentDay}
+                  claimedToday={snapshot.dailyClaimedToday}
+                  onClaim={() => void actions.claimDailyReward(
+                    { day: snapshot.dailyCurrentDay, claimedToday: snapshot.dailyClaimedToday },
+                    () => void reload(),
+                  )}
+                />
+              </View>
+            </StaggeredView>
+          )}
 
-        <View style={{ height: 40 }} />
+          {awayMoreThan24h && (
+            <HomeAwayStrip events={lifeEvents} summaryLine={lifeSummaryLine} />
+          )}
+
+          <StaggeredView index={8}>
+            <View style={{ paddingHorizontal: theme.spacing.lg }}>
+              <PersonalTicker
+                source={{
+                  streakCurrent: streak?.current_streak ?? 0,
+                  streakLongest: streak?.longest_streak ?? 0,
+                  totalCheckins: snapshot.totalCheckinsAll,
+                  level: mascot.level,
+                  phaseLabel: emergentPhaseLabels[mascot.phase],
+                  mascotName: mascot.name,
+                }}
+              />
+            </View>
+          </StaggeredView>
+
+          {snapshot.comboLevel >= 2 && (
+            <StaggeredView index={9}>
+              <View style={styles.section}>
+                <Card variant="elevated" padding="md">
+                  <ComboRing combo={snapshot.comboLevel} bonusPct={comboXpBonus(snapshot.comboLevel)} />
+                </Card>
+              </View>
+            </StaggeredView>
+          )}
+
+          {snapshot.totalCheckinsAll >= 7 && (
+            <StaggeredView index={10}>
+              <EndowmentRow
+                items={[
+                  { icon: 'check', value: `${snapshot.totalCheckinsAll}`, label: 'check-ins' },
+                  { icon: 'flame', value: `${streak?.longest_streak ?? 0}`, label: 'recorde' },
+                  { icon: 'star', value: `${mascot.level}`, label: 'nível' },
+                ]}
+              />
+            </StaggeredView>
+          )}
+
+          <StaggeredView index={11}>
+            <View style={styles.linkRow}>
+              <PressableScale
+                onPress={() => router.push('/checkin')}
+                accessibilityRole="button"
+                accessibilityLabel="Check-in completo guiado"
+              >
+                <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>Check-in guiado →</Typography>
+              </PressableScale>
+              <PressableScale
+                onPress={() => router.push('/safe-night')}
+                accessibilityRole="button"
+                accessibilityLabel="Modo noite difícil"
+              >
+                <Typography variant="caption" tone="secondary" style={{ textDecorationLine: 'underline' }}>
+                  Tô em momento ruim
+                </Typography>
+              </PressableScale>
+            </View>
+          </StaggeredView>
+
+          <View style={{ height: 40 }} />
+        </View>
       </ScrollView>
 
       <ConfettiBurst visible={confetti} />
 
-      <EvolutionModal
-        visible={evolutionVisible}
-        mascot={evolutionMascot}
-        fromPhase={evolutionFrom}
-        onClose={() => setEvolutionVisible(false)}
-        storyTitle={evolutionStory?.title}
-        storyBody={evolutionStory?.body}
-        storyQuote={evolutionStory?.quote}
-      />
+      {/* Modais lazy: criamos o nó React só após interação do usuário. */}
+      {evolutionVisible && (
+        <EvolutionModal
+          visible={evolutionVisible}
+          mascot={evolutionMascot}
+          fromPhase={evolutionFrom}
+          onClose={() => setEvolutionVisible(false)}
+          storyTitle={evolutionStory?.title}
+          storyBody={evolutionStory?.body}
+          storyQuote={evolutionStory?.quote}
+        />
+      )}
 
-      <HabitValueModal
-        visible={habitDetailKind !== null}
-        kind={habitDetailKind}
-        onClose={() => setHabitDetailKind(null)}
-        onConfirm={value => {
-          if (habitDetailKind) void actions.handleCheckin(habitDetailKind, value);
-          setHabitDetailKind(null);
-        }}
-      />
+      {habitDetailKind !== null && (
+        <HabitValueModal
+          visible={true}
+          kind={habitDetailKind}
+          onClose={() => setHabitDetailKind(null)}
+          onConfirm={value => {
+            if (habitDetailKind) void actions.handleCheckin(habitDetailKind, value);
+            setHabitDetailKind(null);
+          }}
+        />
+      )}
 
-      <Tour visible={showTour} onDone={finishTour} />
+      {showTour && <Tour visible={showTour} onDone={finishTour} />}
       {isUnityDebugPanelEnabled() ? (
         <UnityDebugPanel
           version={unityVersion}
@@ -710,9 +747,10 @@ function makeStyles(theme: Theme) {
     scrollOuter: { width: '100%', maxWidth: 560 },
     scroll: {
       paddingTop: theme.spacing.md,
-      gap: theme.spacing.md,
       paddingBottom: 120,
     },
+    aboveFold: { gap: theme.spacing.md },
+    belowFold: { gap: theme.spacing.md, marginTop: theme.spacing.md },
     section: { gap: theme.spacing.md, paddingHorizontal: theme.spacing.lg },
     undoWrap: {
       flexDirection: 'row',
