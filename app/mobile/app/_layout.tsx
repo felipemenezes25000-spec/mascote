@@ -1,33 +1,21 @@
+import { Quicksand_500Medium, Quicksand_600SemiBold, Quicksand_700Bold, } from '@expo-google-fonts/quicksand';
 import {
-  Quicksand_500Medium,
-  Quicksand_600SemiBold,
-  Quicksand_700Bold,
-} from '@expo-google-fonts/quicksand';
+  InstrumentSerif_400Regular, InstrumentSerif_400Regular_Italic, } from '@expo-google-fonts/instrument-serif';
 import {
-  InstrumentSerif_400Regular,
-  InstrumentSerif_400Regular_Italic,
-} from '@expo-google-fonts/instrument-serif';
+  JetBrainsMono_400Regular, JetBrainsMono_500Medium, } from '@expo-google-fonts/jetbrains-mono';
 import {
-  JetBrainsMono_400Regular,
-  JetBrainsMono_500Medium,
-} from '@expo-google-fonts/jetbrains-mono';
-import {
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_500Medium,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-  PlusJakartaSans_800ExtraBold,
-} from '@expo-google-fonts/plus-jakarta-sans';
+  PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold, } from '@expo-google-fonts/plus-jakarta-sans';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { HomeSkeleton } from '@/components/HomeSkeleton';
 import { UnlockToast } from '@/components/UnlockToast';
+import { WebFrame } from '@/components/WebFrame';
 import { registerUnityMomentSubscriber } from '@/components/unity/unityMomentSubscriber';
 import { resolveEffectiveRendererMode } from '@/core/mascot-render-contract/rendererConfig';
 import { getProductionViolations, type ProductionConfigViolation } from '@/lib/env/runtime-config';
@@ -41,6 +29,7 @@ import { initRevenueCatSdk } from '@/services/subscription/RevenueCatBillingProv
 // Fail-fast em build de produção mal-configurado. Em dev/test, sempre []
 // (a função respeita isProduction). Capturado abaixo num estado para
 // renderizar uma tela explicativa em vez de crash silencioso.
+import { Typography } from '@/components/ui';
 const BOOT_VIOLATIONS: ProductionConfigViolation[] = getProductionViolations();
 if (BOOT_VIOLATIONS.length > 0) {
   // Log também — útil em crash report / Sentry quando a tela for ignorada.
@@ -115,18 +104,18 @@ export default function RootLayout() {
   if (BOOT_VIOLATIONS.length > 0) {
     return (
       <View style={[styles.loader, { backgroundColor: theme.colors.bg, paddingHorizontal: 24 }]}>
-        <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 12 }}>
+        <Typography variant="body" style={{ color: theme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 12 }}>
           Build de produção inseguro
-        </Text>
-        <Text style={{ color: theme.colors.textSecondary, textAlign: 'center', marginBottom: 16 }}>
+        </Typography>
+        <Typography variant="body" style={{ color: theme.colors.textSecondary, textAlign: 'center', marginBottom: 16 }}>
           Esta build foi compilada em modo de produção mas tem {BOOT_VIOLATIONS.length} configuração(ões) que comprometem segurança ou cobrança. Não vou rodar.
-        </Text>
+        </Typography>
         {BOOT_VIOLATIONS.map((v, i) => (
           <View key={v.code} style={{ marginBottom: 12, alignSelf: 'stretch' }}>
-            <Text style={{ color: theme.colors.text, fontWeight: '700', marginBottom: 4 }}>
+            <Typography variant="body" style={{ color: theme.colors.text, fontWeight: '700', marginBottom: 4 }}>
               {i + 1}. {v.message}
-            </Text>
-            <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>{v.fix}</Text>
+            </Typography>
+            <Typography variant="body" style={{ color: theme.colors.textSecondary, fontSize: 13 }}>{v.fix}</Typography>
           </View>
         ))}
       </View>
@@ -136,12 +125,12 @@ export default function RootLayout() {
   if (hydrateError) {
     return (
       <View style={[styles.loader, { backgroundColor: theme.colors.bg }]}>
-        <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700', marginBottom: 8 }}>
+        <Typography variant="body" style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700', marginBottom: 8 }}>
           Não consegui carregar
-        </Text>
-        <Text style={{ color: theme.colors.textSecondary, textAlign: 'center', paddingHorizontal: 24, marginBottom: 16 }}>
+        </Typography>
+        <Typography variant="body" style={{ color: theme.colors.textSecondary, textAlign: 'center', paddingHorizontal: 24, marginBottom: 16 }}>
           {hydrateError}
-        </Text>
+        </Typography>
         <Pressable
           onPress={() => {
             setHydrateError(null);
@@ -158,7 +147,7 @@ export default function RootLayout() {
             borderRadius: 999,
           }}
         >
-          <Text style={{ color: '#fff', fontWeight: '700' }}>Tentar de novo</Text>
+          <Typography variant="body" style={{ color: '#fff', fontWeight: '700' }}>Tentar de novo</Typography>
         </Pressable>
       </View>
     );
@@ -185,6 +174,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
       <SafeAreaProvider>
         <StatusBar style={statusBarStyle} />
+        <WebFrame>
         <Stack
           screenOptions={{
             headerShown: false,
@@ -230,6 +220,7 @@ export default function RootLayout() {
           <Stack.Screen name="safe-night" options={{ presentation: 'fullScreenModal' }} />
         </Stack>
         <UnlockToast data={currentToast} onDone={shiftToast} />
+        </WebFrame>
       </SafeAreaProvider>
     </GestureHandlerRootView>
     </ErrorBoundary>
