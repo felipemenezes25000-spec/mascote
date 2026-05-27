@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui';
 /**
  * /mascot-room — quarto vivo do mascote (Unity Mascot Room).
  *
@@ -15,7 +16,6 @@ import { Pressable, ScrollView, StyleSheet, View, type ViewStyle } from 'react-n
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/Icon';
 import { MascotRenderer } from '@/components/MascotRenderer';
-import { Typography } from '@/components/ui';
 import {
   buildUnityMascotState,
   isUnityEnabled,
@@ -133,38 +133,42 @@ export default function MascotRoom() {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Typography variant="title" style={styles.sectionTitle}>Eventos</Typography>
-          <View style={styles.row}>
-            <TestButton label="Phase advance" onPress={handleLevelUp} />
-            <TestButton
-              label={reduceMotion ? 'Reduce motion ON' : 'Reduce motion OFF'}
-              onPress={() => {
-                setReduceMotion(v => !v);
-                appendLog(`→ reduceMotion=${!reduceMotion}`);
-              }}
-            />
-          </View>
-        </View>
+        {__DEV__ && (
+          <>
+            <View style={styles.section} testID="mascot-room-eventos">
+              <Typography variant="title" style={styles.sectionTitle}>Eventos</Typography>
+              <View style={styles.row}>
+                <TestButton label="Phase advance" onPress={handleLevelUp} />
+                <TestButton
+                  label={reduceMotion ? 'Reduce motion ON' : 'Reduce motion OFF'}
+                  onPress={() => {
+                    setReduceMotion(v => !v);
+                    appendLog(`→ reduceMotion=${!reduceMotion}`);
+                  }}
+                />
+              </View>
+            </View>
 
-        <View style={styles.section}>
-          <Typography variant="title" style={styles.sectionTitle}>Debug</Typography>
-          <Typography variant="mono" tone="secondary" style={styles.debugStatus}>
-            renderer: {rendererMode} · unityFlag: {String(isUnityEnabled())} · nativeEmbedded: {String(unityMascotBridge.isNativeEmbedded())} · mascot: {mascot.name} · phase: {mascot.phase}
-          </Typography>
-          <Typography variant="mono" tone="secondary" style={styles.debugStatus}>
-            ack ms: {ackStats.lastAckLatencyMs ?? '-'} · retry: {ackStats.retryCount} · ack seq: {ackStats.lastAckSeq ?? '-'} · timeout: {ackStats.timeoutCount}
-          </Typography>
-          <View style={styles.debugBox}>
-            {debugLog.length === 0 ? (
-              <Typography variant="mono" tone="dim">aguardando mensagens…</Typography>
-            ) : (
-              debugLog.map((line, i) => (
-                <Typography key={i} variant="mono" tone="secondary" style={styles.debugLine}>{line}</Typography>
-              ))
-            )}
-          </View>
-        </View>
+            <View style={styles.section} testID="mascot-room-debug">
+              <Typography variant="title" style={styles.sectionTitle}>Debug</Typography>
+              <Typography variant="mono" tone="secondary" style={styles.debugStatus}>
+                renderer: {rendererMode} · unityFlag: {String(isUnityEnabled())} · nativeEmbedded: {String(unityMascotBridge.isNativeEmbedded())} · mascot: {mascot.name} · phase: {mascot.phase}
+              </Typography>
+              <Typography variant="mono" tone="secondary" style={styles.debugStatus}>
+                ack ms: {ackStats.lastAckLatencyMs ?? '-'} · retry: {ackStats.retryCount} · ack seq: {ackStats.lastAckSeq ?? '-'} · timeout: {ackStats.timeoutCount}
+              </Typography>
+              <View style={styles.debugBox}>
+                {debugLog.length === 0 ? (
+                  <Typography variant="mono" tone="dim">aguardando mensagens…</Typography>
+                ) : (
+                  debugLog.map((line, i) => (
+                    <Typography key={i} variant="mono" tone="secondary" style={styles.debugLine}>{line}</Typography>
+                  ))
+                )}
+              </View>
+            </View>
+          </>
+        )}
 
         <View style={{ height: 32 }} />
       </ScrollView>
