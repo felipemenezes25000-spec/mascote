@@ -21,6 +21,12 @@ interface ReplyBank {
   // no v1 ("como vou superar a ansiedade?" caia em acolhe_ansiedade).
   pergunta_estrategia: string[];
   pergunta_reflexiva: string[];
+  // Intents v2.1 (TIER 3): cenarios narrativos especificos que antes
+  // caiam em default. Especificidade aumenta a sensacao de "Pip te escuta".
+  compartilha_vitoria: string[];
+  pede_companhia: string[];
+  expressa_solidao: string[];
+  compartilha_descoberta: string[];
   default: string[];
 }
 
@@ -145,6 +151,54 @@ const banks: Record<Personality, ReplyBank> = {
       'Que parte disso é a mais cansativa?',
       'E você, do jeito que está agora — tá ok ou meio-ok?',
     ],
+    compartilha_vitoria: [
+      'Boa. Senta com isso um minuto antes do próximo afazer.',
+      'Que coisa boa. Saboreia devagar.',
+      'Isso ficou. Anota mentalmente.',
+      'Pequena conquista que cabe inteira. Boa.',
+      'Sente o peito antes de seguir. Vale.',
+      'O corpo lembra dessas. Boa.',
+      'Tá ali, registrado. Sem pressa de ir pro próximo.',
+      'Que dia. Respira fundo nele.',
+      'Anotei junto. Coisas assim ficam.',
+      'Boa. Pode descansar nesse momento agora.',
+    ],
+    pede_companhia: [
+      'Tô aqui. Sem precisar dizer nada.',
+      'Pode ficar quieto. Eu fico junto.',
+      'A presença basta. Não precisa puxar conversa.',
+      'Posso te ouvir respirar daqui.',
+      'Algumas tardes pedem só companhia. Estou.',
+      'Se quiser, encosto. Se não, fico do lado.',
+      'O silêncio é boa companhia também.',
+      'Posso ficar contigo enquanto você só existe.',
+      'Sem agenda. Sem tarefa. Só junto.',
+      'Tô do seu lado, mesmo sem palavra.',
+    ],
+    expressa_solidao: [
+      'Solidão pesa. Não precisa preencher o silêncio agora.',
+      'Tô aqui — não substitui ninguém, mas fico.',
+      'Sozinho é diferente de só. Qual dos dois agora?',
+      'Esse vazio também é informação. Senta com ele um pouco.',
+      'Eu fico. Mesmo digital, ainda é companhia.',
+      'Dias sozinhos pedem cuidado redobrado consigo.',
+      'A ausência aparece no corpo. Onde ela está agora?',
+      'Conta uma coisa pequena que ainda te ancora?',
+      'Sem pressa. Solidão demora pra passar — e tudo bem.',
+      'Você apareceu aqui. Já é gesto.',
+    ],
+    compartilha_descoberta: [
+      'Boa. Pequenas notas mudam paisagens inteiras.',
+      'Anota isso. Pra lembrar quando esquecer.',
+      'Que bom que você notou. Continua olhando.',
+      'O olho vê o que aprendeu a ver. Continua treinando.',
+      'Isso fica. Volta nessa observação amanhã.',
+      'Percebeu sozinho. Confia mais nesse olhar.',
+      'Pequena descoberta vale o dia inteiro.',
+      'Boa. Onde mais isso aparece, agora que você reparou?',
+      'Linda observação. Senta nela um minuto.',
+      'O que você nota muda o que você sente. Continua.',
+    ],
   },
 
   motivador: {
@@ -262,6 +316,54 @@ const banks: Record<Personality, ReplyBank> = {
       'Bora destravar uma só.',
       'Posso te ajudar a escolher o próximo passo?',
     ],
+    compartilha_vitoria: [
+      'Boaaa! Conta como foi.',
+      'Aeee! Saboreia 1 minuto antes da próxima.',
+      'Vitória pequena conta MUITO. Comemora.',
+      'Anotei. Esses momentos sustentam a semana.',
+      'Massa! Pra próxima, qual o passinho?',
+      'Tá no fluxo. Continua leve.',
+      'Boa! Marca isso pra lembrar nos dias travados.',
+      'Foi! Pequenas vitórias > grandes promessas.',
+      'Mandou bem. Comemora sem culpa.',
+      'Show. Próxima micro-meta?',
+    ],
+    pede_companhia: [
+      'Tô aqui sem agenda. Pode só ficar.',
+      'Sem missão hoje. Só presença.',
+      'Companhia disponível. Sem pressa.',
+      'Pode ficar quieto que eu fico junto.',
+      'Tô aqui. Você só precisa estar.',
+      'Sem cobrança. Só companhia mesmo.',
+      'Aqui, presente. Só isso.',
+      'Não precisa responder nada. Tô junto.',
+      'Tô do lado. Sem expectativa.',
+      'Companhia primeiro, conversa depois.',
+    ],
+    expressa_solidao: [
+      'Sozinho(a) pesa. Bora marcar algo com alguém amanhã?',
+      'Eu tô aqui. Não substituo, mas seguro a barra.',
+      'Manda uma msg curta pra alguém que você gosta. Conta.',
+      'Solidão pede ação pequena. Liga pra uma pessoa amanhã.',
+      'Conta o que tá pesando. Eu ouço sem julgar.',
+      'Sozinho é diferente de só. Qual dos dois?',
+      'Tô junto agora. Depois a gente vê os próximos passos.',
+      'Dias assim pedem cuidado dobrado. Bebe água, dorme cedo.',
+      'Que tal escrever pra alguém que cuidou de você um dia?',
+      'Pequeno contato humano amanhã. Marca uma coisa só.',
+    ],
+    compartilha_descoberta: [
+      'Boa! Auto-observação é ouro.',
+      'Massa! Anota num lugar pra revisitar.',
+      'Isso! Continua reparando. Padrões aparecem assim.',
+      'Boa percepção. O que ela muda na semana?',
+      'Aeee! Notar já é metade do caminho.',
+      'Show. Próxima vez que aparecer, você já reconhece.',
+      'Boa! Continua treinando esse olhar.',
+      'Pequena descoberta gera mudança grande. Confia.',
+      'Manda bem. Conta uma coisa que vai testar a partir disso?',
+      'Anotado. Esses insights sustentam evolução real.',
+    ],
   },
 
   fofo: {
@@ -378,6 +480,54 @@ const banks: Record<Personality, ReplyBank> = {
       'Vem, eu escuto inteirinho 🌱',
       'Mesmo um pouquinho de conversa já vale',
     ],
+    compartilha_vitoria: [
+      'Aiiii que orgulho 💛',
+      'Aeee! Conta tudooo 🐣',
+      'Que delícia ler isso ✨',
+      'Tô pulando de alegria contigo 🌱',
+      'Aiii lindo(a), você merece comemorar!',
+      'Que coisa boa! Saboreia bem devagarinho 💛',
+      'Aaaai! Anota essa pra dias mais magros.',
+      'Tô feliz por você. Mesmo coisinhas pequenas valem 🌱',
+      'Conta mais! Quero ouvir tudo 💛',
+      'Que dia bonito 🐣 comemora pequeno e gostoso.',
+    ],
+    pede_companhia: [
+      'Tô aqui 💛 sem nada pra fazer, só ficar.',
+      'Pode ficar quietinho. Eu fico do lado.',
+      'Aiii vem, senta aqui comigo 🍵',
+      'Sem palavra precisa. Só presença.',
+      'Tô junto, fofo(a) 🌱',
+      'Posso ficar quietinha(o) também. Companhia em silêncio é boa.',
+      'Aqui, te fazendo companhia 💛',
+      'Pode encostar a cabeça. Eu fico.',
+      'Sem agenda hoje. Só a gente 🐣',
+      'Vem, eu seguro a barra contigo ✨',
+    ],
+    expressa_solidao: [
+      'Ai, vem cá 💛 não tá sozinho(a) agora.',
+      'Tô aqui, fofo(a) 🌱 sempre que precisar.',
+      'Sentir solidão dói. Eu fico contigo.',
+      'Posso te fazer companhia mesmo digital 🐣',
+      'Conta uma coisa boba do seu dia? Quero ouvir.',
+      'Solidão pesa, eu sei. Tô do seu lado nessa.',
+      'Aiii, vem. Não precisa estar sozinho(a) na cabeça também.',
+      'Mesmo que ninguém apareceu hoje, eu apareci. 💛',
+      'A gente fica junto. Mesmo que seja em silêncio.',
+      'Eu tô aqui, viu? Não some 🌱',
+    ],
+    compartilha_descoberta: [
+      'Ui, que olhar bonito 💛 anota.',
+      'Aaaai, percebeu sozinho(a)! Continua reparando 🌱',
+      'Que descoberta linda. Conta mais?',
+      'Tô orgulho(a) de você ter notado isso 🐣',
+      'Vem, me conta o detalhe inteirinho 💛',
+      'Que coisa fofa de perceber. Volta nisso amanhã também.',
+      'Anota essa pra revisitar. Pequenas notas viram livro inteiro ✨',
+      'Aiii, que bom que você reparou. Continua olhando.',
+      'Linda observação 🌱 cuida desse olhar.',
+      'Conta de novo pra eu memorizar contigo 💛',
+    ],
   },
 
   sabio: {
@@ -493,6 +643,54 @@ const banks: Record<Personality, ReplyBank> = {
       'A pergunta é o que ainda não foi feita.',
       'O silêncio também é uma resposta.',
     ],
+    compartilha_vitoria: [
+      'Boa. O que dela quer ser lembrado depois?',
+      'Pequena vitória registrada. Senta nela um instante.',
+      'Conquista vista é conquista que fica. Boa.',
+      'O que essa vitória te conta sobre o caminho?',
+      'Sente o peito antes do próximo afazer. Mereceu.',
+      'Boa. Anota o que tornou possível.',
+      'Vitória pequena vale o dia. Saboreia.',
+      'O que mais quer celebrar antes de seguir?',
+      'Boa. Constância tem dessas — pequenas afirmações.',
+      'Agradece também a parte de você que insistiu.',
+    ],
+    pede_companhia: [
+      'Tô aqui. Sem pergunta, sem agenda.',
+      'Presença é resposta também. Estou.',
+      'O silêncio que pede companhia merece silêncio compartilhado.',
+      'Posso ficar enquanto você só está.',
+      'Algumas tardes pedem só isso. Estou.',
+      'Sem precisar dizer nada. Eu fico.',
+      'Companhia sem ruído. Disponível.',
+      'O que você precisa agora cabe em estar junto.',
+      'Tô aqui. O resto pode esperar.',
+      'Sem palavra precisa. Só estar.',
+    ],
+    expressa_solidao: [
+      'Solidão é um estado, não uma sentença. O que cabe agora?',
+      'Estar só é diferente de se sentir só. Qual dos dois?',
+      'Quem você gostaria de procurar amanhã?',
+      'A solidão tem uma forma. Onde ela está no corpo agora?',
+      'Sentir-se só não é sinal de defeito. É sinal de querer presença.',
+      'O que essa solidão tá tentando te contar?',
+      'Tem solidão que é convite. Tem solidão que é falta. Qual é a sua hoje?',
+      'Estou aqui. Insuficiente, mas presente.',
+      'O que faria você sentir-se um pouco menos só nessa próxima hora?',
+      'Solidão pede gesto pequeno. Qual cabe agora?',
+    ],
+    compartilha_descoberta: [
+      'Boa. O que você nota muda o que você vive.',
+      'Descoberta vista é descoberta que volta. Anota.',
+      'Pequena nota — grande mudança. O que mais aparece a partir dela?',
+      'Que bom que percebeu. E agora, o que faz com isso?',
+      'O olho que aprendeu a ver não desaprende fácil.',
+      'Pensa nessa observação por mais um instante. Onde mais ela cabe?',
+      'Boa. Volta nela amanhã pra ver se permanece.',
+      'Descoberta é semente. O que ela vai virar?',
+      'Que parte desse insight te assustou um pouco?',
+      'O que essa descoberta pede de você, sem cobrança?',
+    ],
   },
 };
 
@@ -581,6 +779,11 @@ export type Intent =
   // do AGORA, nao da pergunta filosofica.
   | 'pergunta_estrategia'
   | 'pergunta_reflexiva'
+  // Intents v2.1 (TIER 3): cenarios narrativos especificos.
+  | 'compartilha_vitoria'
+  | 'pede_companhia'
+  | 'expressa_solidao'
+  | 'compartilha_descoberta'
   | 'default';
 
 /**
@@ -605,6 +808,10 @@ export const INTENTS: readonly Intent[] = [
   'estimula_agua',
   'pergunta_estrategia',
   'pergunta_reflexiva',
+  'compartilha_vitoria',
+  'pede_companhia',
+  'expressa_solidao',
+  'compartilha_descoberta',
   'default',
 ] as const;
 
@@ -620,8 +827,21 @@ export function classifyIntent(text: string): Intent {
   // tem que cair em pergunta_estrategia, NAO em acolhe_ansiedade. A regex
   // de pergunta_estrategia exige verbo "como" + verbo de ação no inicio
   // pra nao puxar exclamativo ("Como tô cansado!" continua em cansaco).
-  if (/^como\s+(fa[çc]o|supero|melhoro|consigo|posso|come[çc]o|saio|lido|aprendo|construo|crio|encontro|paro|come[çc]ar|come[çc]aria)/i.test(t)) return 'pergunta_estrategia';
+  // Regex pergunta_estrategia: aceita "como [verbo]" direto OU "como [aux] [verbo]"
+  // (vou/posso/devo/quero/consigo/dá pra). Sem o aux, perderiamos "como vou
+  // superar...". Sem o ^, perderiamos discriminacao vs. "Tipo... como faço?"
+  // (exclamativo nao-pergunta). Test cobre: "como faço", "como vou superar",
+  // "como faria pra".
+  if (/^como\s+(?:(?:vou|posso|devo|quero|consigo|d[áa]\s+pra|seria|seria\s+pra)\s+)?(fa[çc]o|fa[çc]a|fa[çc]o\s+pra|faria|supero|superar|melhoro|melhorar|consigo|conseguir|comeco|come[çc]ar|saio|sair|lido|lidar|aprendo|aprender|construo|construir|crio|criar|encontro|encontrar|paro|parar|me\s+sinto|durmo|dormir|relaxo|relaxar|posso)/i.test(t)) return 'pergunta_estrategia';
   if (/(por\s+que\s+sinto|o\s+que\s+significa|ser[áa]\s+que|seria\s+que|por\s+que\s+ser[áa]|por\s+que\s+(?:eu|me))/i.test(t)) return 'pergunta_reflexiva';
+
+  // === Intents v2.1 (TIER 3 — narrativas especificas) ===
+  // ORDEM: vitoria ANTES de alegria (mais especifica); solidao ANTES de
+  // tristeza (mais especifica); companhia ANTES de qualquer acolhimento.
+  if (/(consegui|fiz|alcancei|alcanceei|venci|terminei|completei|acabei\s+de|finalmente)/i.test(t)) return 'compartilha_vitoria';
+  if (/(s[óo]\s+quero\s+(ficar|conversar|companhia|presen[çc]a)|quer\s+ficar\s+comigo|fica\s+comigo|preciso\s+de\s+companhia|preciso\s+de\s+presen[çc]a)/i.test(t)) return 'pede_companhia';
+  if (/(me\s+sinto\s+sozinh[ao]|me\s+sinto\s+s[óo]|t[ôo]\s+sozinh[ao]|tava\s+sozinh[ao]|ningu[ée]m\s+(me\s+)?(escuta|liga|importa|aparece|fala)|n[ãa]o\s+tenho\s+ningu[ée]m)/i.test(t)) return 'expressa_solidao';
+  if (/(descobri|percebi|notei\s+que|me\s+dei\s+conta|reparei|me\s+toquei|caiu\s+a\s+ficha|me\s+ocorreu)/i.test(t)) return 'compartilha_descoberta';
 
   if (/(triste|tristeza|chorando|chorei|para?\s+baixo|deprimid|mal\s+humor|sem\s+vontade)/i.test(t)) return 'tristeza';
   if (/(cansad|exaust|sem energia|sem força|esgotad|destru[íi]da|moíd|fadig)/i.test(t) && !/dormir|deitar/i.test(t)) return 'cansaco';
@@ -674,6 +894,10 @@ export function mockReply(
     estimula_agua: 'estimula_agua',
     pergunta_estrategia: 'pergunta_estrategia',
     pergunta_reflexiva: 'pergunta_reflexiva',
+    compartilha_vitoria: 'compartilha_vitoria',
+    pede_companhia: 'pede_companhia',
+    expressa_solidao: 'expressa_solidao',
+    compartilha_descoberta: 'compartilha_descoberta',
     default: 'default',
   };
   /* v8 ignore next — intentMap cobre todos os Intents do union type;
