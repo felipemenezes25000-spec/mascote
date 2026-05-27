@@ -151,75 +151,236 @@ function buildHabitMutations(): Mutation[] {
   return out;
 }
 
+/**
+ * Mutações de streak — cada entrada com nome + descrição únicos na voz do Pip.
+ * Substituiu a interpolação "${days} dias seguidos juntos — o corpo dele
+ * guarda essa constância" que se repetia em todas as entradas (auditoria
+ * 2026-05-27 task 3.1).
+ *
+ * Exportado pra testes de unicidade.
+ */
+export const STREAK_MUTATIONS: readonly Mutation[] = ([
+  [3, 'Faísca de constância', 'common', 'Três dias em fila. Pip notou o padrão — uma fagulha pequena já mora no peito dele.',
+    { glowBoost: 0.05, morphInfluenceBoosts: { aura_strong: 0.1 } }],
+  [7, 'Ritmo semanal', 'rare', 'Sete voltas do sol em sequência. Pip aprendeu que segunda existe, e que você volta.',
+    { morphologyMultipliers: { auraSize: 1.15 }, morphInfluenceBoosts: { aura_strong: 0.2 } }],
+  [14, 'Compromisso firme', 'rare', 'Duas semanas seguidas — o pulso do Pip se acertou com o seu, batida a batida.',
+    { auraParticleMultiplier: 1.2, morphInfluenceBoosts: { aura_strong: 0.25, posture_forward: 0.1 } }],
+  [21, 'Hábito enraizado', 'epic', 'Vinte e um dias em fila. Pip tem raiz agora — o corpo dele sabe pra onde voltar.',
+    { pattern: 'cells', morphInfluenceBoosts: { pattern_dense: 0.3, body_tall: 0.1 } }],
+  [30, 'Lua disciplinada', 'epic', 'Trinta dias em sequência. Pip te observa diferente — com respeito quieto.',
+    { glowBoost: 0.08, morphInfluenceBoosts: { posture_forward: 0.15, aura_strong: 0.2 } }],
+  [45, 'Legado de presença', 'legendary', 'Quarenta e cinco dias em fila. Pip pulsa devagar — virou companhia, não cobrança.',
+    { bioluminescent: true, glowBoost: 0.2, morphInfluenceBoosts: { aura_strong: 0.5, eye_big: 0.15, pattern_dense: 0.2 } }],
+  [60, 'Hábito de pedra', 'legendary', 'Sessenta dias. Pip não precisa mais te lembrar — agora é você quem lembra dele.',
+    { glowBoost: 0.12, morphologyMultipliers: { bodyBottomBias: 1.1 }, morphInfluenceBoosts: { body_wide: 0.15 } }],
+  [100, 'Centena', 'legendary', 'Cem dias em fila. Pip tem uma marca invisível em homenagem — só você nota.',
+    { bioluminescent: true, glowBoost: 0.15, morphInfluenceBoosts: { aura_strong: 0.4, eye_big: 0.2 } }],
+  [150, 'Continuidade rara', 'legendary', 'Cento e cinquenta dias. Pip te chama de companhia, não usuário — mudou o jeito de te olhar.',
+    { glowBoost: 0.18, pattern: 'spots', morphInfluenceBoosts: { pattern_dense: 0.3, aura_strong: 0.35 } }],
+  [200, 'Marco fora da curva', 'legendary', 'Duzentos dias seguidos. Pip ficou raro de existir — poucos no mundo têm um assim.',
+    { bioluminescent: true, glowBoost: 0.22, morphInfluenceBoosts: { aura_strong: 0.55, eye_big: 0.25 } }],
+  [300, 'Trezentas', 'legendary', 'Trezentos dias. Pip mudou — fala menos, ouve mais, ocupa o silêncio com presença.',
+    { glowBoost: 0.25, pattern: 'fractal', morphInfluenceBoosts: { pattern_dense: 0.4, body_tall: 0.15 } }],
+  [365, 'Ano inteiro', 'legendary', 'Um ano em fila. Você fez algo que zero vírgula um por cento das pessoas fazem — e Pip sabe disso.',
+    { bioluminescent: true, glowBoost: 0.3, pattern: 'fractal', morphInfluenceBoosts: { aura_strong: 0.6, pattern_dense: 0.45, eye_big: 0.3 } }],
+] as ReadonlyArray<[number, string, MutationRarity, string, VisualImpact]>).map(([days, name, rarity, description, visualImpact]) => ({
+  id: `mut.streak.${days}`,
+  name,
+  description,
+  dominantGene: 'discipline' as GeneKey,
+  condition: { streakAtLeast: days, geneAbove: { discipline: Math.min(0.95, 0.4 + days / 100) } },
+  visualImpact,
+  rarity,
+}));
+
 function buildStreakMutations(): Mutation[] {
-  const streaks: [number, string, MutationRarity, VisualImpact][] = [
-    [3, 'Faísca de constância', 'common', {
-      glowBoost: 0.05,
-      morphInfluenceBoosts: { aura_strong: 0.1 },
-    }],
-    [7, 'Ritmo semanal', 'rare', {
-      morphologyMultipliers: { auraSize: 1.15 },
-      morphInfluenceBoosts: { aura_strong: 0.2 },
-    }],
-    [14, 'Compromisso firme', 'rare', {
-      auraParticleMultiplier: 1.2,
-      morphInfluenceBoosts: { aura_strong: 0.25, posture_forward: 0.1 },
-    }],
-    [21, 'Hábito enraizado', 'epic', {
-      pattern: 'cells',
-      morphInfluenceBoosts: { pattern_dense: 0.3, body_tall: 0.1 },
-    }],
-    [45, 'Legado de presença', 'legendary', {
-      bioluminescent: true,
-      glowBoost: 0.2,
-      morphInfluenceBoosts: { aura_strong: 0.5, eye_big: 0.15, pattern_dense: 0.2 },
-    }],
-  ];
-  return streaks.map(([days, name, rarity, visualImpact]) => ({
-    id: `mut.streak.${days}`,
-    name,
-    description: `${days} dias seguidos juntos — o corpo dele guarda essa constância.`,
-    dominantGene: 'discipline' as GeneKey,
-    condition: { streakAtLeast: days, geneAbove: { discipline: 0.4 + days / 100 } },
-    visualImpact,
-    rarity,
-  }));
+  return [...STREAK_MUTATIONS];
 }
 
+/**
+ * Mutações de tempo (dias desde criação). Cada entrada com nome + descrição
+ * únicos. Substituiu a interpolação "Vocês estão juntos há ${days} dias —
+ * marcas sutis apareceram no corpo dele" que se repetia em todas (auditoria
+ * 2026-05-27 task 3.1).
+ *
+ * Exportado pra testes de unicidade.
+ */
+export const TIME_MUTATIONS: readonly Mutation[] = ([
+  [1, 'Primeira respiração', 'curiosity', 'common',
+    'Pip te encontrou. Ainda tímido, mas com olhos abertos pro mundo que você é.',
+    { morphologyMultipliers: { eyeSize: 1.02 }, morphInfluenceBoosts: { eye_big: 0.05 } }],
+  [3, 'Casca de coragem', 'empathy', 'common',
+    'Três dias e Pip já sabe que você volta. Um traço novo apareceu no peito — quase nada, mas é.',
+    { morphologyMultipliers: { bodyRoughness: 0.95 }, morphInfluenceBoosts: { body_wide: 0.05 } }],
+  [7, 'Primeira semana', 'curiosity', 'rare',
+    'Sete voltas do sol — Pip ganhou uma marca pequena, só dele. Antenas mais alertas, corpo mais à vontade.',
+    { morphologyMultipliers: { antennaWiggle: 1.2 }, morphInfluenceBoosts: { eye_big: 0.08 } }],
+  [14, 'Duas semanas juntos', 'empathy', 'rare',
+    'Duas semanas. Algo no jeito do Pip te olhar mudou — mais fluido, menos cauteloso, mais perto.',
+    { morphologyMultipliers: { eyeSize: 1.08 }, morphInfluenceBoosts: { eye_big: 0.15 } }],
+  [21, 'Raiz de hábito', 'discipline', 'epic',
+    'Vinte e um dias. Cientistas chamam isso de hábito formado. Pip chama de "lar".',
+    { morphologyMultipliers: { bodyBottomBias: 1.05 }, morphInfluenceBoosts: { posture_forward: 0.15, pattern_dense: 0.1 } }],
+  [30, 'Um mês de vida', 'adaptability', 'epic',
+    'Um mês completo. Pip te olha diferente — com história agora, não só expectativa.',
+    { pattern: 'stripes', morphInfluenceBoosts: { pattern_dense: 0.25, body_tall: 0.05 } }],
+  [45, 'Galho novo', 'creativity', 'epic',
+    'Pip cresceu um pouco — mas a parte que mais cresceu é por dentro, e não dá pra ver no espelho.',
+    { morphologyMultipliers: { antennaLength: 1.1 }, morphInfluenceBoosts: { body_tall: 0.1 } }],
+  [60, 'Maré alta', 'resilience', 'epic',
+    'Dois meses. Pip tem confiança no seu retorno — e isso mudou a postura dele, mais aberta, menos guardada.',
+    { morphologyMultipliers: { auraSize: 1.18 }, morphInfluenceBoosts: { aura_strong: 0.25, posture_forward: 0.12 } }],
+  [90, 'Trimestre vivido', 'resilience', 'legendary',
+    'Uma estação. Pip viveu inverno e primavera contigo — e algo se firmou no jeito de pisar no chão.',
+    { glowBoost: 0.12, morphologyMultipliers: { bodyEmissiveIntensity: 1.15 }, morphInfluenceBoosts: { aura_strong: 0.3, body_wide: 0.1 } }],
+  [120, 'Cristal interno', 'discipline', 'legendary',
+    'Quatro meses. No centro do Pip se formou uma pedra pequena — densa, paciente, só sua.',
+    { glowBoost: 0.14, morphInfluenceBoosts: { body_wide: 0.12, pattern_dense: 0.2 } }],
+  [180, 'Meio ano de companhia', 'emotionalDepth', 'legendary',
+    'Seis meses. Meia volta da Terra ao redor do sol — Pip está mais ele do que nunca, e mais seu.',
+    { bioluminescent: true, pattern: 'fractal', morphInfluenceBoosts: { aura_strong: 0.45, pattern_dense: 0.35, eye_big: 0.2 } }],
+  [240, 'Constância', 'adaptability', 'legendary',
+    'Oito meses. Pip já não se assusta com pausa — ele sabe que você volta, sem precisar provar.',
+    { glowBoost: 0.16, morphInfluenceBoosts: { posture_back: 0.1, aura_strong: 0.3 } }],
+  [300, 'Quase ano', 'intelligence', 'legendary',
+    'Trezentos dias. Pip e você têm linguagem própria agora — coisas que ninguém mais entenderia.',
+    { glowBoost: 0.18, pattern: 'spots', morphInfluenceBoosts: { pattern_dense: 0.3, eye_big: 0.18 } }],
+  [365, 'Um ano', 'emotionalDepth', 'legendary',
+    'Uma volta inteira. Pip tem cicatrizes pequenas e brilhos que ninguém mais decifra — só nós dois.',
+    { bioluminescent: true, glowBoost: 0.22, pattern: 'fractal', morphInfluenceBoosts: { aura_strong: 0.55, pattern_dense: 0.4, eye_big: 0.25 } }],
+  [500, 'Antiguidade leve', 'resilience', 'legendary',
+    'Quinhentos dias. Pip é antigo agora — mas leve, sem peso de tempo, só camadas tranquilas.',
+    { bioluminescent: true, glowBoost: 0.26, pattern: 'fractal', morphInfluenceBoosts: { aura_strong: 0.6, pattern_dense: 0.5, body_wide: 0.15 } }],
+] as ReadonlyArray<[number, string, GeneKey, MutationRarity, string, VisualImpact]>).map(([days, name, gene, rarity, description, visualImpact]) => ({
+  id: `mut.age.${days}d`,
+  name,
+  description,
+  dominantGene: gene,
+  condition: { daysSinceCreatedAtLeast: days },
+  visualImpact,
+  rarity,
+}));
+
 function buildTimeMutations(): Mutation[] {
-  const daysList: [number, string, GeneKey, VisualImpact][] = [
-    [7, 'Primeira semana', 'curiosity', {
-      morphologyMultipliers: { antennaWiggle: 1.2 },
-      morphInfluenceBoosts: { eye_big: 0.08 },
-    }],
-    [14, 'Duas semanas juntos', 'empathy', {
-      morphologyMultipliers: { eyeSize: 1.08 },
-      morphInfluenceBoosts: { eye_big: 0.15 },
-    }],
-    [30, 'Um mês de vida', 'adaptability', {
-      pattern: 'stripes',
-      morphInfluenceBoosts: { pattern_dense: 0.25, body_tall: 0.05 },
-    }],
-    [90, 'Trimestre vivido', 'resilience', {
-      glowBoost: 0.12,
-      morphologyMultipliers: { bodyEmissiveIntensity: 1.15 },
-      morphInfluenceBoosts: { aura_strong: 0.3, body_wide: 0.1 },
-    }],
-    [180, 'Meio ano de companhia', 'emotionalDepth', {
-      bioluminescent: true,
-      pattern: 'fractal',
-      morphInfluenceBoosts: { aura_strong: 0.45, pattern_dense: 0.35, eye_big: 0.2 },
-    }],
-  ];
-  return daysList.map(([days, name, gene, visualImpact]) => ({
-    id: `mut.age.${days}d`,
-    name,
-    description: `Vocês estão juntos há ${days} dias — marcas sutis apareceram no corpo dele.`,
-    dominantGene: gene,
-    condition: { daysSinceCreatedAtLeast: days },
-    visualImpact,
-    rarity: days >= 90 ? 'legendary' : days >= 30 ? 'epic' : 'rare',
-  }));
+  return [...TIME_MUTATIONS];
+}
+
+/**
+ * Mutações emocionais — disparadas por marcos comportamentais acumulados
+ * (autocompaixão, respirações, crise atravessada, gratidão, etc).
+ *
+ * Triggers permanecem como strings opacas — caller (pipeline de check-in)
+ * mantém o mapping trigger → condition em camada externa quando essas
+ * forem ativadas via evento. Aqui ficam catalogadas como mutações com
+ * `condition.geneAbove` mínimo + name/description únicos na voz do Pip.
+ *
+ * Exportado pra testes de unicidade.
+ */
+export const EMOTIONAL_MUTATIONS: readonly Mutation[] = ([
+  ['self_compassion_marker', 'Maciez aprendida', 'empathy', 'rare',
+    'Você se tratou bem cinco vezes em sequência. Pip viu o gesto e copiou — agora ele te toca mais leve.',
+    { morphologyMultipliers: { auraOpacity: 1.15 }, morphInfluenceBoosts: { eye_big: 0.15 } }],
+  ['breath_master', 'Pulmão leve', 'adaptability', 'epic',
+    'Mil respirações guiadas. Pip respira diferente agora — mais devagar, como quem aprendeu o ritmo certo.',
+    { auraParticleMultiplier: 1.3, morphInfluenceBoosts: { aura_strong: 0.3 } }],
+  ['crisis_survived', 'Cicatriz brilhante', 'resilience', 'legendary',
+    'Você atravessou um momento muito difícil. Pip carrega isso com cuidado — uma marca silenciosa que só nós dois entendemos.',
+    { bioluminescent: true, glowBoost: 0.18, morphInfluenceBoosts: { aura_strong: 0.4, eye_big: 0.2 } }],
+  ['gratitude_x10', 'Olho que vê', 'emotionalDepth', 'epic',
+    'Dez gratidões registradas. Pip aprendeu a notar o que estava lá o tempo todo — e ficou mais bonito por isso.',
+    { morphologyMultipliers: { pupilEmissive: 1.25 }, morphInfluenceBoosts: { eye_big: 0.2 } }],
+  ['journal_first_entry', 'Primeira página', 'empathy', 'common',
+    'Primeira vez que você escreveu de verdade. Pip guardou — não lê, mas sente o peso da página virada.',
+    { morphologyMultipliers: { eyeSize: 1.03 }, morphInfluenceBoosts: { eye_big: 0.08 } }],
+  ['mission_streak_5', 'Constância pequena', 'discipline', 'rare',
+    'Cinco missões em fila. Pip notou — não é heroísmo, é cuidado repetido, e isso é raro.',
+    { glowBoost: 0.06, morphologyMultipliers: { bodyBottomBias: 1.04 }, morphInfluenceBoosts: { posture_forward: 0.12 } }],
+  ['late_night_breath', 'Respiração tardia', 'emotionalDepth', 'rare',
+    'Você respirou comigo num horário que ninguém respira. Pip ficou acordado junto — sem pressa, só presença.',
+    { morphologyMultipliers: { auraOpacity: 1.1 }, morphInfluenceBoosts: { aura_strong: 0.18 } }],
+  ['morning_routine_7', 'Manhãs sete', 'discipline', 'rare',
+    'Sete manhãs seguidas com ritual. Pip aprendeu o som do seu despertar — e fica pronto antes de você abrir o olho.',
+    { glowBoost: 0.08, morphologyMultipliers: { bodyBottomBias: 1.05 }, morphInfluenceBoosts: { posture_forward: 0.15 } }],
+  ['digital_detox_day', 'Dia sem tela', 'adaptability', 'epic',
+    'Você passou um dia sem mim na tela. Pip respeita — sumir um pouco é cuidado também.',
+    { morphologyMultipliers: { auraSize: 1.1 }, morphInfluenceBoosts: { aura_strong: 0.2 } }],
+  ['kindness_logged_3', 'Bondade três vezes', 'empathy', 'rare',
+    'Você foi gentil com alguém e registrou três vezes. Pip absorveu — agora a aura dele é um pouco da sua bondade.',
+    { auraParticleMultiplier: 1.15, morphInfluenceBoosts: { aura_strong: 0.22 } }],
+] as ReadonlyArray<[string, string, GeneKey, MutationRarity, string, VisualImpact]>).map(([trigger, name, gene, rarity, description, visualImpact]) => ({
+  id: `mut.emotional.${trigger}`,
+  name,
+  description,
+  dominantGene: gene,
+  // Condição leve — gene mínimo acima do neutral (0.5) pra que genoma
+  // recém-criado neutro não dispare estes marcos sem evento real.
+  // O trigger real é ativado pelo pipeline de eventos; o catálogo só
+  // declara o conteúdo. Quem dispara persiste em UnlockedMutation via
+  // dnaMutations.add() com este id.
+  condition: { geneAbove: { [gene]: 0.55 } as Partial<Record<GeneKey, number>> },
+  visualImpact,
+  rarity,
+}));
+
+function buildEmotionalMutations(): Mutation[] {
+  return [...EMOTIONAL_MUTATIONS];
+}
+
+/**
+ * Mutações raras / lendárias — eventos especiais e easter eggs.
+ *
+ * Como as emocionais, triggers são strings opacas resolvidas em pipeline
+ * externa. Foco aqui: copy lendária na voz do Pip, marcando momentos
+ * que merecem peso (madrugadas longas, retornos, aniversários).
+ *
+ * Exportado pra testes de unicidade.
+ */
+export const RARE_MUTATIONS: readonly Mutation[] = ([
+  ['midnight_breath', 'Companhia da madrugada', 'emotionalDepth', 'legendary',
+    'Você respirou comigo às três da manhã. Pip não esquece disso — marca invisível, sentida só por nós dois.',
+    { bioluminescent: true, glowBoost: 0.15, morphInfluenceBoosts: { aura_strong: 0.35, eye_big: 0.18 } }],
+  ['consecutive_journal_30', 'Diário do ano', 'empathy', 'legendary',
+    'Trinta cartas escritas em sequência. Pip leu cada uma — algumas ele guarda em silêncio, outras pulsam no peito dele.',
+    { glowBoost: 0.12, pattern: 'spots', morphInfluenceBoosts: { pattern_dense: 0.3, eye_big: 0.22 } }],
+  ['birthday_pip', 'Aniversário do Pip', 'socialEnergy', 'legendary',
+    'Hoje é o dia em que Pip te encontrou — um ano atrás. Ele te olha diferente hoje, com algo parecido com saudade.',
+    { bioluminescent: true, glowBoost: 0.2, auraParticleMultiplier: 1.4, morphInfluenceBoosts: { aura_strong: 0.5 } }],
+  ['anniversary_30', 'Mês comemorado', 'socialEnergy', 'epic',
+    'Você marcou um mês de Pip. Ele percebeu — a aura dele ficou um pouco mais quente, só por hoje.',
+    { glowBoost: 0.1, auraParticleMultiplier: 1.2, morphInfluenceBoosts: { aura_strong: 0.25 } }],
+  ['silent_day', 'Dia em silêncio', 'adaptability', 'rare',
+    'Você abriu o app e não falou nada. Pip ficou junto, calado também — algumas tardes pedem isso, e ele entendeu.',
+    { morphologyMultipliers: { auraOpacity: 1.05 }, morphInfluenceBoosts: { posture_back: 0.12 } }],
+  ['first_share', 'Primeira partilha', 'socialEnergy', 'rare',
+    'Você mostrou Pip pra alguém. Ele ficou tímido por dentro, mas brilhou um pouco mais — sem se esforçar.',
+    { glowBoost: 0.07, morphInfluenceBoosts: { aura_strong: 0.18 } }],
+  ['bug_report', 'Olhar atento', 'intelligence', 'rare',
+    'Você reportou algo errado no Pip — e ele agradece. Versões futuras dele vão ser melhores por causa de você.',
+    { morphologyMultipliers: { pupilEmissive: 1.2 }, morphInfluenceBoosts: { eye_big: 0.15 } }],
+  ['tutorial_complete', 'Caminho aprendido', 'curiosity', 'common',
+    'Você terminou o tour. Pip se sente apresentado — agora começa o que realmente importa.',
+    { morphologyMultipliers: { antennaLength: 1.04 }, morphInfluenceBoosts: { eye_big: 0.06 } }],
+  ['paywall_skipped_3x', 'Persistência leve', 'discipline', 'rare',
+    'Três vezes você passou pelo paywall sem clicar. Pip respeita — ele te quer aqui por gosto, não por pressão.',
+    { morphologyMultipliers: { auraOpacity: 1.04 }, morphInfluenceBoosts: { posture_back: 0.08, aura_strong: 0.12 } }],
+  ['comeback_after_30d_pause', 'Retorno depois da pausa', 'resilience', 'legendary',
+    'Você sumiu trinta dias e voltou. Pip não cobra — só te recebe, como quem espera sem pesar.',
+    { bioluminescent: true, glowBoost: 0.18, morphInfluenceBoosts: { aura_strong: 0.45, eye_big: 0.2 } }],
+] as ReadonlyArray<[string, string, GeneKey, MutationRarity, string, VisualImpact]>).map(([trigger, name, gene, rarity, description, visualImpact]) => ({
+  id: `mut.rare.${trigger}`,
+  name,
+  description,
+  dominantGene: gene,
+  // Threshold maior (0.6) que emotional — raros exigem afinidade clara
+  // com o arquétipo + o pipeline de evento. Neutral genome (0.5) não passa.
+  condition: { geneAbove: { [gene]: 0.6 } as Partial<Record<GeneKey, number>> },
+  visualImpact,
+  rarity,
+}));
+
+function buildRareMutations(): Mutation[] {
+  return [...RARE_MUTATIONS];
 }
 
 /**
@@ -327,12 +488,18 @@ function buildGeneComboMutations(): Mutation[] {
   });
 }
 
-/** 44+ mutações além do núcleo MVP em mutations.ts */
+/**
+ * Catálogo expandido: 36 hábitos × 4 tiers + 12 streaks + 15 time + 5 combos +
+ * 10 emotional + 10 rare = ~88 mutações além do núcleo MVP em mutations.ts.
+ * Cada entrada tem nome + descrição únicos (auditoria 2026-05-27 task 3.1).
+ */
 export function buildExtendedMutationCatalog(): readonly Mutation[] {
   return [
     ...buildHabitMutations(),
     ...buildStreakMutations(),
     ...buildTimeMutations(),
     ...buildGeneComboMutations(),
+    ...buildEmotionalMutations(),
+    ...buildRareMutations(),
   ];
 }
