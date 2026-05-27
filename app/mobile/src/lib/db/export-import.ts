@@ -24,6 +24,9 @@ const ALL_TABLES = [
   'combo',
   'dna_mutations',
   'customization',
+  // atelier_looks foi adicionada depois do design original de export-import;
+  // sem ela, reset+import perdia todos os looks salvos pelo usuário.
+  'atelier_looks',
 ];
 
 const EXPORT_EXTENDED_TABLES = [
@@ -212,7 +215,40 @@ export async function importAll(data: Record<string, any[]>): Promise<ImportResu
       continue;
     }
 
-    await withLock(t, () => write(t, value));
+    // Validação por-tabela: confirma que cada row tem owner_id consistente.
+    // Sem isso, um payload malformado/malicioso podia sobrescrever a tabela
+    // inteira com `[{}]` (silent reset) ou trazer linhas de outro user_id.
+    // Em dispositivos compartilhados (futuro multi-perfil), também previne
+    // que um import limpe dados de outro usuário não-incluído no payload.
+    const expectedUid =
+      typeof (data.profiles as { id?: string }[] | undefined)?.[0]?.id === 'string'
+        ? (data.profiles as { id: string }[])[0].id
+        : null;
+    const idField = t === 'profiles' ? 'id' : 'user_id';
+    const allHaveOwner = value.every(r => {
+      const owner = (r as Record<string, unknown>)[idField];
+      if (typeof owner !== 'string' || owner.length === 0) return false;
+      if (expectedUid && owner !== expectedUid) return false;
+      return true;
+    });
+    if (!allHaveOwner) {
+      skipped.push(t);
+      continue;
+    }
+
+    await withLock(t, async () => {
+      // Merge em vez de overwrite: preserva rows de outros user_ids (multi-perfil).
+      // Se o caller pretende reset total, deve chamar resetAll() antes.
+      if (expectedUid && t !== 'profiles') {
+        const existing = await readRaw(t);
+        const others = (existing as Array<Record<string, unknown>>).filter(
+          r => (r as Record<string, unknown>)[idField] !== expectedUid,
+        );
+        await write(t, [...others, ...value]);
+      } else {
+        await write(t, value);
+      }
+    });
     imported.push(t);
   }
   return { imported, skipped };

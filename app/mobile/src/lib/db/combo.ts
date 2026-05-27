@@ -12,20 +12,31 @@ function freshCombo(user_id: string): Combo {
   };
 }
 
+// Storage corrompido (import malicioso ou bug futuro) poderia trazer current
+// fora de [1..5]; comboXpBonus dependia disso pra calcular bônus, multiplicando
+// XP por valor arbitrário. Guard repara em todos os reads — bump já clampa
+// crescimento, mas reads diretos de storage também precisam de proteção.
+function clampCurrent(n: number): number {
+  if (!Number.isFinite(n)) return 1;
+  return Math.min(5, Math.max(1, Math.floor(n)));
+}
+
 function decayCombo(c: Combo, now: Date = new Date()): Combo {
-  if (!c.last_action_at) return c;
+  const safeCurrent = clampCurrent(c.current);
+  const repaired = safeCurrent !== c.current ? { ...c, current: safeCurrent } : c;
+  if (!repaired.last_action_at) return repaired;
   // last_action_at vem de toISOString() em writes próprios, mas storage corrompido
   // pode trazer string inválida — Date inválida → NaN → comparação NaN > X é false,
   // então combo nunca decairia. Guard explícito repara o estado.
-  const lastMs = new Date(c.last_action_at).getTime();
+  const lastMs = new Date(repaired.last_action_at).getTime();
   if (!Number.isFinite(lastMs)) {
-    return { ...c, current: 1, last_action_at: null, updated_at: now.toISOString() };
+    return { ...repaired, current: 1, last_action_at: null, updated_at: now.toISOString() };
   }
   const hoursSince = (now.getTime() - lastMs) / (1000 * 60 * 60);
-  if (hoursSince > COMBO_TIMEOUT_HOURS && c.current > 1) {
-    return { ...c, current: 1, updated_at: now.toISOString() };
+  if (hoursSince > COMBO_TIMEOUT_HOURS && repaired.current > 1) {
+    return { ...repaired, current: 1, updated_at: now.toISOString() };
   }
-  return c;
+  return repaired;
 }
 
 export const combo = {
@@ -65,6 +76,11 @@ export const combo = {
 };
 
 export function comboXpBonus(level: number): number {
+  // Defesa em profundidade: combo.bump clampa current a [1..5] e decayCombo
+  // repara reads, mas comboXpBonus pode ser chamado com input arbitrário
+  // (testes, refactors futuros). Clamp aqui evita bônus inflacionado se a
+  // contenção upstream falhar.
   if (!Number.isFinite(level) || level < 1) return 0;
-  return (level - 1) * 25;
+  const clamped = Math.min(5, Math.floor(level));
+  return (clamped - 1) * 25;
 }

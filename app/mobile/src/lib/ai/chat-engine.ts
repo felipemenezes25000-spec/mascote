@@ -10,8 +10,17 @@
  * Quando há proxy oficial no ar, prefira `generateReply` (já trata proxy,
  * recall, anti-repeat e guards). Use `sendChatMessage` para integrações
  * leves ou testes onde só a resposta de texto importa.
+ *
+ * IMPORTANTE — Safety: sendChatMessage SEMPRE aplica `evaluateUserMessage`
+ * antes de enviar pra OpenAI e `validateAiResponse` no retorno. O fallback
+ * path (chat.tsx catch block) depende disso: sem essas guardas, uma mensagem
+ * "vou me matar" ia direto pra OpenAI sem CRISIS_REPLY.
  */
+import { evaluateUserMessage } from '@/ai/SafetyRules';
+import { validateAiResponse } from '@/ai/AIResponseValidator';
 import { classifyIntent, mockReply } from '@/content/replies';
+import { SAFE_FALLBACK } from '@/content/safety';
+import { logger } from '@/lib/logger';
 import type { Personality } from '@/types';
 import { getOpenAI } from './openai-client';
 import { buildSystemPrompt, type SystemPromptPersonality } from './system-prompt';
@@ -51,6 +60,14 @@ export async function sendChatMessage(text: string, opts: SendOptions): Promise<
     };
   }
 
+  // SAFETY GATE — input: bloqueia crise/diagnóstico antes de chegar na OpenAI.
+  // Sem esse gate, "vou me matar" ia direto pro modelo (e poderia escapar
+  // o CRISIS_REPLY canônico). Equivalente ao gate em generateReply.
+  const inputDecision = evaluateUserMessage(trimmed);
+  if (!inputDecision.allowed && inputDecision.redirect) {
+    return { content: inputDecision.redirect, source: 'local' };
+  }
+
   let openai: Awaited<ReturnType<typeof getOpenAI>>;
   try {
     openai = await getOpenAI();
@@ -86,15 +103,22 @@ export async function sendChatMessage(text: string, opts: SendOptions): Promise<
     });
     const reply = res.choices[0]?.message?.content?.trim();
     if (!reply) throw new Error('Empty response');
-    return { content: reply, source: 'openai' };
+    // SAFETY GATE — output: passa pela validação canônica antes de devolver.
+    // Diagnose acidental, prescrições, markup proibido viram SAFE_FALLBACK
+    // ou CRISIS_REPLY conforme o tipo de violação.
+    const validated = validateAiResponse({ reply, safety_flag: 'safe' }, inputDecision.flag);
+    if (validated.safety_flag !== 'safe') {
+      return { content: validated.reply, source: 'local' };
+    }
+    return { content: validated.reply, source: 'openai' };
   } catch (err) {
     // NUNCA logar o erro inteiro — pode conter o Request com Authorization
     // header e vazar a API key. Só a mensagem (que o SDK normaliza).
     const reason = err instanceof Error ? err.message : 'unknown';
-    console.warn('[chat-engine] OpenAI failed, falling back to local:', reason);
+    logger.warn('[chat-engine] OpenAI failed, falling back to local', { reason });
     const intent = classifyIntent(trimmed);
     return {
-      content: mockReply(opts.personality, intent, opts.mascotName),
+      content: mockReply(opts.personality, intent, opts.mascotName) ?? SAFE_FALLBACK,
       source: 'local',
     };
   }

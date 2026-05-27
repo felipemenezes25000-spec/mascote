@@ -116,9 +116,22 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
   const dailyXpSoFar = await checkinsDb.xpSumToday(profile.id, today);
   const wasFirstToday = dailyXpSoFar === 0;
 
+  // Detecta dedupe hit DETERMINISTICAMENTE (antes era heurística "occurred_at
+  // >1s") probando a tabela por idempotency_key match. Cenário comum:
+  // tap após bater cap diário (delta=0 → dailyXpSoFar estagnado → mesma key).
+  // Sem isso, combo.bump e xpEvents.add rodavam em todo tap pós-cap,
+  // inflando bonusPct e gerando rows duplicadas de xpEvents.
+  const idempotencyKey = `${profile.id}-${today}-${kind}-${value}-${dailyXpSoFar}`;
+  const todayCheckins = await checkinsDb.list(profile.id, today);
+  const isDedupedHit = todayCheckins.some(c => c.idempotency_key === idempotencyKey);
+
   const streakResult = await applyCheckinToStreak(profile.id);
 
-  const comboAfter = await comboDb.bump(profile.id);
+  // Combo só avança em checkin genuíno. Em dedupe, lê o estado atual (decay
+  // implícito via combo.get) pra continuar usando o bonusPct correto.
+  const comboAfter = isDedupedHit
+    ? await comboDb.get(profile.id)
+    : await comboDb.bump(profile.id);
   const bonusPct = comboXpBonus(comboAfter.current);
 
   const baseXp = baseXpInput + (wasFirstToday ? 5 : 0);
@@ -136,24 +149,11 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
     occurred_on: today,
     occurred_at: new Date().toISOString(),
     xp_awarded: result.delta,
-    idempotency_key: `${profile.id}-${today}-${kind}-${value}-${dailyXpSoFar}`,
+    idempotency_key: idempotencyKey,
   });
 
-  // Detecta dedupe hit: quando idempotency_key colide com um checkin já
-  // persistido (mesmo dia/kind/value/dailyXpSoFar), `checkinsDb.add` retorna
-  // o row existente em vez de criar um novo. Sem essa detecção, walletDb.add
-  // rodava incondicionalmente → tap-spam após cap diário (delta=0,
-  // dailyXpSoFar estagnado) reusava a mesma key e mintava moedas infinitas.
-  // Heurística: se occurred_at do retorno é >1s atrás, é row pré-existente.
-  let isDedupedHit = false;
-  if (persistedCheckin) {
-    const occurredMs = new Date(persistedCheckin.occurred_at).getTime();
-    if (Number.isFinite(occurredMs)) {
-      isDedupedHit = Date.now() - occurredMs > 1000;
-    }
-  }
-
-  if (result.delta > 0) {
+  // Gate todas as side-effects (xpEvents + wallet) na detecção determinística.
+  if (!isDedupedHit && result.delta > 0) {
     await xpEvents.add({
       user_id: profile.id,
       amount: result.delta,
@@ -161,7 +161,6 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
       reference: { habit: kind, value },
     });
   }
-  // Só credita moedas se o checkin é genuinamente novo (não dedupe).
   if (!isDedupedHit) {
     await walletDb.add(profile.id, coinsInput, 0);
   }

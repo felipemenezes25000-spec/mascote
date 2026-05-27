@@ -42,8 +42,12 @@ export function calculateTotalEvolutionCombinations(): number {
 /** Combinações efetivas após aplicar histórico (microevoluções modulam slots). */
 export function calculateEffectiveCombinations(microEvolutionCount: number): number {
   const base = calculateTotalEvolutionCombinations();
+  // Guard contra NaN: Math.max(1, NaN)===NaN propaga e telemetria reportava
+  // "evolução total: NaN" silenciosamente quando microEvolutionCount era
+  // corrompido (mascot pré-migration, snapshot mal-importado).
+  const n = Number.isFinite(microEvolutionCount) ? Math.max(0, microEvolutionCount) : 0;
   // Cada microevolução pode modular até 3 eixos (conservador)
-  const microFactor = Math.max(1, microEvolutionCount * 3);
+  const microFactor = Math.max(1, n * 3);
   return base * microFactor;
 }
 

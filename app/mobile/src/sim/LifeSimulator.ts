@@ -17,6 +17,10 @@ const MIN_TICK_HOURS = 0.05; // ~3 min — evita micro-ticks a cada focus
 const ENERGY_FLOOR = 12;
 
 function clampEnergy(v: number): number {
+  // NaN bypass guard: Math.round(NaN)===NaN, e min/max(NaN, x) propaga NaN
+  // — sem essa guarda, energy corrompido (import malformado, divisão por 0
+  // upstream) virava NaN persistido em mascot_life, e UI mostrava "NaN%".
+  if (!Number.isFinite(v)) return ENERGY_FLOOR;
   return Math.max(ENERGY_FLOOR, Math.min(100, Math.round(v)));
 }
 

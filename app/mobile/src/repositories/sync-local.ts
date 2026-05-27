@@ -71,8 +71,26 @@ export const localSyncRepo: SyncRepository = {
     }
 
     if (payload.subscription?.tier) {
-      await localSubscriptionRepo.setTier(uid, payload.subscription.tier);
-      applied.push('subscription');
+      // Guard contra tier upgrade via import: um payload malicioso/manualmente
+      // editado podia promover free → plus_annual sem passar pela RevenueCat.
+      // Política: import só permite manter ou DESCER tier (e.g. plus_annual
+      // → free quando user perdeu assinatura na origem). Upgrades reais
+      // devem vir via restorePurchases (RevenueCat), nunca via snapshot.
+      const tierRank: Record<string, number> = {
+        free: 0,
+        plus_monthly: 1,
+        plus_annual: 2,
+      };
+      const currentTier = await localSubscriptionRepo.getTier(uid);
+      const incoming = payload.subscription.tier;
+      const currentRank = tierRank[currentTier] ?? 0;
+      const incomingRank = tierRank[incoming] ?? 0;
+      if (incomingRank <= currentRank) {
+        await localSubscriptionRepo.setTier(uid, incoming);
+        applied.push('subscription');
+      } else {
+        skipped.push('subscription');
+      }
     }
 
     if (payload.personalization) {

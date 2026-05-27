@@ -357,7 +357,14 @@ export function aggregateVisualImpact(
     auraParticleMultiplier: 1,
     morphInfluenceBoosts: {},
   };
+  // Dedup defensivo: `dnaMutations.unlock` previne dupes na persistência,
+  // mas callers podem compor IDs de múltiplas fontes (e.g. persisted +
+  // newly evaluated) e a duplicação inflaria multiplicadores (1.2 × 1.2
+  // = 1.44 em vez de 1.2). Idempotência por contrato.
+  const seenIds = new Set<string>();
   for (const id of unlockedIds) {
+    if (seenIds.has(id)) continue;
+    seenIds.add(id);
     const m = getMutationById(id);
     if (!m) continue;
     const v = m.visualImpact;
