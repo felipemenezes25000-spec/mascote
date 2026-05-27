@@ -6,7 +6,7 @@
  */
 
 import { Component, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Appearance, Pressable, StyleSheet, Text, View } from 'react-native';
 import { logger } from '@/lib/logger';
 
 interface Props {
@@ -17,6 +17,16 @@ interface State {
   hasError: boolean;
   error: Error | null;
 }
+
+// ErrorBoundary é class component (React não suporta hooks aqui), então não
+// pode usar useTheme(). Lemos Appearance no momento da render — se o usuário
+// trocar tema enquanto a tela de erro está aberta, ele recarrega o app e o
+// boundary reseta. Vale o trade-off vs. forçar um wrapper funcional só pra
+// ler o store de tema.
+const palette = (isDark: boolean) =>
+  isDark
+    ? { bg: '#15110D', text: '#FCF3E7', textDim: '#C6B6A0', debug: '#A89578' }
+    : { bg: '#FBF6F1', text: '#1F1A14', textDim: '#5E5448', debug: '#9A8F80' };
 
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false, error: null };
@@ -38,15 +48,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      const c = palette(Appearance.getColorScheme() === 'dark');
       return (
-        <View style={styles.wrap}>
+        <View style={[styles.wrap, { backgroundColor: c.bg }]}>
           <Text style={styles.emoji}>🌿</Text>
-          <Text style={styles.title}>Algo deu errado</Text>
-          <Text style={styles.body}>
+          <Text style={[styles.title, { color: c.text }]}>Algo deu errado</Text>
+          <Text style={[styles.body, { color: c.textDim }]}>
             A culpa é da gente. Tenta de novo? Se persistir, recarrega o app.
           </Text>
           {__DEV__ && this.state.error && (
-            <Text style={styles.debug}>{String(this.state.error.message)}</Text>
+            <Text style={[styles.debug, { color: c.debug }]}>{String(this.state.error.message)}</Text>
           )}
           <Pressable
             onPress={this.reset}
@@ -66,24 +77,21 @@ export class ErrorBoundary extends Component<Props, State> {
 const styles = StyleSheet.create({
   wrap: {
     flex: 1,
-    backgroundColor: '#FBF6F1',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
     gap: 12,
   },
   emoji: { fontSize: 64 },
-  title: { fontSize: 22, fontWeight: '700', color: '#1F1A14' },
+  title: { fontSize: 22, fontWeight: '700' },
   body: {
     fontSize: 15,
-    color: '#5E5448',
     textAlign: 'center',
     maxWidth: 320,
     lineHeight: 22,
   },
   debug: {
     fontSize: 11,
-    color: '#9A8F80',
     fontFamily: 'JetBrainsMono_400Regular',
     marginTop: 16,
     paddingHorizontal: 16,

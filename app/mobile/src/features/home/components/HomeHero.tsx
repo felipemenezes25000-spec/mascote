@@ -44,7 +44,6 @@ interface Props {
   equippedAccId: AccessoryId;
   customState: MascotCustomization | null;
   mutationIds: readonly string[];
-  evolutionVisuals: import('@/hooks/useEvolutionState').EvolutionVisuals | null;
   behaviorAction?: { kind: import('@/lib/animation-triggers').MascotAnimationKind; key: number };
   unlockedSceneCount: number;
   onPrev: () => void;
@@ -75,7 +74,6 @@ export function HomeHero({
   equippedAccId,
   customState,
   mutationIds,
-  evolutionVisuals,
   behaviorAction,
   unlockedSceneCount,
   onPrev,
@@ -131,11 +129,6 @@ export function HomeHero({
                 action={behaviorAction}
                 customization={customState}
                 mutationIds={mutationIds}
-                evolutionVisuals={evolutionVisuals}
-                unityContext={{
-                  sceneId: (scene as { id?: string }).id ?? 'room',
-                  equippedAccessoryIds: equippedAccId !== 'none' ? [equippedAccId] : [],
-                }}
               />
             </MascotAmbient>
           </MascotInteractive>

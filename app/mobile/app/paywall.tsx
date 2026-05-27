@@ -7,10 +7,6 @@ import { Mascot } from '@/components/Mascot';
 import type { ArchetypeKey } from '@/lib/themes';
 import type { Personality } from '@/types';
 import { getTier } from '@/content/billing';
-import { modifiersToVisuals } from '@/game/evolution/PhenotypeRenderer';
-import { buildEvolutionState } from '@/game/evolution/EvolutionEngine';
-import { loadEvolutionState } from '@/game/evolution/EvolutionPersistence';
-import { checkins as checkinsDb } from '@/lib/db';
 import { copyFor, type PaywallTrigger } from '@/lib/paywall-triggers';
 import { validateBillingEnv } from '@/lib/billing-config';
 import { isAiProxyConfigured } from '@/ai/ProxyMascotAI';
@@ -40,8 +36,6 @@ export default function Paywall() {
   // Ref guard fecha a janela entre handler enfileirado e setLoading propagar via render.
   // Sem isso, dois taps em <1 frame leem closure stale (loading=false) e disparam 2 compras.
   const purchaseInFlightRef = useRef(false);
-  const [beforeVisuals, setBeforeVisuals] = useState<ReturnType<typeof modifiersToVisuals> | null>(null);
-  const [afterVisuals, setAfterVisuals] = useState<ReturnType<typeof modifiersToVisuals> | null>(null);
 
   const annual = getTier('plus_annual');
   const monthly = getTier('plus_monthly');
@@ -60,32 +54,13 @@ export default function Paywall() {
     };
   }, [profile?.id]);
 
-  useEffect(() => {
-    if (!profile || !mascot) return;
-    let alive = true;
-    void (async () => {
-      const all = await checkinsDb.listAll(profile.id);
-      const persistedEvolution = await loadEvolutionState(profile.id);
-      if (!alive) return;
-      const state = buildEvolutionState({
-        mascot,
-        checkins: all,
-        streak,
-        // Preserva `unlockedAt` histórico ao hidratar micros.
-        persistedMicroEvolutions: persistedEvolution?.microEvolutions ?? [],
-      });
-      setBeforeVisuals(modifiersToVisuals(state.phenotype.displayModifiers));
-      setAfterVisuals(modifiersToVisuals({
-        ...state.phenotype.displayModifiers,
-        glowMultiplier: state.phenotype.displayModifiers.glowMultiplier + 0.15,
-        auraParticleBoost: state.phenotype.displayModifiers.auraParticleBoost + 0.12,
-        activeEnergy: true,
-      }));
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [profile?.id, mascot, streak]);
+  // Antes existia um useEffect calculando `beforeVisuals`/`afterVisuals` via
+  // `modifiersToVisuals` + `buildEvolutionState` pra animar a preview. Após o
+  // pivô 2D (commit 4d0004a), o wrapper `Mascot` IGNORA `evolutionVisuals`
+  // silenciosamente — então a computação inteira virou trabalho perdido em
+  // cada mount do paywall (leitura full de checkins + buildEvolutionState).
+  // Removido em 2026-05-27. Se animação extra de paywall voltar, integrar via
+  // `proceduralGenome` em vez de visuals.
 
   const enqueueToast = useStore(s => s.enqueueToast);
 
@@ -152,7 +127,6 @@ export default function Paywall() {
               phase={mascot?.phase ?? 'bebe'}
               mood="ok"
               size={120}
-              evolutionVisuals={beforeVisuals}
               reduceMotion
             />
           </View>
@@ -164,7 +138,6 @@ export default function Paywall() {
               phase={mascot?.phase ?? 'adulto'}
               mood="empolgado"
               size={120}
-              evolutionVisuals={afterVisuals}
               reduceMotion
             />
           </View>

@@ -255,7 +255,7 @@ function SliderRow({
   max,
   onChange,
   theme,
-  step = 1,
+  step,
 }: {
   label: string;
   value: number;
@@ -263,10 +263,15 @@ function SliderRow({
   max: number;
   onChange: (v: number) => void;
   theme: ReturnType<typeof useTheme>;
+  /** Incremento por tap. Default: ~5% do range (mínimo 1) — assim hue 0-360
+   *  anda em saltos de 18, markCount 0-5 anda de 1 em 1. O default antigo
+   *  (step*5 com step=1) saltava 5 em todos os sliders, fazendo markCount
+   *  pular min→max num único tap. */
   step?: number;
 }) {
-  const stepDown = () => onChange(Math.max(min, value - step * 5));
-  const stepUp = () => onChange(Math.min(max, value + step * 5));
+  const effectiveStep = step ?? Math.max(1, Math.round((max - min) / 20));
+  const stepDown = () => onChange(Math.max(min, value - effectiveStep));
+  const stepUp = () => onChange(Math.min(max, value + effectiveStep));
   return (
     <View style={styles.sliderRow}>
       <Pressable

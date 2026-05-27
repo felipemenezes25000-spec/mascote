@@ -18,7 +18,6 @@ import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
 import { SceneBackground } from '@/components/SceneBackground';
 import { getPersonality } from '@/content/personalities';
-import { modifiersToVisuals } from '@/game/evolution/PhenotypeRenderer';
 import {
   formatRareTrait,
   generateOnboardingPreview,
@@ -72,14 +71,9 @@ export default function MascotBirth() {
     () => generateOnboardingPreview(answers, getPersonality(personality).mascotName, personality),
     [answers, personality],
   );
-  const visuals = useMemo(
-    () => modifiersToVisuals(
-      preview.phenotype.displayModifiers,
-      preview.phenotype.slots.animationSet,
-      preview.phenotype.slots.environmentId,
-    ),
-    [preview],
-  );
+  // `visuals` (modifiersToVisuals) era passado pra prop `evolutionVisuals` do
+  // Mascot — ignorada após pivô 2D. useMemo removido em 2026-05-27 (era pure
+  // dead compute em todo render do onboarding).
   const dna = sanitizeGenome(preview.genotype.genome);
   const mood = mapMoodToMascot(answers.moodId);
 
@@ -154,7 +148,6 @@ export default function MascotBirth() {
                 force2D
                 dnaOverride={dna}
                 seedOverride={preview.seed}
-                evolutionVisuals={visuals}
               />
             </Animated.View>
           </SceneBackground>

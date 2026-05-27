@@ -1,6 +1,6 @@
 import { router, Redirect } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
@@ -121,10 +121,36 @@ export default function Cancel() {
           <View style={{ gap: theme.spacing.md, paddingVertical: theme.spacing.md }}>
             <Typography variant="body" style={styles.title}>Cancelar assinatura</Typography>
             <Typography variant="body" style={styles.subtitle}>
-              Sua assinatura será cancelada nas configurações da App Store / Google Play.
-              Em produção, esse botão te leva pra lá. Aqui é demo.
+              A cobrança é feita pela {Platform.OS === 'ios' ? 'App Store' : 'Google Play'}. O botão
+              abaixo abre o gerenciador de assinaturas direto — lá você cancela
+              quando quiser e mantém o acesso até o fim do período pago.
             </Typography>
-            <Button label="Entendi" onPress={() => router.back()} />
+            <Button
+              label={Platform.OS === 'ios' ? 'Abrir gerenciar assinaturas' : 'Abrir Google Play'}
+              onPress={async () => {
+                // iOS: https://apps.apple.com/account/subscriptions abre direto
+                // o gerenciador no aplicativo da App Store (deep link oficial
+                // Apple). Android: account/subscriptions tem comportamento
+                // equivalente no Play Store.
+                const url =
+                  Platform.OS === 'ios'
+                    ? 'https://apps.apple.com/account/subscriptions'
+                    : 'https://play.google.com/store/account/subscriptions';
+                try {
+                  const can = await Linking.canOpenURL(url);
+                  if (can) await Linking.openURL(url);
+                  else throw new Error('cannot open');
+                } catch {
+                  Alert.alert(
+                    'Não consegui abrir',
+                    Platform.OS === 'ios'
+                      ? 'Vá em Ajustes > [Seu nome] > Assinaturas pra gerenciar.'
+                      : 'Abra a Play Store > Conta > Pagamentos e assinaturas.',
+                  );
+                }
+              }}
+            />
+            <Button variant="secondary" label="Voltar" onPress={() => router.back()} />
           </View>
         )}
       </ScrollView>

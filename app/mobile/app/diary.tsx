@@ -88,10 +88,13 @@ export default function DiaryScreen() {
       // Defensive view-side dedup por summary: legacy data pre-idempotency-window
       // (commit c66fbc8) pode ter memórias duplicadas no AsyncStorage. Mantém a
       // mais recente (sorted DESC garante isso). Espelha o padrão de memories.tsx.
+      // Normaliza trim+lowercase pra pegar "Senti orgulho" vs "senti orgulho "
+      // como duplicatas (variação de capitalization escapava ao dedup antigo).
       const seen = new Set<string>();
       const deduped = sorted.filter(m => {
-        if (seen.has(m.summary)) return false;
-        seen.add(m.summary);
+        const key = m.summary.trim().toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
         return true;
       });
       setMemories(deduped);

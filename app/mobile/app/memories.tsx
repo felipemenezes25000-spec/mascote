@@ -50,8 +50,10 @@ export default function Memories() {
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
       const deduped = sorted.filter(m => {
-        if (seen.has(m.summary)) return false;
-        seen.add(m.summary);
+        // trim+lowercase pra pegar capitalization/whitespace variants.
+        const key = m.summary.trim().toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
         return true;
       });
       setMemories(deduped);

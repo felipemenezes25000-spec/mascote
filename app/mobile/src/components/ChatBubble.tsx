@@ -61,8 +61,13 @@ function makeStyles(theme: Theme) {
       borderBottomLeftRadius: 4,
     },
     crisis: {
-      backgroundColor: '#FFF5F1',
+      // surface2 mantém legibilidade em light/sepia/dark (cor hardcoded peach
+      // antiga quebrava texto-claro em dark mode). Identidade visual de crisis
+      // fica no borderColor + borderWidth aumentado (sinal forte sem quebrar
+      // contraste).
+      backgroundColor: theme.colors.surface2,
       borderColor: theme.colors.error,
+      borderWidth: 2,
     },
     text: { ...theme.text.body },
     userText: { color: '#fff' },

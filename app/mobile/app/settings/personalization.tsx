@@ -123,7 +123,7 @@ export default function PersonalizationSettings() {
     () => (draft ? storedToPartial(draft) : undefined),
     [draft],
   );
-  const { visuals, loading: evolutionLoading, error: evolutionError, refresh: refreshEvolution } =
+  const { loading: evolutionLoading, error: evolutionError, refresh: refreshEvolution } =
     useEvolutionState(evolutionPartial);
 
   if (!profile || !mascot || !settings) return <Redirect href="/splash" />;
@@ -246,7 +246,6 @@ export default function PersonalizationSettings() {
                 phase={mascot.phase}
                 mood={mascot.mood}
                 size={140}
-                evolutionVisuals={visuals}
               />
             )}
           </SceneBackground>

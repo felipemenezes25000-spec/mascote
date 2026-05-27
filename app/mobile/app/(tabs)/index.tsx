@@ -467,7 +467,6 @@ export default function Home() {
               equippedAccId={snapshot.equippedAccId}
               customState={snapshot.customState}
               mutationIds={snapshot.mutationIds}
-              evolutionVisuals={evolutionVisuals}
               behaviorAction={behaviorAction}
               unlockedSceneCount={snapshot.unlockedSceneIds.length}
               statusLine={displayLine}

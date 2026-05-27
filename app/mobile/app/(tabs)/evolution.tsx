@@ -111,7 +111,6 @@ export default function EvolutionTab() {
   // padrão. UX-break crítica.
   const [customState, setCustomState] = useState<MascotCustomization | null>(null);
   const {
-    visuals: evolutionVisuals,
     state: evolutionState,
     loading: evolutionLoading,
     error: evolutionError,
@@ -280,8 +279,6 @@ export default function EvolutionTab() {
                       reduceMotion={settings?.reduce_motion}
                       customization={customState}
                       mutationIds={unlockedMutations.map(u => u.mutation_id)}
-                      evolutionVisuals={evolutionVisuals}
-                      unityContext={{ sceneId: activeSceneId }}
                     />
                   </MascotAmbient>
                 )}
