@@ -1,12 +1,14 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { habitMeta } from '@/content/missions';
 import { useTheme } from '@/lib/useTheme';
+import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 import type { HabitKind } from '@/types';
 
+import { Typography } from '@/components/ui';
 const QUESTIONS: { kind: HabitKind; q: string; options: { label: string; value: number }[] }[] = [
   { kind: 'sleep', q: 'Quantas horas você dormiu?', options: [{ label: '< 5h', value: 4 }, { label: '5–6h', value: 6 }, { label: '7–8h', value: 7 }, { label: '> 8h', value: 9 }] },
   { kind: 'water', q: 'Quantos copos de água até agora?', options: [{ label: '0–1', value: 1 }, { label: '2–3', value: 3 }, { label: '4–6', value: 5 }, { label: '7+', value: 7 }] },
@@ -25,8 +27,14 @@ export default function CheckIn() {
     setAnswers(prev => ({ ...prev, [q.kind]: value }));
     if (step + 1 < QUESTIONS.length) setStep(step + 1);
     else {
-      const payload = JSON.stringify({ ...answers, [q.kind]: value });
-      router.replace({ pathname: '/checkin-result', params: { data: payload } });
+      // Payload sai da URL (`?data=...`) e vai pro store efêmero. Motivos:
+      // (1) deep-link malicioso podia injetar JSON arbitrário; (2) URLs com
+      // payload acabam em logs/web history; (3) tamanho de query string tem
+      // limite. `clearLastCheckin` no unmount de /checkin-result evita reuso
+      // stale do snapshot em navegações futuras.
+      const finalAnswers = { ...answers, [q.kind]: value } as Record<HabitKind, number>;
+      useStore.getState().setLastCheckin({ answers: finalAnswers, timestamp: Date.now() });
+      router.replace('/checkin-result');
     }
   }
 
@@ -44,9 +52,9 @@ export default function CheckIn() {
             accessibilityRole="button"
             accessibilityLabel="Voltar"
           >
-            <Text style={styles.closeText}>←</Text>
+            <Typography variant="body" style={styles.closeText}>←</Typography>
           </Pressable>
-          <Text style={styles.kicker}>CHECK-IN {step + 1}/{QUESTIONS.length}</Text>
+          <Typography variant="body" style={styles.kicker}>CHECK-IN {step + 1}/{QUESTIONS.length}</Typography>
           <View style={{ width: 36 }} />
         </View>
         <View style={styles.progress}>
@@ -55,8 +63,8 @@ export default function CheckIn() {
 
         <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, flexGrow: 1 }}>
           <View style={{ alignItems: 'center', gap: 8, paddingVertical: theme.spacing.lg }}>
-            <Text style={styles.emoji}>{meta.emoji}</Text>
-            <Text style={styles.title}>{q.q}</Text>
+            <Typography variant="body" style={styles.emoji}>{meta.emoji}</Typography>
+            <Typography variant="body" style={styles.title}>{q.q}</Typography>
           </View>
           <View style={{ gap: theme.spacing.sm }}>
             {q.options.map(o => (
@@ -67,7 +75,7 @@ export default function CheckIn() {
                 accessibilityRole="button"
                 accessibilityLabel={o.label}
               >
-                <Text style={styles.optLabel}>{o.label}</Text>
+                <Typography variant="body" style={styles.optLabel}>{o.label}</Typography>
               </Pressable>
             ))}
           </View>

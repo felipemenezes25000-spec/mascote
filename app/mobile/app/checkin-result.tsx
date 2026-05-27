@@ -1,6 +1,6 @@
-import { router, Redirect, useLocalSearchParams } from 'expo-router';
+import { router, Redirect } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { MascotRenderer } from '@/components/MascotRenderer';
@@ -15,10 +15,12 @@ import { applyCheckinFully } from '@/lib/checkin';
 import type { Theme } from '@/lib/themes';
 import type { HabitKind } from '@/types';
 
+import { Typography } from '@/components/ui';
 export default function CheckInResult() {
   const theme = useTheme();
   const styles = makeStyles(theme);
-  const params = useLocalSearchParams<{ data: string }>();
+  const snapshot = useStore(s => s.lastCheckin);
+  const clearLastCheckin = useStore(s => s.clearLastCheckin);
   const profile = useStore(s => s.profile);
   const mascot = useStore(s => s.mascot);
   const refreshMascot = useStore(s => s.refreshMascot);
@@ -32,31 +34,32 @@ export default function CheckInResult() {
   const persistedRef = useRef(false);
 
   useEffect(() => {
-    try {
-      const parsed = JSON.parse(params.data ?? '{}');
-      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-        throw new Error('JSON inválido');
-      }
-      // Deep-link malicioso (`/checkin-result?data={"sleep":"DROP","x":NaN}`)
-      // passava direto pro applyCheckinFully. Filtra so chaves de HabitKind
-      // conhecidas + valores numericos finitos positivos.
-      const valid: Record<string, number> = {};
-      const ALLOWED: HabitKind[] = ['water', 'sleep', 'exercise', 'meditation', 'reading', 'journaling', 'breath', 'outdoor', 'sun'];
-      for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
-        if (!ALLOWED.includes(k as HabitKind)) continue;
-        if (typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 10_000) continue;
-        valid[k] = v;
-      }
-      if (Object.keys(valid).length === 0) {
-        throw new Error('Nenhum habito valido no payload');
-      }
-      setAnswers(valid);
-    } catch {
-      Alert.alert('Dados inválidos', 'Não consegui ler o check-in. Tente de novo.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+    if (!snapshot) return;
+    // Defense-in-depth: o snapshot vem do nosso próprio /checkin, mas
+    // mantemos o allow-list de HabitKind + bounds numéricos pra resistir
+    // a refactors futuros que possam injetar dados externos no store.
+    const valid: Record<string, number> = {};
+    const ALLOWED: HabitKind[] = ['water', 'sleep', 'exercise', 'meditation', 'reading', 'journaling', 'breath', 'outdoor', 'sun'];
+    for (const [k, v] of Object.entries(snapshot.answers)) {
+      if (!ALLOWED.includes(k as HabitKind)) continue;
+      if (typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 10_000) continue;
+      valid[k] = v;
     }
-  }, [params.data]);
+    if (Object.keys(valid).length === 0) {
+      // Snapshot vazio/corrompido — limpa e volta pra home (não Alert: o
+      // usuário não disparou esse caminho conscientemente, é só refresh).
+      clearLastCheckin();
+      router.replace('/(tabs)');
+      return;
+    }
+    setAnswers(valid);
+    // Cleanup no unmount: limpa o snapshot pra próxima visita ao
+    // /checkin-result (via refresh ou deep-link) cair no redirect ao invés
+    // de mostrar dados de check-in antigo.
+    return () => {
+      clearLastCheckin();
+    };
+  }, [snapshot, clearLastCheckin]);
 
   useEffect(() => {
     if (persistedRef.current || answers === null) return;
@@ -99,12 +102,16 @@ export default function CheckInResult() {
   }, [profile?.id, mascot?.id, answers]);
 
   if (!mascot) return <Redirect href='/splash' />;
+  // Refresh direto em /checkin-result sem snapshot no store: redireciona
+  // pra home em vez de spinner infinito. O effect acima também limpa o
+  // snapshot vazio caso o usuário chegue aqui via deep-link.
+  if (!snapshot) return <Redirect href='/(tabs)' />;
   if (answers === null || persistedXp === null) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
           <ActivityIndicator size="large" accessibilityLabel="Salvando check-in" />
-          <Text style={styles.subtitle}>Salvando seu check-in...</Text>
+          <Typography variant="body" style={styles.subtitle}>Salvando seu check-in...</Typography>
         </View>
       </SafeAreaView>
     );
@@ -139,10 +146,10 @@ export default function CheckInResult() {
         </SceneBackground>
 
         <View style={{ alignItems: 'center', gap: theme.spacing.sm }}>
-          <Text style={styles.title}>{meta.mascotName} sorriu.</Text>
-          <Text style={styles.subtitle}>
+          <Typography variant="body" style={styles.title}>{meta.mascotName} sorriu.</Typography>
+          <Typography variant="body" style={styles.subtitle}>
             +{persistedXp} XP · +{coinsGained} 🪙 · {goodCount}/{Object.keys(answers).length} marcadores bons hoje
-          </Text>
+          </Typography>
         </View>
 
         <View style={styles.list}>
@@ -151,9 +158,9 @@ export default function CheckInResult() {
             const isLast = i === arr.length - 1;
             return (
               <View key={k} style={[styles.row, isLast && styles.rowLast]}>
-                <Text style={styles.rowEmoji}>{m?.emoji}</Text>
-                <Text style={styles.rowLabel}>{m?.label}</Text>
-                <Text style={styles.rowValue}>{v}</Text>
+                <Typography variant="body" style={styles.rowEmoji}>{m?.emoji}</Typography>
+                <Typography variant="body" style={styles.rowLabel}>{m?.label}</Typography>
+                <Typography variant="body" style={styles.rowValue}>{v}</Typography>
               </View>
             );
           })}

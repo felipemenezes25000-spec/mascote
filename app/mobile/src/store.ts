@@ -1,5 +1,17 @@
 import { create } from 'zustand';
 import type { HabitKind, Mascot, MascotDNA, Profile, Settings, Streak, Wallet } from '@/types';
+
+/**
+ * Snapshot efêmero do payload de check-in passado de /checkin para
+ * /checkin-result. Substitui o antigo `?data=` na URL (XSS via deep-link,
+ * limite de tamanho, payload visível em logs). NUNCA persistido: vive só
+ * em memória, deve ser limpo quando /checkin-result desmonta.
+ */
+export type LastCheckinSnapshot = {
+  answers: Record<HabitKind, number>;
+  timestamp: number;
+} | null;
+
 import { applyHabitDrift, sanitizeGenome } from '@/lib/dna';
 import { readSystemReduceMotion } from '@/lib/accessibility';
 import { mascots, profiles, runMigrations, settings, streaks, wallet as walletDb, withLock } from '@/lib/db';
@@ -30,6 +42,12 @@ interface AppState {
   proactiveBubbleLine: string | null;
   /** Flag visual: retorno após ausência longa. */
   lifeReturnCelebration: boolean;
+  /**
+   * Ponte efêmera entre /checkin e /checkin-result. NÃO persistido em
+   * AsyncStorage — vive só dentro de uma sessão. Recarregar /checkin-result
+   * com snapshot=null redireciona pra home (evita reuso de payload stale).
+   */
+  lastCheckin: LastCheckinSnapshot;
   hydrate: () => Promise<void>;
   setProfile: (p: Profile | null) => void;
   setMascot: (m: Mascot | null) => void;
@@ -52,6 +70,10 @@ interface AppState {
   /** Roda tick de simulação offline/online e atualiza mascot + life state. */
   runLifeSimulation: () => Promise<void>;
   clearLifeEvents: () => void;
+  /** Grava snapshot do check-in pra /checkin-result ler. Não persiste. */
+  setLastCheckin: (snapshot: LastCheckinSnapshot) => void;
+  /** Limpa snapshot do check-in. Chamado no unmount de /checkin-result. */
+  clearLastCheckin: () => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -69,6 +91,7 @@ export const useStore = create<AppState>((set, get) => ({
   lifeSummaryLine: null,
   proactiveBubbleLine: null,
   lifeReturnCelebration: false,
+  lastCheckin: null,
 
   async hydrate() {
     // Migrations PRIMEIRO. Se schema mudou, queremos transformar antes de
@@ -288,6 +311,7 @@ export const useStore = create<AppState>((set, get) => ({
       lifeSummaryLine: null,
       proactiveBubbleLine: null,
       lifeReturnCelebration: false,
+      lastCheckin: null,
     });
   },
 
@@ -320,5 +344,13 @@ export const useStore = create<AppState>((set, get) => ({
 
   clearLifeEvents() {
     set({ lifeEvents: [], lifeReturnCelebration: false });
+  },
+
+  setLastCheckin(snapshot) {
+    set({ lastCheckin: snapshot });
+  },
+
+  clearLastCheckin() {
+    set({ lastCheckin: null });
   },
 }));
