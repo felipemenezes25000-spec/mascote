@@ -81,7 +81,12 @@ const SURFACES: Record<ResolvedMode, ModeSurfaces> = {
     surface2: '#1A1510',
     text: '#FCF3E7',
     textSecondary: '#C6B6A0',
-    textDim: '#8E7E68',
+    // textDim bumped from #8E7E68 (4.28:1 on surface, FAILS WCAG AA) para
+    // #A89578 (5.81:1 on surface, passes AA com folga). textDim aparece em
+    // captions, hints e badges sobre `surface` no dark mode — ficar abaixo
+    // de 4.5:1 quebra a11y mesmo em texto pequeno. Para light/sepia, textDim
+    // permanece intencionalmente baixo (hint visual, não texto-de-conteúdo).
+    textDim: '#A89578',
     border: '#34291F',
     border2: '#4A3B2C',
     inkInverse: '#15110D',

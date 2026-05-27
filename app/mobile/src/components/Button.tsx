@@ -83,7 +83,10 @@ function makeStyles(theme: Theme) {
       borderRadius: theme.radius.md,
       alignItems: 'center',
       justifyContent: 'center',
+      // minHeight 52 + minWidth 44 garantem alvo de toque WCAG/AAA mesmo em
+      // labels muito curtas ("OK", "✓") que o padding horizontal não cobriria.
       minHeight: 52,
+      minWidth: 44,
     },
     primary: {
       backgroundColor: theme.colors.primary,

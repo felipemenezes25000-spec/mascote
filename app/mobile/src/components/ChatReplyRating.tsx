@@ -46,6 +46,8 @@ export function ChatReplyRating({ onRate }: Props) {
           onPress={() => pick('helpful')}
           accessibilityRole="button"
           accessibilityLabel="Resposta útil"
+          // chip tem paddingV 6 + xs ~16 = ~28px. hitSlop traz alvo pra ~44px.
+          hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
         >
           <Text style={styles.chipText}>Útil</Text>
         </PressableScale>
@@ -54,6 +56,7 @@ export function ChatReplyRating({ onRate }: Props) {
           onPress={() => pick('not_helpful')}
           accessibilityRole="button"
           accessibilityLabel="Resposta não ajudou"
+          hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
         >
           <Text style={styles.chipText}>Não ajudou</Text>
         </PressableScale>
@@ -62,6 +65,7 @@ export function ChatReplyRating({ onRate }: Props) {
           onPress={() => pick('repetition')}
           accessibilityRole="button"
           accessibilityLabel="Já vi essa resposta antes"
+          hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
         >
           <Text style={[styles.chipText, styles.chipGhostText]}>Repetiu?</Text>
         </PressableScale>

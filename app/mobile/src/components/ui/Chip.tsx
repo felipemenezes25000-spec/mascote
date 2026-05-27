@@ -22,6 +22,10 @@ export function Chip({ label, selected, onPress, leading, trailing, style }: Pro
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected }}
+      // hitSlop 8 estende alvo de toque pra ~44x44 mesmo em chips compactos
+      // (padding 12x6 + caption ~16 = ~28px de altura visual). Sem o slop, o
+      // alvo real é menor que a recomendação WCAG/Apple HIG.
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       style={[
         styles.base,
         {

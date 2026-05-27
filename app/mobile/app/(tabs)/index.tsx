@@ -677,6 +677,9 @@ export default function Home() {
                 onPress={() => router.push('/checkin')}
                 accessibilityRole="button"
                 accessibilityLabel="Check-in completo guiado"
+                // Texto plano (caption ~14lh, sem padding) — hitSlop garante
+                // alvo de toque mínimo de 44px sem inflar o visual da linha.
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
               >
                 <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>Check-in guiado →</Typography>
               </PressableScale>
@@ -684,6 +687,7 @@ export default function Home() {
                 onPress={() => router.push('/safe-night')}
                 accessibilityRole="button"
                 accessibilityLabel="Modo noite difícil"
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
               >
                 <Typography variant="caption" tone="secondary" style={{ textDecorationLine: 'underline' }}>
                   Tô em momento ruim

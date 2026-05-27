@@ -339,7 +339,13 @@ export default function ChatTab() {
 
       {showCvvBanner && (
         <View style={styles.cvvBanner}>
-          <Pressable style={styles.cvvMain} onPress={() => router.push('/safe-night')}>
+          <Pressable
+            style={styles.cvvMain}
+            onPress={() => router.push('/safe-night')}
+            // cvvBanner tem paddingVertical 10 + Icon 14 → ~34px height. hitSlop
+            // top/bottom 6 leva alvo pra ~46px sem encostar no input bar acima.
+            hitSlop={{ top: 6, bottom: 6 }}
+          >
             <Icon name="shield" size={14} color="#8C4F1F" strokeWidth={2} />
             <Typography variant="body" style={styles.cvvText}>Tô em momento ruim · só presença</Typography>
           </Pressable>
@@ -424,6 +430,7 @@ export default function ChatTab() {
             style={styles.suggestionsToggle}
             onPress={() => setShowSuggestions(true)}
             accessibilityLabel="Mostrar sugestões de conversa"
+            hitSlop={{ top: 8, bottom: 8, left: 12, right: 12 }}
           >
             <Typography variant="body" style={styles.suggestionsToggleText}>Sugestões ▸</Typography>
           </PressableScale>
@@ -435,6 +442,7 @@ export default function ChatTab() {
                 style={styles.suggestionsToggle}
                 onPress={() => setShowSuggestions(false)}
                 accessibilityLabel="Ocultar sugestões"
+                hitSlop={{ top: 8, bottom: 8, left: 12, right: 12 }}
               >
                 <Typography variant="body" style={styles.suggestionsToggleText}>Sugestões ▾</Typography>
               </PressableScale>
@@ -450,6 +458,9 @@ export default function ChatTab() {
                   key={s.label}
                   style={styles.suggestionChip}
                   onPress={() => send(s.text)}
+                  // hitSlop 8 garante ~44px alvo de toque sem alterar visual.
+                  // suggestionChip tem paddingVertical 8 + body ~22lh = ~38px.
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   <Typography variant="body" style={styles.suggestionText}>{s.label}</Typography>
                 </PressableScale>

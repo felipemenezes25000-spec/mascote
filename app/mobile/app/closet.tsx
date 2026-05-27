@@ -1,6 +1,6 @@
 import { router, Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
@@ -19,6 +19,7 @@ import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
+import { Typography } from '@/components/ui';
 const ACC_PRICES: Record<string, number> = {
   cap: 80,
   glasses: 120,
@@ -217,6 +218,9 @@ export default function Closet() {
         <PressableScale
           onPress={() => setTab('accessories')}
           style={[styles.tab, tab === 'accessories' && styles.tabActive]}
+          // tab tem paddingVertical 10 + Icon 14 + body ~16 = ~36px. hitSlop
+          // estende alvo de toque pra ~44px+ sem inflar o pill visual.
+          hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
         >
           <Icon
             name="package"
@@ -224,13 +228,14 @@ export default function Closet() {
             color={tab === 'accessories' ? '#fff' : theme.colors.textSecondary}
             strokeWidth={2.2}
           />
-          <Text style={[styles.tabText, tab === 'accessories' && styles.tabTextActive]}>
+          <Typography variant="body" style={[styles.tabText, tab === 'accessories' && styles.tabTextActive]}>
             Acessórios
-          </Text>
+          </Typography>
         </PressableScale>
         <PressableScale
           onPress={() => setTab('scenes')}
           style={[styles.tab, tab === 'scenes' && styles.tabActive]}
+          hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
         >
           <Icon
             name="sparkles"
@@ -238,9 +243,9 @@ export default function Closet() {
             color={tab === 'scenes' ? '#fff' : theme.colors.textSecondary}
             strokeWidth={2.2}
           />
-          <Text style={[styles.tabText, tab === 'scenes' && styles.tabTextActive]}>
+          <Typography variant="body" style={[styles.tabText, tab === 'scenes' && styles.tabTextActive]}>
             Cenários
-          </Text>
+          </Typography>
         </PressableScale>
       </View>
 
@@ -255,7 +260,7 @@ export default function Closet() {
               <View key={acc.id} style={[styles.item, !owned && styles.itemLocked]}>
                 <View style={styles.itemEmoji}>
                   {/* mostrar emoji desaturado + badge de lock pra dar preview */}
-                  <Text style={{ fontSize: 30, opacity: owned ? 1 : 0.35 }}>{acc.emoji}</Text>
+                  <Typography variant="body" style={{ fontSize: 30, opacity: owned ? 1 : 0.35 }}>{acc.emoji}</Typography>
                   {!owned && (
                     <View style={styles.lockBadge}>
                       <Icon name="lock" size={11} color={theme.colors.textSecondary} strokeWidth={2.2} />
@@ -263,15 +268,15 @@ export default function Closet() {
                   )}
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.itemTitle}>{acc.name}</Text>
-                  <Text style={styles.itemSub}>{acc.description}</Text>
+                  <Typography variant="body" style={styles.itemTitle}>{acc.name}</Typography>
+                  <Typography variant="body" style={styles.itemSub}>{acc.description}</Typography>
                   {!owned && (
                     <View style={styles.hintRow}>
-                      <Text style={styles.itemHint}>{acc.unlock.label}</Text>
+                      <Typography variant="body" style={styles.itemHint}>{acc.unlock.label}</Typography>
                       {canUnlock && (
                         <View style={styles.readyBadge}>
                           <Icon name="check" size={9} color={theme.colors.success} strokeWidth={3} />
-                          <Text style={styles.readyText}>pronto</Text>
+                          <Typography variant="body" style={styles.readyText}>pronto</Typography>
                         </View>
                       )}
                     </View>
@@ -305,7 +310,7 @@ export default function Closet() {
             return (
               <View key={sc.id} style={[styles.item, !owned && styles.itemLocked]}>
                 <View style={styles.itemEmoji}>
-                  <Text style={{ fontSize: 30, opacity: owned ? 1 : 0.35 }}>{sc.emoji}</Text>
+                  <Typography variant="body" style={{ fontSize: 30, opacity: owned ? 1 : 0.35 }}>{sc.emoji}</Typography>
                   {!owned && (
                     <View style={styles.lockBadge}>
                       <Icon name="lock" size={11} color={theme.colors.textSecondary} strokeWidth={2.2} />
@@ -313,15 +318,15 @@ export default function Closet() {
                   )}
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.itemTitle}>{sc.name}</Text>
-                  <Text style={styles.itemSub}>{sc.description}</Text>
+                  <Typography variant="body" style={styles.itemTitle}>{sc.name}</Typography>
+                  <Typography variant="body" style={styles.itemSub}>{sc.description}</Typography>
                   {!owned && (
                     <View style={styles.hintRow}>
-                      <Text style={styles.itemHint}>{sc.unlock.label}</Text>
+                      <Typography variant="body" style={styles.itemHint}>{sc.unlock.label}</Typography>
                       {canUnlock && (
                         <View style={styles.readyBadge}>
                           <Icon name="check" size={9} color={theme.colors.success} strokeWidth={3} />
-                          <Text style={styles.readyText}>pronto</Text>
+                          <Typography variant="body" style={styles.readyText}>pronto</Typography>
                         </View>
                       )}
                     </View>
