@@ -11,6 +11,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { withLock } from '@/lib/db/internal';
 import type { Personality } from '@/types';
 
 const KEY = (userId: string, personality: Personality) =>
@@ -55,14 +56,20 @@ export async function rememberReply(
 ): Promise<void> {
   const cleaned = sanitizeReply(reply);
   if (!cleaned) return;
-  try {
-    const existing = await shouldRetryForVariety(userId, personality);
-    // Dedup: se já tem exatamente essa frase, move pro topo em vez de duplicar.
-    const next = [cleaned, ...existing.filter(r => r !== cleaned)].slice(0, MAX_RECENT);
-    await AsyncStorage.setItem(KEY(userId, personality), JSON.stringify(next));
-  } catch {
-    /* cache é melhor-esforço */
-  }
+  // Lock per (userId, personality): duas respostas paralelas faziam
+  // read-modify-write sobreposto → a segunda write clobberava a primeira
+  // e entradas sumiam do cache, voltando a permitir Chat Plus repetitivo.
+  // Mesma estratégia já usada em lib/bond.ts e repositórios sync-local.
+  await withLock(`antirepeat:${userId}:${personality}`, async () => {
+    try {
+      const existing = await shouldRetryForVariety(userId, personality);
+      // Dedup: se já tem exatamente essa frase, move pro topo em vez de duplicar.
+      const next = [cleaned, ...existing.filter(r => r !== cleaned)].slice(0, MAX_RECENT);
+      await AsyncStorage.setItem(KEY(userId, personality), JSON.stringify(next));
+    } catch {
+      /* cache é melhor-esforço */
+    }
+  });
 }
 
 /** Heurística simples: Jaccard 80%+ de palavras longas em comum. */

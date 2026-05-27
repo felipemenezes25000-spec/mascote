@@ -93,13 +93,11 @@ export function BlendPanel({ onApply }: BlendPanelProps) {
           <Typography variant="caption" tone="secondary" style={styles.slotLabel}>
             A
           </Typography>
-          <PressableScale
+          <Chip
+            label={`${presetA.emoji}  ${presetA.label}`}
+            selected
             onPress={() => pickPreset('A')}
-            accessibilityRole="button"
-            accessibilityLabel={t('atelier.blend.a11y_pick_slot', 'A', presetA.label)}
-          >
-            <Chip label={`${presetA.emoji}  ${presetA.label}`} selected />
-          </PressableScale>
+          />
         </View>
 
         <Icon
@@ -113,13 +111,11 @@ export function BlendPanel({ onApply }: BlendPanelProps) {
           <Typography variant="caption" tone="secondary" style={styles.slotLabel}>
             B
           </Typography>
-          <PressableScale
+          <Chip
+            label={`${presetB.emoji}  ${presetB.label}`}
+            selected
             onPress={() => pickPreset('B')}
-            accessibilityRole="button"
-            accessibilityLabel={t('atelier.blend.a11y_pick_slot', 'B', presetB.label)}
-          >
-            <Chip label={`${presetB.emoji}  ${presetB.label}`} selected />
-          </PressableScale>
+          />
         </View>
       </View>
 

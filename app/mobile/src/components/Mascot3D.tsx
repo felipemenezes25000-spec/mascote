@@ -40,7 +40,7 @@ import {
   applyMutationVisualImpact,
 } from '@/lib/dna/mutations';
 import { personalityMorphBias } from '@/lib/dna/personalityMorphBias';
-import type { Genome } from '@/lib/dna/genome';
+import { sanitizeGenome, type Genome } from '@/lib/dna/genome';
 import type { Personality } from '@/types';
 
 interface Props {
@@ -149,8 +149,10 @@ export function Mascot3D({
   // procedural R3F nao ha mesh com shape keys, mas a Creature usa as
   // mesmas chaves pra modular escala de leaves selecionados (Body),
   // mantendo paridade visual entre as 3 trilhas de render.
+  const safeDna = useMemo(() => sanitizeGenome(dna), [dna]);
+
   const morphInfluences = useMemo(() => {
-    const base = morphologyFromGenome(dna as Genome);
+    const base = morphologyFromGenome(safeDna);
     const withCustom = applyCustomization(base, customization ?? null);
     const impact = aggregateVisualImpact(mutationIds);
     const withMut = applyMutationVisualImpact(withCustom, impact);
@@ -180,7 +182,7 @@ export function Mascot3D({
       >
         <SceneLights />
         <Creature
-          dna={dna}
+          dna={safeDna}
           seed={seed}
           look={look}
           reduceMotion={reduceMotion ?? false}

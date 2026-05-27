@@ -173,7 +173,11 @@ export default function NameStep() {
       >
         <View style={styles.container}>
           <View style={styles.mascotWrap}>
-            <Mascot personality={personality} phase="ovo" mood="feliz" size={180} />
+            {/* Visual = "bebe" pra manter continuidade com /onboarding/mascot
+                (recém-chocado). O mascote PERSISTE como 'ovo' (linha ~121)
+                pra não pular a narrativa "Quebrou o casco!" no primeiro XP —
+                ver comentário em finish(). Aqui é só apresentação. */}
+            <Mascot personality={personality} phase="bebe" mood={initialMood ?? 'feliz'} size={180} />
           </View>
           <View style={styles.form}>
             <Typography variant="mono" tone="brand" style={styles.kicker}>{stepLabel('name')}</Typography>

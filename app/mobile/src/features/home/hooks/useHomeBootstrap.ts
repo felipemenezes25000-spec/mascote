@@ -157,7 +157,7 @@ export function useHomeBootstrap({ profile, mascot, tier }: Options) {
       firstMissionPending: !!(settingsRow as { first_mission_pending?: boolean })
         .first_mission_pending,
     });
-  }, [profile?.id, mascot, tier]);
+  }, [profile?.id, mascot?.id, mascot?.last_seen_at, tier]);
 
   useEffect(() => {
     if (!profile) {

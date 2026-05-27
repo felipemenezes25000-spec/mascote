@@ -24,6 +24,7 @@ import {
   glowHex,
   morphologyFromGenome,
   paletteFromGenome,
+  sanitizeGenome,
 } from '@/lib/dna';
 
 export interface BodyProps {
@@ -49,6 +50,7 @@ export function Body({
   const tStart = useRef<number>(performance.now() / 1000);
 
   const geometry = useMemo(() => {
+    const safeDna = sanitizeGenome(dna);
     // v3 (2026-05-22): SphereGeometry 64×48 em vez de IcosahedronGeometry(1, 5).
     // Por quê: icosa subdivide em triângulos com normais distintas por face —
     // mesmo com smooth shading, displacement procedural cria pequenas diferenças
@@ -57,7 +59,7 @@ export function Body({
     // uniforme com vértices densos: 3072 quads pequenos com inclinações suaves.
     const geo = new THREE.SphereGeometry(1, 64, 48);
     const pos = geo.attributes.position;
-    const seed = (dna.empathy + dna.chaos * 100 + dna.creativity * 17) * 1000;
+    const seed = (safeDna.empathy + safeDna.chaos * 100 + safeDna.creativity * 17) * 1000;
 
     // CHIBI proportions — substitui blob ovoide único (alien) por silhueta
     // tipo Kirby/Pokemon/Tamagotchi com cabeça grande + cintura + corpo menor.

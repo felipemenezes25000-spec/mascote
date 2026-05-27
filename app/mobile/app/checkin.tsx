@@ -60,7 +60,13 @@ export default function CheckIn() {
           </View>
           <View style={{ gap: theme.spacing.sm }}>
             {q.options.map(o => (
-              <Pressable key={o.label} style={styles.opt} onPress={() => pick(o.value)}>
+              <Pressable
+                key={o.label}
+                style={styles.opt}
+                onPress={() => pick(o.value)}
+                accessibilityRole="button"
+                accessibilityLabel={o.label}
+              >
                 <Text style={styles.optLabel}>{o.label}</Text>
               </Pressable>
             ))}
