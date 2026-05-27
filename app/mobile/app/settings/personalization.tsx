@@ -1,6 +1,6 @@
 import { router, Redirect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
@@ -27,6 +27,7 @@ import type { BondType, CommunicationTone, UserGoal } from '@/game/evolution/Evo
 import type { Personality } from '@/types';
 import type { MascotPronoun, StoredPersonalization } from '@/repositories/personalization';
 
+import { Typography } from '@/components/ui';
 const BONDS: { id: BondType; label: string }[] = [
   { id: 'companheiro', label: 'Companheiro' },
   { id: 'guardiao', label: 'Guardião' },
@@ -214,18 +215,18 @@ export default function PersonalizationSettings() {
           accessibilityRole="button"
           accessibilityLabel="Fechar personalização"
         >
-          <Text style={styles.closeText}>✕</Text>
+          <Typography variant="body" style={styles.closeText}>✕</Typography>
         </Pressable>
-        <Text style={styles.headerTitle} accessibilityRole="header">
+        <Typography variant="body" style={styles.headerTitle} accessibilityRole="header">
           Personalização
-        </Text>
+        </Typography>
         <View style={{ width: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.lead}>
+        <Typography variant="body" style={styles.lead}>
           Estilo Sims: você molda a base dela. Os hábitos continuam guiando a evolução.
-        </Text>
+        </Typography>
 
         <View style={styles.previewWrap}>
           <SceneBackground sceneId={draft.initialSceneId ?? 'room'} height={180}>
@@ -321,7 +322,7 @@ export default function PersonalizationSettings() {
                 onPress={() => void setPalette(p.id)}
                 style={[styles.swatch, { backgroundColor: p.brand }, settings.brand_palette === p.id && styles.swatchOn]}
               >
-                <Text style={styles.swatchText}>{p.name}</Text>
+                <Typography variant="body" style={styles.swatchText}>{p.name}</Typography>
               </PressableScale>
             ))}
           </View>
@@ -341,7 +342,7 @@ export default function PersonalizationSettings() {
         </Section>
 
         <Section title="Personalidade (tom da IA)">
-          <Text style={styles.hint}>{pmeta.label} · {pmeta.tagline}</Text>
+          <Typography variant="body" style={styles.hint}>{pmeta.label} · {pmeta.tagline}</Typography>
           <ChipRow>
             {personalities.map(p => (
               <Chip
@@ -365,7 +366,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   const styles = useStyles(makeStyles);
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Typography variant="body" style={styles.sectionTitle}>{title}</Typography>
       {children}
     </View>
   );
@@ -387,7 +388,7 @@ function Chip({ label, selected, onPress }: { label: string; selected: boolean; 
       accessibilityLabel={label}
       style={[styles.chip, selected && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
     >
-      <Text style={[styles.chipText, selected && { color: theme.tokens.semantic.inkOnBrand }]}>{label}</Text>
+      <Typography variant="body" style={[styles.chipText, selected && { color: theme.tokens.semantic.inkOnBrand }]}>{label}</Typography>
     </Pressable>
   );
 }

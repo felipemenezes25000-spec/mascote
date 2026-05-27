@@ -1,6 +1,6 @@
 import { Redirect, router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
@@ -12,6 +12,7 @@ import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { InAppNotification } from '@/types';
 
+import { Typography } from '@/components/ui';
 const kindIcon: Record<InAppNotification['kind'], IconName> = {
   reminder: 'clock',
   streak_at_risk: 'flame',
@@ -91,7 +92,7 @@ export default function NotificationsScreen() {
           list.length > 0 ? (
             <PressableScale onPress={markAllRead} hitSlop={10} style={styles.markBtn}>
               <Icon name="check" size={12} color={theme.colors.primary} strokeWidth={2.4} />
-              <Text style={styles.markRead}>Tudo</Text>
+              <Typography variant="body" style={styles.markRead}>Tudo</Typography>
             </PressableScale>
           ) : undefined
         }
@@ -102,10 +103,10 @@ export default function NotificationsScreen() {
             <View style={styles.emptyIconWrap}>
               <Icon name="bell" size={32} color={theme.colors.textDim} strokeWidth={1.6} />
             </View>
-            <Text style={styles.emptyText}>Sem avisos por aqui</Text>
-            <Text style={styles.emptySub}>
+            <Typography variant="body" style={styles.emptyText}>Sem avisos por aqui</Typography>
+            <Typography variant="body" style={styles.emptySub}>
               Se você ativar avisos, eu te chamo com carinho para novidades e lembretes leves.
-            </Text>
+            </Typography>
           </View>
         ) : (
           list.map((n, i) => {
@@ -120,9 +121,9 @@ export default function NotificationsScreen() {
                     <Icon name={kindIcon[n.kind]} size={18} color={color} strokeWidth={2.2} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.title}>{n.title}</Text>
-                    <Text style={styles.body}>{n.body}</Text>
-                    <Text style={styles.time}>{formatTime(n.created_at)}</Text>
+                    <Typography variant="body" style={styles.title}>{n.title}</Typography>
+                    <Typography variant="body" style={styles.body}>{n.body}</Typography>
+                    <Typography variant="body" style={styles.time}>{formatTime(n.created_at)}</Typography>
                   </View>
                   {!n.read_at && <View style={styles.dot} />}
                 </PressableScale>

@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { setOnboardingDraft } from '@/lib/onboarding-draft';
@@ -9,6 +9,7 @@ import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { Profile } from '@/types';
 
+import { Typography } from '@/components/ui';
 type AgeBand = NonNullable<Profile['age_band']> | 'under16';
 
 const options: { id: AgeBand; label: string; allowed: boolean }[] = [
@@ -53,11 +54,11 @@ export default function Age() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <View>
-          <Text style={styles.kicker}>{stepLabel('age')}</Text>
-          <Text style={styles.title}>Qual sua faixa de idade?</Text>
-          <Text style={styles.subtitle}>
+          <Typography variant="body" style={styles.kicker}>{stepLabel('age')}</Typography>
+          <Typography variant="body" style={styles.title}>Qual sua faixa de idade?</Typography>
+          <Typography variant="body" style={styles.subtitle}>
             Vou usar isso só pra adaptar o tom. Idade fica no seu dispositivo, não compartilhamos.
-          </Text>
+          </Typography>
         </View>
         <View style={styles.options} accessibilityRole="radiogroup">
           {options.map(o => (
@@ -69,9 +70,9 @@ export default function Age() {
               accessibilityLabel={o.label}
               style={[styles.opt, selected === o.id && styles.optSelected]}
             >
-              <Text style={[styles.optLabel, selected === o.id && styles.optLabelSelected]}>
+              <Typography variant="body" style={[styles.optLabel, selected === o.id && styles.optLabelSelected]}>
                 {o.label}
-              </Text>
+              </Typography>
             </Pressable>
           ))}
         </View>

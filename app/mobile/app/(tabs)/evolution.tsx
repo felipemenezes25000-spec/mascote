@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui';
 /**
  * Aba "Evolução" — terceira tab do handoff.
  *
@@ -13,7 +14,7 @@
 
 import { router, useFocusEffect, Redirect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/Icon';
 import { MascotRenderer } from '@/components/MascotRenderer';
@@ -241,7 +242,7 @@ export default function EvolutionTab() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <StaggeredView index={0}>
           <View style={styles.headerRow}>
-            <Text accessibilityRole="header" style={styles.h1}>Evolução</Text>
+            <Typography variant="body" accessibilityRole="header" style={styles.h1}>Evolução</Typography>
             <PressableScale
               onPress={() => router.push('/profile')}
               style={styles.iconBtn}
@@ -291,10 +292,10 @@ export default function EvolutionTab() {
 
         <StaggeredView index={2}>
           <View style={styles.heroInfo}>
-            <Text style={styles.heroName}>{mascot.name}</Text>
-            <Text style={styles.heroSub}>
+            <Typography variant="body" style={styles.heroName}>{mascot.name}</Typography>
+            <Typography variant="body" style={styles.heroSub}>
               {meta.label} · {meta.mascotName} · nível {mascot.level}
-            </Text>
+            </Typography>
           </View>
         </StaggeredView>
 
@@ -313,27 +314,27 @@ export default function EvolutionTab() {
             <View style={styles.identityCard}>
               <View style={styles.identityHeader}>
                 <Icon name="sparkle" size={14} color={theme.colors.primary} strokeWidth={2.4} />
-                <Text style={styles.identityKicker}>Identidade procedural</Text>
+                <Typography variant="body" style={styles.identityKicker}>Identidade procedural</Typography>
               </View>
               {descriptors.length > 0 && (
-                <Text style={styles.identityLead}>
+                <Typography variant="body" style={styles.identityLead}>
                   {descriptors.join(' · ')}
-                </Text>
+                </Typography>
               )}
               {traits.length > 0 && (
                 <View style={styles.traitsRow}>
                   {traits.slice(0, 4).map((t, i) => (
                     <View key={i} style={styles.traitChip}>
-                      <Text style={styles.traitChipText}>{t}</Text>
+                      <Typography variant="body" style={styles.traitChipText}>{t}</Typography>
                     </View>
                   ))}
                 </View>
               )}
               <View style={styles.identityFooter}>
                 <Icon name="lock" size={11} color={theme.colors.textSecondary} strokeWidth={2.2} />
-                <Text style={styles.identityFooterText}>
+                <Typography variant="body" style={styles.identityFooterText}>
                   {totalMutations} marcos biológicos possíveis — cada um único, desbloqueado pelo seu caminho
-                </Text>
+                </Typography>
               </View>
             </View>
           </StaggeredView>
@@ -348,14 +349,14 @@ export default function EvolutionTab() {
             <View style={styles.identityCard}>
               <View style={styles.identityHeader}>
                 <Icon name="sparkle" size={14} color={theme.colors.primary} strokeWidth={2.4} />
-                <Text style={styles.identityKicker}>Arquétipos dominantes</Text>
+                <Typography variant="body" style={styles.identityKicker}>Arquétipos dominantes</Typography>
               </View>
               <View style={styles.genomeList}>
                 {archetypes.map((a, i) => (
                   <View key={a.id} style={styles.genomeRow}>
-                    <Text style={[styles.genomeLabel, i === 0 && { fontWeight: '700' }]}>
+                    <Typography variant="body" style={[styles.genomeLabel, i === 0 && { fontWeight: '700' }]}>
                       {a.label}
-                    </Text>
+                    </Typography>
                     <View style={styles.genomeBarTrack}>
                       <View
                         style={[
@@ -368,13 +369,13 @@ export default function EvolutionTab() {
                         ]}
                       />
                     </View>
-                    <Text style={styles.genomePct}>{Math.round(a.percent * 100)}%</Text>
+                    <Typography variant="body" style={styles.genomePct}>{Math.round(a.percent * 100)}%</Typography>
                   </View>
                 ))}
               </View>
-              <Text style={styles.identityFooterText}>
+              <Typography variant="body" style={styles.identityFooterText}>
                 {archetypes[0].tagline}
-              </Text>
+              </Typography>
             </View>
           </StaggeredView>
         )}
@@ -384,22 +385,22 @@ export default function EvolutionTab() {
             mais recentes). Empty state acolhedor pra quem nunca teve marco. */}
         <StaggeredView index={5}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Transformações</Text>
+            <Typography variant="body" style={styles.sectionTitle}>Transformações</Typography>
             <PressableScale
               onPress={() => router.push('/mutations')}
               accessibilityRole="button"
               accessibilityLabel="Ver todas as mutações"
             >
-              <Text style={styles.sectionLink}>ver tudo →</Text>
+              <Typography variant="body" style={styles.sectionLink}>ver tudo →</Typography>
             </PressableScale>
           </View>
           {unlockedMutationDetails.length === 0 ? (
             <View style={styles.timelineEmpty}>
               <Icon name="sparkle" size={20} color={theme.colors.primary} strokeWidth={1.8} />
-              <Text style={styles.timelineEmptyText}>
+              <Typography variant="body" style={styles.timelineEmptyText}>
                 Nenhuma transformação ainda. Continue cuidando de você — as mudanças
                 aparecem no próprio ritmo dela.
-              </Text>
+              </Typography>
             </View>
           ) : (
             <View style={styles.timeline}>
@@ -415,15 +416,15 @@ export default function EvolutionTab() {
                     </View>
                     <View style={[styles.timelineCard, { borderColor: color + colorToken.alpha33 }]}>
                       <View style={styles.timelineHeader}>
-                        <Text style={[styles.timelineRarity, { color }]}>
+                        <Typography variant="body" style={[styles.timelineRarity, { color }]}>
                           {rarityLabel(u.mutation.rarity)}
-                        </Text>
-                        <Text style={styles.timelineDate}>
+                        </Typography>
+                        <Typography variant="body" style={styles.timelineDate}>
                           {new Date(u.unlocked_at).toLocaleDateString('pt-BR')}
-                        </Text>
+                        </Typography>
                       </View>
-                      <Text style={styles.timelineName}>{u.mutation.name}</Text>
-                      <Text style={styles.timelineDesc}>{u.mutation.description}</Text>
+                      <Typography variant="body" style={styles.timelineName}>{u.mutation.name}</Typography>
+                      <Typography variant="body" style={styles.timelineDesc}>{u.mutation.description}</Typography>
                     </View>
                   </View>
                 );
@@ -444,15 +445,15 @@ export default function EvolutionTab() {
             <View style={styles.nextCard}>
               <View style={styles.nextHeader}>
                 <Icon name="sparkle" size={14} color={theme.colors.primary} strokeWidth={2.2} />
-                <Text style={styles.nextKicker}>Algo está chegando</Text>
+                <Typography variant="body" style={styles.nextKicker}>Algo está chegando</Typography>
               </View>
-              <Text style={styles.nextHint}>
+              <Typography variant="body" style={styles.nextHint}>
                 Sinto na forma dela uma mudança vindo. Cuide de você no seu ritmo
                 — ela acompanha.
-              </Text>
-              <Text style={styles.nextRarity}>
+              </Typography>
+              <Typography variant="body" style={styles.nextRarity}>
                 · {rarityLabel(nextMutationCandidate.rarity).toLowerCase()} ·
-              </Text>
+              </Typography>
             </View>
             </PremiumFeatureGuard>
           </StaggeredView>
@@ -462,9 +463,9 @@ export default function EvolutionTab() {
         {memorySnippets.length > 0 && (
           <StaggeredView index={7}>
             <View style={styles.identityCard}>
-              <Text style={styles.sectionTitle}>Memórias que {mascot.name} guarda</Text>
+              <Typography variant="body" style={styles.sectionTitle}>Memórias que {mascot.name} guarda</Typography>
               {memorySnippets.map((s, i) => (
-                <Text key={i} style={styles.timelineEmptyText}>· {s}</Text>
+                <Typography variant="body" key={i} style={styles.timelineEmptyText}>· {s}</Typography>
               ))}
             </View>
           </StaggeredView>
@@ -473,25 +474,25 @@ export default function EvolutionTab() {
         {evolutionState && (
           <StaggeredView index={8}>
             <View style={styles.identityCard}>
-              <Text style={styles.sectionTitle}>Personalidade procedural</Text>
-              <Text style={styles.identityLead}>
+              <Typography variant="body" style={styles.sectionTitle}>Personalidade procedural</Typography>
+              <Typography variant="body" style={styles.identityLead}>
                 {evolutionState.microEvolutions.length} microevoluções ·{' '}
                 {evolutionState.phenotype.displayModifiers.activeEnergy ? 'energia ativa' : 'calma presente'}
-              </Text>
+              </Typography>
               <View style={styles.traitsRow}>
                 {evolutionState.phenotype.displayModifiers.calmAura ? (
                   <View style={styles.traitChip}>
-                    <Text style={styles.traitChipText}>calm aura ativa</Text>
+                    <Typography variant="body" style={styles.traitChipText}>calm aura ativa</Typography>
                   </View>
                 ) : null}
                 {evolutionState.phenotype.displayModifiers.zenParticles ? (
                   <View style={styles.traitChip}>
-                    <Text style={styles.traitChipText}>zen particles visíveis</Text>
+                    <Typography variant="body" style={styles.traitChipText}>zen particles visíveis</Typography>
                   </View>
                 ) : null}
                 {evolutionState.phenotype.displayModifiers.activeEnergy ? (
                   <View style={styles.traitChip}>
-                    <Text style={styles.traitChipText}>energia ativa</Text>
+                    <Typography variant="body" style={styles.traitChipText}>energia ativa</Typography>
                   </View>
                 ) : null}
               </View>
@@ -504,7 +505,7 @@ export default function EvolutionTab() {
         {safeDna && (
           <StaggeredView index={9}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Traços do corpo dela</Text>
+              <Typography variant="body" style={styles.sectionTitle}>Traços do corpo dela</Typography>
               <PressableScale
                 onPress={() => {
                   if (!genomeExpanded) {
@@ -523,9 +524,9 @@ export default function EvolutionTab() {
                       : 'Ver detalhes dos genes'
                 }
               >
-                <Text style={styles.sectionLink}>
+                <Typography variant="body" style={styles.sectionLink}>
                   {!genomeExpanded ? 'ver todos' : showGeneDetails ? 'ocultar detalhes' : 'ver detalhes'}
-                </Text>
+                </Typography>
               </PressableScale>
             </View>
             <View style={styles.genomeList}>
@@ -536,7 +537,7 @@ export default function EvolutionTab() {
                 const visible = genomeExpanded ? entries : entries.slice(0, 4);
                 return visible.map(({ key, value }) => (
                   <View key={key} style={styles.genomeRow}>
-                    <Text style={styles.genomeLabel}>{GENE_FRIENDLY[key] ?? key}</Text>
+                    <Typography variant="body" style={styles.genomeLabel}>{GENE_FRIENDLY[key] ?? key}</Typography>
                     <View style={styles.genomeBarTrack}>
                       <View
                         style={[
@@ -550,7 +551,7 @@ export default function EvolutionTab() {
                       />
                     </View>
                     {showGeneDetails ? (
-                      <Text style={styles.genomePct}>{Math.round(value * 100)}%</Text>
+                      <Typography variant="body" style={styles.genomePct}>{Math.round(value * 100)}%</Typography>
                     ) : null}
                   </View>
                 ));
@@ -566,7 +567,7 @@ export default function EvolutionTab() {
                 accessibilityLabel="Ver menos traços"
                 style={styles.collapseWrap}
               >
-                <Text style={styles.sectionLink}>ver menos</Text>
+                <Typography variant="body" style={styles.sectionLink}>ver menos</Typography>
               </PressableScale>
             ) : null}
           </StaggeredView>
@@ -595,7 +596,7 @@ function LinkCard({ icon, label, onPress }: { icon: IconName; label: string; onP
       <View style={styles.linkIconWrap}>
         <Icon name={icon} size={20} color={theme.colors.primary} strokeWidth={2.2} />
       </View>
-      <Text style={styles.linkLabel}>{label}</Text>
+      <Typography variant="body" style={styles.linkLabel}>{label}</Typography>
     </PressableScale>
   );
 }

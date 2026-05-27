@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -11,6 +11,7 @@ import { BrandLogo } from '@/components/BrandLogo';
 import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 
+import { Typography } from '@/components/ui';
 export default function Splash() {
   const theme = useTheme();
   const scale = useSharedValue(0.85);
@@ -44,10 +45,10 @@ export default function Splash() {
     <View style={[styles.wrap, { backgroundColor: theme.colors.bg }]}>
       <Animated.View style={[styles.content, style]}>
         <BrandLogo size={200} />
-        <Text style={[styles.wordmark, { color: theme.colors.primary }]}>mascote</Text>
-        <Text style={[styles.tagline, { color: theme.colors.textSecondary }]}>
+        <Typography variant="body" style={[styles.wordmark, { color: theme.colors.primary }]}>mascote</Typography>
+        <Typography variant="body" style={[styles.tagline, { color: theme.colors.textSecondary }]}>
           Seu companheiro de autocuidado.
-        </Text>
+        </Typography>
       </Animated.View>
     </View>
   );

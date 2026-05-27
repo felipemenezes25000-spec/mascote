@@ -1,4 +1,4 @@
-import { Alert, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
@@ -9,6 +9,7 @@ import type { Theme } from '@/lib/themes';
 
 // Em iPad/dispositivo sem app de telefone, tel: nao abre. Catch silencioso
 // deixava o usuario em crise sem feedback — fail abertamente com fallback.
+import { Typography } from '@/components/ui';
 async function safeOpen(url: string, fallbackTitle: string, fallbackBody: string) {
   try {
     const canOpen = await Linking.canOpenURL(url);
@@ -34,10 +35,10 @@ export default function Help() {
             <View style={styles.bannerIconWrap}>
               <Icon name="heart" size={20} color={theme.colors.primary} strokeWidth={2.2} fill={theme.colors.primary + '30'} />
             </View>
-            <Text style={styles.bannerTitle}>Eu fico contigo agora</Text>
-            <Text style={styles.bannerText}>
+            <Typography variant="body" style={styles.bannerTitle}>Eu fico contigo agora</Typography>
+            <Typography variant="body" style={styles.bannerText}>
               Se o que você tá sentindo é grande, tem gente preparada pra te ajudar. Não precisa passar por isso sozinho(a).
-            </Text>
+            </Typography>
           </View>
         </StaggeredView>
 
@@ -71,7 +72,7 @@ export default function Help() {
               title="SAMU — 192"
               sub="Risco imediato à vida"
               cta="Ligar"
-              onPress={() => Linking.openURL('tel:192').catch(() => {})}
+              onPress={() => safeOpen('tel:192', 'SAMU — 192', 'Disque 192 do seu telefone. Atendimento médico de urgência, 24h.')}
             />
             <ResourceRow
               icon="shield"
@@ -109,10 +110,10 @@ export default function Help() {
 
         <StaggeredView index={4}>
           <Section title="O que o Mascote não é">
-            <Text style={styles.p}>
+            <Typography variant="body" style={styles.p}>
               Esse app é wellness e autocuidado. Ele não substitui terapia, não dá diagnóstico, não prescreve nada.
               Se a IA falar algo que parece conselho clínico, ignora — ela pode errar. Pra essas coisas, profissional.
-            </Text>
+            </Typography>
           </Section>
         </StaggeredView>
 
@@ -138,7 +139,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   const styles = useStyles(makeStyles);
   return (
     <View style={{ gap: theme.spacing.sm, marginTop: theme.spacing.lg }}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Typography variant="body" style={styles.sectionTitle}>{title}</Typography>
       <View style={styles.sectionContent}>{children}</View>
     </View>
   );
@@ -174,12 +175,12 @@ function ResourceRow({
         <Icon name={icon} size={16} color={color} strokeWidth={2.2} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={styles.resourceTitle}>{title}</Text>
-        <Text style={styles.resourceSub}>{sub}</Text>
+        <Typography variant="body" style={styles.resourceTitle}>{title}</Typography>
+        <Typography variant="body" style={styles.resourceSub}>{sub}</Typography>
       </View>
       {cta && onPress && (
         <View style={[styles.ctaBtn, { backgroundColor: color }]}>
-          <Text style={styles.ctaText}>{cta}</Text>
+          <Typography variant="body" style={styles.ctaText}>{cta}</Typography>
           <Icon name="arrow-right" size={11} color="#fff" strokeWidth={2.6} />
         </View>
       )}
@@ -193,7 +194,7 @@ function Bullet({ children }: { children: React.ReactNode }) {
   return (
     <View style={styles.bullet}>
       <Icon name="check" size={12} color={theme.colors.primary} strokeWidth={2.6} />
-      <Text style={[styles.p, styles.pBullet]}>{children}</Text>
+      <Typography variant="body" style={[styles.p, styles.pBullet]}>{children}</Typography>
     </View>
   );
 }

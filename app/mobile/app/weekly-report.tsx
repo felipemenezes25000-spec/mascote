@@ -2,7 +2,6 @@ import { router, Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Typography } from '@/components/ui';
 import { Button } from '@/components/Button';
 import { HabitChart } from '@/components/HabitChart';
 import { Heatmap } from '@/components/Heatmap';
@@ -22,6 +21,7 @@ import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { Checkin, HabitKind, Message } from '@/types';
 
+import { Typography } from '@/components/ui';
 export default function WeeklyReport() {
   const theme = useTheme();
   const styles = useStyles(makeStyles);

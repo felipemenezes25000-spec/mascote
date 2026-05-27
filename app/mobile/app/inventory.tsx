@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Redirect } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/Icon';
 import { EmptyState } from '@/components/EmptyState';
@@ -14,6 +14,7 @@ import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 
+import { Typography } from '@/components/ui';
 export default function Inventory() {
   const theme = useTheme();
   const styles = makeStyles(theme);
@@ -47,7 +48,7 @@ export default function Inventory() {
       <ScreenHeader variant="back" title="Coleção" subtitle={`${totalUnlocked} de ${totalAll} itens`} />
       <ScrollView contentContainerStyle={styles.container}>
         <StaggeredView index={0}>
-          <Text style={styles.h1}>Tudo que você ganhou</Text>
+          <Typography variant="body" style={styles.h1}>Tudo que você ganhou</Typography>
         </StaggeredView>
 
         {totalUnlocked === 0 && (
@@ -107,22 +108,22 @@ function Section({
   return (
     <View style={{ gap: theme.spacing.sm }}>
       <View style={s.sectionHeader}>
-        <Text style={s.sectionTitle}>{title}</Text>
+        <Typography variant="body" style={s.sectionTitle}>{title}</Typography>
         <View style={s.countBadge}>
-          <Text style={s.countText}>{count}/{total}</Text>
+          <Typography variant="body" style={s.countText}>{count}/{total}</Typography>
         </View>
       </View>
       <View style={s.grid}>
         {items.map((it, i) => (
           <View key={i} style={[s.cell, !it.unlocked && s.cellLocked]}>
             {it.unlocked ? (
-              <Text style={s.cellEmoji}>{it.emoji}</Text>
+              <Typography variant="body" style={s.cellEmoji}>{it.emoji}</Typography>
             ) : (
               <Icon name="lock" size={18} color={theme.colors.textDim} strokeWidth={2} />
             )}
-            <Text style={s.cellLabel} numberOfLines={1}>
+            <Typography variant="body" style={s.cellLabel} numberOfLines={1}>
               {it.label}
-            </Text>
+            </Typography>
           </View>
         ))}
       </View>

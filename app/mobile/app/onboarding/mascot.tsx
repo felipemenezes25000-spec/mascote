@@ -1,10 +1,11 @@
+import { Typography } from '@/components/ui';
 /**
  * onboarding/mascot.tsx — DNA reveal + egg hatch + nascimento do mascote.
  */
 
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -110,15 +111,15 @@ export default function MascotBirth() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.container}>
-          <Text style={styles.kicker}>{stepLabel('mascot')}</Text>
-          <Text style={styles.title}>O DNA dele está pronto</Text>
+          <Typography variant="body" style={styles.kicker}>{stepLabel('mascot')}</Typography>
+          <Typography variant="body" style={styles.title}>O DNA dele está pronto</Typography>
           <View style={styles.dnaCard}>
-            <Text style={styles.dnaLabel}>TRAÇO RARO</Text>
-            <Text style={styles.dnaTrait}>{formatRareTrait(preview)}</Text>
-            <Text style={styles.dnaSeed}>Seed #{preview.seed.toString(16).toUpperCase()}</Text>
-            <Text style={styles.dnaArchetype}>Arquétipo · {preview.genotype.archetype}</Text>
+            <Typography variant="body" style={styles.dnaLabel}>TRAÇO RARO</Typography>
+            <Typography variant="body" style={styles.dnaTrait}>{formatRareTrait(preview)}</Typography>
+            <Typography variant="body" style={styles.dnaSeed}>Seed #{preview.seed.toString(16).toUpperCase()}</Typography>
+            <Typography variant="body" style={styles.dnaArchetype}>Arquétipo · {preview.genotype.archetype}</Typography>
           </View>
-          <Text style={styles.hint}>Cada escolha sua deixou marcas únicas. Ninguém terá esse mascote.</Text>
+          <Typography variant="body" style={styles.hint}>Cada escolha sua deixou marcas únicas. Ninguém terá esse mascote.</Typography>
           <Button label="Chocar o ovo" onPress={() => setPhase('hatch')} />
         </View>
       </SafeAreaView>
@@ -128,20 +129,20 @@ export default function MascotBirth() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <Text style={styles.kicker}>{stepLabel('mascot')}</Text>
-        <Text style={styles.title}>
+        <Typography variant="body" style={styles.kicker}>{stepLabel('mascot')}</Typography>
+        <Typography variant="body" style={styles.title}>
           {phase === 'hatch' ? 'Algo está nascendo...' : 'Olha quem chegou!'}
-        </Text>
+        </Typography>
         {phase === 'birth' ? (
-          <Text style={styles.birthHook}>
+          <Typography variant="body" style={styles.birthHook}>
             Esse foi o primeiro momento de vida de vocês dois.
-          </Text>
+          </Typography>
         ) : null}
         <View style={styles.sceneWrap}>
           <SceneBackground sceneId="room" height={260}>
             {phase === 'hatch' && (
               <Animated.View style={[styles.egg, eggStyle]}>
-                <Text style={styles.eggEmoji}>🥚</Text>
+                <Typography variant="body" style={styles.eggEmoji}>🥚</Typography>
               </Animated.View>
             )}
             <Animated.View style={[styles.mascotWrap, phase === 'birth' ? { opacity: 1 } : mascotStyle]}>
@@ -161,8 +162,8 @@ export default function MascotBirth() {
         {phase === 'birth' && (
           <>
             <View style={styles.bubble}>
-              <Text style={styles.bubbleText}>"{preview.firstWords}"</Text>
-              <Text style={styles.bubbleSub}>Traço: {formatRareTrait(preview)}</Text>
+              <Typography variant="body" style={styles.bubbleText}>"{preview.firstWords}"</Typography>
+              <Typography variant="body" style={styles.bubbleSub}>Traço: {formatRareTrait(preview)}</Typography>
             </View>
             <Button
               label="Dar um nome"
@@ -183,7 +184,7 @@ export default function MascotBirth() {
               }
             />
             <Pressable onPress={() => setPhase('reveal')}>
-              <Text style={styles.link}>Ver DNA de novo</Text>
+              <Typography variant="body" style={styles.link}>Ver DNA de novo</Typography>
             </Pressable>
           </>
         )}

@@ -1,6 +1,6 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { ConfettiBurst } from '@/components/ConfettiBurst';
@@ -12,6 +12,7 @@ import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 import type { MascotPhase } from '@/types';
 
+import { Typography } from '@/components/ui';
 const PHASE_LABELS: Record<MascotPhase, string> = {
   ovo: 'Ovo',
   bebe: 'Bebê',
@@ -51,9 +52,9 @@ export default function EvolutionScreen() {
           </SceneBackground>
         </View>
         <View style={{ alignItems: 'center', gap: theme.spacing.sm }}>
-          <Text style={styles.kicker}>EVOLUÇÃO</Text>
-          <Text style={styles.title}>{mascot.name} virou {PHASE_LABELS[mascot.phase]}!</Text>
-          <Text style={styles.subtitle}>{meta.tagline}</Text>
+          <Typography variant="body" style={styles.kicker}>EVOLUÇÃO</Typography>
+          <Typography variant="body" style={styles.title}>{mascot.name} virou {PHASE_LABELS[mascot.phase]}!</Typography>
+          <Typography variant="body" style={styles.subtitle}>{meta.tagline}</Typography>
         </View>
         <Button label="Continuar" onPress={() => router.replace('/(tabs)')} />
       </View>

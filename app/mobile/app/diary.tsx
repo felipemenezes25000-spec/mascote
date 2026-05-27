@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui';
 /**
  * app/diary.tsx — Diário com 2 abas: "Do mascote" e "Suas memórias".
  *
@@ -13,7 +14,7 @@
  */
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/Icon';
 import { dateLocal, daysBetween, todayLocal } from '@/lib/db';
@@ -84,7 +85,16 @@ export default function DiaryScreen() {
       const sorted = [...all].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
-      setMemories(sorted);
+      // Defensive view-side dedup por summary: legacy data pre-idempotency-window
+      // (commit c66fbc8) pode ter memórias duplicadas no AsyncStorage. Mantém a
+      // mais recente (sorted DESC garante isso). Espelha o padrão de memories.tsx.
+      const seen = new Set<string>();
+      const deduped = sorted.filter(m => {
+        if (seen.has(m.summary)) return false;
+        seen.add(m.summary);
+        return true;
+      });
+      setMemories(deduped);
     })();
     return () => {
       alive = false;
@@ -127,7 +137,7 @@ export default function DiaryScreen() {
           >
             <Icon name="arrow-left" size={20} color={theme.colors.text} strokeWidth={2.4} />
           </Pressable>
-          <Text style={styles.kicker}>Diário</Text>
+          <Typography variant="body" style={styles.kicker}>Diário</Typography>
           <View style={styles.backBtn} />
         </View>
 
@@ -184,7 +194,7 @@ function TabButton({
         color={active ? theme.colors.primary : theme.colors.textSecondary}
         strokeWidth={2.2}
       />
-      <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{label}</Text>
+      <Typography variant="body" style={[styles.tabLabel, active && styles.tabLabelActive]}>{label}</Typography>
     </Pressable>
   );
 }
@@ -200,10 +210,10 @@ function MascotTab({
   return (
     <>
       <View style={styles.intro}>
-        <Text style={styles.introText}>
+        <Typography variant="body" style={styles.introText}>
           Aqui é o {mascotName ?? 'mascote'} falando.{'\n'}
           Não cobra ler. Só queria que você soubesse o que eu sinto.
-        </Text>
+        </Typography>
       </View>
 
       {!entries && (
@@ -214,9 +224,9 @@ function MascotTab({
 
       {entries && entries.length === 0 && (
         <View style={styles.empty}>
-          <Text style={styles.emptyText}>
+          <Typography variant="body" style={styles.emptyText}>
             Ainda não tenho muito pra escrever. Volta amanhã pra fazer um check-in — e a gente começa.
-          </Text>
+          </Typography>
         </View>
       )}
 
@@ -237,10 +247,10 @@ function UserTab({
   return (
     <>
       <View style={styles.intro}>
-        <Text style={styles.introText}>
+        <Typography variant="body" style={styles.introText}>
           O que eu lembro de você.{'\n'}
           Cada conversa, missão e momento que ficou.
-        </Text>
+        </Typography>
       </View>
 
       {!byBucket && (
@@ -251,28 +261,28 @@ function UserTab({
 
       {byBucket && Object.keys(byBucket).length === 0 && (
         <View style={styles.empty}>
-          <Text style={styles.emptyText}>
+          <Typography variant="body" style={styles.emptyText}>
             Ainda sem memórias guardadas. Conte algo no chat — vou começar a guardar pequenos momentos.
-          </Text>
+          </Typography>
         </View>
       )}
 
       {byBucket && Object.entries(byBucket).map(([bucket, items]) => (
         <View key={bucket} style={styles.bucketSection}>
-          <Text style={styles.bucketLabel}>{bucket}</Text>
+          <Typography variant="body" style={styles.bucketLabel}>{bucket}</Typography>
           {items.map(m => (
             <View key={m.id} style={styles.card}>
               <View style={styles.cardHeader}>
                 <View style={[styles.iconBubble, { backgroundColor: theme.colors.primaryTint }]}>
-                  <Text style={styles.memEmoji}>{MEM_KIND_EMOJI[m.kind]}</Text>
+                  <Typography variant="body" style={styles.memEmoji}>{MEM_KIND_EMOJI[m.kind]}</Typography>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.cardKind}>{m.summary}</Text>
-                  <Text style={styles.cardDate}>{formatAge(m.created_at)}</Text>
+                  <Typography variant="body" style={styles.cardKind}>{m.summary}</Typography>
+                  <Typography variant="body" style={styles.cardDate}>{formatAge(m.created_at)}</Typography>
                 </View>
               </View>
               {m.source_snippet ? (
-                <Text style={styles.memSnippet} numberOfLines={2}>“{m.source_snippet}”</Text>
+                <Typography variant="body" style={styles.memSnippet} numberOfLines={2}>“{m.source_snippet}”</Typography>
               ) : null}
             </View>
           ))}
@@ -294,12 +304,12 @@ function DiaryCard({
           <Icon name={iconCfg.name} size={14} color={iconColor} strokeWidth={2.2} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.cardKind}>{KIND_LABEL[entry.kind]}</Text>
-          <Text style={styles.cardDate}>{formatAge(entry.occurred_at)}</Text>
+          <Typography variant="body" style={styles.cardKind}>{KIND_LABEL[entry.kind]}</Typography>
+          <Typography variant="body" style={styles.cardDate}>{formatAge(entry.occurred_at)}</Typography>
         </View>
-        {entry.hint && <Text style={styles.cardHint}>{entry.hint}</Text>}
+        {entry.hint && <Typography variant="body" style={styles.cardHint}>{entry.hint}</Typography>}
       </View>
-      <Text style={styles.cardBody}>{entry.body}</Text>
+      <Typography variant="body" style={styles.cardBody}>{entry.body}</Typography>
     </View>
   );
 }

@@ -1,3 +1,4 @@
+import { ProgressBar, Typography } from '@/components/ui';
 /**
  * HomeStatsBars — barras de Energia + XP em grid 2 colunas.
  * Pequenas, compactas — mascote é hero, stats são suporte.
@@ -7,7 +8,7 @@ import { useTheme, useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import { Card } from '@/components/Card';
 import { Icon } from '@/components/Icon';
-import { Typography, ProgressBar } from '@/components/ui';
+
 import type { Mascot as MascotType } from '@/types';
 
 interface Props {

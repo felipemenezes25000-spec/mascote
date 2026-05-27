@@ -1,6 +1,6 @@
 import { router, Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
@@ -11,6 +11,7 @@ import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 import type { Mission } from '@/types';
 
+import { Typography } from '@/components/ui';
 export default function MissionDetail() {
   const theme = useTheme();
   const styles = makeStyles(theme);
@@ -71,31 +72,31 @@ export default function MissionDetail() {
             accessibilityRole="button"
             accessibilityLabel="Voltar"
           >
-            <Text style={styles.closeText}>←</Text>
+            <Typography variant="body" style={styles.closeText}>←</Typography>
           </Pressable>
-          <Text style={styles.kicker}>MISSÃO DE HOJE</Text>
+          <Typography variant="body" style={styles.kicker}>MISSÃO DE HOJE</Typography>
           <View style={{ width: 36 }} />
         </View>
 
         <View style={{ alignItems: 'center', gap: theme.spacing.sm, paddingVertical: theme.spacing.lg }}>
-          <Text style={styles.emoji}>{meta.emoji}</Text>
-          <Text style={styles.title}>{mission.title}</Text>
+          <Typography variant="body" style={styles.emoji}>{meta.emoji}</Typography>
+          <Typography variant="body" style={styles.title}>{mission.title}</Typography>
           <View style={styles.xpBadge}>
-            <Text style={styles.xpText}>+{mission.xp_reward} XP · +15 🪙</Text>
+            <Typography variant="body" style={styles.xpText}>+{mission.xp_reward} XP · +15 🪙</Typography>
           </View>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.body}>{mission.description}</Text>
+          <Typography variant="body" style={styles.body}>{mission.description}</Typography>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Como contar</Text>
-          <Text style={styles.body}>
+          <Typography variant="body" style={styles.sectionTitle}>Como contar</Typography>
+          <Typography variant="body" style={styles.body}>
             • Faz o que tá na descrição.{'\n'}
             • Quando terminar, toca em "Marcar como feito".{'\n'}
             • Sem prova, sem cobrança. Honra própria.
-          </Text>
+          </Typography>
         </View>
 
         <View style={{ flexGrow: 1 }} />
@@ -107,7 +108,7 @@ export default function MissionDetail() {
             disabled={mission.status === 'completed'}
           />
           <Pressable onPress={() => router.back()}>
-            <Text style={styles.ghost}>Vou tentar depois</Text>
+            <Typography variant="body" style={styles.ghost}>Vou tentar depois</Typography>
           </Pressable>
         </View>
       </ScrollView>

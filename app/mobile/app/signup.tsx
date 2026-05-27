@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
-import { Typography, Input } from '@/components/ui';
+import { Input, Typography } from '@/components/ui';
+
 import { clearOnboardingDraft, setOnboardingDraft } from '@/lib/onboarding-draft';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -23,7 +24,7 @@ export default function Signup() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={styles.container}>
           <Pressable onPress={() => router.back()} hitSlop={10} style={styles.back}>
-            <Text style={styles.backText}>←</Text>
+            <Typography variant="body" style={styles.backText}>←</Typography>
           </Pressable>
           <View style={{ flex: 1, justifyContent: 'center', gap: theme.spacing.lg }}>
             <View style={{ gap: theme.spacing.sm }}>

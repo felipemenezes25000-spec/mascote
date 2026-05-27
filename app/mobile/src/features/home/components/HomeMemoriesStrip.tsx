@@ -1,3 +1,4 @@
+import { MemoryCard, Typography } from '@/components/ui';
 /**
  * HomeMemoriesStrip — strip horizontal de memórias contextuais na Home.
  *
@@ -10,7 +11,7 @@ import { ScrollView, View, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
-import { Typography, MemoryCard } from '@/components/ui';
+
 import { listMemories } from '@/lib/memory';
 import type { MemoryItem } from '@/lib/memory';
 

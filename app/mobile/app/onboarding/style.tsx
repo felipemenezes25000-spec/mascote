@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Icon, type IconName } from '@/components/Icon';
@@ -11,6 +11,7 @@ import { stepLabel } from '@/lib/onboarding-flow';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
+import { Typography } from '@/components/ui';
 const STYLES: { id: StylePreset; label: string; desc: string; icon: IconName }[] = [
   { id: 'soft', label: 'Suave', desc: 'Tons pastéis, presença acolhedora', icon: 'heart' },
   { id: 'vivid', label: 'Vívido', desc: 'Cores vivas, energia radiante', icon: 'zap' },
@@ -28,9 +29,9 @@ export default function StyleStep() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <StaggeredView index={0}>
-          <Text style={styles.kicker}>{stepLabel('style')}</Text>
-          <Text style={styles.title}>Como você imagina seu mascote?</Text>
-          <Text style={styles.subtitle}>Isso define a paleta e a vibe inicial — hábitos ainda moldam a evolução.</Text>
+          <Typography variant="body" style={styles.kicker}>{stepLabel('style')}</Typography>
+          <Typography variant="body" style={styles.title}>Como você imagina seu mascote?</Typography>
+          <Typography variant="body" style={styles.subtitle}>Isso define a paleta e a vibe inicial — hábitos ainda moldam a evolução.</Typography>
         </StaggeredView>
         <ScrollView contentContainerStyle={{ gap: theme.spacing.sm }}>
           {STYLES.map((s, i) => (
@@ -44,8 +45,8 @@ export default function StyleStep() {
                   <Icon name={s.icon} size={18} color={selected === s.id ? '#fff' : theme.colors.primary} strokeWidth={2.2} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.optLabel, selected === s.id && styles.optLabelSelected]}>{s.label}</Text>
-                  <Text style={[styles.optDesc, selected === s.id && styles.optDescSelected]}>{s.desc}</Text>
+                  <Typography variant="body" style={[styles.optLabel, selected === s.id && styles.optLabelSelected]}>{s.label}</Typography>
+                  <Typography variant="body" style={[styles.optDesc, selected === s.id && styles.optDescSelected]}>{s.desc}</Typography>
                 </View>
               </PressableScale>
             </StaggeredView>

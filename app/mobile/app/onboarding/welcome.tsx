@@ -2,7 +2,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -21,6 +21,7 @@ import { useStyles, useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 
+import { Typography } from '@/components/ui';
 export default function Welcome() {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
@@ -185,11 +186,11 @@ export default function Welcome() {
                 );
               }}
             >
-              <Text style={styles.linkText}>Pular descobrimento e escolher direto</Text>
+              <Typography variant="body" style={styles.linkText}>Pular descobrimento e escolher direto</Typography>
             </Pressable>
-            <Text style={styles.disclaimer}>
+            <Typography variant="body" style={styles.disclaimer}>
               Mascote é wellness e autocuidado. Não substitui acompanhamento profissional.
-            </Text>
+            </Typography>
           </Animated.View>
         </View>
       </SafeAreaView>

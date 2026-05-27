@@ -13,7 +13,7 @@
  * **Princípio:** zero quebra. Se algo falha, cai pro 2D sem aviso.
  */
 
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import type {
   MascotCustomization,
@@ -94,26 +94,14 @@ function MascotImpl(props: Props) {
   const dna = dnaOverride ?? mascot?.dna;
   const seed = seedOverride ?? mascot?.dna_seed ?? 0;
   const [boundaryFallback, setBoundaryFallback] = useState(false);
-  const [web3dTimedOut, setWeb3dTimedOut] = useState(false);
 
   const use3D = useMemo(() => {
-    if (boundaryFallback || web3dTimedOut) return false;
+    if (boundaryFallback) return false;
     if (force2D) return false;
     if (force3D) return true;
     if (!dna) return false;
     return detectCapabilities().canRender3D;
-  }, [force2D, force3D, dna, boundaryFallback, web3dTimedOut]);
-
-  // Web: Suspense do Mascot3D pode ficar no spinner indefinidamente. Após 4s → 2D.
-  // Sob vitest (`process.env.NODE_ENV === 'test'`) o timer mantém o test renderer
-  // ocupado e estoura o timeout de 15s; pulamos.
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'test') return;
-    if (Platform.OS !== 'web' || force2D || boundaryFallback || !dna) return;
-    setWeb3dTimedOut(false);
-    const t = setTimeout(() => setWeb3dTimedOut(true), 4000);
-    return () => clearTimeout(t);
-  }, [dna, force2D, boundaryFallback]);
+  }, [force2D, force3D, dna, boundaryFallback]);
 
   const phaseScale = PHASE_SCALE[phase] ?? 1;
   const isLegendary = phase === 'evoluido';

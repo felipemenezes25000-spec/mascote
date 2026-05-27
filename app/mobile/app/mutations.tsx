@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui';
 /**
  * Tela Mutações — catálogo + state lock/unlock.
  *
@@ -8,7 +9,7 @@
 
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
@@ -82,21 +83,21 @@ export default function MutationsScreen() {
             <Icon name="arrow-left" size={22} color={theme.colors.text} strokeWidth={2.2} />
           </PressableScale>
           <View style={{ flex: 1 }}>
-            <Text accessibilityRole="header" style={styles.h1}>Mutações</Text>
-            <Text style={styles.subtitle}>
+            <Typography variant="body" accessibilityRole="header" style={styles.h1}>Mutações</Typography>
+            <Typography variant="body" style={styles.subtitle}>
               {totalUnlocked} de {totalAvailable} desbloqueadas
-            </Text>
+            </Typography>
           </View>
         </View>
 
         {totalUnlocked === 0 && (
           <View style={styles.empty}>
             <Icon name="sparkle" size={36} color={theme.colors.primary} strokeWidth={1.6} />
-            <Text style={styles.emptyTitle}>Ainda nada gravado no corpo dela.</Text>
-            <Text style={styles.emptyBody}>
+            <Typography variant="body" style={styles.emptyTitle}>Ainda nada gravado no corpo dela.</Typography>
+            <Typography variant="body" style={styles.emptyBody}>
               Marcos biológicos surgem com o tempo, conforme você cuida de você
               e ela acompanha. Sem corrida — cada criatura tem o próprio ritmo.
-            </Text>
+            </Typography>
           </View>
         )}
 
@@ -109,13 +110,13 @@ export default function MutationsScreen() {
                   { backgroundColor: rarityColor(g.rarity, theme) },
                 ]}
               />
-              <Text style={[styles.rarityLabel, { color: rarityColor(g.rarity, theme) }]}>
+              <Typography variant="body" style={[styles.rarityLabel, { color: rarityColor(g.rarity, theme) }]}>
                 {rarityLabel(g.rarity)}
-              </Text>
+              </Typography>
               <View style={{ flex: 1 }} />
-              <Text style={styles.rarityCount}>
+              <Typography variant="body" style={styles.rarityCount}>
                 {g.items.filter(m => unlockedIds.has(m.id)).length}/{g.items.length}
-              </Text>
+              </Typography>
             </View>
             {g.items.map(m => (
               <MutationCard
@@ -155,24 +156,24 @@ function MutationCard({
           color={isUnlocked ? color : theme.colors.textSecondary}
           strokeWidth={2.2}
         />
-        <Text
+        <Typography variant="body"
           style={[
             styles.cardName,
             !isUnlocked && styles.cardNameLocked,
           ]}
         >
           {isUnlocked ? mutation.name : '???'}
-        </Text>
+        </Typography>
       </View>
-      <Text style={[styles.cardDesc, !isUnlocked && styles.cardDescLocked]}>
+      <Typography variant="body" style={[styles.cardDesc, !isUnlocked && styles.cardDescLocked]}>
         {isUnlocked
           ? mutation.description
           : 'Algo ligado ao caminho dela. Continue cuidando de você — vai aparecer quando for hora.'}
-      </Text>
+      </Typography>
       {isUnlocked && unlockedAt && (
-        <Text style={styles.cardDate}>
+        <Typography variant="body" style={styles.cardDate}>
           desbloqueada em {new Date(unlockedAt).toLocaleDateString('pt-BR')}
-        </Text>
+        </Typography>
       )}
     </View>
   );

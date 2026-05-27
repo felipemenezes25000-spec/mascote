@@ -1,3 +1,4 @@
+import { SectionHeader, Typography } from '@/components/ui';
 /**
  * /atelier-settings — preferências do Atelier.
  *
@@ -16,7 +17,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { HideToggleRow } from '@/components/atelier/HideToggleRow';
-import { SectionHeader, Typography } from '@/components/ui';
 import { settings as settingsDb } from '@/lib/db';
 import { useStore } from '@/store';
 import { useStyles } from '@/lib/useTheme';

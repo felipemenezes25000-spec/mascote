@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui';
 /**
  * HomeMissionCard — missão do dia + entrada para mystery box.
  * Empty state quando ainda não há missão.
@@ -7,7 +8,6 @@ import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import { MissionCard } from '@/components/MissionCard';
 import { MysteryBoxCard } from '@/components/MysteryBoxCard';
-import { Typography } from '@/components/ui';
 import type { Mission } from '@/types';
 
 interface Props {

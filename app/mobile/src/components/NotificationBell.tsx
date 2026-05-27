@@ -44,7 +44,11 @@ export function NotificationBell({ profileId, refreshKey }: Props) {
       <Icon name="bell" size={18} color={theme.colors.text} strokeWidth={2} />
       {unread > 0 && (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>{unread > 9 ? '9+' : unread}</Text>
+          {/* Threshold 99+ alinhado com convenção iOS/Twitter/etc. Antes era
+              '9+' (>9), que confundia: bell dizia "9+" mas /notifications
+              mostrava "10 não lidos" — usuário interpretava como inconsistência
+              de contador (auditoria 2026-05-27). 99 é o teto natural. */}
+          <Text style={styles.badgeText}>{unread > 99 ? '99+' : unread}</Text>
         </View>
       )}
     </PressableScale>

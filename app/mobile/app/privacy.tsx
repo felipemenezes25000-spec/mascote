@@ -1,32 +1,33 @@
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
+import { Typography } from '@/components/ui';
 export default function Privacy() {
   const styles = useStyles(makeStyles);
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.headerRow}>
         <Pressable onPress={() => router.back()} hitSlop={10} style={styles.close}>
-          <Text style={styles.closeText}>✕</Text>
+          <Typography variant="body" style={styles.closeText}>✕</Typography>
         </Pressable>
-        <Text style={styles.headerTitle}>Privacidade</Text>
+        <Typography variant="body" style={styles.headerTitle}>Privacidade</Typography>
         <View style={{ width: 36 }} />
       </View>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.h1}>Política de privacidade</Text>
-        <Text style={styles.meta}>Versão local · atualizada em 2026-05-16</Text>
+        <Typography variant="body" style={styles.h1}>Política de privacidade</Typography>
+        <Typography variant="body" style={styles.meta}>Versão local · atualizada em 2026-05-16</Typography>
 
-        <Text style={styles.h2}>O resumo de 30 segundos</Text>
-        <Text style={styles.p}>
+        <Typography variant="body" style={styles.h2}>O resumo de 30 segundos</Typography>
+        <Typography variant="body" style={styles.p}>
           Esse app roda 100% no seu dispositivo. Você é a única pessoa que tem acesso aos seus dados. Não enviamos nada
           pra nenhum servidor — exceto se você optar por conectar uma chave da OpenAI, caso em que suas mensagens
           vão diretamente pra OpenAI (e voltam) sem passar por nós.
-        </Text>
+        </Typography>
 
-        <Text style={styles.h2}>O que coletamos localmente</Text>
+        <Typography variant="body" style={styles.h2}>O que coletamos localmente</Typography>
         <Bullet>Seu nome e o nome do mascote.</Bullet>
         <Bullet>Idade aproximada (faixa), só se você informar.</Bullet>
         <Bullet>Hábitos registrados (água, sono, exercício, etc.) e quantidades.</Bullet>
@@ -35,39 +36,39 @@ export default function Privacy() {
         <Bullet>Conquistas, acessórios e cenários desbloqueados.</Bullet>
         <Bullet>Configurações (tema, idioma, notificações, etc.).</Bullet>
 
-        <Text style={styles.h2}>O que NÃO coletamos</Text>
+        <Typography variant="body" style={styles.h2}>O que NÃO coletamos</Typography>
         <Bullet>Localização, contatos, fotos, microfone, biometria.</Bullet>
         <Bullet>Dados financeiros.</Bullet>
         <Bullet>Informação clínica ou diagnóstica.</Bullet>
 
-        <Text style={styles.h2}>Onde os dados ficam</Text>
-        <Text style={styles.p}>
+        <Typography variant="body" style={styles.h2}>Onde os dados ficam</Typography>
+        <Typography variant="body" style={styles.p}>
           Em armazenamento local do dispositivo (AsyncStorage no celular, localStorage no navegador). Nada sai daí.
           Quando você ativar a chave da OpenAI, as mensagens vão direto da sua máquina pra OpenAI.
-        </Text>
+        </Typography>
 
-        <Text style={styles.h2}>Seus direitos</Text>
+        <Typography variant="body" style={styles.h2}>Seus direitos</Typography>
         <Bullet>Ver seus dados: "Exportar meus dados" nas configurações exibe tudo em JSON.</Bullet>
         <Bullet>Corrigir: edita perfil e nome do mascote em "Configurações".</Bullet>
         <Bullet>Apagar: "Excluir conta" remove tudo localmente, sem volta.</Bullet>
         <Bullet>Revogar consentimentos: toggles em "Configurações".</Bullet>
 
-        <Text style={styles.h2}>Quando virar produto real</Text>
-        <Text style={styles.p}>
+        <Typography variant="body" style={styles.h2}>Quando virar produto real</Typography>
+        <Typography variant="body" style={styles.p}>
           Esse texto vai ser substituído por uma política completa em conformidade com a LGPD: bases legais por dado,
           processadores (OpenAI, RevenueCat, etc.), retenção, transferência internacional, DPO, contato com
           ANPD. Por ora, app é local — então a política curta basta.
-        </Text>
+        </Typography>
 
-        <Text style={styles.h2}>Idade</Text>
-        <Text style={styles.p}>
+        <Typography variant="body" style={styles.h2}>Idade</Typography>
+        <Typography variant="body" style={styles.p}>
           App pensado para 16+. Menores de 16: peço pra você não usar. 16–18: idealmente com consentimento parental.
-        </Text>
+        </Typography>
 
-        <Text style={styles.h2}>Contato</Text>
-        <Text style={styles.p}>
-          Quando o produto for ao ar: <Text style={styles.code}>dpo@meumascote.app</Text>. Por ora, fala com o Felipe.
-        </Text>
+        <Typography variant="body" style={styles.h2}>Contato</Typography>
+        <Typography variant="body" style={styles.p}>
+          Quando o produto for ao ar: <Typography variant="body" style={styles.code}>dpo@meumascote.app</Typography>. Por ora, fala com o Felipe.
+        </Typography>
 
         <View style={{ height: 60 }} />
       </ScrollView>
@@ -79,8 +80,8 @@ function Bullet({ children }: { children: React.ReactNode }) {
   const styles = useStyles(makeStyles);
   return (
     <View style={styles.bullet}>
-      <Text style={styles.bulletDot}>•</Text>
-      <Text style={[styles.p, { flex: 1 }]}>{children}</Text>
+      <Typography variant="body" style={styles.bulletDot}>•</Typography>
+      <Typography variant="body" style={[styles.p, { flex: 1 }]}>{children}</Typography>
     </View>
   );
 }

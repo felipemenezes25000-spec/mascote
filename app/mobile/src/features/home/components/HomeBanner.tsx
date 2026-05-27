@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui';
 /**
  * HomeBanner — exibe UM banner por vez seguindo prioridade:
  *  1. Noite difícil (cuidado imediato)
@@ -11,7 +12,6 @@ import { useTheme, useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import { Icon } from '@/components/Icon';
 import { LimitedEventBanner } from '@/components/LimitedEventBanner';
-import { Typography } from '@/components/ui';
 import { activeLimitedEvent } from '@/lib/events';
 
 interface SeasonalEvent {

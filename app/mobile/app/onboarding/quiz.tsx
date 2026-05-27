@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
@@ -9,6 +9,7 @@ import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { Personality } from '@/types';
 
+import { Typography } from '@/components/ui';
 interface QuizOption {
   label: string;
   weights: Partial<Record<Personality, number>>;
@@ -95,10 +96,10 @@ export default function Quiz() {
             <Mascot personality={winner} phase="ovo" mood="feliz" size={180} />
           </View>
           <View>
-            <Text style={styles.kicker}>Combinou contigo</Text>
-            <Text style={styles.title}>{meta.label}</Text>
-            <Text style={styles.tagline}>{meta.tagline}</Text>
-            <Text style={styles.subtitle}>{meta.description}</Text>
+            <Typography variant="body" style={styles.kicker}>Combinou contigo</Typography>
+            <Typography variant="body" style={styles.title}>{meta.label}</Typography>
+            <Typography variant="body" style={styles.tagline}>{meta.tagline}</Typography>
+            <Typography variant="body" style={styles.subtitle}>{meta.description}</Typography>
           </View>
           <View style={{ gap: theme.spacing.sm }}>
             <Button
@@ -111,7 +112,7 @@ export default function Quiz() {
               }
             />
             <Pressable onPress={() => router.replace('/onboarding/goal')}>
-              <Text style={styles.linkText}>Prefiro o tour completo</Text>
+              <Typography variant="body" style={styles.linkText}>Prefiro o tour completo</Typography>
             </Pressable>
           </View>
         </View>
@@ -124,11 +125,11 @@ export default function Quiz() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <View style={{ gap: theme.spacing.sm }}>
-          <Text style={styles.kicker}>Passo 2 de 4 · pergunta {step + 1}/{quiz.length}</Text>
+          <Typography variant="body" style={styles.kicker}>Passo 2 de 4 · pergunta {step + 1}/{quiz.length}</Typography>
           <View style={styles.progress}>
             <View style={[styles.progressFill, { width: `${((step + 1) / quiz.length) * 100}%` }]} />
           </View>
-          <Text style={styles.title}>{q.question}</Text>
+          <Typography variant="body" style={styles.title}>{q.question}</Typography>
         </View>
         <View style={{ gap: theme.spacing.sm }} accessibilityRole="radiogroup">
           {q.options.map((opt, i) => (
@@ -140,12 +141,12 @@ export default function Quiz() {
               accessibilityLabel={opt.label}
               style={styles.opt}
             >
-              <Text style={styles.optLabel}>{opt.label}</Text>
+              <Typography variant="body" style={styles.optLabel}>{opt.label}</Typography>
             </Pressable>
           ))}
         </View>
         <Pressable onPress={() => router.replace('/onboarding/goal')}>
-          <Text style={styles.linkText}>Pular quiz e seguir o tour</Text>
+          <Typography variant="body" style={styles.linkText}>Pular quiz e seguir o tour</Typography>
         </Pressable>
       </View>
     </SafeAreaView>

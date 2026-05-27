@@ -57,6 +57,7 @@ export default function Closet() {
   const streak = useStore(s => s.streak);
   const wallet = useStore(s => s.wallet);
   const refreshWallet = useStore(s => s.refreshWallet);
+  const enqueueToast = useStore(s => s.enqueueToast);
   const { tier } = useSubscriptionTier();
   const [ownedAccIds, setOwnedAccIds] = useState<Set<string>>(new Set());
   const [equippedId, setEquippedId] = useState<string | null>(null);
@@ -84,13 +85,19 @@ export default function Closet() {
 
   async function equip(id: string) {
     if (!profile) return;
+    const meta = getAccessory(id);
     if (equippedId === id) {
       await inventory.unequip(profile.id, id);
       setEquippedId(null);
       await load();
+      enqueueToast({
+        kind: 'info',
+        emoji: meta?.emoji ?? '👋',
+        title: 'Acessório removido',
+        subtitle: meta?.name ? `${meta.name} guardado no closet.` : 'Guardado no closet.',
+      });
       return;
     }
-    const meta = getAccessory(id);
     const owned = await inventory.listOwned(profile.id);
     const allOwned = owned
       .map(o => {
@@ -101,6 +108,15 @@ export default function Closet() {
     await inventory.equip(profile.id, id, meta ? { current: meta.slot, allOwned } : undefined);
     setEquippedId(id);
     await load();
+    // Toast confirma o equip — auditoria 2026-05-27 reportou que clicar
+    // "Equipar" parecia não mudar nada visualmente (botão muda pra "Tirar",
+    // mas sem reforço visual). Toast resolve a percepção.
+    enqueueToast({
+      kind: 'accessory',
+      emoji: meta?.emoji ?? '✨',
+      title: meta?.name ? `${meta.name} equipado` : 'Equipado',
+      subtitle: 'Tá ficando lindo seu mascote.',
+    });
   }
 
   async function buyAccessory(id: string, price: number) {

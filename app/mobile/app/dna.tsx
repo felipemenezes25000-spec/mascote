@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui';
 /**
  * app/dna.tsx — Tela "DNA do Mascote".
  *
@@ -17,7 +18,7 @@
  */
 import { Stack, router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/Icon';
 import { Mascot } from '@/components/Mascot';
@@ -87,9 +88,9 @@ export default function DnaScreen() {
       <SafeAreaView style={styles.safe}>
         <Stack.Screen options={{ title: 'DNA do Mascote' }} />
         <View style={styles.empty}>
-          <Text style={styles.emptyText}>
+          <Typography variant="body" style={styles.emptyText}>
             Seu mascote ainda não nasceu. Termine o onboarding pra ver o DNA.
-          </Text>
+          </Typography>
         </View>
       </SafeAreaView>
     );
@@ -113,7 +114,7 @@ export default function DnaScreen() {
           >
             <Icon name="arrow-left" size={20} color={theme.colors.text} strokeWidth={2.4} />
           </Pressable>
-          <Text style={styles.kicker}>DNA do Mascote</Text>
+          <Typography variant="body" style={styles.kicker}>DNA do Mascote</Typography>
           <View style={styles.backBtn} />
         </View>
 
@@ -125,16 +126,16 @@ export default function DnaScreen() {
             size={140}
             dnaOverride={genome}
           />
-          <Text style={styles.archetypeName}>{archetype.name}</Text>
-          <Text style={styles.archetypeTag}>{archetype.tag}</Text>
-          <Text style={styles.archetypeTagline}>{archetype.tagline}</Text>
+          <Typography variant="body" style={styles.archetypeName}>{archetype.name}</Typography>
+          <Typography variant="body" style={styles.archetypeTag}>{archetype.tag}</Typography>
+          <Typography variant="body" style={styles.archetypeTagline}>{archetype.tagline}</Typography>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Traços</Text>
-          <Text style={styles.sectionHint}>
+          <Typography variant="body" style={styles.sectionTitle}>Traços</Typography>
+          <Typography variant="body" style={styles.sectionHint}>
             Quanto mais alto, mais forte na personalidade do seu mascote. Hábitos cumpridos só aumentam — nada nunca cai por falta.
-          </Text>
+          </Typography>
           <View style={styles.bars}>
             {sortedGenes.map(meta => {
               const value = genome[meta.key];
@@ -142,13 +143,13 @@ export default function DnaScreen() {
               return (
                 <View key={meta.key} style={styles.barRow}>
                   <View style={styles.barHeader}>
-                    <Text style={styles.barLabel}>{meta.label}</Text>
-                    <Text style={styles.barPct}>{pct}%</Text>
+                    <Typography variant="body" style={styles.barLabel}>{meta.label}</Typography>
+                    <Typography variant="body" style={styles.barPct}>{pct}%</Typography>
                   </View>
                   <View style={styles.barTrack}>
                     <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: barColor(theme, value) }]} />
                   </View>
-                  <Text style={styles.barDesc}>{meta.desc}</Text>
+                  <Typography variant="body" style={styles.barDesc}>{meta.desc}</Typography>
                 </View>
               );
             })}
@@ -156,26 +157,26 @@ export default function DnaScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>O que está moldando isso</Text>
+          <Typography variant="body" style={styles.sectionTitle}>O que está moldando isso</Typography>
           {influences.length === 0 ? (
-            <Text style={styles.sectionHint}>
+            <Typography variant="body" style={styles.sectionHint}>
               Faça check-ins nos próximos dias e isso aqui se preenche com a história do seu mascote.
-            </Text>
+            </Typography>
           ) : (
             <View style={styles.influences}>
               {influences.map(inf => (
                 <View key={inf.habit} style={styles.influenceCard}>
                   <View style={styles.influenceHeader}>
-                    <Text style={styles.influenceHabit}>{HABIT_LABEL[inf.habit]}</Text>
-                    <Text style={styles.influenceCount}>{inf.count}× em 30 dias</Text>
+                    <Typography variant="body" style={styles.influenceHabit}>{HABIT_LABEL[inf.habit]}</Typography>
+                    <Typography variant="body" style={styles.influenceCount}>{inf.count}× em 30 dias</Typography>
                   </View>
-                  <Text style={styles.influenceGenes}>
+                  <Typography variant="body" style={styles.influenceGenes}>
                     Fortalece:{' '}
                     {inf.genes
                       .map(g => GENE_META.find(m => m.key === g)?.label)
                       .filter(Boolean)
                       .join(' · ')}
-                  </Text>
+                  </Typography>
                 </View>
               ))}
             </View>
@@ -183,13 +184,13 @@ export default function DnaScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Para onde tende a evoluir</Text>
-          <Text style={styles.sectionHint}>
-            Seu traço dominante é <Text style={styles.bold}>{dominantGene.label}</Text>. Se você seguir cuidando do que está cuidando, novas mutações ligadas a esse traço podem aparecer.
-          </Text>
-          <Text style={[styles.sectionHint, { marginTop: theme.spacing.sm }]}>
-            Quer ver outra parte florescer? <Text style={styles.bold}>{minorGene.label}</Text> está mais discreta — hábitos que reforçam esse traço vão equilibrar o conjunto.
-          </Text>
+          <Typography variant="body" style={styles.sectionTitle}>Para onde tende a evoluir</Typography>
+          <Typography variant="body" style={styles.sectionHint}>
+            Seu traço dominante é <Typography variant="body" style={styles.bold}>{dominantGene.label}</Typography>. Se você seguir cuidando do que está cuidando, novas mutações ligadas a esse traço podem aparecer.
+          </Typography>
+          <Typography variant="body" style={[styles.sectionHint, { marginTop: theme.spacing.sm }]}>
+            Quer ver outra parte florescer? <Typography variant="body" style={styles.bold}>{minorGene.label}</Typography> está mais discreta — hábitos que reforçam esse traço vão equilibrar o conjunto.
+          </Typography>
         </View>
       </ScrollView>
     </SafeAreaView>

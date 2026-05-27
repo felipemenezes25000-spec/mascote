@@ -1,6 +1,6 @@
 import { router, Redirect } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
@@ -10,6 +10,7 @@ import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 
+import { Typography } from '@/components/ui';
 export default function Cancel() {
   const theme = useTheme();
   const styles = makeStyles(theme);
@@ -69,9 +70,9 @@ export default function Cancel() {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.headerRow}>
           <Pressable onPress={() => router.back()} hitSlop={10} style={styles.close}>
-            <Text style={styles.closeText}>✕</Text>
+            <Typography variant="body" style={styles.closeText}>✕</Typography>
           </Pressable>
-          <Text style={styles.kicker}>PAUSAR / CANCELAR</Text>
+          <Typography variant="body" style={styles.kicker}>PAUSAR / CANCELAR</Typography>
           <View style={{ width: 36 }} />
         </View>
 
@@ -79,30 +80,30 @@ export default function Cancel() {
           <>
             <View style={{ alignItems: 'center', gap: theme.spacing.md }}>
               <Mascot personality={mascot.personality} phase={mascot.phase} mood="triste" size={140} />
-              <Text style={styles.title}>Antes de cancelar...</Text>
-              <Text style={styles.subtitle}>
+              <Typography variant="body" style={styles.title}>Antes de cancelar...</Typography>
+              <Typography variant="body" style={styles.subtitle}>
                 {mascot.name} vai sentir saudade. Mas você decide. Sem manipulação.
-              </Text>
+              </Typography>
             </View>
 
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Que tal pausar por 30 dias?</Text>
-              <Text style={styles.cardBody}>
+              <Typography variant="body" style={styles.cardTitle}>Que tal pausar por 30 dias?</Typography>
+              <Typography variant="body" style={styles.cardBody}>
                 Mantém seus dados, sem cobrança, sem notificações. Quando voltar, tudo onde parou.
-              </Text>
+              </Typography>
               <Button label="Pausar 30 dias" onPress={pause30} />
             </View>
 
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Trocar pro plano grátis</Text>
-              <Text style={styles.cardBody}>
+              <Typography variant="body" style={styles.cardTitle}>Trocar pro plano grátis</Typography>
+              <Typography variant="body" style={styles.cardBody}>
                 Você mantém o mascote e o histórico, com limites de uso.
-              </Text>
+              </Typography>
               <Button variant="secondary" label="Mudar pra Free" onPress={() => void switchToFree()} />
             </View>
 
             <Pressable onPress={() => setStep('confirm')}>
-              <Text style={styles.cancelDestructive}>Quero cancelar mesmo assim</Text>
+              <Typography variant="body" style={styles.cancelDestructive}>Quero cancelar mesmo assim</Typography>
             </Pressable>
           </>
         )}
@@ -110,19 +111,19 @@ export default function Cancel() {
         {step === 'pause' && (
           <View style={{ alignItems: 'center', gap: theme.spacing.lg, paddingVertical: theme.spacing.xl }}>
             <Mascot personality={mascot.personality} phase={mascot.phase} mood="exausto" size={150} />
-            <Text style={styles.title}>{mascot.name} entrou em modo descanso.</Text>
-            <Text style={styles.subtitle}>Volta quando quiser. Tudo aqui esperando.</Text>
+            <Typography variant="body" style={styles.title}>{mascot.name} entrou em modo descanso.</Typography>
+            <Typography variant="body" style={styles.subtitle}>Volta quando quiser. Tudo aqui esperando.</Typography>
             <Button label="OK" onPress={() => router.replace('/(tabs)')} />
           </View>
         )}
 
         {step === 'confirm' && (
           <View style={{ gap: theme.spacing.md, paddingVertical: theme.spacing.md }}>
-            <Text style={styles.title}>Cancelar assinatura</Text>
-            <Text style={styles.subtitle}>
+            <Typography variant="body" style={styles.title}>Cancelar assinatura</Typography>
+            <Typography variant="body" style={styles.subtitle}>
               Sua assinatura será cancelada nas configurações da App Store / Google Play.
               Em produção, esse botão te leva pra lá. Aqui é demo.
-            </Text>
+            </Typography>
             <Button label="Entendi" onPress={() => router.back()} />
           </View>
         )}

@@ -21,7 +21,7 @@ import {
 import { applyCheckinFully, undoLastCheckin } from '@/lib/checkin';
 import type { CheckinOutcome } from '@/lib/checkin';
 import { applyXp } from '@/lib/xp';
-import { copyFor, markShown, shouldTrigger } from '@/lib/paywall-triggers';
+import { copyFor, isInPaywallCooldown, markShown, shouldTrigger } from '@/lib/paywall-triggers';
 import { DAILY_REWARDS } from '@/components/DailyRewardStrip';
 import { createAnimationAction } from '@/lib/animation-triggers';
 import { sanitizeGenome } from '@/lib/dna';
@@ -86,6 +86,10 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
     async (currentMascot: Mascot, currentStreak: Streak) => {
       const profile = opts.profile;
       if (!profile) return;
+      // Cooldown de sessão (fix auditoria 2026-05-27): se já mostramos paywall
+      // nos últimos 30min, segura este. Múltiplos milestones no mesmo tap
+      // (streak_7 + level_5 + checkin_30) não viram chain de upsells.
+      if (isInPaywallCooldown()) return;
       const [allCheckins, boxOpenedCount] = await Promise.all([
         checkinsDb.listAll(profile.id),
         mysteryBox.openedCount(profile.id),
@@ -249,7 +253,21 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
         }
       }
 
-      await maybeShowPaywall(out.mascot, out.streak);
+      // Paywall só se houve PROGRESSO real (XP ganho OU streak milestone OU
+      // phaseChange OU unlock). Tap em hábito já completado hoje (0 XP, sem
+      // unlock) NUNCA dispara paywall — bug reportado na auditoria 2026-05-27.
+      // Combinado com SESSION_COOLDOWN_MS em paywall-triggers, evita interromper
+      // user em positive flow state com upsell.
+      const madeProgress =
+        out.xpGained > 0 ||
+        out.streakMilestone ||
+        out.phaseChanged ||
+        out.leveledUp ||
+        out.newMutations.length > 0 ||
+        out.unlocks.achievements.length > 0;
+      if (madeProgress) {
+        await maybeShowPaywall(out.mascot, out.streak);
+      }
     },
     [opts, haptic, refreshMascot, refreshStreak, refreshWallet, enqueueToast, maybeShowPaywall],
   );

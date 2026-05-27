@@ -1,9 +1,9 @@
+import { Typography } from '@/components/ui';
 /**
  * HomeAwayStrip — micro-resumo do que o mascote fez enquanto o usuário estava fora.
  * Tom tranquilo, sem culpa (living moments da simulação).
  */
 import { View, StyleSheet } from 'react-native';
-import { Typography } from '@/components/ui';
 import { useTheme } from '@/lib/useTheme';
 import type { SimulationEvent } from '@/sim/types';
 

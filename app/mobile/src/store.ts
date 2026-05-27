@@ -16,7 +16,8 @@ import { applyHabitDrift, sanitizeGenome } from '@/lib/dna';
 import { readSystemReduceMotion } from '@/lib/accessibility';
 import { mascots, profiles, runMigrations, settings, streaks, wallet as walletDb, withLock } from '@/lib/db';
 import { logger } from '@/lib/logger';
-import { SECURE_KEYS, secureGet, secureRemove, secureSet } from '@/lib/secureStore';
+import { resolveOpenAiKey } from '@/lib/ai/credentials';
+import { SECURE_KEYS, secureRemove, secureSet } from '@/lib/secureStore';
 import type { UnlockToastData } from '@/components/UnlockToast';
 import type { LifeState, SimulationEvent } from '@/sim/types';
 import { orchestrateLifeSimulation } from '@/sim/orchestrate';
@@ -76,6 +77,11 @@ interface AppState {
   clearLastCheckin: () => void;
 }
 
+// Rate-limit dedup pra enqueueToast em kinds spammy ('info'). Fora do create()
+// pra sobreviver re-renders mas isolado por process (não persiste). Manual
+// pra testes: limpar via internal export se necessário.
+const recentToastShownAt = new Map<string, number>();
+
 export const useStore = create<AppState>((set, get) => ({
   hydrated: false,
   profile: null,
@@ -109,10 +115,8 @@ export const useStore = create<AppState>((set, get) => ({
        defensiva: profiles.get tem try/catch interno e retorna null/[] em erro,
        nunca rejeita. O early-return `if (!profile)` é exercitado em testes. */
     const [openAiKey, profile] = await Promise.all([
-      // Sem .catch, keychain corrompido (raro mas documentado em migrations
-      // de iOS) rejeitava Promise.all inteiro, hydrate abortava antes do
-      // `set({hydrated:true})` -> splash infinito.
-      secureGet(SECURE_KEYS.openAiKey).catch(() => null),
+      // SecureStore primeiro; em dev cai pro EXPO_PUBLIC_OPENAI_API_KEY local.
+      resolveOpenAiKey().catch(() => null),
       profiles.get().catch(() => null),
     ]);
     if (!profile) {
@@ -244,6 +248,19 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   enqueueToast(t) {
+    // Rate limit por (kind, title) — auditoria 2026-05-27 reportou toasts
+    // "AVISO / A energia hoje tá diferente" aparecendo de forma persistente
+    // em quase toda tela. Causa: múltiplos lifecycles emitem toasts info do
+    // mesmo proactiveBubbleLine. Dedup por (kind+title) com janela de 60s.
+    // Achievements/mutations/level passam sem rate (não-spam by design).
+    const RATE_LIMITED_KINDS: ReadonlyArray<UnlockToastData['kind']> = ['info'];
+    if (RATE_LIMITED_KINDS.includes(t.kind)) {
+      const key = `${t.kind}:${t.title}`;
+      const now = Date.now();
+      const lastShownAt = recentToastShownAt.get(key) ?? 0;
+      if (now - lastShownAt < 60_000) return; // skip dentro da janela
+      recentToastShownAt.set(key, now);
+    }
     // Forma funcional evita race quando múltiplos toasts são enfileirados
     // no mesmo tick (ex: processUnlocks disparando vários).
     set(state =>

@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui';
 /**
  * onboarding/identity.tsx — 3 perguntas que selam a identidade inicial do mascote.
  *
@@ -13,7 +14,7 @@
  */
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Icon, type IconName } from '@/components/Icon';
@@ -142,7 +143,7 @@ export default function IdentityOnboarding() {
           <Pressable onPress={back} accessibilityRole="button" accessibilityLabel="Voltar" style={styles.backBtn}>
             <Icon name="arrow-left" size={18} color={theme.colors.textSecondary} strokeWidth={2.4} />
           </Pressable>
-          <Text style={styles.kicker}>{stepLabel('quiz')} · {step + 1} de {totalSteps}</Text>
+          <Typography variant="body" style={styles.kicker}>{stepLabel('quiz')} · {step + 1} de {totalSteps}</Typography>
           <View style={styles.backBtn} />
         </View>
 
@@ -187,8 +188,8 @@ function StepObjetivo({
   return (
     <>
       <StaggeredView index={0}>
-        <Text style={styles.title}>O que tá te trazendo aqui hoje?</Text>
-        <Text style={styles.subtitle}>Pode mudar depois. Vou usar pra começar pelo lugar certo.</Text>
+        <Typography variant="body" style={styles.title}>O que tá te trazendo aqui hoje?</Typography>
+        <Typography variant="body" style={styles.subtitle}>Pode mudar depois. Vou usar pra começar pelo lugar certo.</Typography>
       </StaggeredView>
       <ScrollView contentContainerStyle={{ gap: theme.spacing.sm, paddingBottom: theme.spacing.md }}>
         {OBJETIVOS.map((o, i) => (
@@ -201,7 +202,7 @@ function StepObjetivo({
               <View style={[styles.iconWrap, selected?.id === o.id && styles.iconWrapSelected]}>
                 <Icon name={o.icon} size={18} color={selected?.id === o.id ? '#fff' : theme.colors.primary} strokeWidth={2.2} />
               </View>
-              <Text style={[styles.optLabel, selected?.id === o.id && styles.optLabelSelected]}>{o.label}</Text>
+              <Typography variant="body" style={[styles.optLabel, selected?.id === o.id && styles.optLabelSelected]}>{o.label}</Typography>
               {selected?.id === o.id && <Icon name="check" size={18} color="#fff" strokeWidth={2.8} />}
             </PressableScale>
           </StaggeredView>
@@ -217,8 +218,8 @@ function StepTom({
   return (
     <>
       <StaggeredView index={0}>
-        <Text style={styles.title}>Como você quer que ele fale com você?</Text>
-        <Text style={styles.subtitle}>O jeito de falar muda quando seu mascote evolui — mas começa por aqui.</Text>
+        <Typography variant="body" style={styles.title}>Como você quer que ele fale com você?</Typography>
+        <Typography variant="body" style={styles.subtitle}>O jeito de falar muda quando seu mascote evolui — mas começa por aqui.</Typography>
       </StaggeredView>
       <ScrollView contentContainerStyle={{ gap: theme.spacing.sm, paddingBottom: theme.spacing.md }}>
         {TONS.map((t, i) => (
@@ -229,8 +230,8 @@ function StepTom({
               accessibilityLabel={t.label}
             >
               <View style={{ flex: 1 }}>
-                <Text style={[styles.optLabel, selected?.id === t.id && styles.optLabelSelected]}>{t.label}</Text>
-                <Text style={[styles.optDesc, selected?.id === t.id && styles.optDescSelected]}>{t.desc}</Text>
+                <Typography variant="body" style={[styles.optLabel, selected?.id === t.id && styles.optLabelSelected]}>{t.label}</Typography>
+                <Typography variant="body" style={[styles.optDesc, selected?.id === t.id && styles.optDescSelected]}>{t.desc}</Typography>
               </View>
               {selected?.id === t.id && <Icon name="check" size={18} color="#fff" strokeWidth={2.8} />}
             </PressableScale>
@@ -247,8 +248,8 @@ function StepMascote({
   return (
     <>
       <StaggeredView index={0}>
-        <Text style={styles.title}>Quem vai cuidar com você?</Text>
-        <Text style={styles.subtitle}>Quatro almas, um mascote. Escolhe quem combina com seu momento.</Text>
+        <Typography variant="body" style={styles.title}>Quem vai cuidar com você?</Typography>
+        <Typography variant="body" style={styles.subtitle}>Quatro almas, um mascote. Escolhe quem combina com seu momento.</Typography>
       </StaggeredView>
       <ScrollView contentContainerStyle={{ gap: theme.spacing.sm, paddingBottom: theme.spacing.md }}>
         {MASCOTES.map((m, i) => (
@@ -262,12 +263,12 @@ function StepMascote({
                 <Icon name={m.icon} size={18} color={selected?.id === m.id ? '#fff' : theme.colors.primary} strokeWidth={2.2} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.optLabel, selected?.id === m.id && styles.optLabelSelected]}>
+                <Typography variant="body" style={[styles.optLabel, selected?.id === m.id && styles.optLabelSelected]}>
                   {m.mascotName} · {m.label}
-                </Text>
-                <Text style={[styles.optDesc, selected?.id === m.id && styles.optDescSelected]} numberOfLines={2}>
+                </Typography>
+                <Typography variant="body" style={[styles.optDesc, selected?.id === m.id && styles.optDescSelected]} numberOfLines={2}>
                   "{m.tagline}"
-                </Text>
+                </Typography>
               </View>
               {selected?.id === m.id && <Icon name="check" size={18} color="#fff" strokeWidth={2.8} />}
             </PressableScale>

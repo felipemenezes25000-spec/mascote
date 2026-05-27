@@ -1,10 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
-import { Typography, Input } from '@/components/ui';
+import { Input, Typography } from '@/components/ui';
+
 import { logger } from '@/lib/logger';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -81,7 +82,7 @@ export default function FeedbackScreen() {
             accessibilityRole="button"
             accessibilityLabel="Voltar"
           >
-            <Text style={styles.closeText}>✕</Text>
+            <Typography variant="body" style={styles.closeText}>✕</Typography>
           </Pressable>
           <Typography variant="mono" tone="secondary" style={styles.kicker}>FEEDBACK</Typography>
           <View style={{ width: 36 }} />
@@ -100,7 +101,7 @@ export default function FeedbackScreen() {
               accessibilityLabel={`Nota ${i + 1} de 5`}
               accessibilityState={{ selected: score === i + 1 }}
             >
-              <Text style={styles.npsEmoji}>{emoji}</Text>
+              <Typography variant="body" style={styles.npsEmoji}>{emoji}</Typography>
             </Pressable>
           ))}
         </View>

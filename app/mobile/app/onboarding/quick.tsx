@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { PressableScale } from '@/components/PressableScale';
@@ -12,6 +12,7 @@ import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { Personality } from '@/types';
 
+import { Typography } from '@/components/ui';
 interface MascoteEscolha {
   id: 'bipo' | 'zip' | 'lulu' | 'aro';
   mascotName: string;
@@ -58,8 +59,8 @@ export default function QuickQuestions() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <StaggeredView index={0}>
-          <Text style={styles.kicker}>{stepLabel('quick')}</Text>
-          <Text style={styles.title}>Só mais 3 toques</Text>
+          <Typography variant="body" style={styles.kicker}>{stepLabel('quick')}</Typography>
+          <Typography variant="body" style={styles.title}>Só mais 3 toques</Typography>
         </StaggeredView>
         <ScrollView contentContainerStyle={{ gap: theme.spacing.lg }}>
           <Section title="Seu mascote">
@@ -73,9 +74,9 @@ export default function QuickQuestions() {
             ))}
           </Section>
           {mascote && (
-            <Text style={{ ...theme.text.xs, color: theme.colors.textSecondary, fontStyle: 'italic' }}>
+            <Typography variant="body" style={{ ...theme.text.xs, color: theme.colors.textSecondary, fontStyle: 'italic' }}>
               "{mascote.tagline}"
-            </Text>
+            </Typography>
           )}
           <Section title="Tom de conversa">
             {TONES.map(t => (
@@ -114,7 +115,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   const theme = useTheme();
   return (
     <View style={{ gap: theme.spacing.sm }}>
-      <Text style={{ ...theme.text.sm, color: theme.colors.textSecondary, fontWeight: '700' }}>{title}</Text>
+      <Typography variant="body" style={{ ...theme.text.sm, color: theme.colors.textSecondary, fontWeight: '700' }}>{title}</Typography>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{children}</View>
     </View>
   );
@@ -134,7 +135,7 @@ function Chip({ label, selected, onPress }: { label: string; selected: boolean; 
         borderColor: selected ? theme.colors.primary : theme.colors.border,
       }}
     >
-      <Text style={{ color: selected ? '#fff' : theme.colors.text, fontWeight: '600', fontSize: 13 }}>{label}</Text>
+      <Typography variant="body" style={{ color: selected ? '#fff' : theme.colors.text, fontWeight: '600', fontSize: 13 }}>{label}</Typography>
     </PressableScale>
   );
 }

@@ -148,7 +148,12 @@ export default function CheckInResult() {
         <View style={{ alignItems: 'center', gap: theme.spacing.sm }}>
           <Typography variant="body" style={styles.title}>{meta.mascotName} sorriu.</Typography>
           <Typography variant="body" style={styles.subtitle}>
-            +{persistedXp} XP · +{coinsGained} 🪙 · {goodCount}/{Object.keys(answers).length} marcadores bons hoje
+            {persistedXp > 0
+              ? `+${persistedXp} XP · +${coinsGained} 🪙 · ${goodCount}/${Object.keys(answers).length} marcadores bons hoje`
+              // Quando totalXp=0 é porque user já bateu o cap diário (150 XP)
+              // antes do guided checkin. Copy honesta — fix auditoria 2026-05-27
+              // que viu "+0 XP" e interpretou como bug. Não é bug: é cap.
+              : `+${coinsGained} 🪙 · ${goodCount}/${Object.keys(answers).length} bons · XP do dia no máximo (cuidado em dobro)`}
           </Typography>
         </View>
 

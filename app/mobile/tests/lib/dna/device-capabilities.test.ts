@@ -57,22 +57,20 @@ describe('detectCapabilities', () => {
     expect(c.canRender3D).toBe(false);
   });
 
-  it('web habilita 3D em qualidade alta quando WebGL disponível', async () => {
+  it('web usa 2D estável por padrão (pipeline 3D web ainda imaturo)', async () => {
     mockPlatform('web', 0);
     stubWebGLAvailable(true);
     const { detectCapabilities } = await import('@/lib/deviceCapabilities');
     const c = detectCapabilities();
-    expect(c.canRender3D).toBe(true);
-    expect(c.qualityTier).toBe('high');
+    expect(c.canRender3D).toBe(false);
+    expect(c.reason).toContain('2D');
   });
 
-  it('web SEM WebGL cai pro 2D (headless browsers, devices low-end)', async () => {
+  it('web com override true ainda permite 3D opt-in (QA / force3D)', async () => {
     mockPlatform('web', 0);
-    stubWebGLAvailable(false);
     const { detectCapabilities } = await import('@/lib/deviceCapabilities');
-    const c = detectCapabilities();
-    expect(c.canRender3D).toBe(false);
-    expect(c.reason).toContain('WebGL');
+    const c = detectCapabilities(true);
+    expect(c.canRender3D).toBe(true);
   });
 
   it('iOS 16+ habilita 3D high', async () => {

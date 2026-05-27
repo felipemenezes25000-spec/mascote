@@ -4,7 +4,6 @@ import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
-import { Typography, Input } from '@/components/ui';
 import { getPersonality } from '@/content/personalities';
 import { readSystemReduceMotion } from '@/lib/accessibility';
 import { mascots, profiles, settings as settingsDb, streaks, wallet as walletDb } from '@/lib/db';
@@ -20,6 +19,7 @@ import { useStore } from '@/store';
 import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { MascotMood, Personality } from '@/types';
+import { Input, Typography } from '@/components/ui';
 
 const VALID_MOODS: readonly MascotMood[] = ['triste', 'ok', 'feliz', 'empolgado', 'exausto'];
 function parseMood(raw: unknown): MascotMood | null {

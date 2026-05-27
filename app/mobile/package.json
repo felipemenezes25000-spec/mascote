@@ -31,6 +31,7 @@
     "doctor": "npx expo-doctor",
     "build-icons": "node scripts/build-icons.js",
     "audit:visual": "node scripts/audit-visual.js",
+    "validate:chat-ai": "node scripts/validate-chat-ai.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "quality": "npm run typecheck && npm run lint && npm test",

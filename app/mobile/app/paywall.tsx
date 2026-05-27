@@ -1,10 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
-import { PaywallCard } from '@/components/ui';
 import type { ArchetypeKey } from '@/lib/themes';
 import type { Personality } from '@/types';
 import { getTier } from '@/content/billing';
@@ -21,6 +20,7 @@ import { safeBack } from '@/lib/router-utils';
 import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { BillingTierId } from '@/content/billing';
+import { PaywallCard, Typography } from '@/components/ui';
 
 const PERSONALITY_TO_ARCHETYPE: Record<Personality, ArchetypeKey> = {
   calmo: 'contemplativo',
@@ -87,6 +87,8 @@ export default function Paywall() {
     };
   }, [profile?.id, mascot, streak]);
 
+  const enqueueToast = useStore(s => s.enqueueToast);
+
   async function handleSubscribe(selected: BillingTierId) {
     // Re-entry guard via ref: `setLoading` só repropaga via render, então cliques
     // rápidos (até 1 frame) leem closure stale com loading=false e disparariam 2
@@ -99,6 +101,18 @@ export default function Paywall() {
       if (result.success) {
         const next = await subscriptionService.getCurrentTier(profile.id);
         setTier(next);
+        // Feedback explícito do trial: antes do safeBack(), enfileira toast
+        // confirmando o início do trial. Fix auditoria 2026-05-27 — paywall
+        // fechava silenciosamente, usuário não sabia se entrou no trial.
+        const tierMeta = getTier(selected);
+        enqueueToast({
+          kind: 'info',
+          emoji: '✨',
+          title: tierMeta.trialDays > 0 ? `Trial iniciado!` : 'Plus ativo!',
+          subtitle: tierMeta.trialDays > 0
+            ? `${tierMeta.trialDays} dias grátis. Cancele quando quiser.`
+            : 'Bem-vindo ao Plus.',
+        });
         safeBack();
         return;
       }
@@ -127,12 +141,12 @@ export default function Paywall() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
         <Pressable onPress={() => safeBack()} style={styles.close} hitSlop={10} accessibilityLabel="Fechar">
-          <Text style={styles.closeText}>✕</Text>
+          <Typography variant="body" style={styles.closeText}>✕</Typography>
         </Pressable>
 
         <View style={styles.previewRow}>
           <View style={styles.previewCol}>
-            <Text style={styles.previewLabel}>Agora</Text>
+            <Typography variant="body" style={styles.previewLabel}>Agora</Typography>
             <Mascot
               personality={mascot?.personality ?? 'fofo'}
               phase={mascot?.phase ?? 'bebe'}
@@ -142,9 +156,9 @@ export default function Paywall() {
               reduceMotion
             />
           </View>
-          <Text style={styles.previewArrow}>→</Text>
+          <Typography variant="body" style={styles.previewArrow}>→</Typography>
           <View style={styles.previewCol}>
-            <Text style={styles.previewLabel}>Com Plus</Text>
+            <Typography variant="body" style={styles.previewLabel}>Com Plus</Typography>
             <Mascot
               personality={mascot?.personality ?? 'fofo'}
               phase={mascot?.phase ?? 'adulto'}
@@ -157,8 +171,8 @@ export default function Paywall() {
         </View>
 
         <View style={styles.modeBanner} accessibilityRole="text">
-          <Text style={styles.modeLabel}>{billingEnv.label}</Text>
-          <Text style={styles.modeDetail}>{billingEnv.detail}</Text>
+          <Typography variant="body" style={styles.modeLabel}>{billingEnv.label}</Typography>
+          <Typography variant="body" style={styles.modeDetail}>{billingEnv.detail}</Typography>
         </View>
 
         {/* Disclosure honesto: se o proxy de IA ainda não foi configurado nessa
@@ -166,22 +180,22 @@ export default function Paywall() {
             sem proxy = IA local. Honestidade > conversão suja. */}
         {!isAiProxyConfigured() ? (
           <View style={styles.disclosure} accessibilityRole="text">
-            <Text style={styles.disclosureLabel}>Sobre a IA Plus nesta build</Text>
-            <Text style={styles.disclosureDetail}>
+            <Typography variant="body" style={styles.disclosureLabel}>Sobre a IA Plus nesta build</Typography>
+            <Typography variant="body" style={styles.disclosureDetail}>
               Esta versão usa IA local (sem cloud). A IA cloud com personalidade chega
               na próxima atualização — sem custo extra pra quem já é Plus.
-            </Text>
+            </Typography>
           </View>
         ) : null}
 
-        <Text style={styles.kicker}>MASCOTE PLUS</Text>
-        <Text style={styles.title}>{triggerCopy.title}</Text>
-        <Text style={styles.sub}>{triggerCopy.body}</Text>
+        <Typography variant="body" style={styles.kicker}>MASCOTE PLUS</Typography>
+        <Typography variant="body" style={styles.title}>{triggerCopy.title}</Typography>
+        <Typography variant="body" style={styles.sub}>{triggerCopy.body}</Typography>
         <View style={styles.honestyBox}>
-          <Text style={styles.honestyTitle}>Transparência</Text>
-          <Text style={styles.honestyBody}>
+          <Typography variant="body" style={styles.honestyTitle}>Transparência</Typography>
+          <Typography variant="body" style={styles.honestyBody}>
             Recursos de segurança e crise continuam disponíveis na versão grátis (CVV 188, SAMU 192 e modo noite difícil).
-          </Text>
+          </Typography>
         </View>
 
         {/* PaywallCard emocional alinhado a arquétipo da personalidade —
@@ -199,7 +213,7 @@ export default function Paywall() {
 
         <View style={styles.featureList}>
           {monthly.benefits.map(f => (
-            <Text key={f} style={styles.feature}>✓  {f}</Text>
+            <Typography variant="body" key={f} style={styles.feature}>✓  {f}</Typography>
           ))}
         </View>
 
@@ -211,51 +225,56 @@ export default function Paywall() {
           >
             {annual.badge && (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>{annual.badge}</Text>
+                <Typography variant="body" style={styles.badgeText}>{annual.badge}</Typography>
               </View>
             )}
-            <Text style={styles.planTitle}>Anual</Text>
-            <Text style={styles.planPrice}>R$ {(annual.totalCents / 100).toFixed(0)}/ano</Text>
-            <Text style={styles.planSub}>
+            <Typography variant="body" style={styles.planTitle}>Anual</Typography>
+            <Typography variant="body" style={styles.planPrice}>R$ {(annual.totalCents / 100).toFixed(0)}/ano</Typography>
+            <Typography variant="body" style={styles.planSub}>
               R$ {(annual.monthlyCents / 100).toFixed(2).replace('.', ',')}/mês · {annual.savingsPct}% off
-            </Text>
+            </Typography>
           </Pressable>
           <Pressable
             style={styles.plan}
             onPress={() => void handleSubscribe('plus_monthly')}
             disabled={loading || isPremium || purchaseBlocked}
           >
-            <Text style={styles.planTitle}>Mensal</Text>
-            <Text style={styles.planPrice}>R$ {(monthly.totalCents / 100).toFixed(2).replace('.', ',')}/mês</Text>
-            <Text style={styles.planSub}>Trial {monthly.trialDays} dias grátis</Text>
+            <Typography variant="body" style={styles.planTitle}>Mensal</Typography>
+            <Typography variant="body" style={styles.planPrice}>R$ {(monthly.totalCents / 100).toFixed(2).replace('.', ',')}/mês</Typography>
+            <Typography variant="body" style={styles.planSub}>Trial {monthly.trialDays} dias grátis</Typography>
           </Pressable>
         </View>
 
         {isPremium ? (
-          <Text style={styles.premiumActive}>Você já é Plus ✨</Text>
-        ) : (
+          <Typography variant="body" style={styles.premiumActive}>Você já é Plus ✨</Typography>
+        ) : loading ? (
           <Button
-            label={loading ? 'Processando...' : `Começar ${annual.trialDays} dias grátis`}
-            onPress={() => void handleSubscribe('plus_annual')}
-            disabled={loading || purchaseBlocked}
+            label="Processando..."
+            onPress={() => undefined}
+            disabled
           />
-        )}
+        ) : null}
+        {/* CTA principal é o PaywallCard (linha 189-198) com "Começar X dias
+            grátis". Antes havia um Button idêntico aqui — duas CTAs roxa+laranja
+            lado a lado confundiam (auditoria 2026-05-27). Mantemos só
+            PaywallCard como CTA emocional + os 2 plan cards (Anual/Mensal)
+            como CTA funcional de seleção de plano. */}
         <Pressable
           onPress={() => safeBack()}
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Continuar com versão grátis"
         >
-          <Text style={styles.ghost}>Fico com a versão grátis por enquanto</Text>
+          <Typography variant="body" style={styles.ghost}>Fico com a versão grátis por enquanto</Typography>
         </Pressable>
 
-        <Text style={styles.legal}>
+        <Typography variant="body" style={styles.legal}>
           {billingEnv.mode === 'demo'
             ? 'Modo demo — pagamento simulado localmente. Cancele quando quiser.'
             : billingEnv.mode === 'production_misconfigured'
               ? 'Produção: configure RevenueCat e o SDK nativo antes de cobrar.'
               : 'Produção: variáveis OK; aguardando SDK nativo para cobrança real.'}
-        </Text>
+        </Typography>
       </ScrollView>
     </SafeAreaView>
   );

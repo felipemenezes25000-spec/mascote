@@ -18,28 +18,6 @@ function hasExpoGLNative(): boolean {
   return requireOptionalNativeModule('ExponentGLObjectManager') != null;
 }
 
-/**
- * Checa se o browser tem WebGL real disponível (não só o canvas API).
- * Cacheia o resultado — query do contexto é cara, e capability não muda
- * dentro de uma sessão.
- */
-let webglCache: boolean | null = null;
-function hasWebGL(): boolean {
-  if (webglCache !== null) return webglCache;
-  if (typeof document === 'undefined') {
-    webglCache = false;
-    return false;
-  }
-  try {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
-    webglCache = gl != null;
-  } catch {
-    webglCache = false;
-  }
-  return webglCache;
-}
-
 export interface Capabilities {
   /** true se podemos renderizar Mascot3D com R3F. */
   canRender3D: boolean;
@@ -52,8 +30,7 @@ export interface Capabilities {
 /**
  * Decide capabilities a partir de sinais disponíveis.
  *
- * IMPORTANTE: web SEMPRE pode renderizar 3D (Three.js roda em qualquer
- * navegador moderno). Mobile usa heurística mais conservadora.
+ * Web usa 2D estável por padrão; iOS/Android usam heurística conservadora.
  *
  * @param override Se true/false explícito, retorna esse valor (configurações).
  */
@@ -65,14 +42,11 @@ export function detectCapabilities(override?: boolean): Capabilities {
     return { canRender3D: false, reason: 'user override (off)', qualityTier: 'low' };
   }
 
-  // Web: checa WebGL real. Antes assumíamos disponível, mas QA flagrou que
-  // headless browsers (Playwright, e2e) e alguns devices low-end caem em
-  // canvas vazio sem disparar o Mascot3DBoundary (que só pega throws).
+  // Web: R3F procedural/GLB ainda renderiza mal (flash 3D → timeout 4s → 2D).
+  // Até o pipeline web ficar pronto, 2D DNA-driven é a experiência estável.
+  // override=true (Mascot force3D) ainda permite QA opt-in.
   if (Platform.OS === 'web') {
-    if (hasWebGL()) {
-      return { canRender3D: true, reason: 'web (WebGL OK)', qualityTier: 'high' };
-    }
-    return { canRender3D: false, reason: 'web sem WebGL', qualityTier: 'low' };
+    return { canRender3D: false, reason: 'web (2D estável)', qualityTier: 'low' };
   }
 
   if (!hasExpoGLNative()) {

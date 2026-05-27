@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui';
 /**
  * Mini-jogo respiração 4-7-8 — técnica do Dr. Andrew Weil.
  * 5 ciclos = ~95s. Conta como check-in de breath + XP.
@@ -10,9 +11,10 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -73,8 +75,13 @@ export default function Breathe() {
     return () => {
       mountedRef.current = false;
       cleanup();
+      // Reanimated mantém o worklet rodando no UI thread mesmo após unmount
+      // até a próxima frame. Em sessões longas (5 ciclos × 19s = 95s), se o
+      // user sai no meio o `withTiming` continua animando CPU sem necessidade.
+      // cancelAnimation força o worklet a parar imediatamente.
+      cancelAnimation(scale);
     };
-  }, []);
+  }, [scale]);
 
   function hapticBeat() {
     if (Platform.OS === 'web') return;
@@ -191,27 +198,27 @@ export default function Breathe() {
           <View style={styles.heroIconWrap}>
             <Icon name="wind" size={48} color={theme.colors.primary} strokeWidth={1.6} />
           </View>
-          <Text style={styles.title}>Terminou</Text>
-          <Text style={styles.subtitle}>
+          <Typography variant="body" style={styles.title}>Terminou</Typography>
+          <Typography variant="body" style={styles.subtitle}>
             5 ciclos completos. Sente o ritmo do coração mais devagar?
-          </Text>
+          </Typography>
           {rewardOk ? (
             <View style={styles.rewards}>
               <View style={styles.reward}>
                 <Icon name="zap" size={11} color={theme.colors.primary} strokeWidth={2.4} fill={theme.colors.primary} />
-                <Text style={styles.rewardText}>+25 XP</Text>
+                <Typography variant="body" style={styles.rewardText}>+25 XP</Typography>
               </View>
               <View style={styles.reward}>
                 <Icon name="coins" size={11} color={theme.colors.primaryDeep} strokeWidth={2.4} />
-                <Text style={styles.rewardText}>+15</Text>
+                <Typography variant="body" style={styles.rewardText}>+15</Typography>
               </View>
               <View style={styles.reward}>
                 <Icon name="check" size={11} color={theme.colors.success} strokeWidth={2.6} />
-                <Text style={styles.rewardText}>check-in</Text>
+                <Typography variant="body" style={styles.rewardText}>check-in</Typography>
               </View>
             </View>
           ) : (
-            <Text style={styles.subtitle}>Sessão concluída.</Text>
+            <Typography variant="body" style={styles.subtitle}>Sessão concluída.</Typography>
           )}
           <Button label="Voltar pra Home" onPress={() => router.replace('/(tabs)')} />
         </View>
@@ -231,7 +238,7 @@ export default function Breathe() {
         >
           <Icon name="x" size={16} color={theme.colors.text} strokeWidth={2.2} />
         </PressableScale>
-        <Text style={styles.kicker}>RESPIRAÇÃO 4-7-8</Text>
+        <Typography variant="body" style={styles.kicker}>RESPIRAÇÃO 4-7-8</Typography>
         <View style={{ width: 38 }} />
       </View>
 
@@ -241,35 +248,35 @@ export default function Breathe() {
             <View style={styles.heroIconWrap}>
               <Icon name="wind" size={48} color={theme.colors.primary} strokeWidth={1.6} />
             </View>
-            <Text style={styles.title}>Respiração 4-7-8</Text>
-            <Text style={styles.subtitle}>
+            <Typography variant="body" style={styles.title}>Respiração 4-7-8</Typography>
+            <Typography variant="body" style={styles.subtitle}>
               Inspira 4s pelo nariz, segura 7s, expira 8s pela boca. 5 ciclos. Ajuda a desacelerar o sistema nervoso.
-            </Text>
+            </Typography>
             <Button label="Começar" onPress={start} style={{ marginTop: 24 }} />
             <View style={styles.hintRow}>
               <Icon name="clock" size={11} color={theme.colors.textDim} strokeWidth={2.2} />
-              <Text style={styles.hint}>~95 segundos · +25 XP · +15 moedas</Text>
+              <Typography variant="body" style={styles.hint}>~95 segundos · +25 XP · +15 moedas</Typography>
             </View>
           </>
         ) : (
           <>
             <View style={styles.cycleBadge}>
-              <Text style={styles.cycle}>
+              <Typography variant="body" style={styles.cycle}>
                 CICLO {cycle + 1} / {TOTAL_CYCLES}
-              </Text>
+              </Typography>
             </View>
             <View style={styles.bubbleWrap}>
               <Animated.View style={[styles.aura, auraStyle]} />
               <Animated.View style={[styles.bubble, circleStyle]}>
-                <Text style={styles.phaseLabel}>{PHASES[phase as Exclude<Phase, 'idle' | 'done'>].label}</Text>
-                <Text style={styles.phaseTimer}>{secondsLeft}</Text>
+                <Typography variant="body" style={styles.phaseLabel}>{PHASES[phase as Exclude<Phase, 'idle' | 'done'>].label}</Typography>
+                <Typography variant="body" style={styles.phaseTimer}>{secondsLeft}</Typography>
               </Animated.View>
             </View>
-            <Text style={styles.phaseHint}>
+            <Typography variant="body" style={styles.phaseHint}>
               {PHASES[phase as Exclude<Phase, 'idle' | 'done'>].hint}
-            </Text>
+            </Typography>
             <Pressable onPress={stop} hitSlop={10} style={{ marginTop: 24 }}>
-              <Text style={styles.stopText}>Parar</Text>
+              <Typography variant="body" style={styles.stopText}>Parar</Typography>
             </Pressable>
           </>
         )}

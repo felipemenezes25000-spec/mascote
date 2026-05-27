@@ -1,3 +1,4 @@
+import { QuickActionCard, Typography } from '@/components/ui';
 /**
  * CareActionGrid (HomeQuickActions) — até 5 hábitos visíveis + sheet com o restante.
  * Reduz carga cognitiva na Home; long-press continua abrindo valor custom.
@@ -6,7 +7,7 @@ import { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
-import { Typography, QuickActionCard } from '@/components/ui';
+
 import { BottomSheet } from '@/components/ui/ModalShell';
 import { PressableScale } from '@/components/PressableScale';
 import type { IconName } from '@/components/Icon';

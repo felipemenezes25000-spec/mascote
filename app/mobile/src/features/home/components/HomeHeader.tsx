@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui';
 /**
  * HomeHeader — 2 linhas: saudação + sino; nome + recursos.
  * Em telas estreitas usa saudação compacta para evitar truncamento.
@@ -8,7 +9,6 @@ import type { Theme } from '@/lib/themes';
 import { BrandLogo } from '@/components/BrandLogo';
 import { NotificationBell } from '@/components/NotificationBell';
 import { WalletPills } from '@/components/WalletPills';
-import { Typography } from '@/components/ui';
 import { greetingForCompact } from '@/features/home/helpers';
 import type { Profile, Streak, Wallet } from '@/types';
 

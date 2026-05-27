@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui';
 /**
  * /atelier-looks-history — historico de looks AUTO (weekly snapshots).
  *
@@ -24,7 +25,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MascotRenderer } from '@/components/MascotRenderer';
 import { PressableScale } from '@/components/PressableScale';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Typography } from '@/components/ui';
 import { atelierLooks, customization as customizationDb, type AtelierLook } from '@/lib/db';
 import { t } from '@/lib/i18n';
 import { useStore } from '@/store';

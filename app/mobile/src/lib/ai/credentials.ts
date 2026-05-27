@@ -9,15 +9,30 @@
  * Validação: chave deve começar com `sk-` e ter tamanho minimo plausível
  * (chaves OpenAI hoje têm ~50 chars + prefix). Fail soft para o caller exibir Alert.
  */
+import { getRuntimeConfig } from '@/lib/env/runtime-config';
 import { secureGet, secureSet, secureRemove, SECURE_KEYS } from '@/lib/secureStore';
 
-export async function getApiKey(): Promise<string | null> {
+/** Dev-only: EXPO_PUBLIC_OPENAI_API_KEY no .env local (gitignored). Nunca em prod. */
+export function getDevOpenAiKeyFallback(): string | null {
+  const { isDevelopment } = getRuntimeConfig();
+  if (!isDevelopment) return null;
+  const raw = process.env.EXPO_PUBLIC_OPENAI_API_KEY?.trim();
+  if (!raw || !raw.startsWith('sk-') || raw.length < 20) return null;
+  return raw;
+}
+
+export async function resolveOpenAiKey(): Promise<string | null> {
   try {
-    return await secureGet(SECURE_KEYS.openAiKey);
+    const stored = await secureGet(SECURE_KEYS.openAiKey);
+    if (stored) return stored;
   } catch {
-    // Storage indisponível — comporta-se como "sem chave" e cai pro modo local.
-    return null;
+    // Storage indisponível — tenta fallback de dev abaixo.
   }
+  return getDevOpenAiKeyFallback();
+}
+
+export async function getApiKey(): Promise<string | null> {
+  return resolveOpenAiKey();
 }
 
 export async function setApiKey(apiKey: string): Promise<void> {

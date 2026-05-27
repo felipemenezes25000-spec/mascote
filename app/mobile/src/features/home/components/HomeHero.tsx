@@ -1,3 +1,4 @@
+import { MascotStatusBubble, Typography } from '@/components/ui';
 /**
  * HomeHero — área principal mascote-centrada (Etapa 6).
  *
@@ -22,7 +23,7 @@ import { MascotAmbient } from '@/components/MascotAmbient';
 import { MascotInteractive, type MascotGestureKind } from '@/components/MascotInteractive';
 import { PressableScale } from '@/components/PressableScale';
 import { SceneBackground } from '@/components/SceneBackground';
-import { Typography, MascotStatusBubble } from '@/components/ui';
+
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import { sanitizeGenome } from '@/lib/dna';
 import { dominantArchetype } from '@/game/evolution/archetypeAffinity';

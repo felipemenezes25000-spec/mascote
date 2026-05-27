@@ -78,6 +78,41 @@ describe('AIResponseValidator', () => {
     const r = toAiResponse({ reply: '```code```' }, 'openai');
     expect(r.source).toBe('fallback');
   });
+
+  it('preserva source openai em resposta longa-mas-segura (fix audit 2026-05-27)', () => {
+    // OpenAI às vezes excede 35 palavras / 280 chars em resposta legítima.
+    // Antes: caía pra source='fallback' e UI badge mentia "modo local".
+    // Agora: valid=true (sem flag de segurança), clean=false (warning de tamanho).
+    const longReply = 'Que bom te ouvir hoje, de verdade mesmo. Respira fundo comigo agora, bem devagarinho — ' +
+      'sente o ar entrando e saindo, sem pressa nenhuma. Eu fico aqui contigo até você sentir um pouquinho ' +
+      'mais de leveza, sem cobrança, sem pressa, tá bom mesmo assim? A gente vai juntos no seu ritmo.';
+    expect(longReply.length).toBeGreaterThan(280); // garante que excede ceiling soft
+    const v = validateAiResponse({ reply: longReply });
+    expect(v.valid).toBe(true); // não é falha de segurança
+    expect(v.clean).toBe(false); // mas excede ceiling soft
+    expect(v.reply).toBe(longReply); // texto original preservado
+    expect(v.issues).toContain('soft_too_long_chars');
+  });
+
+  it('toAiResponse mantém source openai em resposta longa (fix audit 2026-05-27)', () => {
+    const longReply = 'Que bom te ouvir hoje, de verdade mesmo. Respira fundo comigo agora, bem devagarinho — ' +
+      'sente o ar entrando e saindo, sem pressa nenhuma. Eu fico aqui contigo até você sentir um pouquinho ' +
+      'mais de leveza, sem cobrança, sem pressa, tá bom mesmo assim? A gente vai juntos no seu ritmo.';
+    const r = toAiResponse({ reply: longReply }, 'openai');
+    expect(r.source).toBe('openai'); // badge "IA conectada" continua honesto
+    expect(r.reply).toBe(longReply);
+  });
+
+  it('hard-trunca resposta absurdamente longa preservando openai source', () => {
+    // Modelo descalibrado entregando 1000+ chars: trunca pra ~600 com ellipsis
+    // em vez de cair pra SAFE_FALLBACK silencioso (que era o bug original).
+    const monster = 'palavra '.repeat(150); // ~1200 chars
+    const v = validateAiResponse({ reply: monster });
+    expect(v.valid).toBe(true);
+    expect(v.reply.length).toBeLessThanOrEqual(600);
+    expect(v.reply.endsWith('…')).toBe(true);
+    expect(v.issues).toContain('hard_truncated');
+  });
 });
 
 describe('PersonalityVoice', () => {

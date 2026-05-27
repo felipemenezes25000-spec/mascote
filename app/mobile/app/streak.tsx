@@ -1,4 +1,4 @@
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -10,6 +10,7 @@ import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 
+import { Typography } from '@/components/ui';
 const FREEZE_COST = 50; // moedas
 
 export default function StreakScreen() {
@@ -20,6 +21,7 @@ export default function StreakScreen() {
   const wallet = useStore(s => s.wallet);
   const refreshStreak = useStore(s => s.refreshStreak);
   const refreshWallet = useStore(s => s.refreshWallet);
+  const enqueueToast = useStore(s => s.enqueueToast);
   const current = streak?.current_streak ?? 0;
   const longest = streak?.longest_streak ?? 0;
   const grace = streak?.grace_days_left ?? 2;
@@ -47,7 +49,16 @@ export default function StreakScreen() {
     }
     await refreshStreak();
     await refreshWallet();
-    Alert.alert('Freeze adicionado', `Agora você tem ${Math.min(5, streak.grace_days_left + 1)} folgas.`);
+    // Toast em vez de Alert: Alert é modal jarring que interrompe; toast
+    // confirma sem quebrar flow. Fix auditoria 2026-05-27 — usuária reportou
+    // "compra sem feedback" provavelmente porque Alert no web é nativo do
+    // browser e fácil de perder na lateral.
+    enqueueToast({
+      kind: 'info',
+      emoji: '🛡️',
+      title: 'Streak Freeze adicionado',
+      subtitle: `Agora você tem ${Math.min(5, streak.grace_days_left + 1)} folga(s) na manga.`,
+    });
   }
 
   return (
@@ -59,8 +70,8 @@ export default function StreakScreen() {
             <View style={styles.flameWrap}>
               <Icon name="flame" size={56} color={theme.colors.error} strokeWidth={1.6} fill={theme.colors.error + '40'} />
             </View>
-            <Text style={styles.bigNumber}>{current}</Text>
-            <Text style={styles.subtitle}>{current === 1 ? 'dia' : 'dias'} seguidos cuidando de você</Text>
+            <Typography variant="body" style={styles.bigNumber}>{current}</Typography>
+            <Typography variant="body" style={styles.subtitle}>{current === 1 ? 'dia' : 'dias'} seguidos cuidando de você</Typography>
           </View>
         </StaggeredView>
 
@@ -68,13 +79,13 @@ export default function StreakScreen() {
           <View style={styles.statRow}>
             <Card variant="elevated" padding="md" style={styles.statCard}>
               <Icon name="trophy" size={14} color={theme.colors.gold} strokeWidth={2.2} />
-              <Text style={styles.statValue}>{longest}</Text>
-              <Text style={styles.statLabel}>recorde</Text>
+              <Typography variant="body" style={styles.statValue}>{longest}</Typography>
+              <Typography variant="body" style={styles.statLabel}>recorde</Typography>
             </Card>
             <Card variant="elevated" padding="md" style={styles.statCard}>
               <Icon name="shield" size={14} color={theme.colors.sky} strokeWidth={2.2} />
-              <Text style={styles.statValue}>{grace}</Text>
-              <Text style={styles.statLabel}>folgas disponíveis</Text>
+              <Typography variant="body" style={styles.statValue}>{grace}</Typography>
+              <Typography variant="body" style={styles.statLabel}>folgas disponíveis</Typography>
             </Card>
           </View>
         </StaggeredView>
@@ -86,16 +97,16 @@ export default function StreakScreen() {
                 <Icon name="shield" size={18} color={theme.colors.sky} strokeWidth={2.2} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.freezeTitle}>Streak Freeze</Text>
-                <Text style={styles.freezeBody}>
+                <Typography variant="body" style={styles.freezeTitle}>Streak Freeze</Typography>
+                <Typography variant="body" style={styles.freezeBody}>
                   Compra uma folga extra (até 5 simultâneas). Custa {FREEZE_COST} moedas e te protege em dia ruim.
-                </Text>
+                </Typography>
               </View>
             </View>
             <View style={styles.freezeRow}>
               <View style={styles.balanceRow}>
                 <Icon name="coins" size={12} color={theme.colors.primaryDeep} strokeWidth={2.4} />
-                <Text style={styles.freezeBalance}>Você tem {wallet?.coins ?? 0}</Text>
+                <Typography variant="body" style={styles.freezeBalance}>Você tem {wallet?.coins ?? 0}</Typography>
               </View>
               <Button
                 label={
@@ -116,14 +127,14 @@ export default function StreakScreen() {
           <Card variant="flat" padding="md" style={styles.infoCard}>
             <View style={styles.infoHeader}>
               <Icon name="info" size={14} color={theme.colors.textSecondary} strokeWidth={2.2} />
-              <Text style={styles.infoTitle}>Como funciona</Text>
+              <Typography variant="body" style={styles.infoTitle}>Como funciona</Typography>
             </View>
-            <Text style={styles.infoBody}>
+            <Typography variant="body" style={styles.infoBody}>
               · Cada check-in conta um dia.{'\n'}
               · Pulou um dia? Você gasta uma folga e a sequência continua.{'\n'}
               · A cada 14 dias seguidos, ganha +1 folga (até 5).{'\n'}
               · Sem culpa: o Mascote descansa, não morre.
-            </Text>
+            </Typography>
           </Card>
         </StaggeredView>
 
@@ -131,14 +142,14 @@ export default function StreakScreen() {
           <Card variant="flat" padding="md" style={styles.infoCard}>
             <View style={styles.infoHeader}>
               <Icon name="target" size={14} color={theme.colors.primary} strokeWidth={2.2} />
-              <Text style={styles.infoTitle}>Próximos marcos</Text>
+              <Typography variant="body" style={styles.infoTitle}>Próximos marcos</Typography>
             </View>
             {[7, 14, 30, 60, 100].filter(m => m > current).slice(0, 3).map(m => (
               <View key={m} style={styles.milestoneRow}>
                 <View style={styles.milestoneBadge}>
-                  <Text style={styles.milestoneN}>{m}d</Text>
+                  <Typography variant="body" style={styles.milestoneN}>{m}d</Typography>
                 </View>
-                <Text style={styles.milestoneText}>{milestoneCopy(m)}</Text>
+                <Typography variant="body" style={styles.milestoneText}>{milestoneCopy(m)}</Typography>
               </View>
             ))}
           </Card>

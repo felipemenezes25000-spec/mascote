@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -20,8 +20,11 @@ import { StaggeredView } from '@/components/StaggeredView';
 import { formatBRL, getTier } from '@/content/billing';
 import { useTheme } from '@/lib/useTheme';
 import { makeShadow } from '@/lib/themes';
+import { useStore } from '@/store';
+import { restorePurchasesService } from '@/services/subscription/RestorePurchasesService';
 import type { Theme } from '@/lib/themes';
 
+import { Typography } from '@/components/ui';
 export default function SubscriptionActive() {
   const theme = useTheme();
   const styles = makeStyles(theme);
@@ -29,6 +32,32 @@ export default function SubscriptionActive() {
   const free = getTier('free');
   const monthly = getTier('plus_monthly');
   const annual = getTier('plus_annual');
+  const profile = useStore(s => s.profile);
+  const enqueueToast = useStore(s => s.enqueueToast);
+  const [restoring, setRestoring] = useState(false);
+
+  async function handleRestore() {
+    if (!profile || restoring) return;
+    setRestoring(true);
+    try {
+      // O service persiste o tier em localSubscriptionRepo internamente.
+      // Aqui só precisamos refletir o resultado via toast/Alert — telas que
+      // dependem do tier o re-leem ao montar (getCurrentTier).
+      const result = await restorePurchasesService.restore(profile.id);
+      if (result.success) {
+        enqueueToast({
+          kind: 'info',
+          emoji: '✨',
+          title: 'Compras restauradas',
+          subtitle: result.message,
+        });
+      } else {
+        Alert.alert('Restaurar compras', result.message);
+      }
+    } finally {
+      setRestoring(false);
+    }
+  }
 
   useEffect(() => {
     badgePulse.value = withRepeat(
@@ -49,10 +78,10 @@ export default function SubscriptionActive() {
       <ScrollView contentContainerStyle={styles.container}>
         <StaggeredView index={0}>
           <View style={styles.card}>
-            <Text style={styles.label}>PLANO ATUAL (DEMO)</Text>
-            <Text style={styles.planName}>{free.name}</Text>
-            <Text style={styles.price}>{formatBRL(free.totalCents)}/mês</Text>
-            <Text style={styles.note}>Nessa versão local, não há cobrança.</Text>
+            <Typography variant="body" style={styles.label}>PLANO ATUAL (DEMO)</Typography>
+            <Typography variant="body" style={styles.planName}>{free.name}</Typography>
+            <Typography variant="body" style={styles.price}>{formatBRL(free.totalCents)}/mês</Typography>
+            <Typography variant="body" style={styles.note}>Nessa versão local, não há cobrança.</Typography>
             {free.benefits.map(b => <Benefit key={b} text={b} />)}
           </View>
         </StaggeredView>
@@ -66,12 +95,12 @@ export default function SubscriptionActive() {
             />
             <Animated.View style={[styles.recommendedBadge, badgeStyle]}>
               <Icon name="crown" size={11} color="#fff" strokeWidth={2.2} fill="#fff" />
-              <Text style={styles.recommendedText}>{annual.badge ?? 'RECOMENDADO'}</Text>
+              <Typography variant="body" style={styles.recommendedText}>{annual.badge ?? 'RECOMENDADO'}</Typography>
             </Animated.View>
-            <Text style={styles.planName}>{annual.name}</Text>
-            <Text style={styles.price}>
+            <Typography variant="body" style={styles.planName}>{annual.name}</Typography>
+            <Typography variant="body" style={styles.price}>
               {formatBRL(annual.monthlyCents)}/mês · {formatBRL(annual.totalCents)}/ano
-            </Text>
+            </Typography>
             {annual.benefits.map(b => <Benefit key={b} text={b} />)}
             <Button label={`Começar trial ${annual.trialDays} dias`} onPress={() => router.push('/paywall')} />
           </View>
@@ -79,15 +108,30 @@ export default function SubscriptionActive() {
 
         <StaggeredView index={2}>
           <View style={styles.card}>
-            <Text style={styles.planName}>{monthly.name} Mensal</Text>
-            <Text style={styles.price}>{formatBRL(monthly.totalCents)}/mês</Text>
-            <Text style={styles.note}>Trial {monthly.trialDays} dias.</Text>
+            <Typography variant="body" style={styles.planName}>{monthly.name} Mensal</Typography>
+            <Typography variant="body" style={styles.price}>{formatBRL(monthly.totalCents)}/mês</Typography>
+            <Typography variant="body" style={styles.note}>Trial {monthly.trialDays} dias.</Typography>
             {monthly.benefits.map(b => <Benefit key={b} text={b} />)}
           </View>
         </StaggeredView>
 
+        {/* Restaurar compras — exigência Apple Store Guideline 3.1.1. Service
+            existe (restorePurchasesService) e cobre demo + production; faltava
+            só o ponto de entrada na UI. Auditoria 2026-05-27. */}
+        <PressableScale
+          onPress={handleRestore}
+          style={styles.restoreLink}
+          disabled={restoring || !profile}
+          accessibilityRole="button"
+          accessibilityLabel="Restaurar compras anteriores"
+        >
+          <Typography variant="body" style={styles.restoreText}>
+            {restoring ? 'Restaurando…' : 'Restaurar compras'}
+          </Typography>
+        </PressableScale>
+
         <PressableScale onPress={() => router.push('/cancel')} style={styles.cancelLink}>
-          <Text style={styles.cancelText}>Pausar ou cancelar</Text>
+          <Typography variant="body" style={styles.cancelText}>Pausar ou cancelar</Typography>
         </PressableScale>
       </ScrollView>
     </SafeAreaView>
@@ -102,7 +146,7 @@ function Benefit({ text }: { text: string }) {
       <View style={styles.benefitCheck}>
         <Icon name="check" size={11} color={theme.colors.success} strokeWidth={3} />
       </View>
-      <Text style={styles.benefit}>{text}</Text>
+      <Typography variant="body" style={styles.benefit}>{text}</Typography>
     </View>
   );
 }
@@ -189,6 +233,12 @@ function makeStyles(theme: Theme) {
       ...theme.text.sm,
       color: theme.colors.text,
       flex: 1,
+    },
+    restoreLink: { paddingVertical: theme.spacing.sm, alignItems: 'center' },
+    restoreText: {
+      ...theme.text.body,
+      color: theme.colors.text,
+      fontWeight: '700',
     },
     cancelLink: { paddingVertical: theme.spacing.md, alignItems: 'center' },
     cancelText: {

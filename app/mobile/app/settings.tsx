@@ -195,6 +195,14 @@ export default function SettingsScreen() {
                   text: 'Apagar',
                   style: 'destructive',
                   onPress: async () => {
+                    // resetAll() limpa o DB local (AsyncStorage). Mas a chave
+                    // OpenAI vive no SecureStore (keychain/keystore), que NÃO
+                    // é tocado por resetAll. Sem clearApiKey aqui, "Excluir
+                    // conta" deixava a chave persistida — usuário criava
+                    // novo perfil e a chave anterior ressurgia em hydrate().
+                    // Gap de LGPD (right-to-erasure): exclusão precisa ser
+                    // total. Auditoria 2026-05-27.
+                    await clearApiKey();
                     await resetAll();
                     resetStore();
                     await hydrate();

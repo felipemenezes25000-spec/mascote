@@ -17,6 +17,7 @@
 
 import { dnaMutations, checkins } from '@/lib/db';
 import { getMutationById } from '@/lib/dna';
+import { displayNameOrYou } from '@/lib/identity/displayName';
 import type { Checkin, Mascot } from '@/types';
 
 export type DiaryEntryKind =
@@ -122,7 +123,7 @@ export async function buildMascotDiary(args: BuildArgs): Promise<DiaryEntry[]> {
 
 function buildBirthEntry(mascot: Mascot, displayName?: string): DiaryEntry {
   const name = mascot.name || 'eu';
-  const user = displayName ? displayName : 'você';
+  const user = displayNameOrYou(displayName);
   return {
     id: 'birth',
     kind: 'birth',
@@ -147,7 +148,7 @@ export function buildMutationBody(
   mascotName: string,
   displayName?: string,
 ): string {
-  const user = displayName ?? 'você';
+  const user = displayNameOrYou(displayName);
   const opener = pickOpener(mutationId);
   // Frase no estilo "{opener} {desc do efeito}. Acho que foi
   // {explicação do user}." — mantém autoria do mascote.
@@ -178,7 +179,7 @@ export function detectReturnAfterAbsence(
     // (00:01 dia N → 23:59 dia N+1) que viravam gap=1 mas sem absenteísmo.
     const gapDays = calendarDayDiff(sorted[i - 1].occurred_on, sorted[i].occurred_on);
     if (gapDays >= ABSENCE_THRESHOLD_DAYS) {
-      const user = displayName ?? 'você';
+      const user = displayNameOrYou(displayName);
       out.push({
         id: `return:${sorted[i].id}`,
         kind: 'return_after_absence',
@@ -223,7 +224,7 @@ export function detectStreakMilestones(
       seenMilestones.add(run);
       const sample = checkinList.find(c => c.occurred_on === d);
       if (sample) {
-        const user = displayName ?? 'você';
+        const user = displayNameOrYou(displayName);
         out.push({
           id: `streak:${run}`,
           kind: 'streak_milestone',

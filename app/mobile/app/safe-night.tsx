@@ -1,3 +1,4 @@
+import { Typography } from '@/components/ui';
 /**
  * Modo Noite Difícil — presença sem gamification.
  *
@@ -12,7 +13,7 @@
  */
 
 import { router } from 'expo-router';
-import { Alert, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/Icon';
 import { Mascot } from '@/components/Mascot';
@@ -74,10 +75,10 @@ export default function SafeNight() {
         </StaggeredView>
 
         <StaggeredView index={1}>
-          <Text style={styles.title}>Eu fico aqui.</Text>
-          <Text style={styles.subtitle}>
+          <Typography variant="body" style={styles.title}>Eu fico aqui.</Typography>
+          <Typography variant="body" style={styles.subtitle}>
             Sem missão, sem cobrança, sem ranking. Só presença.
-          </Text>
+          </Typography>
         </StaggeredView>
 
         <StaggeredView index={2}>
@@ -101,7 +102,7 @@ export default function SafeNight() {
           <View style={styles.crisisBox}>
             <View style={styles.crisisHeader}>
               <Icon name="heart" size={14} color={theme.colors.error} strokeWidth={2.4} fill={theme.colors.error + '40'} />
-              <Text style={styles.crisisKicker}>EM CRISE? FALA COM HUMANO.</Text>
+              <Typography variant="body" style={styles.crisisKicker}>EM CRISE? FALA COM HUMANO.</Typography>
             </View>
             <CrisisLine
               icon="message-circle"
@@ -124,10 +125,10 @@ export default function SafeNight() {
           </View>
         </StaggeredView>
 
-        <Text style={styles.gentle}>
+        <Typography variant="body" style={styles.gentle}>
           Eu sou companhia digital. Não substituo ninguém — mas eu fico contigo
           enquanto você decide o próximo passo.
-        </Text>
+        </Typography>
 
         <View style={{ height: 32 }} />
       </ScrollView>
@@ -154,8 +155,8 @@ function PrimaryAction({
         <Icon name={icon} size={20} color={theme.colors.primary} strokeWidth={2} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={styles.primaryLabel}>{label}</Text>
-        <Text style={styles.primarySub}>{sub}</Text>
+        <Typography variant="body" style={styles.primaryLabel}>{label}</Typography>
+        <Typography variant="body" style={styles.primarySub}>{sub}</Typography>
       </View>
       <Icon name="chevron-right" size={16} color={theme.colors.textDim} strokeWidth={2} />
     </PressableScale>
@@ -186,8 +187,8 @@ function CrisisLine({
         <Icon name={icon} size={16} color={theme.colors.error} strokeWidth={2.2} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={styles.crisisLabel}>{label}</Text>
-        <Text style={styles.crisisSub}>{sub}</Text>
+        <Typography variant="body" style={styles.crisisLabel}>{label}</Typography>
+        <Typography variant="body" style={styles.crisisSub}>{sub}</Typography>
       </View>
     </PressableScale>
   );

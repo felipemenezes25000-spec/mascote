@@ -1,3 +1,4 @@
+import { SectionHeader, Typography } from '@/components/ui';
 /**
  * /atelier — Ateliê do Mascote.
  *
@@ -18,7 +19,6 @@ import { MorphSlider } from '@/components/MorphSlider';
 import { PressableScale } from '@/components/PressableScale';
 import { RangeSlider } from '@/components/RangeSlider';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { SectionHeader, Typography } from '@/components/ui';
 import { AtelierDebugMenu } from '@/components/atelier/AtelierDebugMenu';
 import { AtelierOnboarding, useAtelierOnboarding } from '@/components/atelier/AtelierOnboarding';
 import { AutoSaveIndicator } from '@/components/atelier/AutoSaveIndicator';

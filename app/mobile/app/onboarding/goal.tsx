@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Icon, type IconName } from '@/components/Icon';
@@ -10,6 +10,7 @@ import { stepLabel } from '@/lib/onboarding-flow';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
+import { Typography } from '@/components/ui';
 const GOALS: { id: string; label: string; icon: IconName }[] = [
   { id: 'sono', label: 'Melhorar meu sono', icon: 'moon' },
   { id: 'agua', label: 'Beber mais água', icon: 'droplet' },
@@ -44,10 +45,10 @@ export default function Goal() {
           <View>
             <View style={styles.kickerRow}>
               <Icon name="target" size={12} color={theme.colors.primary} strokeWidth={2.4} />
-              <Text style={styles.kicker}>{stepLabel('goal')}</Text>
+              <Typography variant="body" style={styles.kicker}>{stepLabel('goal')}</Typography>
             </View>
-            <Text style={styles.title}>O que tá te chamando pra cá?</Text>
-            <Text style={styles.subtitle}>Pode mudar depois. Vou usar pra começar com o pé direito.</Text>
+            <Typography variant="body" style={styles.title}>O que tá te chamando pra cá?</Typography>
+            <Typography variant="body" style={styles.subtitle}>Pode mudar depois. Vou usar pra começar com o pé direito.</Typography>
           </View>
         </StaggeredView>
         <ScrollView contentContainerStyle={{ gap: theme.spacing.sm, paddingBottom: theme.spacing.md }}>
@@ -66,9 +67,9 @@ export default function Goal() {
                     strokeWidth={2.2}
                   />
                 </View>
-                <Text style={[styles.optLabel, selectedGoal === g.id && styles.optLabelSelected]}>
+                <Typography variant="body" style={[styles.optLabel, selectedGoal === g.id && styles.optLabelSelected]}>
                   {g.label}
-                </Text>
+                </Typography>
                 {selectedGoal === g.id && (
                   <Icon name="check" size={18} color="#fff" strokeWidth={2.8} />
                 )}
@@ -77,7 +78,7 @@ export default function Goal() {
           ))}
         </ScrollView>
         <View style={styles.moodSection}>
-          <Text style={styles.moodKicker}>E como você tá agora?</Text>
+          <Typography variant="body" style={styles.moodKicker}>E como você tá agora?</Typography>
           <View style={styles.moodRow}>
             {MOODS.map(m => (
               <Pressable
@@ -86,7 +87,7 @@ export default function Goal() {
                 onPress={() => setSelectedMood(m.id)}
                 accessibilityLabel={`Humor ${m.id} de 5`}
               >
-                <Text style={styles.moodEmoji}>{m.emoji}</Text>
+                <Typography variant="body" style={styles.moodEmoji}>{m.emoji}</Typography>
               </Pressable>
             ))}
           </View>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Redirect } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
@@ -14,6 +14,7 @@ import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { AchievementContext } from '@/content/achievements';
 
+import { Typography } from '@/components/ui';
 export default function AchievementsScreen() {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
@@ -66,8 +67,8 @@ export default function AchievementsScreen() {
             <View style={styles.summaryIconWrap}>
               <Icon name="trophy" size={28} color={theme.colors.gold} strokeWidth={1.8} fill={theme.colors.gold + '30'} />
             </View>
-            <Text style={styles.summaryValue}>{totalUnlocked} / {total}</Text>
-            <Text style={styles.summaryLabel}>conquistas desbloqueadas</Text>
+            <Typography variant="body" style={styles.summaryValue}>{totalUnlocked} / {total}</Typography>
+            <Typography variant="body" style={styles.summaryLabel}>conquistas desbloqueadas</Typography>
             <View style={styles.bar}>
               <View style={[styles.barFill, { width: `${progress * 100}%` }]} />
             </View>
@@ -90,14 +91,14 @@ export default function AchievementsScreen() {
                 <View style={[styles.item, !unlocked && styles.itemLocked]}>
                   <View style={[styles.iconCircle, unlocked && styles.iconCircleUnlocked]}>
                     {unlocked ? (
-                      <Text style={styles.emoji}>{a.emoji}</Text>
+                      <Typography variant="body" style={styles.emoji}>{a.emoji}</Typography>
                     ) : (
                       <Icon name="lock" size={18} color={theme.colors.textDim} strokeWidth={2} />
                     )}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.title, !unlocked && styles.titleLocked]}>{a.title}</Text>
-                    <Text style={styles.desc}>{a.description}</Text>
+                    <Typography variant="body" style={[styles.title, !unlocked && styles.titleLocked]}>{a.title}</Typography>
+                    <Typography variant="body" style={styles.desc}>{a.description}</Typography>
                   </View>
                   {unlocked && (
                     <View style={styles.checkBadge}>

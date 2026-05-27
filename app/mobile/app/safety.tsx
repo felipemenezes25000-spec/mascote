@@ -1,4 +1,4 @@
-import { Alert, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
@@ -10,6 +10,7 @@ import type { Theme } from '@/lib/themes';
 // Em iPad/tablet sem app de telefone, tel: nao abre e o `.catch(() => {})`
 // engolia o erro — user em crise tappa "Ligar 188" e nada acontece, sem
 // feedback. Falha aberta com Alert mostrando o numero pra digitar manual.
+import { Typography } from '@/components/ui';
 async function safeOpen(url: string, fallbackTitle: string, fallbackBody: string) {
   try {
     const canOpen = await Linking.canOpenURL(url);
@@ -32,7 +33,7 @@ export default function Safety() {
       <ScreenHeader variant="modal" title="Segurança & limites" subtitle="o que esperar deste app" />
       <ScrollView contentContainerStyle={styles.container}>
         <StaggeredView index={0}>
-          <Text style={styles.title}>O que esperar — e o que não esperar</Text>
+          <Typography variant="body" style={styles.title}>O que esperar — e o que não esperar</Typography>
         </StaggeredView>
 
         <StaggeredView index={1}>
@@ -41,12 +42,12 @@ export default function Safety() {
               <View style={[styles.cardIconWrap, { backgroundColor: theme.colors.primary + '20' }]}>
                 <Icon name="heart" size={16} color={theme.colors.primary} strokeWidth={2.2} />
               </View>
-              <Text style={styles.cardTitle}>É wellness, não terapia.</Text>
+              <Typography variant="body" style={styles.cardTitle}>É wellness, não terapia.</Typography>
             </View>
-            <Text style={styles.cardBody}>
+            <Typography variant="body" style={styles.cardBody}>
               O Mascote é pra autocuidado e bem-estar — companhia leve, lembretes, missões pequenas.
               Não é serviço de saúde mental. Não diagnostica, não prescreve, não trata.
-            </Text>
+            </Typography>
           </View>
         </StaggeredView>
 
@@ -56,7 +57,7 @@ export default function Safety() {
               <View style={[styles.cardIconWrap, { backgroundColor: theme.colors.error + '20' }]}>
                 <Icon name="alert-triangle" size={16} color={theme.colors.error} strokeWidth={2.2} />
               </View>
-              <Text style={styles.cardTitleCrisis}>Em crise emocional</Text>
+              <Typography variant="body" style={styles.cardTitleCrisis}>Em crise emocional</Typography>
             </View>
             <CrisisBtn
               icon="message-circle"
@@ -84,32 +85,32 @@ export default function Safety() {
 
         <StaggeredView index={3}>
           <Card icon="alert-triangle" title="Sinais pra procurar profissional">
-            <Text style={styles.cardBody}>
+            <Typography variant="body" style={styles.cardBody}>
               · Tristeza ou ansiedade intensa há mais de 2 semanas{'\n'}
               · Pensamentos de se machucar ou não querer estar aqui{'\n'}
               · Sono ou alimentação muito desregulada por dias seguidos{'\n'}
               · Sensação de que nada melhora{'\n'}
               · Uso de álcool ou substâncias pra aguentar
-            </Text>
+            </Typography>
           </Card>
         </StaggeredView>
 
         <StaggeredView index={4}>
           <Card icon="info" title="O que a IA não faz">
-            <Text style={styles.cardBody}>
+            <Typography variant="body" style={styles.cardBody}>
               A IA pode errar. Ela é treinada pra não dar conselho clínico, mas pode falhar.
               Se algo soar como conselho médico, ignore — busque profissional.
-            </Text>
+            </Typography>
           </Card>
         </StaggeredView>
 
         <StaggeredView index={5}>
           <Card icon="user" title="Onde encontrar ajuda profissional">
-            <Text style={styles.cardBody}>
+            <Typography variant="body" style={styles.cardBody}>
               · CAPS (Centro de Atenção Psicossocial) — gratuito pelo SUS{'\n'}
               · Clínicas-escola de universidades — gratuito ou baixo custo{'\n'}
               · Convênio ou particular — indicação confiável
-            </Text>
+            </Typography>
           </Card>
         </StaggeredView>
       </ScrollView>
@@ -126,7 +127,7 @@ function Card({ icon, title, children }: { icon: IconName; title: string; childr
         <View style={styles.cardIconWrap}>
           <Icon name={icon} size={16} color={theme.colors.primary} strokeWidth={2.2} />
         </View>
-        <Text style={styles.cardTitle}>{title}</Text>
+        <Typography variant="body" style={styles.cardTitle}>{title}</Typography>
       </View>
       {children}
     </View>
@@ -154,11 +155,11 @@ function CrisisBtn({
         <Icon name={icon} size={16} color={theme.colors.error} strokeWidth={2.2} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={styles.crisisTitle}>{title}</Text>
-        <Text style={styles.crisisBody}>{body}</Text>
+        <Typography variant="body" style={styles.crisisTitle}>{title}</Typography>
+        <Typography variant="body" style={styles.crisisBody}>{body}</Typography>
       </View>
       <View style={styles.crisisCtaBtn}>
-        <Text style={styles.crisisCta}>{cta}</Text>
+        <Typography variant="body" style={styles.crisisCta}>{cta}</Typography>
         <Icon name="arrow-right" size={11} color={theme.colors.error} strokeWidth={2.6} />
       </View>
     </PressableScale>

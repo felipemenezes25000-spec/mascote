@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
@@ -32,6 +32,7 @@ import { makeShadow } from '@/lib/themes';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 
+import { Typography } from '@/components/ui';
 interface Slice {
   id: string;
   label: string;
@@ -196,9 +197,9 @@ export default function Rewards() {
         <StaggeredView index={1}>
           <View style={styles.sectionHeader}>
             <Icon name="sparkles" size={12} color={theme.colors.primary} strokeWidth={2.4} />
-            <Text style={styles.sectionTitle}>Roda da Sorte</Text>
+            <Typography variant="body" style={styles.sectionTitle}>Roda da Sorte</Typography>
           </View>
-          <Text style={styles.note}>1 giro grátis por dia. Sem opção paga.</Text>
+          <Typography variant="body" style={styles.note}>1 giro grátis por dia. Sem opção paga.</Typography>
         </StaggeredView>
 
         <View style={styles.wheelWrap}>
@@ -271,17 +272,17 @@ export default function Rewards() {
         <StaggeredView index={2}>
           <View style={styles.sectionHeader}>
             <Icon name="gift" size={12} color={theme.colors.primary} strokeWidth={2.4} />
-            <Text style={styles.sectionTitle}>Caixa Surpresa</Text>
+            <Typography variant="body" style={styles.sectionTitle}>Caixa Surpresa</Typography>
           </View>
-          <Text style={styles.note}>1 por dia. Drop entre moedas, gemas, XP, acessórios.</Text>
+          <Typography variant="body" style={styles.note}>1 por dia. Drop entre moedas, gemas, XP, acessórios.</Typography>
         </StaggeredView>
         <View style={{ alignItems: 'center', paddingVertical: theme.spacing.md }}>
           <MysteryBoxCard available={boxAvailable} onOpen={openBox} />
         </View>
 
-        <Text style={styles.disclaimer}>
+        <Typography variant="body" style={styles.disclaimer}>
           Wellness gamificado, sem pay-to-win. Nenhum item premium influencia em conteúdo de cuidado.
-        </Text>
+        </Typography>
       </ScrollView>
       <ConfettiBurst visible={confetti} />
     </SafeAreaView>

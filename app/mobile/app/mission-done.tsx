@@ -1,6 +1,6 @@
 import { router, Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { ConfettiBurst } from '@/components/ConfettiBurst';
@@ -15,6 +15,7 @@ import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 
+import { Typography } from '@/components/ui';
 interface Reward {
   xp: number;
   coins: number;
@@ -129,13 +130,13 @@ export default function MissionDone() {
       <View style={styles.container}>
         <View style={{ alignItems: 'center', gap: theme.spacing.md }}>
           <Mascot personality={displayMascot.personality} phase={displayMascot.phase} mood="empolgado" size={180} />
-          <Text style={styles.kicker}>MISSÃO CONCLUÍDA</Text>
-          <Text style={styles.title}>{titleText}</Text>
-          <Text style={styles.subtitle}>{xpText}</Text>
+          <Typography variant="body" style={styles.kicker}>MISSÃO CONCLUÍDA</Typography>
+          <Typography variant="body" style={styles.title}>{titleText}</Typography>
+          <Typography variant="body" style={styles.subtitle}>{xpText}</Typography>
           {mascotLine && (
-            <Text style={[styles.subtitle, { fontWeight: '400', fontSize: 15, color: theme.colors.textSecondary }]}>
+            <Typography variant="body" style={[styles.subtitle, { fontWeight: '400', fontSize: 15, color: theme.colors.textSecondary }]}>
               {mascotLine}
-            </Text>
+            </Typography>
           )}
         </View>
         <Button label="Voltar pra Home" onPress={() => router.replace('/(tabs)')} />

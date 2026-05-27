@@ -1,6 +1,6 @@
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, Share, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
@@ -22,6 +22,7 @@ import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
+import { Typography } from '@/components/ui';
 type Mode = 'progress' | 'invite';
 
 export default function ShareScreen() {
@@ -102,9 +103,9 @@ export default function ShareScreen() {
           accessibilityRole="tab"
           accessibilityState={{ selected: mode === 'progress' }}
         >
-          <Text style={[styles.tabLabel, mode === 'progress' && styles.tabLabelActive]}>
+          <Typography variant="body" style={[styles.tabLabel, mode === 'progress' && styles.tabLabelActive]}>
             Progresso
-          </Text>
+          </Typography>
         </Pressable>
         <Pressable
           onPress={() => setMode('invite')}
@@ -113,9 +114,9 @@ export default function ShareScreen() {
           accessibilityRole="tab"
           accessibilityState={{ selected: mode === 'invite' }}
         >
-          <Text style={[styles.tabLabel, mode === 'invite' && styles.tabLabelActive]}>
+          <Typography variant="body" style={[styles.tabLabel, mode === 'invite' && styles.tabLabelActive]}>
             Convidar amigo
-          </Text>
+          </Typography>
         </Pressable>
       </View>
 
@@ -138,42 +139,42 @@ export default function ShareScreen() {
             <View style={styles.cardOverlay}>
               {mode === 'progress' ? (
                 <>
-                  <Text style={styles.cardKicker}>
+                  <Typography variant="body" style={styles.cardKicker}>
                     {isMilestone ? `🎉 MARCO DE ${currentStreak} DIAS` : 'MEU MASCOTE HOJE'}
-                  </Text>
-                  <Text style={styles.cardName}>{mascot.name}</Text>
-                  <Text style={styles.cardLine}>
+                  </Typography>
+                  <Typography variant="body" style={styles.cardName}>{mascot.name}</Typography>
+                  <Typography variant="body" style={styles.cardLine}>
                     nível {mascot.level} · {mascot.phase}
-                  </Text>
+                  </Typography>
                   <View style={styles.cardStats}>
                     <View style={styles.statBox}>
                       <Icon name="flame" size={12} color={theme.colors.error} strokeWidth={2.4} fill={theme.colors.error + '50'} />
-                      <Text style={styles.statValue}>{currentStreak}</Text>
-                      <Text style={styles.statLabel}>dias</Text>
+                      <Typography variant="body" style={styles.statValue}>{currentStreak}</Typography>
+                      <Typography variant="body" style={styles.statLabel}>dias</Typography>
                     </View>
                     <View style={styles.statBox}>
                       <Icon name="check" size={12} color={theme.colors.success} strokeWidth={2.4} />
-                      <Text style={styles.statValue}>{todayCount}×</Text>
-                      <Text style={styles.statLabel}>hoje</Text>
+                      <Typography variant="body" style={styles.statValue}>{todayCount}×</Typography>
+                      <Typography variant="body" style={styles.statLabel}>hoje</Typography>
                     </View>
                     <View style={styles.statBox}>
                       <Icon name="zap" size={12} color={theme.colors.primary} strokeWidth={2.4} fill={theme.colors.primary} />
-                      <Text style={styles.statValue}>{mascot.xp}</Text>
-                      <Text style={styles.statLabel}>XP</Text>
+                      <Typography variant="body" style={styles.statValue}>{mascot.xp}</Typography>
+                      <Typography variant="body" style={styles.statLabel}>XP</Typography>
                     </View>
                   </View>
-                  <Text style={styles.cardFooter}>Mascote · {meta.label}</Text>
+                  <Typography variant="body" style={styles.cardFooter}>Mascote · {meta.label}</Typography>
                 </>
               ) : (
                 <>
-                  <Text style={styles.cardKicker}>CONVIDE UM AMIGO</Text>
-                  <Text style={styles.cardName}>{meta.mascotName} convida</Text>
-                  <Text style={styles.cardInvite}>
+                  <Typography variant="body" style={styles.cardKicker}>CONVIDE UM AMIGO</Typography>
+                  <Typography variant="body" style={styles.cardName}>{meta.mascotName} convida</Typography>
+                  <Typography variant="body" style={styles.cardInvite}>
                     "Vem com a gente. Sem cobrança, sem culpa."
-                  </Text>
-                  <Text style={styles.cardLink} numberOfLines={1}>
+                  </Typography>
+                  <Typography variant="body" style={styles.cardLink} numberOfLines={1}>
                     {buildInviteLink(profile.id)}
-                  </Text>
+                  </Typography>
                 </>
               )}
             </View>
@@ -186,18 +187,18 @@ export default function ShareScreen() {
           {mode === 'progress' ? (
             <>
               <Button label="Compartilhar progresso" onPress={shareProgress} />
-              <Text style={styles.hint}>
+              <Typography variant="body" style={styles.hint}>
                 {isMilestone
                   ? `Você bateu ${currentStreak} dias. Vale comemorar — copy especial entra automaticamente.`
                   : 'Em desktop web, abre fallback nativo. No celular abre a folha do sistema.'}
-              </Text>
+              </Typography>
             </>
           ) : (
             <>
               <Button label="Convidar amigo" onPress={shareInvite} />
-              <Text style={styles.hint}>
+              <Typography variant="body" style={styles.hint}>
                 Cada convite ajuda a gente a crescer sem ad. Sem trackers — só um link pra encontrar o Mascote.
-              </Text>
+              </Typography>
             </>
           )}
         </View>

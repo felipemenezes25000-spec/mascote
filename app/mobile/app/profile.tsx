@@ -1,6 +1,6 @@
 import { router, Redirect, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card } from '@/components/Card';
 import { Icon, type IconName } from '@/components/Icon';
@@ -26,6 +26,7 @@ import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { Checkin, HabitKind } from '@/types';
 
+import { Typography } from '@/components/ui';
 const HABIT_ICONS: Record<HabitKind, IconName> = {
   water: 'droplet',
   sleep: 'moon',
@@ -132,10 +133,10 @@ export default function You() {
               </MascotAmbient>
             </SceneBackground>
             <View style={styles.heroInfo}>
-              <Text style={styles.heroName}>{mascot.name}</Text>
-              <Text style={styles.heroSub}>
+              <Typography variant="body" style={styles.heroName}>{mascot.name}</Typography>
+              <Typography variant="body" style={styles.heroSub}>
                 {meta.label} · {emergentPhaseLabels[mascot.phase]} · nível {mascot.level}
-              </Text>
+              </Typography>
             </View>
           </View>
         </StaggeredView>
@@ -178,11 +179,11 @@ export default function You() {
         <StaggeredView index={5}>
           <View style={styles.sectionHeader}>
             <Icon name="calendar" size={12} color={theme.colors.textSecondary} strokeWidth={2.2} />
-            <Text style={styles.sectionTitle}>Hábitos da semana</Text>
+            <Typography variant="body" style={styles.sectionTitle}>Hábitos da semana</Typography>
           </View>
           <View style={{ gap: theme.spacing.sm }}>
             {habitsList.length === 0 ? (
-              <Text style={styles.empty}>Nenhum check-in essa semana. Começa pequeno.</Text>
+              <Typography variant="body" style={styles.empty}>Nenhum check-in essa semana. Começa pequeno.</Typography>
             ) : (
               habitsList.slice(0, 6).map(([kind, count]) => {
                 const m = habitMeta[kind as HabitKind];
@@ -205,9 +206,9 @@ export default function You() {
                       <View style={styles.habitBarTrack}>
                         <View style={[styles.habitBarFill, { width: `${pct}%` }]} />
                       </View>
-                      <Text style={styles.habitLabel}>
+                      <Typography variant="body" style={styles.habitLabel}>
                         {m.label} · {count as number}
-                      </Text>
+                      </Typography>
                     </View>
                   </View>
                 );
@@ -218,7 +219,7 @@ export default function You() {
 
         <StaggeredView index={6}>
           <PressableScale style={styles.linkCta} onPress={() => router.push('/weekly-report')}>
-            <Text style={styles.linkCtaText}>Ver relatório completo</Text>
+            <Typography variant="body" style={styles.linkCtaText}>Ver relatório completo</Typography>
             <Icon name="arrow-right" size={14} color={theme.colors.primary} strokeWidth={2.4} />
           </PressableScale>
         </StaggeredView>
@@ -229,17 +230,17 @@ export default function You() {
             <PressableScale onPress={() => router.push('/paywall')}>
               <View style={styles.paywallKickerRow}>
                 <Icon name="sparkle" size={10} color={theme.colors.primary} strokeWidth={2.4} fill={theme.colors.primary} />
-                <Text style={styles.paywallKicker}>DEMO</Text>
+                <Typography variant="body" style={styles.paywallKicker}>DEMO</Typography>
               </View>
-              <Text style={styles.paywallTitle}>Ver tela de paywall</Text>
-              <Text style={styles.paywallSub}>App roda local. Paywall é só visual.</Text>
+              <Typography variant="body" style={styles.paywallTitle}>Ver tela de paywall</Typography>
+              <Typography variant="body" style={styles.paywallSub}>App roda local. Paywall é só visual.</Typography>
             </PressableScale>
           </Card>
         </StaggeredView>
 
-        <Text style={styles.disclaimer}>
+        <Typography variant="body" style={styles.disclaimer}>
           Mascote é wellness e autocuidado. Não substitui acompanhamento profissional. Em crise: CVV 188.
-        </Text>
+        </Typography>
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
@@ -254,8 +255,8 @@ function Stat({ icon, label, value }: { icon: IconName; label: string; value: st
       <View style={styles.statIconWrap}>
         <Icon name={icon} size={12} color={theme.colors.primary} strokeWidth={2.4} />
       </View>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Typography variant="body" style={styles.statValue}>{value}</Typography>
+      <Typography variant="body" style={styles.statLabel}>{label}</Typography>
     </View>
   );
 }
@@ -268,7 +269,7 @@ function QuickBtn({ icon, label, onPress }: { icon: IconName; label: string; onP
       <View style={styles.quickIconWrap}>
         <Icon name={icon} size={18} color={theme.colors.primary} strokeWidth={2.2} />
       </View>
-      <Text style={styles.quickLabel}>{label}</Text>
+      <Typography variant="body" style={styles.quickLabel}>{label}</Typography>
     </PressableScale>
   );
 }

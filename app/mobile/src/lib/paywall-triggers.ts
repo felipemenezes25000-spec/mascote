@@ -29,6 +29,25 @@ interface Context {
   hasSubscription: boolean;
 }
 
+// Rate limit em sessão pra evitar chain de paywalls quando milestones múltiplos
+// disparam simultaneamente (ex: streak_7 + level_5 + checkin_30 no mesmo tap).
+// 1 paywall a cada 30min mesmo que múltiplos triggers acumulem — respeita
+// "flow state" do user que acabou de completar uma ação positiva.
+// Aplica no CALLER (useHomeActions.maybeShowPaywall), não em shouldTrigger,
+// pra preservar a invariante "shouldTrigger sempre retorna próximo elegível".
+const SESSION_COOLDOWN_MS = 30 * 60 * 1000;
+let lastShownAt = 0;
+
+/** Reset pra testes — não consumir em código de produção. */
+export function __resetPaywallSessionRateLimit(): void {
+  lastShownAt = 0;
+}
+
+/** True se um paywall foi mostrado dentro da janela de cooldown da sessão. */
+export function isInPaywallCooldown(): boolean {
+  return Date.now() - lastShownAt < SESSION_COOLDOWN_MS;
+}
+
 export async function shouldTrigger(ctx: Context): Promise<PaywallTrigger | null> {
   if (ctx.hasSubscription) return null;
 
@@ -55,6 +74,7 @@ export async function shouldTrigger(ctx: Context): Promise<PaywallTrigger | null
 }
 
 export async function markShown(trigger: PaywallTrigger): Promise<void> {
+  lastShownAt = Date.now();
   await AsyncStorage.setItem(`paywall_shown:${trigger}`, new Date().toISOString());
 }
 

@@ -1,6 +1,6 @@
 import { router, Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
@@ -11,6 +11,7 @@ import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
+import { Typography } from '@/components/ui';
 export default function MonthlyReport() {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
@@ -45,29 +46,29 @@ export default function MonthlyReport() {
           accessibilityRole="button"
           accessibilityLabel="Fechar retrospectiva mensal"
         >
-          <Text style={styles.closeText}>✕</Text>
+          <Typography variant="body" style={styles.closeText}>✕</Typography>
         </Pressable>
-        <Text style={styles.headerTitle}>Retrospectiva do mês</Text>
+        <Typography variant="body" style={styles.headerTitle}>Retrospectiva do mês</Typography>
         <View style={{ width: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.hero}>
           <Mascot personality={mascot.personality} phase={mascot.phase} mood="feliz" size={80} reduceMotion />
-          <Text style={styles.heroText}>
+          <Typography variant="body" style={styles.heroText}>
             {mascot.name} olhou os últimos 30 dias com carinho — {monthCheckins} cuidados em {activeDays} dias diferentes.
-          </Text>
+          </Typography>
         </View>
 
         <PremiumFeatureGuard tier={tier} feature="report">
           <View style={styles.card}>
-            <Text style={styles.kicker}>MARCO MENSAL</Text>
-            <Text style={styles.body}>
+            <Typography variant="body" style={styles.kicker}>MARCO MENSAL</Typography>
+            <Typography variant="body" style={styles.body}>
               Streak atual: {streak?.current_streak ?? 0} dias · Nível {mascot.level}
-            </Text>
-            <Text style={styles.body}>
+            </Typography>
+            <Typography variant="body" style={styles.body}>
               Uma transformação maior desbloqueia com constância gentil — Plus acelera visuais lendários e relatórios profundos.
-            </Text>
+            </Typography>
             <Button
               label="Ver evolução completa"
               variant="secondary"
@@ -77,14 +78,14 @@ export default function MonthlyReport() {
         </PremiumFeatureGuard>
 
         <Pressable onPress={() => router.push('/weekly-report')}>
-          <Text style={{ color: theme.colors.primary, fontWeight: '600', textAlign: 'center' }}>
+          <Typography variant="body" style={{ color: theme.colors.primary, fontWeight: '600', textAlign: 'center' }}>
             Ver relatório semanal →
-          </Text>
+          </Typography>
         </Pressable>
 
-        <Text style={styles.footer}>
+        <Typography variant="body" style={styles.footer}>
           Retrospectiva local. Gráficos mensais completos no Plus.
-        </Text>
+        </Typography>
       </ScrollView>
     </SafeAreaView>
   );

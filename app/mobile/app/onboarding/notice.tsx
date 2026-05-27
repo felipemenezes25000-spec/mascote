@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { inventory, mascots as mascotsDb, settings as settingsDb, wallet as walletDb } from '@/lib/db';
@@ -10,6 +10,7 @@ import { useStore } from '@/store';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
+import { Typography } from '@/components/ui';
 /**
  * Tela combinada (push + notice) — toggle de avisos + disclaimer wellness
  * + entrega idempotente do Welcome Pack (50 XP, 25 moedas, boné azul).
@@ -84,8 +85,8 @@ export default function Notice() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <ScrollView contentContainerStyle={{ gap: theme.spacing.md, flexGrow: 1 }}>
-          <Text style={styles.kicker}>{stepLabel('notice')}</Text>
-          <Text style={styles.title}>Última coisa antes de começar</Text>
+          <Typography variant="body" style={styles.kicker}>{stepLabel('notice')}</Typography>
+          <Typography variant="body" style={styles.title}>Última coisa antes de começar</Typography>
 
           {/* Push toggle (antes era tela separada push.tsx) */}
           <Pressable
@@ -96,10 +97,10 @@ export default function Notice() {
             accessibilityState={{ checked: pushEnabled }}
           >
             <View style={{ flex: 1 }}>
-              <Text style={styles.pushTitle}>Posso te avisar?</Text>
-              <Text style={styles.pushBody}>
+              <Typography variant="body" style={styles.pushTitle}>Posso te avisar?</Typography>
+              <Typography variant="body" style={styles.pushBody}>
                 Se ativar, avisamos com cuidado (sem insistir e sem culpa). Você desliga quando quiser.
-              </Text>
+              </Typography>
             </View>
             <Switch
               value={pushEnabled}
@@ -111,27 +112,27 @@ export default function Notice() {
           </Pressable>
 
           {/* Disclaimer wellness */}
-          <Text style={styles.body}>
-            Esse app é pra <Text style={styles.bold}>autocuidado e bem-estar</Text>. Ele NÃO é
+          <Typography variant="body" style={styles.body}>
+            Esse app é pra <Typography variant="body" style={styles.bold}>autocuidado e bem-estar</Typography>. Ele NÃO é
             terapia, não dá diagnóstico, não prescreve remédio e não substitui psicólogo,
             psiquiatra ou médico.
-          </Text>
+          </Typography>
           <View style={styles.alertBox}>
-            <Text style={styles.alertTitle}>Em momentos de crise emocional</Text>
-            <Text style={styles.alertBody}>
-              CVV — <Text style={styles.bold}>188</Text> (24h, gratuito) ou cvv.org.br
-            </Text>
-            <Text style={styles.alertBody}>
-              Emergência médica: <Text style={styles.bold}>192</Text> (SAMU)
-            </Text>
+            <Typography variant="body" style={styles.alertTitle}>Em momentos de crise emocional</Typography>
+            <Typography variant="body" style={styles.alertBody}>
+              CVV — <Typography variant="body" style={styles.bold}>188</Typography> (24h, gratuito) ou cvv.org.br
+            </Typography>
+            <Typography variant="body" style={styles.alertBody}>
+              Emergência médica: <Typography variant="body" style={styles.bold}>192</Typography> (SAMU)
+            </Typography>
           </View>
-          <Text style={styles.body}>
+          <Typography variant="body" style={styles.body}>
             A IA pode errar. Não tome o que ela diz como conselho profissional. Se você precisa de
             ajuda real, busque um profissional.
-          </Text>
-          <Text style={styles.body}>
+          </Typography>
+          <Typography variant="body" style={styles.body}>
             Ao continuar, você confirma que entendeu esses limites e tem 16 anos ou mais.
-          </Text>
+          </Typography>
         </ScrollView>
         <Button
           label="Entendi e quero começar"
