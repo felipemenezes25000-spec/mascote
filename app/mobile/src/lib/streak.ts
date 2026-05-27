@@ -25,7 +25,12 @@ export function nextStreakState(
   }
 
   let nextStreak = current.current_streak;
-  let nextGrace = current.grace_days_left;
+  // Migration v4 backfilla grace_days_left=2, mas import/storage corrompido
+  // pode entregar undefined/NaN. Sem o `??`, propagava NaN via `nextGrace + 1`
+  // pra persistência (JSON.stringify(NaN)=null), corrompendo a streak.
+  let nextGrace = typeof current.grace_days_left === 'number' && Number.isFinite(current.grace_days_left)
+    ? current.grace_days_left
+    : INITIAL_GRACE_AFTER_BROKEN;
   let graceUsed = false;
   let brokenAndRestarted = false;
 

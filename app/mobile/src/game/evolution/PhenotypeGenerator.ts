@@ -45,8 +45,10 @@ export function generatePhenotypeSlots(
       PHENOTYPE_CATALOG_SIZES.rarityTier - 1,
       // ANTES: faltava `epico` no map — genotype `epico` (do RaritySystem
       // 5-tier) caia em `undefined` e Math.min recebia NaN, silenciosamente
-      // bugando o rarityTier do phenotype.
-      { comum: 0, incomum: 1, raro: 2, epico: 3, lendario: 4 }[genotype.initialRarity],
+      // bugando o rarityTier do phenotype. TS union restringe a 5 valores,
+      // mas import/storage corrompido pode burlar; fallback p/ `raro` (2)
+      // evita NaN se a chave for desconhecida.
+      ({ comum: 0, incomum: 1, raro: 2, epico: 3, lendario: 4 } as Record<string, number>)[genotype.initialRarity] ?? 2,
     ),
   };
 }
