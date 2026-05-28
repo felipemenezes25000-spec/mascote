@@ -93,6 +93,11 @@ export async function generateViaOpenAIDirect(input: GenerateInput): Promise<Pro
         model: MODEL,
         response_format: { type: 'json_object' },
         temperature: 0.85,
+        // Cap defensivo: o ProceduralGenome JSON real cabe em ~1200 tokens.
+        // Sem max_tokens, modelo descalibrado/jailbreak pode gerar reply
+        // gigante — sangrando custo (~$0.60/M out) sem ganho funcional.
+        // Validator descartaria depois, mas o custo já foi pago.
+        max_tokens: 1500,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: buildUserPrompt(input) },

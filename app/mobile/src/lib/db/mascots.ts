@@ -17,7 +17,11 @@ export const mascots = {
       if (!dna) {
         const { genomeForPersonality } = await import('@/lib/dna/personalities');
         const { genomeFromPreset, sanitizeGenome } = await import('@/lib/dna/genome');
-        if (typeof dna_seed !== 'number') {
+        // Number.isFinite descarta NaN/Infinity — `typeof NaN === 'number'` é
+        // true, então sem esse guard um seed corrompido (storage parse falho,
+        // import malformado) passaria pro genomeFromPreset e produziria genoma
+        // com componentes NaN, envenenando toda a sequência de mutação a jusante.
+        if (typeof dna_seed !== 'number' || !Number.isFinite(dna_seed)) {
           let s = 0x811c9dc5;
           for (let i = 0; i < m.user_id.length; i++) {
             s ^= m.user_id.charCodeAt(i);
