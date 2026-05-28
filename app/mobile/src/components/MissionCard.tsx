@@ -31,7 +31,8 @@ export function MissionCard({ title, description, xp, completed, onPress }: Prop
       onPress={onPress}
       style={[styles.card, completed && styles.completed]}
       accessibilityRole="button"
-      accessibilityLabel={`${completed ? 'Missão concluída' : 'Missão de hoje'}: ${title}`}
+      accessibilityLabel={`${completed ? 'Missão concluída' : 'Missão de hoje'}: ${title}, ${xp} XP`}
+      accessibilityState={{ disabled: completed, checked: completed }}
       scale={0.98}
     >
       <View style={styles.header}>

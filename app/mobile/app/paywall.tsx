@@ -109,12 +109,22 @@ export default function Paywall() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Pressable onPress={() => safeBack()} style={styles.close} hitSlop={10} accessibilityLabel="Fechar">
+        <Pressable
+          onPress={() => safeBack()}
+          style={styles.close}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar"
+        >
           <Typography variant="body" style={styles.closeText}>✕</Typography>
         </Pressable>
 
-        <View style={styles.previewRow}>
-          <View style={styles.previewCol}>
+        <View
+          style={styles.previewRow}
+          accessibilityRole="image"
+          accessibilityLabel="Comparação visual: seu mascote agora versus com Plus"
+        >
+          <View style={styles.previewCol} importantForAccessibility="no-hide-descendants">
             <Typography variant="body" style={styles.previewLabel}>Agora</Typography>
             <Mascot
               personality={mascot?.personality ?? 'fofo'}
@@ -125,7 +135,7 @@ export default function Paywall() {
             />
           </View>
           <Typography variant="body" style={styles.previewArrow}>→</Typography>
-          <View style={styles.previewCol}>
+          <View style={styles.previewCol} importantForAccessibility="no-hide-descendants">
             <Typography variant="body" style={styles.previewLabel}>Com Plus</Typography>
             <Mascot
               personality={mascot?.personality ?? 'fofo'}
@@ -202,6 +212,13 @@ export default function Paywall() {
             style={[styles.plan, styles.planHighlight]}
             onPress={() => void handleSubscribe('plus_annual')}
             disabled={loading || isPremium || purchaseBlocked}
+            accessibilityRole="button"
+            accessibilityLabel={`Plano Anual: R$ ${(annual.totalCents / 100).toFixed(0)} por ano, ${annual.savingsPct}% de desconto${annual.badge ? `, ${annual.badge}` : ''}`}
+            accessibilityHint="Toque duas vezes pra assinar o plano anual"
+            accessibilityState={{
+              disabled: loading || isPremium || purchaseBlocked,
+              selected: tier === 'plus_annual',
+            }}
           >
             {annual.badge && (
               <View style={styles.badge}>
@@ -218,6 +235,13 @@ export default function Paywall() {
             style={styles.plan}
             onPress={() => void handleSubscribe('plus_monthly')}
             disabled={loading || isPremium || purchaseBlocked}
+            accessibilityRole="button"
+            accessibilityLabel={`Plano Mensal: R$ ${(monthly.totalCents / 100).toFixed(2).replace('.', ',')} por mês, ${monthly.trialDays} dias grátis`}
+            accessibilityHint="Toque duas vezes pra assinar o plano mensal"
+            accessibilityState={{
+              disabled: loading || isPremium || purchaseBlocked,
+              selected: tier === 'plus_monthly',
+            }}
           >
             <Typography variant="body" style={styles.planTitle}>Mensal</Typography>
             <Typography variant="body" style={styles.planPrice}>R$ {(monthly.totalCents / 100).toFixed(2).replace('.', ',')}/mês</Typography>

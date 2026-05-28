@@ -42,7 +42,9 @@ export function Button({
     <Animated.View style={[animStyle, style]}>
       <Pressable
         testID={testID}
+        accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityState={{ disabled: !!disabled }}
         onPress={onPress}
         disabled={disabled}
         onPressIn={() => {

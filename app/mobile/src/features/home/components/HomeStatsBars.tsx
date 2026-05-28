@@ -21,7 +21,15 @@ export function HomeStatsBars({ mascot, toNext }: Props) {
   const styles = useStyles(makeStyles);
   return (
     <View style={styles.barsRow}>
-      <Card variant="elevated" padding="md" style={styles.barCard}>
+      <Card
+        variant="elevated"
+        padding="md"
+        style={styles.barCard}
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityLabel={`Energia: ${mascot.energy} de 100`}
+        accessibilityValue={{ min: 0, max: 100, now: mascot.energy }}
+      >
         <View style={styles.barHeader}>
           <Icon name="heart" size={12} color={theme.colors.sage} strokeWidth={2.4} fill={theme.colors.sage} />
           <Typography variant="mono" tone="secondary" style={styles.barLabel}>ENERGIA</Typography>
@@ -29,7 +37,15 @@ export function HomeStatsBars({ mascot, toNext }: Props) {
         <ProgressBar progress={mascot.energy / 100} fillColor={theme.colors.sage} animated={false} />
         <Typography variant="mono" tone="secondary">{mascot.energy}/100</Typography>
       </Card>
-      <Card variant="elevated" padding="md" style={styles.barCard}>
+      <Card
+        variant="elevated"
+        padding="md"
+        style={styles.barCard}
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityLabel={`Nível ${mascot.level}: ${toNext.current} de ${toNext.needed} XP até a próxima forma`}
+        accessibilityValue={{ min: 0, max: toNext.needed, now: toNext.current }}
+      >
         <View style={styles.barHeader}>
           <Icon name="zap" size={12} color={theme.colors.primary} strokeWidth={2.4} fill={theme.colors.primary} />
           <Typography variant="mono" tone="secondary" style={styles.barLabel}>NÍVEL {mascot.level}</Typography>

@@ -23,7 +23,9 @@ export function MysteryBoxCard({ available, onOpen }: Props) {
       onPress={onOpen}
       disabled={!available}
       style={[styles.card, !available && styles.cardDone]}
+      accessibilityRole="button"
       accessibilityLabel={available ? 'Abrir caixa surpresa' : 'Caixa amanhã'}
+      accessibilityState={{ disabled: !available }}
     >
       <View style={[styles.iconWrap, !available && styles.iconWrapDone]}>
         <Icon

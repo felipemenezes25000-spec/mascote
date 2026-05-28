@@ -105,7 +105,12 @@ export default function MascotBirth() {
         <View style={styles.container}>
           <Typography variant="body" style={styles.kicker}>{stepLabel('mascot')}</Typography>
           <Typography variant="body" style={styles.title}>O DNA dele está pronto</Typography>
-          <View style={styles.dnaCard}>
+          <View
+            style={styles.dnaCard}
+            accessible
+            accessibilityRole="text"
+            accessibilityLabel={`Traço raro: ${formatRareTrait(preview)}. Seed número ${preview.seed.toString(16).toUpperCase()}. Arquétipo: ${preview.genotype.archetype}`}
+          >
             <Typography variant="body" style={styles.dnaLabel}>TRAÇO RARO</Typography>
             <Typography variant="body" style={styles.dnaTrait}>{formatRareTrait(preview)}</Typography>
             <Typography variant="body" style={styles.dnaSeed}>Seed #{preview.seed.toString(16).toUpperCase()}</Typography>
@@ -150,7 +155,12 @@ export default function MascotBirth() {
         </View>
         {phase === 'birth' && (
           <>
-            <View style={styles.bubble}>
+            <View
+              style={styles.bubble}
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel={`Primeiras palavras: "${preview.firstWords}". Traço: ${formatRareTrait(preview)}`}
+            >
               <Typography variant="body" style={styles.bubbleText}>"{preview.firstWords}"</Typography>
               <Typography variant="body" style={styles.bubbleSub}>Traço: {formatRareTrait(preview)}</Typography>
             </View>
@@ -172,7 +182,12 @@ export default function MascotBirth() {
                 })
               }
             />
-            <Pressable onPress={() => setPhase('reveal')}>
+            <Pressable
+              onPress={() => setPhase('reveal')}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Ver DNA de novo"
+            >
               <Typography variant="body" style={styles.link}>Ver DNA de novo</Typography>
             </Pressable>
           </>

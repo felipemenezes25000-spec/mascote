@@ -45,7 +45,11 @@ export default function MascotRoom() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <SceneBackground sceneId="room" height={420}>
           <View style={styles.heroWrap}>
-            <MascotInteractive onGesture={handleGesture} reduceMotion={settings?.reduce_motion}>
+            <MascotInteractive
+              onGesture={handleGesture}
+              reduceMotion={settings?.reduce_motion}
+              accessibilityLabel={`Carinho no ${mascot.name}`}
+            >
               <MascotRenderer
                 personality={mascot.personality}
                 phase={mascot.phase}
@@ -57,7 +61,12 @@ export default function MascotRoom() {
           </View>
         </SceneBackground>
 
-        <View style={styles.identityRow}>
+        <View
+          style={styles.identityRow}
+          accessible
+          accessibilityRole="text"
+          accessibilityLabel={`${mascot.name}, fase ${mascot.phase}, humor ${mascot.mood}`}
+        >
           <Typography variant="body" style={[styles.name, { color: theme.colors.text }]}>
             {mascot.name}
           </Typography>
@@ -82,6 +91,7 @@ export default function MascotRoom() {
                     borderColor: theme.colors.border,
                   },
                 ]}
+                hitSlop={8}
                 accessibilityRole="button"
                 accessibilityLabel={`Registrar hábito ${h}`}
               >
