@@ -42,7 +42,7 @@ export function buildInviteLink(userId: string | undefined | null): string {
   if (!userId || !userId.trim()) return 'https://mascote.app/i/amigo';
   const tag = userId.length >= 6 ? userId.slice(-6) : userId;
   // userId é tipado string mas pode conter `/`, `?`, `#`, espaço, unicode
-  // (Supabase UUIDs hoje, mas o tipo nao garante). Sem encode, URL fica
+  // (UUIDs hoje, mas o tipo nao garante). Sem encode, URL fica
   // ambigua tipo `https://mascote.app/i/abc/def`.
   return `https://mascote.app/i/${encodeURIComponent(tag)}`;
 }

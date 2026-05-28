@@ -45,24 +45,38 @@ export function WaitlistForm({ dict }: { dict: Dictionary }) {
     setStep(2);
   };
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("loading");
-    setTimeout(() => {
+    setError("");
+    const referrer = typeof document !== "undefined" ? document.referrer : "";
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, name, pick, utm, referrer }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        if (body?.error === "invalid_email") {
+          setError(cta.errorEmail);
+          setStatus("error");
+          setStep(1);
+          return;
+        }
+        throw new Error(body?.error ?? `http_${res.status}`);
+      }
+      // Espelha no localStorage por compat (algumas telas/dev tools leem daqui).
       try {
         const list = JSON.parse(localStorage.getItem("mascote.waitlist") || "[]");
-        list.push({
-          email,
-          name,
-          pick,
-          at: new Date().toISOString(),
-          referrer: typeof document !== "undefined" ? document.referrer : "",
-          ...utm,
-        });
+        list.push({ email, name, pick, at: new Date().toISOString(), referrer, ...utm });
         localStorage.setItem("mascote.waitlist", JSON.stringify(list));
       } catch {}
       setStatus("success");
-    }, 600);
+    } catch {
+      setError(cta.errorNetwork);
+      setStatus("error");
+    }
   };
 
   if (status === "success") {

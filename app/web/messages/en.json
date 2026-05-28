@@ -306,7 +306,8 @@
     "submit": "Keep me posted",
     "success": "I'm here. We'll talk soon.",
     "errorRequired": "Email's missing — we can't reach you without it.",
-    "errorEmail": "That email looks off. Mind checking?"
+    "errorEmail": "That email looks off. Mind checking?",
+    "errorNetwork": "Couldn't send it just now. Try again in a few seconds."
   },
   "manifesto": {
     "kicker": "MANIFESTO",

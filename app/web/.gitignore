@@ -6,3 +6,7 @@ node_modules
 .DS_Store
 
 .vercel
+
+# Waitlist storage — JSONL com leads capturados pela /api/waitlist.
+# Nunca commitar (contém PII: email, IP, UA, UTMs).
+.data/

@@ -188,7 +188,7 @@ Quando ausente: comportamento legado (DNA-driven). Zero regressão.
 
 - Campo `procedural_genome` adicionado ao tipo `Mascot` (opcional).
 - Repository `mascots.update()` aceita novo campo.
-- Sync local + Supabase (via `repositories/sync-local.ts`) inclui o campo.
+- Sync local (via `repositories/sync-local.ts`) inclui o campo. Sync remoto depende do backend final.
 
 ### B.8 Animações por mark (extra do bloco "fora de escopo")
 
@@ -288,7 +288,7 @@ Decisões tomadas autonomamente durante implementação (Felipe estava descansan
 ## O que ficou como TODO explícito
 
 - **Server-side rate limit no proxy** — atualmente só client-side. Risco de abuse se user manipular relógio. Anotado em `src/lib/procedural/generate.ts`.
-- **Sync Supabase do `procedural_genome`** — campo já está no tipo TS e no AsyncStorage. Sincronizar com tabela Supabase requer migration no `app/server/` ou wherever o schema vive. Sem isso, genome só vive local.
+- **Sync remoto do `procedural_genome`** — campo já está no tipo TS e no AsyncStorage. Sincronizar com backend remoto requer schema/migration definidos. Sem isso, genome só vive local.
 - **Animações de outros marks** (`scar`, `leaf`, `stripe`) — estático por enquanto.
 - **Testes E2E** do flow completo (Maestro) — só unit/integration cobertos.
 

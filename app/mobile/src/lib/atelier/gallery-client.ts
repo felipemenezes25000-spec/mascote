@@ -1,8 +1,8 @@
 /**
  * gallery-client — fetcher pra atelier gallery server.
  *
- * Camada fina sobre HTTP fetch. Backend final (Supabase/Hono/etc) trocara
- * a URL base + auth, mas o shape do client permanece estavel.
+ * Camada fina sobre HTTP fetch. Backend final trocara a URL base + auth,
+ * mas o shape do client permanece estavel.
  *
  * Privacidade:
  *   - NUNCA envia user_id (mesma regra do lookShare).

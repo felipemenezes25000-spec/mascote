@@ -306,7 +306,8 @@
     "submit": "Quiero saber",
     "success": "Aquí estoy. Pronto hablamos.",
     "errorRequired": "Falta el correo — sin él no podemos avisarte.",
-    "errorEmail": "Ese correo se ve raro. ¿Lo revisas?"
+    "errorEmail": "Ese correo se ve raro. ¿Lo revisas?",
+    "errorNetwork": "No pude enviarlo ahora. Inténtalo en unos segundos."
   },
   "manifesto": {
     "kicker": "MANIFIESTO",

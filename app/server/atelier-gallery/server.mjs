@@ -2,9 +2,9 @@
  * Mock JSON server pra atelier gallery — stub HTTP API simples.
  *
  * Por que aqui:
- *   Felipe ainda nao decidiu backend final (Supabase? Hono? Edge function?).
- *   Esse stub roda em Node puro (sem deps), com endpoints CRUD basicos pra
- *   permitir wire-up do cliente RN antes da decisao infra.
+ *   Felipe ainda nao decidiu backend final. Esse stub roda em Node puro
+ *   (sem deps), com endpoints CRUD basicos pra permitir wire-up do cliente
+ *   RN antes da decisao infra.
  *
  * Storage: arquivo JSON local (./data/gallery.json). Atomico via write
  * temp + rename. Sem auth, sem rate limit — pra dev local apenas.

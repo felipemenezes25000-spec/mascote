@@ -27,6 +27,6 @@ Default port 4174. Override via `PORT=8080 node server.mjs`.
 
 ## Backend final
 
-Esse stub eh provisorio. Decisao final entre Supabase / Hono+D1 / Edge
-Function depende de Felipe. O cliente RN (`src/lib/atelier/gallery-client.ts`)
-abstrai a transport pra facilitar troca.
+Esse stub eh provisorio. Decisao final do backend depende de Felipe.
+O cliente RN (`src/lib/atelier/gallery-client.ts`) abstrai a transport
+pra facilitar troca.

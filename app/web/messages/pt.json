@@ -306,7 +306,8 @@
     "submit": "Quero acompanhar",
     "success": "Tô aqui. Em breve a gente se fala.",
     "errorRequired": "Falta o e-mail — sem ele a gente não consegue te avisar.",
-    "errorEmail": "Esse e-mail parece estranho. Confere de novo?"
+    "errorEmail": "Esse e-mail parece estranho. Confere de novo?",
+    "errorNetwork": "Não consegui enviar agora. Tenta de novo em alguns segundos."
   },
   "manifesto": {
     "kicker": "MANIFESTO",
