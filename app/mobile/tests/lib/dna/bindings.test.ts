@@ -17,7 +17,6 @@ import {
   unlockedAccessories,
   PHASE_BONE_PRESETS,
   USER_BAND_MODS,
-  PERSONALITY_TO_GLB,
 } from '@/lib/dna/bindings';
 import type { Genome } from '@/lib/dna/genome';
 
@@ -177,20 +176,6 @@ describe('unlockedAccessories', () => {
     expect(scarfResult[0].bone).toBe('neck');
     const leafResult = unlockedAccessories(baseDna, ['leaf'], ['leaf']);
     expect(leafResult[0].bone).toBe('body');
-  });
-});
-
-describe('PERSONALITY_TO_GLB', () => {
-  it('cada personality tem um GLB único', () => {
-    const paths = Object.values(PERSONALITY_TO_GLB);
-    const unique = new Set(paths);
-    expect(unique.size).toBe(paths.length);
-  });
-
-  it('todos os paths apontam para assets/mascot-3d/', () => {
-    for (const path of Object.values(PERSONALITY_TO_GLB)) {
-      expect(path).toMatch(/^assets\/mascot-3d\/.+\.glb$/);
-    }
   });
 });
 

@@ -174,7 +174,6 @@ vi.mock('react-native', () => {
       isReduceMotionEnabled: vi.fn(() => Promise.resolve(false)),
     },
     NativeModules: {
-      // UnityMascotModule fica undefined em test — bridge cai pro modo stub.
     },
     DeviceEventEmitter: {
       addListener: vi.fn(() => ({ remove: () => undefined })),

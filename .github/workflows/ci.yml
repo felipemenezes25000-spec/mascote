@@ -45,8 +45,3 @@ jobs:
       - name: npm audit (informacional)
         run: npm audit --omit=dev || true
         continue-on-error: true
-
-  # Validação Unity — ver também .github/workflows/unity-ci.yml
-  unity-structure:
-    name: Unity — estrutura
-    uses: ./.github/workflows/unity-ci.yml

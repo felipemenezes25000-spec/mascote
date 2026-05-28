@@ -102,8 +102,7 @@ async function main() {
   }, buildSeed());
 
   await page.goto(`${BASE}/(tabs)`, { waitUntil: 'load', timeout: 45000 });
-  // Aguarda fallback web 3D→2D (4s) + animação inicial.
-  await page.waitForTimeout(5500);
+  await page.waitForTimeout(2500);
 
   const bodyText = await page.evaluate(() => document.body?.innerText ?? '');
   const hasCrash =
@@ -111,18 +110,13 @@ async function main() {
     bodyText.includes('Maximum update depth') ||
     bodyText.includes('Build de produção inseguro');
 
-  const mascot3d = await page.getByLabel('mascote procedural').count();
+  const mascotProcedural = await page.getByLabel('mascote procedural').count();
   const mascotInteract = await page.getByLabel('Interagir com o mascote').count();
-  const canvasCount = await page.locator('canvas').count();
   const svgCount = await page.locator('svg').count();
   const hasName = bodyText.includes('Bipo');
 
-  // Mascote 2D (web fallback) renderiza ~30+ SVGs aninhados (corpo, olhos, sombras…)
-  // sem accessibilityLabel="mascote procedural". Aceitamos o sinal SVG + nome.
   const mascotVisible =
-    hasName &&
-    bodyText.includes('Bipo') &&
-    (mascot3d > 0 || mascotInteract > 0 || canvasCount > 0 || svgCount > 20);
+    hasName && (mascotProcedural > 0 || mascotInteract > 0 || svgCount > 20);
 
   await page.screenshot({ path: join(outDir, 'home-mascot.png'), fullPage: true });
 
@@ -161,7 +155,6 @@ async function main() {
     const t = (e.text ?? '').toLowerCase();
     if (t.includes('download the react devtools')) return false;
     if (t.includes('revenuecat')) return false;
-    if (t.includes('r3f: hooks can only be used within the canvas')) return false;
     if (t.includes('computed radius is nan')) return false;
     return true;
   });
@@ -169,7 +162,7 @@ async function main() {
   const report = {
     base: BASE,
     mascotVisible,
-    mascotSignals: { mascot3d, mascotInteract, canvasCount, svgCount, hasName },
+    mascotSignals: { mascotProcedural, mascotInteract, svgCount, hasName },
     hasCrash,
     tabResults,
     criticalErrors,

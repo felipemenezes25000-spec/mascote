@@ -2,8 +2,7 @@
  * FpsCounter — overlay simples mostrando FPS em DEV mode.
  *
  * Usa requestAnimationFrame pra contar frames numa janela móvel de 1s.
- * Útil pra detectar regressões de perf no preview (1 mascote 3D + 4 mini
- * personality swatches + auto-save tick).
+ * Útil pra detectar regressões de perf no preview (mascote SVG + swatches).
  *
  * NÃO renderiza em release builds (gate __DEV__).
  *

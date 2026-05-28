@@ -587,7 +587,7 @@ export default function AtelierScreen() {
             onPress={() => setAttributionOpen(true)}
             style={[styles.actionBtn, { backgroundColor: theme.colors.surface }]}
             accessibilityRole="button"
-            accessibilityLabel="Ver composição dos blend shapes"
+            accessibilityLabel="Ver composição morfológica"
           >
             <Icon name="info" size={16} color={theme.colors.text} strokeWidth={2} />
             <Typography variant="bodyBold" style={styles.actionLabel}>

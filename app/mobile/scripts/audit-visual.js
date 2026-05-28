@@ -3,7 +3,7 @@
  * audit-visual.js
  *
  * Audita débito visual:
- *   - Hex hardcoded em src/components (não-ui, não-mascot-3d, não-Mascot2D/BrandLogo)
+ *   - Hex hardcoded em src/components (não-ui, não-Mascot2D/BrandLogo)
  *     e em app/ — devem usar theme.colors.* ou theme.tokens.*
  *   - `<Text>` cru (sem ser via @/components/ui/Typography) em telas (app/)
  *     e em src/features
@@ -52,8 +52,6 @@ function isHexAllowed(file) {
   if (rel.startsWith('src/lib/themes.ts')) return true;
   // DNA: paletteFromGenome computa hex a partir de HSL — função pura
   if (rel.startsWith('src/lib/dna/')) return true;
-  // Renderers 3D: hex é cor THREE.js / scene fog procedural
-  if (rel.startsWith('src/components/mascot-3d/')) return true;
   if (rel === 'src/components/Mascot2D.tsx') return true;
   if (rel === 'src/components/BrandLogo.tsx') return true;
   // PhenotypeRenderer: scene fog atmospherics derivadas de environment_id (12 hex)

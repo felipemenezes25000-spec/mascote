@@ -8,7 +8,7 @@
  *
  * Agora Morphology tem `pattern: MorphPattern`, e o pipeline
  * (DNA → morphology → customization → mutation) propaga corretamente.
- * Mascot3D consome via material props.
+ * Mascot2D consome via paleta e morphInfluences.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -97,7 +97,7 @@ describe('Invariante: pattern visual propaga DNA → mutation → render', () =>
   });
 
   it('mutation NÃO sobrescreve pattern de customization preferido', () => {
-    // Ordem da composição (em Mascot3D Creature):
+    // Ordem da composição no pipeline de render:
     //   1. morphologyFromGenome(g) → pattern DNA
     //   2. applyCustomization → user override (se não-plain)
     //   3. applyMutationVisualImpact → mutation override (se não-plain)

@@ -1,23 +1,9 @@
 /**
- * DNA → Material/Bones bindings.
+ * DNA → material, proporções e animação.
  *
- * Centraliza o mapping entre o Genome procedural e os parâmetros que o
- * Mascot3D vai aplicar nos GLBs modelados em Blender. Pure functions —
+ * Centraliza o mapping entre Genome procedural e parâmetros consumidos
+ * pelo Mascot2D (cores, escala por fase, estado de animação). Pure functions —
  * zero side effects, fácil de testar.
- *
- * Quando os assets GLB chegarem (ver `docs/design/MASCOT_3D_ASSETS_BRIEF.md`),
- * o Mascot3D.tsx vai:
- *   1. `useGLTF()` carrega o GLB (depende da personality do mascote)
- *   2. `dnaToMaterialBindings(dna)` retorna tints + intensities
- *   3. Aplica em `body_material.color.setHex(bindings.bodyTint)` etc
- *   4. `dnaToBoneScales(dna, phase, userBand)` retorna scales por bone
- *   5. Aplica em `bones.head.scale.set(scales.head, ...)` etc
- *   6. `dnaToAnimationState(dna, mood, action)` retorna animation a tocar
- *   7. `useAnimations(actions)` faz blend
- *
- * Substitui o sistema antigo de vertex displacement procedural, que
- * inerentemente gerava blobs alienígenas. Agora o DNA tinta + escala
- * proporcionalmente assets feitos por artista — Pokemon-tier visual real.
  */
 
 import { paletteFromGenome } from './palette';
@@ -25,12 +11,9 @@ import { morphologyFromGenome, type Morphology } from './morphology';
 import { moodScore } from './mood';
 import type { MascotAnimationKind } from '@/lib/animation-triggers';
 import type { Genome } from './genome';
-import type { MascotMood, MascotPhase, Personality } from '@/types';
+import type { MascotMood, MascotPhase } from '@/types';
 
-/**
- * Bindings que o renderer aplica diretamente no GLB carregado.
- * Tudo numérico ou hex — sem objetos Three.js (lib pura, testável headless).
- */
+/** Cores e shader-like props derivados do DNA (hex + multiplicadores). */
 export interface MaterialBindings {
   /** Cor do body_material (hex number) — `mesh.material.color.setHex(this)` */
   bodyTint: number;
@@ -50,10 +33,7 @@ export interface MaterialBindings {
   pattern: Morphology['pattern'];
 }
 
-/**
- * Bone scales por bone — aplica em `skeleton.bones[name].scale.setScalar(value)`.
- * Valores são MULTIPLICADORES do base 1.0 — chibi proportions vêm daqui.
- */
+/** Escalas de proporção por região (multiplicadores sobre 1.0 — chibi, fases, etc.). */
 export interface BoneScales {
   head: number;
   neck: number;
@@ -163,14 +143,6 @@ export const PHASE_BONE_PRESETS: Record<
   adolescente: { head: 1.05, body: 0.95, eye: 1.05, limb: 0.95, glowMult: 1.0 },
   adulto: { head: 1.0, body: 1.0, eye: 1.0, limb: 1.0, glowMult: 1.15 },
   evoluido: { head: 0.95, body: 1.0, eye: 1.0, limb: 1.05, glowMult: 1.5 },
-};
-
-/** Personality → GLB path. Cada base é um asset separado. */
-export const PERSONALITY_TO_GLB: Record<Personality, string> = {
-  calmo: 'assets/mascot-3d/bipo.glb',
-  motivador: 'assets/mascot-3d/zip.glb',
-  fofo: 'assets/mascot-3d/lulu.glb',
-  sabio: 'assets/mascot-3d/aro.glb',
 };
 
 /**
@@ -309,10 +281,7 @@ export function dnaToMaterialBindings(
   };
 }
 
-/**
- * DNA + phase + userBand → BoneScales. Aplica em runtime via
- * `skeleton.bones[name].scale.setScalar(value)`.
- */
+/** DNA + phase + userBand → BoneScales (proporções para SVG / morphInfluences). */
 export function dnaToBoneScales(
   dna: Genome,
   phase: MascotPhase,
@@ -343,15 +312,12 @@ export function dnaToBoneScales(
   };
 }
 
-/**
- * Acessórios desbloqueados por DNA + hábitos. Lista de bone-name → GLB path
- * pra carregar GLBs adicionais e attachar ao mascote base.
- */
+/** Acessórios equipados — slot anatômico + id para o renderer 2D. */
 export interface AccessoryAttachment {
-  /** Bone do mascote base onde anexa (head, neck, body) */
+  /** Região do mascote (head, neck, body, hand_R) */
   bone: string;
-  /** Path do GLB do acessório */
-  glbPath: string;
+  /** Id do acessório (cap, bow, wings_angel, …) */
+  accessoryId: string;
   /** Multiplicador de escala opcional */
   scale?: number;
 }
@@ -364,28 +330,26 @@ export function unlockedAccessories(
   // unlockedIds vem do estado do app (achievements). Equipped é o subset
   // que o user escolheu equipar. Aqui só converte equipped em attachments.
   //
-  // Aceita IDs curtos legados (cap, bow, glasses…) E GLB keys longos
-  // (cap_classic, wings_angel, aura_cosmic…). IDs longos resolvem para
-  // o filename real; IDs curtos resolvem via tabela legacy → filename.
-  const ACCESSORY_BONES: Record<string, { bone: string; scale?: number; glb?: string }> = {
+  // IDs curtos (cap, bow…) e ids longos (cap_classic, wings_angel…).
+  const ACCESSORY_BONES: Record<string, { bone: string; scale?: number; id?: string }> = {
     // IDs curtos legados — mantidos pra retro-compat dos consumers atuais.
-    cap: { bone: 'head', scale: 1.0, glb: 'cap_classic' },
-    bow: { bone: 'head', scale: 0.8, glb: 'bow_tie' },
-    glasses: { bone: 'head', scale: 1.1, glb: 'glasses_round' },
-    crown: { bone: 'head', scale: 1.0, glb: 'crown_royal' },
-    flower: { bone: 'head', scale: 0.7, glb: 'flower_daisy' },
-    headphones: { bone: 'head', scale: 1.05, glb: 'beanie' },
+    cap: { bone: 'head', scale: 1.0, id: 'cap_classic' },
+    bow: { bone: 'head', scale: 0.8, id: 'bow_tie' },
+    glasses: { bone: 'head', scale: 1.1, id: 'glasses_round' },
+    crown: { bone: 'head', scale: 1.0, id: 'crown_royal' },
+    flower: { bone: 'head', scale: 0.7, id: 'flower_daisy' },
+    headphones: { bone: 'head', scale: 1.05, id: 'beanie' },
     halo: { bone: 'head', scale: 1.0 },
-    horn: { bone: 'head', scale: 0.6, glb: 'sword_floating' },
-    monocle: { bone: 'head', scale: 0.5, glb: 'monocle_gold' },
-    mask: { bone: 'head', scale: 1.0, glb: 'sunglasses' },
-    scarf: { bone: 'neck', scale: 1.0, glb: 'scarf_cozy' },
-    cape: { bone: 'neck', scale: 1.2, glb: 'cape_velvet' },
-    leaf: { bone: 'body', scale: 0.6, glb: 'flame_mane' },
-    cookie: { bone: 'body', scale: 0.5, glb: 'heart_glow' },
-    star: { bone: 'body', scale: 0.4, glb: 'heart_glow' },
+    horn: { bone: 'head', scale: 0.6, id: 'sword_floating' },
+    monocle: { bone: 'head', scale: 0.5, id: 'monocle_gold' },
+    mask: { bone: 'head', scale: 1.0, id: 'sunglasses' },
+    scarf: { bone: 'neck', scale: 1.0, id: 'scarf_cozy' },
+    cape: { bone: 'neck', scale: 1.2, id: 'cape_velvet' },
+    leaf: { bone: 'body', scale: 0.6, id: 'flame_mane' },
+    cookie: { bone: 'body', scale: 0.5, id: 'heart_glow' },
+    star: { bone: 'body', scale: 0.4, id: 'heart_glow' },
 
-    // GLB keys reais — 18 filenames presentes em assets/mascot-3d/accessories/.
+    // ids longos (cap_classic, wings_angel, …)
     cap_classic: { bone: 'head', scale: 1.0 },
     beanie: { bone: 'head', scale: 1.0 },
     bow_tie: { bone: 'head', scale: 0.8 },
@@ -410,17 +374,16 @@ export function unlockedAccessories(
     .filter(id => ACCESSORY_BONES[id])
     .map(id => {
       const entry = ACCESSORY_BONES[id];
-      const filename = entry.glb ?? id;
       return {
         bone: entry.bone,
-        glbPath: `assets/mascot-3d/accessories/${filename}.glb`,
+        accessoryId: entry.id ?? id,
         scale: entry.scale,
       };
     });
 }
 
 // ----------------------------------------------------------------------------
-// Helper: HSL → hex (Three.js < r150 não parseia 'hsl()' strings)
+// Helper: HSL → hex RGB
 // ----------------------------------------------------------------------------
 function hslToHex(h: number, s: number, l: number): number {
   s /= 100;

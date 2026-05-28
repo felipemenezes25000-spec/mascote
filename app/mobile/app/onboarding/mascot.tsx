@@ -71,9 +71,7 @@ export default function MascotBirth() {
     () => generateOnboardingPreview(answers, getPersonality(personality).mascotName, personality),
     [answers, personality],
   );
-  // `visuals` (modifiersToVisuals) era passado pra prop `evolutionVisuals` do
-  // Mascot — ignorada após pivô 2D. useMemo removido em 2026-05-27 (era pure
-  // dead compute em todo render do onboarding).
+  // Preview onboarding: DNA gerado no fluxo, passado via dnaOverride.
   const dna = sanitizeGenome(preview.genotype.genome);
   const mood = mapMoodToMascot(answers.moodId);
 
@@ -145,9 +143,7 @@ export default function MascotBirth() {
                 phase="bebe"
                 mood={mood}
                 size={170}
-                force2D
                 dnaOverride={dna}
-                seedOverride={preview.seed}
               />
             </Animated.View>
           </SceneBackground>

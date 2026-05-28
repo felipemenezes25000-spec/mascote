@@ -1,8 +1,7 @@
 /**
- * Invariante: Mascot3D renderiza traços desbloqueados pelo DNA.
+ * Invariante: traços desbloqueados pelo DNA refletem na morfologia.
  *
- * O renderer Mascot3D usa em RUNTIME mocked (jsdom não tem WebGL), então
- * testamos o CONTRATO upstream que define quais traits a criatura tem:
+ * Testamos o contrato upstream que define quais traits a criatura tem:
  *   genome → morphologyFromGenome → boolean flags (hasTail, hasSpikes, ...)
  *   genome → morphologySummary → human-readable traits
  *
@@ -34,7 +33,7 @@ function defaultCustom(overrides: Partial<MascotCustomization> = {}): MascotCust
   };
 }
 
-describe('Invariante: Mascot3D renderiza traços desbloqueados pelo DNA', () => {
+describe('Invariante: morfologia reflete traços desbloqueados pelo DNA', () => {
   it('genome com creativity >= 0.4 → hasTail = true', () => {
     const g = { ...generateGenome(1), creativity: 0.6 };
     expect(morphologyFromGenome(g).hasTail).toBe(true);

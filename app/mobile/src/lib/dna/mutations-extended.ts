@@ -75,7 +75,7 @@ function habitMorph(habit: HabitKind, tier: number): VisualImpact {
   if (tier >= 4 && habit === 'meditation') impact.bioluminescent = true;
 
   // Morph influence boosts — slice 2026-05-25 / extended pra slice 2026-05-26.
-  // Cada hábito empurra blend shapes coerentes com a vibe da prática.
+  // Cada hábito empurra influências morfológicas coerentes com a vibe da prática.
   // Boosts pequenos por tier (max ~0.3 no tier 4) — não dominam customização.
   const boostStep = 0.06 * tier;
   const morphInfluenceBoosts: Partial<Record<string, number>> = {};

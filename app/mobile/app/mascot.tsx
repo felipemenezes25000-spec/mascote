@@ -3,7 +3,7 @@ import { Typography } from '@/components/ui';
  * /mascot — Tela de identidade da criatura.
  *
  * Expõe o que torna a criatura "minha":
- *  - Avatar 3D em destaque (reusa Mascot component)
+ *  - Avatar SVG em destaque (Mascot2D via Mascot)
  *  - Arquétipo dominante + tagline (linguagem orgânica DLI)
  *  - 8 afinidades em barra (vetor cosseno DNA × perfis)
  *  - Top 3 genes (descrição PT-BR de cada um)

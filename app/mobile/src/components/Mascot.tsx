@@ -1,11 +1,5 @@
 /**
  * Mascot — wrapper de compat sobre Mascot2D.
- *
- * Mantém API legada (force2D, force3D, dnaOverride, seedOverride, evolutionVisuals)
- * pra zero quebra nas 45+ telas que importavam `Mascot` antes do cleanup 2026-05-27.
- * Props descartadas (force3D, evolutionVisuals) são ignoradas silenciosamente.
- *
- * Ver `docs/superpowers/specs/2026-05-27-mascote-2d-procedural-ia-design.md`.
  */
 
 import { memo } from 'react';
@@ -19,7 +13,6 @@ import type {
   Personality,
   ProceduralGenome,
 } from '@/types';
-import type { MascotEvolutionVisuals } from '@/game/evolution/PhenotypeRenderer';
 import type { MascotAnimationKind } from '@/lib/animation-triggers';
 import { useStore } from '@/store';
 
@@ -39,23 +32,15 @@ interface Props {
     | { emoji?: string; slot?: string; id?: AccessoryId }
     | null;
   reduceMotion?: boolean;
-  /** Descontinuado (sempre 2D agora). Aceito pra evitar quebra de imports. */
-  force2D?: boolean;
-  /** Descontinuado. Ignorado. */
-  force3D?: boolean;
   style?: StyleProp<ViewStyle>;
-  /** Descontinuado (3D-only). Ignorado. */
-  evolutionVisuals?: MascotEvolutionVisuals | null;
   /** Override de DNA pra preview/onboarding. */
   dnaOverride?: MascotDNA;
-  seedOverride?: number;
   /** Genome IA-procedural. Passado direto pro Mascot2D. */
   proceduralGenome?: ProceduralGenome | null;
 }
 
 function MascotImpl(props: Props) {
   const storeMascot = useStore(s => s.mascot);
-  // dnaOverride > store.mascot.dna (preview de onboarding)
   const dna = props.dnaOverride ?? storeMascot?.dna;
 
   return (

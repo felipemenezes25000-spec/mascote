@@ -1,8 +1,5 @@
 /**
- * Mascot2D — fallback SVG do mascote (carregado em devices sem suporte 3D).
- *
- * Mantém API idêntica ao Mascot3D pra ser drop-in. O wrapper em
- * `Mascot.tsx` escolhe automaticamente entre os dois via deviceCapabilities.
+ * Mascot2D — mascote procedural em SVG (renderer principal do app).
  *
  * Visual: robô laranja paramétrico alinhado ao Design Handoff:
  *  - Cabeça rounded-rectangle (rx 34)
@@ -85,8 +82,7 @@ interface Props {
   reduceMotion?: boolean;
   /**
    * DNA opcional — quando passado, sobrescreve paleta baseada em personality
-   * com paleta derivada do genoma. Garante que o fallback 2D seja a MESMA
-   * criatura cromática que o 3D — não um "robô laranja genérico".
+   * com paleta derivada do genoma — não um "robô laranja genérico".
    *
    * Se ausente, mantém comportamento legado (personality.primaryColor).
    */
@@ -107,7 +103,7 @@ interface Props {
 /**
  * Converte morphInfluences em scaleX/scaleY pra wrapper SVG.
  *
- * SVG não tem blend shapes nativos como mesh 3D, então aproximamos:
+ * O SVG aproxima morfologia via escala:
  * - body_tall/body_short → scaleY (1.0 ± 0.15 * weight)
  * - body_wide/body_narrow → scaleX (1.0 ± 0.15 * weight)
  *
@@ -351,9 +347,8 @@ function MascotImpl({
 
   // PALETA: prioridade DNA → personality preset → tema (último recurso).
   //
-  // **Por que DNA primeiro:** o Mascot2D é fallback do 3D. Se o 3D usa cor
-  // derivada do genome via paletteFromGenome(), o 2D PRECISA usar a mesma cor
-  // pra não quebrar a fantasia ("é a mesma criatura, só renderizada diferente").
+  // **Por que DNA primeiro:** garante paridade cromática com o genoma —
+  // mesma criatura independente de personality preset.
   //
   // Sem DNA, cai pra preset por personality (Calmo=sage, Motivador=brand,
   // Fofo=coral, Sábio=lilac) — comportamento legado preservado.

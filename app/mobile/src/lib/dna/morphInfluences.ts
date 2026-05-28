@@ -1,22 +1,14 @@
 /**
- * morphInfluences — mapeia Morphology pra dict de blend shape weights [0, 1].
+ * morphInfluences — mapeia Morphology pra pesos morfológicos [0, 1].
  *
- * Cada multiplicador morphology vira um par positivo/negativo de blend shapes.
- * Ex: body_height = 1.2 → { body_tall: 0.67 } (0.2/0.3 = 0.67)
- *     body_height = 0.85 → { body_short: 0.5 }
- *
- * Pra Unity: weights são 0-1 aqui; lá viram 0-100 no SetBlendShapeWeight.
- * Pra Three.js: weights 0-1 batem com `morphTargetInfluences` direto.
- *
- * **GLBs precisam ter blend shapes nomeados conforme o protocolo abaixo.**
- * Se não tiverem, controllers ignoram silenciosamente — não quebra render.
+ * Cada multiplicador vira pares positivo/negativo (ex.: body_height alto → body_tall).
+ * O Mascot2D converte esses pesos em scaleX/scaleY no wrapper SVG.
  */
 
 import type { Morphology } from './morphology';
 
 /**
- * Catálogo oficial de blend shapes esperados nos GLBs/Unity prefabs.
- * Nomeação convencional Mascote (NÃO usar nomes do Blender exportado direto):
+ * Catálogo de chaves morfológicas (usadas em mutations e no renderer 2D):
  *
  *   eye_big        — olho maior
  *   eye_small      — olho menor

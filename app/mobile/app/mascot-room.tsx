@@ -1,12 +1,4 @@
-/**
- * /mascot-room — quarto vivo do mascote (2D, sem Unity).
- *
- * Pré-cleanup 2026-05-27 esta rota era 100% Unity (rendering nativo de
- * "destino premium"). Após o big-bang, é uma tela 2D simples que mostra o
- * Mascot2D em destaque com gestos manuais (carinho/jogar/cantar).
- *
- * Ver `docs/superpowers/specs/2026-05-27-mascote-2d-procedural-ia-design.md`.
- */
+/** /mascot-room — quarto do mascote com Mascot2D em destaque e gestos manuais. */
 
 import { router } from 'expo-router';
 import { useCallback } from 'react';

@@ -92,7 +92,7 @@ function buildAttributionTable(
     ...Object.keys(finalInf),
   ]);
 
-  // Mapping de keys de mutation que mexem em cada blend shape.
+  // Mapping de keys de mutation que mexem em cada influência morfológica.
   const sourcesByKey: Record<string, string[]> = {};
   for (const u of unlocked) {
     const mut = getMutationById(u.mutation_id);
@@ -147,21 +147,21 @@ export function MorphAttributionModal({
   return (
     <ModalShell visible={visible} onClose={onClose} title="Composição visual">
       <Typography variant="caption" tone="secondary">
-        Cada blend shape weight é a soma de: base DNA+customização +
+        Cada peso morfológico é a soma de: base DNA+customização +
         mutations + personalidade. Final clamped em [0, 1].
       </Typography>
 
       {rows.length === 0 ? (
         <View style={styles.emptyWrap}>
           <Typography variant="body" tone="dim" align="center">
-            Nada empurrando os blend shapes ainda. Customize sliders ou desbloqueie
+            Nada empurrando a morfologia ainda. Customize sliders ou desbloqueie
             mutações pra ver a composição.
           </Typography>
         </View>
       ) : (
         <ScrollView style={styles.scrollWrap} contentContainerStyle={styles.scrollContent}>
           <View style={styles.tableHeader}>
-            <Typography variant="caption" style={[styles.col, styles.colKey, { color: theme.colors.textSecondary }]}>Blend shape</Typography>
+            <Typography variant="caption" style={[styles.col, styles.colKey, { color: theme.colors.textSecondary }]}>Traço</Typography>
             <Typography variant="caption" style={[styles.col, styles.colNum, { color: theme.colors.textSecondary }]}>Base</Typography>
             <Typography variant="caption" style={[styles.col, styles.colNum, { color: theme.colors.textSecondary }]}>Mut.</Typography>
             <Typography variant="caption" style={[styles.col, styles.colNum, { color: theme.colors.textSecondary }]}>Pers.</Typography>
@@ -189,8 +189,7 @@ export function MorphAttributionModal({
       )}
 
       <Typography variant="caption" tone="dim" align="center">
-        Blend shapes só aparecem visualmente quando o GLB tem shape keys
-        nomeadas — ver MORPH_TARGETS_DESIGN.md.
+        Pesos altos afetam escala e silhueta no preview SVG do Mascot2D.
       </Typography>
     </ModalShell>
   );

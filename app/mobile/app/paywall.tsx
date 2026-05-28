@@ -54,13 +54,7 @@ export default function Paywall() {
     };
   }, [profile?.id]);
 
-  // Antes existia um useEffect calculando `beforeVisuals`/`afterVisuals` via
-  // `modifiersToVisuals` + `buildEvolutionState` pra animar a preview. Após o
-  // pivô 2D (commit 4d0004a), o wrapper `Mascot` IGNORA `evolutionVisuals`
-  // silenciosamente — então a computação inteira virou trabalho perdido em
-  // cada mount do paywall (leitura full de checkins + buildEvolutionState).
-  // Removido em 2026-05-27. Se animação extra de paywall voltar, integrar via
-  // `proceduralGenome` em vez de visuals.
+  // Preview usa dnaOverride direto no Mascot — sem camada evolutionVisuals.
 
   const enqueueToast = useStore(s => s.enqueueToast);
 

@@ -1,9 +1,9 @@
 /**
- * Mascot2D — paridade DNA-driven com Mascot3D.
+ * Mascot2D — render DNA-driven.
  *
  * Garante:
  *  - Sem DNA, paleta vem de personality (compat legada)
- *  - Com DNA, paleta deriva de paletteFromGenome (paridade com 3D)
+ *  - Com DNA, paleta deriva de paletteFromGenome
  *  - DNAs diferentes produzem renders distintos (não fallback genérico)
  */
 
@@ -23,7 +23,7 @@ function snapshotColors(json: string): Set<string> {
   return colors;
 }
 
-describe('Mascot2D — DNA-driven (paridade com 3D)', () => {
+describe('Mascot2D — DNA-driven', () => {
   it('sem DNA, render usa cor da personality (compat legada)', () => {
     const tree = TestRenderer.create(
       <Mascot2D personality="calmo" phase="adolescente" mood="ok" size={200} />,

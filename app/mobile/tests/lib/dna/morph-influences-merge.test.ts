@@ -10,7 +10,7 @@
  *  - Boost em key inexistente cria
  *  - Pares mutually exclusive ainda podem se VIOLAR após boost (ex:
  *    base.eye_big + boost.eye_small = ambos > 0). Isso é aceito —
- *    blend shape do GLB lida nativamente com weights conflitantes.
+ *    o renderer 2D aplica clamp/merge conforme mergeMorphInfluences.
  */
 
 import { describe, expect, it } from 'vitest';

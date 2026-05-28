@@ -1,5 +1,5 @@
 /**
- * morphInfluences — derive blend shape weights from final Morphology.
+ * morphInfluences — deriva pesos morfológicos a partir da Morphology final.
  *
  * Invariantes:
  *  - Todos os weights em [0, 1]

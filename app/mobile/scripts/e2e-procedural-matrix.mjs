@@ -9,8 +9,7 @@
  *  - genome states: none (fallback DNA-driven) | IA | IA + userOverrides
  *  - moods: triste, ok, feliz, empolgado, exausto
  *
- * Falha se: console errors, page crash, mascote ausente (svg count == 0),
- * ou canvas detectado (vestígio de 3D).
+ * Falha se: console errors, page crash ou mascote ausente (svg count == 0).
  */
 import { chromium } from 'playwright';
 import { mkdirSync, writeFileSync } from 'node:fs';

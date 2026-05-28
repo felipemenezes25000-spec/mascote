@@ -72,10 +72,9 @@ export interface VisualImpact {
   /** Multiplicador na quantidade de partículas da aura. */
   auraParticleMultiplier?: number;
   /**
-   * Boosts aditivos pros blend shape weights derivados da Morphology.
+   * Boosts aditivos pros pesos morfológicos derivados da Morphology.
    * Range [-1, 1]; somado ao influences base, clamped final em [0, 1].
    * Catálogo de keys em `morphInfluences.ts:MORPH_INFLUENCE_KEYS`.
-   * NO-OP se GLB não expõe blend shapes.
    */
   morphInfluenceBoosts?: Partial<Record<string, number>>;
 }
@@ -329,7 +328,7 @@ export interface AggregatedVisualImpact {
   bioluminescent: boolean;
   pattern: BodyPattern;
   auraParticleMultiplier: number;
-  /** Boosts aditivos pros blend shape weights (slice 2026-05-25). */
+  /** Boosts aditivos pros pesos morfológicos. */
   morphInfluenceBoosts: Record<string, number>;
 }
 
@@ -390,7 +389,7 @@ export function aggregateVisualImpact(
       for (const [key, boost] of Object.entries(v.morphInfluenceBoosts)) {
         if (typeof boost !== 'number' || !Number.isFinite(boost)) continue;
         // Boosts somam aditivamente — várias mutations com mesmo key compõem.
-        // Clamp final acontece em quem consome (Three.js, Unity controller).
+        // Clamp final acontece em mergeMorphInfluences / Mascot2D.
         out.morphInfluenceBoosts[key] = (out.morphInfluenceBoosts[key] ?? 0) + boost;
       }
     }
@@ -435,9 +434,8 @@ export function applyMutationVisualImpact(
     if (typeof mult !== 'number' || !Number.isFinite(mult)) continue;
     // Cap per-param em [0.25, 4]: compõe multiplicativamente em
     // `aggregateVisualImpact`, então 5 mutations c/ mult=1.5 viraria 7.6× —
-    // explodindo morfologia fora da faixa visual prevista pelo renderer 3D
-    // (orelhas ocupando 30% do canvas etc). 0.25 mínimo evita partes
-    // somindo (mult=0 colapsava o mesh).
+    // explodindo morfologia fora da faixa visual prevista (SVG ocupando o canvas).
+    // 0.25 mínimo evita partes somindo.
     const safeMult = Math.max(0.25, Math.min(4, mult));
     const k = key as MorphKeys;
     const cur = out[k];
@@ -448,7 +446,7 @@ export function applyMutationVisualImpact(
   // glowBoost: incremento aditivo no emissive intensity do corpo.
   // CAP obrigatório: sem isso, mutations futuras com glowBoost mal-calibrado
   // (ou um payload corrompido com Infinity) propagavam direto pro renderer
-  // 3D e causavam bloom branco overwhelming. Faixa física ≤ 5.
+  // e causavam glow overwhelming. Faixa física ≤ 5.
   if (impact.glowBoost > 0 && Number.isFinite(impact.glowBoost)) {
     out.bodyEmissiveIntensity = Math.min(5, out.bodyEmissiveIntensity + impact.glowBoost);
   }

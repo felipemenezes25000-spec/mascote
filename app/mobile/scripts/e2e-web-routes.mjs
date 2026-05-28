@@ -124,7 +124,6 @@ function isNoise(text) {
     t.includes('animated: `useNativeDriver`') ||
     t.includes('expo-av') && t.includes('deprecated') ||
     t.includes('revenuecat') && t.includes('not configured') ||
-    t.includes('r3f: hooks can only be used within the canvas') ||
     t.includes('computed radius is nan') ||
     t.includes('validateDOMNesting') ||
     t.includes('attempted to navigate before mounting the root layout')

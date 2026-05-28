@@ -44,9 +44,7 @@ export function paletteFromGenome(g: Genome): Palette {
   };
 }
 
-/**
- * Converte HSL → hex RGB. Útil pra passar pro Three.js (que prefere hex).
- */
+/** Converte HSL → hex RGB. */
 export function hslToHex(h: number, s: number, l: number): number {
   const sat = s / 100;
   const light = l / 100;
@@ -66,7 +64,7 @@ export function hslToHex(h: number, s: number, l: number): number {
   return (R << 16) | (G << 8) | B;
 }
 
-/** Hex RGB do corpo da criatura, conveniente pro Three.js. */
+/** Hex RGB do corpo da criatura. */
 export function bodyHex(p: Palette): number {
   return hslToHex(p.bodyHSL[0], p.bodyHSL[1], p.bodyHSL[2]);
 }
