@@ -9,7 +9,7 @@
  *  - Mantém cooldown state em ref (não re-render)
  *
  * Caller decide o que fazer com `effect.animation` / `effect.message` /
- * `effect.notify` — geralmente: toast queue + Mascot3D action prop.
+ * `effect.notify` — geralmente: toast queue + Mascot2D action prop.
  *
  * **Princípio**: hook é PURO em relação a behaviors (não muta nada do
  * mundo). Side effects são responsabilidade do `onEffect` callback.

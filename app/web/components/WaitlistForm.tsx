@@ -168,7 +168,6 @@ export function WaitlistForm({ dict }: { dict: Dictionary }) {
                   type="button"
                   role="radio"
                   aria-checked={active}
-                  aria-pressed={active}
                   onClick={() => setPick(p.name)}
                   className={`rounded-full border px-4 py-2 text-sm transition ${
                     active

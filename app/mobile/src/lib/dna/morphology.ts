@@ -2,10 +2,10 @@
  * DNA → parâmetros de morfologia.
  *
  * Pura função do Genome — converte os 11 floats em ~20 parâmetros
- * geométricos que o renderer R3F consome (altura, largura, número de
+ * geométricos que o renderer 2D consome (altura, largura, número de
  * membros, tamanho dos olhos, etc).
  *
- * Mantém renderer SEM lógica de DNA: o `Mascot3D.tsx` lê apenas estes
+ * Mantém renderer SEM lógica de DNA: o `Mascot2D.tsx` lê apenas estes
  * parâmetros derivados. Facilita teste, simulação e fallback.
  */
 

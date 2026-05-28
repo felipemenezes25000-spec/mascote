@@ -40,11 +40,16 @@ export function Footer({ dict, lang }: { dict: Dictionary; lang: Locale }) {
               </h4>
               <ul className="space-y-2.5">
                 {col.links.map((l) => {
-                  const external = l.href.startsWith("mailto:") || l.href.startsWith("http") || l.href.startsWith("#");
+                  const isHttp = l.href.startsWith("http");
+                  const external = l.href.startsWith("mailto:") || isHttp || l.href.startsWith("#");
                   return (
                     <li key={l.label}>
                       {external ? (
-                        <a href={l.href} className="text-sm text-ink hover:underline hover:underline-offset-4 hover:decoration-brand hover:decoration-2 transition">
+                        <a
+                          href={l.href}
+                          {...(isHttp ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                          className="text-sm text-ink hover:underline hover:underline-offset-4 hover:decoration-brand hover:decoration-2 transition"
+                        >
                           {l.label}
                         </a>
                       ) : (

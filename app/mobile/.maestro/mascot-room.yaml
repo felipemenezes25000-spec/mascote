@@ -1,8 +1,8 @@
 # Fluxo: abrir o quarto do mascote (rota /mascot-room) e exercitar os botões
-# de teste — gestos, hábitos, eventos. Valida que a rota carrega mesmo sem
-# Unity nativo (fallback Three/2D ou placeholder do bridge).
+# de teste — gestos, hábitos, eventos. App é 100% 2D pós-pivô (commit 4d0004a);
+# este fluxo valida o renderer 2D + bridge de eventos.
 appId: app.meumascote.dev
-tags: [unity, mascot-room]
+tags: [mascot-room]
 ---
 - runFlow:
     file: setup-home.yaml

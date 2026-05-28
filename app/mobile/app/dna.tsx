@@ -3,7 +3,7 @@ import { Typography } from '@/components/ui';
  * app/dna.tsx — Tela "DNA do Mascote".
  *
  * Por que essa tela existe: o genome já molda a aparência da criatura (em
- * Mascot3D.tsx + morphology.ts), mas o usuário não conecta "fiz check-in de
+ * Mascot2D.tsx + morphology.ts), mas o usuário não conecta "fiz check-in de
  * respiração → genes mudaram → mascote ficou diferente". Sem esse loop
  * cognitivo, a evolução parece mágica/aleatória.
  *

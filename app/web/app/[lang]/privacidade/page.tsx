@@ -100,13 +100,13 @@ const content: Record<Locale, { kicker: string; title: string; updated: string; 
       {
         h: "Legal basis",
         p: [
-          "Consent (newsletter, waitlist) and contract execution (app usage). You can request deletion at any moment via hi@meumascote.app — answered within 7 working days.",
+          "Consent (newsletter, waitlist) and contract execution (app usage). You can request deletion at any moment via oi@meumascote.app — answered within 7 working days.",
         ],
       },
       {
         h: "Children & teens",
         p: [
-          "Mascote is 16+. We confirm age at onboarding. We don't target ads to minors, don't knowingly collect minor data. Guardians can request deletion at hi@meumascote.app.",
+          "Mascote is 16+. We confirm age at onboarding. We don't target ads to minors, don't knowingly collect minor data. Guardians can request deletion at oi@meumascote.app.",
         ],
       },
       {
@@ -115,7 +115,7 @@ const content: Record<Locale, { kicker: string; title: string; updated: string; 
           "Functional only: language, theme, newsletter state. If we ever turn on analytics (GA4 or Plausible), a clear opt-in banner will appear first.",
         ],
       },
-      { h: "Contact", p: ["Questions, deletion, complaint: hi@meumascote.app."] },
+      { h: "Contact", p: ["Questions, deletion, complaint: oi@meumascote.app."] },
     ],
   },
   es: {
@@ -146,7 +146,7 @@ const content: Record<Locale, { kicker: string; title: string; updated: string; 
       {
         h: "Base legal",
         p: [
-          "Consentimiento (newsletter, waitlist) y ejecución de contrato (uso de la app). Puedes pedir borrado en hola@meumascote.app — respondido en 7 días hábiles.",
+          "Consentimiento (newsletter, waitlist) y ejecución de contrato (uso de la app). Puedes pedir borrado en oi@meumascote.app — respondido en 7 días hábiles.",
         ],
       },
       {
@@ -159,7 +159,7 @@ const content: Record<Locale, { kicker: string; title: string; updated: string; 
         h: "Cookies",
         p: ["Solo funcionales: idioma, tema, newsletter. Si activamos analítica, banner de opt-in primero."],
       },
-      { h: "Contacto", p: ["Dudas o borrado: hola@meumascote.app."] },
+      { h: "Contacto", p: ["Dudas o borrado: oi@meumascote.app."] },
     ],
   },
 };

@@ -83,7 +83,7 @@ const MOOD_TINTS: Record<MascotMood, { dh: number; ds: number; dl: number }> = {
  * - saturação é clampada em [20, 95] — evita cores cinzas (<20) ou neon (>95).
  * - lightness é clampada em [25, 80] — evita preto puro ou branco lavado.
  *
- * **Uso:** chamado por Mascot2D e Mascot3D pra colorir o CORPO (não acentos
+ * **Uso:** chamado por Mascot2D pra colorir o CORPO (não acentos
  * nem olhos). Acentos/olhos derivam de `tintIdentity(identity, 'ok')` pra
  * manter cor fixa independente do humor.
  */

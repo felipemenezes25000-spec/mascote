@@ -31,7 +31,7 @@ export default function Signup() {
               <Typography variant="mono" tone="brand" style={styles.kicker}>BEM-VINDO</Typography>
               <Typography variant="title">Criar conta</Typography>
               <Typography tone="secondary">
-                Tudo fica no seu dispositivo. Não exigimos email real nessa demo local.
+                Tudo fica no seu dispositivo. O e-mail é opcional — só pedimos pra te avisar de novidades.
               </Typography>
             </View>
             <View style={{ gap: theme.spacing.md }}>
@@ -63,9 +63,17 @@ export default function Signup() {
                 }}
                 disabled={!name.trim()}
               />
-              <Typography variant="mono" tone="dim" align="center">
-                Ao continuar, você concorda com a Política de Privacidade e Termos.
-              </Typography>
+              <View style={styles.legalRow}>
+                <Typography variant="mono" tone="dim" align="center">Ao continuar, você concorda com a </Typography>
+                <Pressable onPress={() => router.push('/privacy')} hitSlop={8}>
+                  <Typography variant="mono" tone="brand" align="center" style={styles.legalLink}>Privacidade</Typography>
+                </Pressable>
+                <Typography variant="mono" tone="dim" align="center"> e </Typography>
+                <Pressable onPress={() => router.push('/terms')} hitSlop={8}>
+                  <Typography variant="mono" tone="brand" align="center" style={styles.legalLink}>Termos</Typography>
+                </Pressable>
+                <Typography variant="mono" tone="dim" align="center">.</Typography>
+              </View>
             </View>
           </View>
         </View>
@@ -81,5 +89,12 @@ function makeStyles(theme: Theme) {
     back: { alignSelf: 'flex-start', padding: 6 },
     backText: { fontSize: 24, color: theme.colors.text },
     kicker: { fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
+    legalRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    legalLink: { textDecorationLine: 'underline' },
   });
 }

@@ -364,7 +364,7 @@ export default function ChatTab() {
             // top/bottom 6 leva alvo pra ~46px sem encostar no input bar acima.
             hitSlop={{ top: 6, bottom: 6 }}
           >
-            <Icon name="shield" size={14} color="#8C4F1F" strokeWidth={2} />
+            <Icon name="shield" size={14} color={theme.colors.warning} strokeWidth={2} />
             <Typography variant="body" style={styles.cvvText}>Tô em momento ruim · só presença</Typography>
           </Pressable>
           <Pressable
@@ -375,7 +375,7 @@ export default function ChatTab() {
             hitSlop={8}
             accessibilityLabel="Fechar"
           >
-            <Icon name="x" size={14} color="#8C4F1F" strokeWidth={2.2} />
+            <Icon name="x" size={14} color={theme.colors.text} strokeWidth={2.2} />
           </Pressable>
         </View>
       )}
@@ -606,7 +606,7 @@ function makeStyles(theme: Theme) {
       alignItems: 'center',
       gap: theme.spacing.sm,
     },
-    cvvText: { flex: 1, ...theme.text.xs, color: '#8C4F1F', fontWeight: '600' },
+    cvvText: { flex: 1, ...theme.text.xs, color: theme.colors.text, fontWeight: '600' },
     listContent: { paddingVertical: theme.spacing.md, gap: 4 },
     emptyWrap: {
       marginHorizontal: theme.spacing.md,

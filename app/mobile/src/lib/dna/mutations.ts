@@ -16,9 +16,9 @@
  * - Sem efeito colateral em gameplay (não afeta XP/coins/level). É puramente
  *   expressiva.
  *
- * **Como o renderer consome**: `Mascot3D` lê `UnlockedMutation[]` do usuário
+ * **Como o renderer consome**: `Mascot2D` lê `UnlockedMutation[]` do usuário
  * e aplica `visualImpact` em sequência sobre os params de `morphologyFromGenome`.
- * Pattern → shader; glowBoost → emissive; bioluminescent → pulse opcional.
+ * Pattern → padrão SVG; glowBoost → halo; bioluminescent → pulse opcional.
  */
 
 import type { Genome, GeneKey } from './genome';

@@ -2,7 +2,7 @@
  * Descritores semânticos seguros derivados do DNA.
  *
  * **REGRA DE OURO**: este módulo é a ÚNICA superfície segura por onde estado do
- * DNA pode atravessar pra IA externa (OpenAI). Outras camadas (Mascot3D,
+ * DNA pode atravessar pra IA externa (OpenAI). Outras camadas (Mascot2D,
  * stories, mood) ficam no device.
  *
  * **Garantias invioláveis**:

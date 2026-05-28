@@ -7,7 +7,7 @@
  *
  * **Princípios invioláveis**:
  * - Behaviors NUNCA mutam DB ou Mascot. Apenas geram **side effects visuais**
- *   (animação via ref no Mascot3D, particles, micro-mensagem).
+ *   (animação via ref no Mascot2D, particles, micro-mensagem).
  * - Engine é DETERMINÍSTICA por contexto + cooldown — não chama RNG sem seed.
  * - Cooldown previne behavior repetir antes do tempo. Permite vibe natural.
  *
@@ -70,12 +70,12 @@ export type BehaviorScore = number;
 
 /**
  * Side effects que o behavior pode emitir. Engine recebe e despacha pro
- * consumer (Mascot3D ref, toast queue, etc.) — separar contrato do
+ * consumer (Mascot2D ref, toast queue, etc.) — separar contrato do
  * comportamento facilita teste sem dependência de UI.
  */
 export interface BehaviorEffect {
   /**
-   * Animação solicitada — Mascot3D ref consome via switch. Strings simples
+   * Animação solicitada — Mascot2D ref consome via switch. Strings simples
    * em vez de função pra serem JSON-serializable (testes + replay).
    */
   animation?: 'bounce' | 'wander' | 'celebrate' | 'rest' | 'observe' | 'breath_deep';

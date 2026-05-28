@@ -35,7 +35,7 @@ export default function Cancel() {
     // settings.tsx (dialog destrutivo sempre exige confirmação explícita).
     Alert.alert(
       'Mudar pra Free?',
-      'Você perde os benefícios Plus imediatamente (mascote 3D completo, mutações raras, IA emocional). Os dados ficam aqui.',
+      'Você perde os benefícios Plus imediatamente (atelier de customização completo, mutações raras, IA emocional). Os dados ficam aqui.',
       [
         { text: 'Continuo Plus', style: 'cancel' },
         {

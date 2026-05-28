@@ -22,6 +22,7 @@ import { useTheme } from '@/lib/useTheme';
 import { makeShadow } from '@/lib/themes';
 import { useStore } from '@/store';
 import { restorePurchasesService } from '@/services/subscription/RestorePurchasesService';
+import { isDemoBilling } from '@/services/subscription';
 import type { Theme } from '@/lib/themes';
 
 import { Typography } from '@/components/ui';
@@ -29,6 +30,7 @@ export default function SubscriptionActive() {
   const theme = useTheme();
   const styles = makeStyles(theme);
   const badgePulse = useSharedValue(0.6);
+  const demoBilling = isDemoBilling();
   const free = getTier('free');
   const monthly = getTier('plus_monthly');
   const annual = getTier('plus_annual');
@@ -78,10 +80,16 @@ export default function SubscriptionActive() {
       <ScrollView contentContainerStyle={styles.container}>
         <StaggeredView index={0}>
           <View style={styles.card}>
-            <Typography variant="body" style={styles.label}>PLANO ATUAL (DEMO)</Typography>
+            <Typography variant="body" style={styles.label}>
+              {demoBilling ? 'PLANO ATUAL (DEMO)' : 'PLANO ATUAL'}
+            </Typography>
             <Typography variant="body" style={styles.planName}>{free.name}</Typography>
             <Typography variant="body" style={styles.price}>{formatBRL(free.totalCents)}/mês</Typography>
-            <Typography variant="body" style={styles.note}>Nessa versão local, não há cobrança.</Typography>
+            {demoBilling && (
+              <Typography variant="body" style={styles.note}>
+                Esta build usa billing demo — nenhuma cobrança real ocorre.
+              </Typography>
+            )}
             {free.benefits.map(b => <Benefit key={b} text={b} />)}
           </View>
         </StaggeredView>

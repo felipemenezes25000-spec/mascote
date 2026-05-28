@@ -21,6 +21,7 @@ import {
   xpEvents,
 } from '@/lib/db';
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
+import { isDemoBilling } from '@/services/subscription';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -224,19 +225,22 @@ export default function You() {
           </PressableScale>
         </StaggeredView>
 
-        {/* Demo paywall */}
-        <StaggeredView index={7}>
-          <Card variant="elevated" padding="md" style={styles.paywallTeaser}>
-            <PressableScale onPress={() => router.push('/paywall')}>
-              <View style={styles.paywallKickerRow}>
-                <Icon name="sparkle" size={10} color={theme.colors.primary} strokeWidth={2.4} fill={theme.colors.primary} />
-                <Typography variant="body" style={styles.paywallKicker}>DEMO</Typography>
-              </View>
-              <Typography variant="body" style={styles.paywallTitle}>Ver tela de paywall</Typography>
-              <Typography variant="body" style={styles.paywallSub}>App roda local. Paywall é só visual.</Typography>
-            </PressableScale>
-          </Card>
-        </StaggeredView>
+        {/* Demo paywall teaser — visivel apenas no modo demo/dev. Em prod com
+            RevenueCat, o paywall e acessado pelo fluxo normal de assinatura. */}
+        {isDemoBilling() && (
+          <StaggeredView index={7}>
+            <Card variant="elevated" padding="md" style={styles.paywallTeaser}>
+              <PressableScale onPress={() => router.push('/paywall')}>
+                <View style={styles.paywallKickerRow}>
+                  <Icon name="sparkle" size={10} color={theme.colors.primary} strokeWidth={2.4} fill={theme.colors.primary} />
+                  <Typography variant="body" style={styles.paywallKicker}>DEMO</Typography>
+                </View>
+                <Typography variant="body" style={styles.paywallTitle}>Ver tela de paywall</Typography>
+                <Typography variant="body" style={styles.paywallSub}>App roda local. Paywall é só visual.</Typography>
+              </PressableScale>
+            </Card>
+          </StaggeredView>
+        )}
 
         <Typography variant="body" style={styles.disclaimer}>
           Mascote é wellness e autocuidado. Não substitui acompanhamento profissional. Em crise: CVV 188.

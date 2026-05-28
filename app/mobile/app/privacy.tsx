@@ -18,7 +18,7 @@ export default function Privacy() {
       </View>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Typography variant="body" style={styles.h1}>Política de privacidade</Typography>
-        <Typography variant="body" style={styles.meta}>Versão local · atualizada em 2026-05-16</Typography>
+        <Typography variant="body" style={styles.meta}>Atualizada em 2026-05-27</Typography>
 
         <Typography variant="body" style={styles.h2}>O resumo de 30 segundos</Typography>
         <Typography variant="body" style={styles.p}>
@@ -53,11 +53,11 @@ export default function Privacy() {
         <Bullet>Apagar: "Excluir conta" remove tudo localmente, sem volta.</Bullet>
         <Bullet>Revogar consentimentos: toggles em "Configurações".</Bullet>
 
-        <Typography variant="body" style={styles.h2}>Quando virar produto real</Typography>
+        <Typography variant="body" style={styles.h2}>Base legal (LGPD)</Typography>
         <Typography variant="body" style={styles.p}>
-          Esse texto vai ser substituído por uma política completa em conformidade com a LGPD: bases legais por dado,
-          processadores (OpenAI, RevenueCat, etc.), retenção, transferência internacional, DPO, contato com
-          ANPD. Por ora, app é local — então a política curta basta.
+          Coleta com base em consentimento (newsletter, opt-ins) e execução de contrato (uso do app). Você pode pedir
+          exclusão a qualquer momento — &quot;Excluir conta&quot; em Configurações apaga tudo localmente; para suporte, escreva
+          pra <Typography variant="body" style={styles.code}>oi@meumascote.app</Typography> e respondemos em 7 dias úteis.
         </Typography>
 
         <Typography variant="body" style={styles.h2}>Idade</Typography>
@@ -67,7 +67,8 @@ export default function Privacy() {
 
         <Typography variant="body" style={styles.h2}>Contato</Typography>
         <Typography variant="body" style={styles.p}>
-          Quando o produto for ao ar: <Typography variant="body" style={styles.code}>dpo@meumascote.app</Typography>. Por ora, fala com o Felipe.
+          Dúvida, pedido de exclusão, reclamação: <Typography variant="body" style={styles.code}>oi@meumascote.app</Typography>.
+          Encarregado de proteção de dados: o mesmo e-mail (somos pequenos, sem rodeio).
         </Typography>
 
         <View style={{ height: 60 }} />

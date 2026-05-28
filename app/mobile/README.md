@@ -39,7 +39,6 @@ npm run test:e2e:critical   # Maestro (emulador)
 ```
 
 CI principal na raiz: `.github/workflows/ci.yml`.
-Validação Unity estrutural: `.github/workflows/unity-ci.yml`.
 E2E Maestro: `.github/workflows/maestro.yml` (nesta pasta).
 
 ## Arquitetura
@@ -51,7 +50,7 @@ app/mobile/
 │   ├── (tabs)/               # home, chat, evolution, report
 │   └── …                     # paywall, customize, missions…
 ├── src/
-│   ├── components/           # UI compartilhada (mascot 2D/3D, Unity, design system)
+│   ├── components/           # UI compartilhada (mascot 2D, design system)
 │   ├── features/             # fatias por tela (ex.: home/)
 │   ├── services/             # orquestração de negócio (home, missions, subscription)
 │   ├── repositories/         # persistência local + contratos de sync
@@ -62,11 +61,10 @@ app/mobile/
 │   ├── hooks/                # hooks globais (tier, evolution, pip)
 │   ├── content/              # catálogos estáticos (missões, billing, acessórios)
 │   ├── analytics/
-│   ├── core/                 # contrato de render Unity
 │   ├── design-system/
 │   └── store.ts              # Zustand
 ├── tests/                    # Vitest (espelha domínios: lib/, sync/, ai/, …)
-├── docs/                     # guias locais (E2E, 3D, RevenueCat)
+├── docs/                     # guias locais (E2E, IA-procedural, RevenueCat)
 ├── assets/
 ├── scripts/
 └── .maestro/                 # flows E2E

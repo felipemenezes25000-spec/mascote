@@ -1,5 +1,5 @@
 /**
- * Mapeia fenótipo + displayModifiers → props visuais do Mascot3D.
+ * Mapeia fenótipo + displayModifiers → props visuais do Mascot2D.
  * Camada pura — testável, sem React.
  */
 

@@ -52,12 +52,6 @@ export function StructuredData({ dict, lang }: { dict: Dictionary; lang: Locale 
         availability: "https://schema.org/PreOrder",
       },
     ],
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.9",
-      ratingCount: "127",
-      bestRating: "5",
-    },
     creator: { "@id": `${SITE.url}#org` },
   };
 

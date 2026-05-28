@@ -93,7 +93,7 @@ export default function Paywall() {
       }
       Alert.alert(
         'Assinatura indisponível',
-        result.error ?? 'Não foi possível concluir a compra. Tente de novo ou use o modo demo.',
+        result.error ?? 'Não foi possível concluir a compra. Tente de novo em instantes.',
       );
     } finally {
       purchaseInFlightRef.current = false;
