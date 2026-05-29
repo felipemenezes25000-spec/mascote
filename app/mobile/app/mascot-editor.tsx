@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '700' },
   sliderRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   sliderBtn: {
-    width: 40, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
+    width: 44, height: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
   },
   track: { height: 4, borderRadius: 2, marginTop: 8, alignSelf: 'stretch', position: 'relative' },
   thumb: { position: 'absolute', top: -6, width: 16, height: 16, borderRadius: 8, marginLeft: -8 },

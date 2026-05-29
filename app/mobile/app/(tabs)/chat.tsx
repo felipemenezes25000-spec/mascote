@@ -360,6 +360,8 @@ export default function ChatTab() {
           <Pressable
             style={styles.cvvMain}
             onPress={() => router.push('/safe-night')}
+            accessibilityRole="button"
+            accessibilityLabel="Tô em momento ruim · só presença"
             // cvvBanner tem paddingVertical 10 + Icon 14 → ~34px height. hitSlop
             // top/bottom 6 leva alvo pra ~46px sem encostar no input bar acima.
             hitSlop={{ top: 6, bottom: 6 }}
@@ -373,6 +375,7 @@ export default function ChatTab() {
               void markCrisisBannerDismissed();
             }}
             hitSlop={8}
+            accessibilityRole="button"
             accessibilityLabel="Fechar"
           >
             <Icon name="x" size={14} color={theme.colors.text} strokeWidth={2.2} />

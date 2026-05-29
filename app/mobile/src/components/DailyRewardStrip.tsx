@@ -73,7 +73,7 @@ export function DailyRewardStrip({ currentDay, claimedToday, onClaim }: Props) {
           const isFuture = r.day > currentDay;
           const iconName = isPast ? 'check' : rewardIcon(r);
           const iconColor = isToday
-            ? '#fff'
+            ? theme.colors.inkInverse
             : isPast
             ? theme.colors.primary
             : r.isGrand
@@ -181,13 +181,13 @@ function makeStyles(theme: Theme) {
       color: theme.colors.textDim,
       fontFamily: 'JetBrainsMono_500Medium',
     },
-    dayLabelToday: { color: '#fff' },
+    dayLabelToday: { color: theme.colors.inkInverse },
     dayValue: {
       fontSize: 10,
       fontWeight: '700',
       color: theme.colors.textSecondary,
       fontFamily: 'PlusJakartaSans_700Bold',
     },
-    dayValueToday: { color: '#fff' },
+    dayValueToday: { color: theme.colors.inkInverse },
   });
 }

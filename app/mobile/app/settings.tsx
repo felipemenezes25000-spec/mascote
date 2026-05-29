@@ -74,8 +74,15 @@ export default function SettingsScreen() {
   }
 
   async function saveMascotName() {
-    if (!mascotNameDraft.trim() || !mascot) return;
-    const updated = await mascotsDb.upsert({ user_id: mascot.user_id, name: mascotNameDraft.trim() });
+    if (!mascot) return;
+    const trimmed = mascotNameDraft.trim();
+    // Espelha saveUserName: dá feedback em vez de no-op silencioso quando o
+    // campo está vazio/só espaços (auditoria 2026-05-29).
+    if (!trimmed) {
+      Alert.alert('Nome inválido', 'Dê ao menos 1 caractere ao seu mascote.');
+      return;
+    }
+    const updated = await mascotsDb.upsert({ user_id: mascot.user_id, name: trimmed });
     setMascot(updated);
     setEditingMascotName(false);
   }

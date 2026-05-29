@@ -43,6 +43,10 @@ function formatNumber(n: number): string {
 }
 
 function makeStyles(theme: Theme) {
+  // No dark, fundos claros fixos (#E8EFF6 / #FEEAD9) ficavam ilegíveis com o
+  // texto claro (theme.colors.text = creme). Espelha o comportamento de
+  // primaryTint: vira um wash escuro translúcido da cor de identidade.
+  const isDark = theme.mode === 'dark';
   return StyleSheet.create({
     row: { flexDirection: 'row', gap: 5 },
     pill: {
@@ -62,12 +66,12 @@ function makeStyles(theme: Theme) {
       borderColor: theme.colors.primarySoft,
     },
     pillGem: {
-      backgroundColor: '#E8EFF6',
-      borderColor: '#BBD3E5',
+      backgroundColor: isDark ? '#3E6FAB22' : '#E8EFF6',
+      borderColor: isDark ? '#3E6FAB55' : '#BBD3E5',
     },
     pillFire: {
-      backgroundColor: '#FEEAD9',
-      borderColor: '#FFC899',
+      backgroundColor: isDark ? theme.colors.error + '22' : '#FEEAD9',
+      borderColor: isDark ? theme.colors.error + '55' : '#FFC899',
     },
     text: {
       fontSize: 11.5,
