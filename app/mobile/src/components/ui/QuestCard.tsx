@@ -32,15 +32,16 @@ export function QuestCard({
 }: Props) {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
-  const Wrapper: any = onPress && !done ? Pressable : View;
+  const interactive = !!onPress && !done;
   return (
-    <Wrapper
-      onPress={done ? undefined : onPress}
+    <Pressable
+      onPress={interactive ? onPress : undefined}
+      disabled={!interactive}
       accessibilityRole={onPress ? 'button' : undefined}
-      style={({ pressed }: { pressed?: boolean }) => [
+      style={({ pressed }) => [
         styles.card,
         done && styles.cardDone,
-        pressed && { opacity: 0.94 },
+        interactive && pressed && { opacity: 0.94 },
         style,
       ]}
     >
@@ -66,7 +67,7 @@ export function QuestCard({
           <Icon name="arrow-right" size={14} color={theme.colors.primary} strokeWidth={2.2} />
         </View>
       ) : null}
-    </Wrapper>
+    </Pressable>
   );
 }
 

@@ -33,16 +33,16 @@ export function ListItem({
   const theme = useTheme();
   const styles = useStyles(makeStyles);
   const titleColor = destructive ? theme.colors.error : theme.colors.text;
-  const Wrapper: any = onPress ? Pressable : View;
+  const interactive = !!onPress && !disabled;
   return (
-    <Wrapper
+    <Pressable
       onPress={onPress}
-      disabled={disabled}
+      disabled={!interactive}
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={accessibilityLabel ?? title}
-      style={({ pressed }: { pressed?: boolean }) => [
+      style={({ pressed }) => [
         styles.row,
-        pressed && styles.pressed,
+        interactive && pressed && styles.pressed,
         disabled && { opacity: 0.5 },
         style,
       ]}
@@ -53,7 +53,7 @@ export function ListItem({
         {description ? <Typography variant="caption" tone="secondary">{description}</Typography> : null}
       </View>
       {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
-    </Wrapper>
+    </Pressable>
   );
 }
 

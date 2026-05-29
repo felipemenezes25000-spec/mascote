@@ -2,7 +2,7 @@
  * StatPill — métrica compacta no formato pill (ex.: streak / level / coins).
  * Versão minimalista do `WalletPills`.
  */
-import { View, StyleSheet, type ViewStyle } from 'react-native';
+import { View, Pressable, StyleSheet, type ViewStyle } from 'react-native';
 import { useTheme } from '@/lib/useTheme';
 import { Typography } from './Typography';
 import { Icon, type IconName } from '@/components/Icon';
@@ -19,7 +19,7 @@ interface Props {
   tone?: 'brand' | 'gold' | 'sage' | 'coral' | 'lilac' | 'neutral';
 }
 
-export function StatPill({ icon, iconColor, label, value, style, tone = 'neutral' }: Props) {
+export function StatPill({ icon, iconColor, label, value, onPress, style, tone = 'neutral' }: Props) {
   const theme = useTheme();
   const map: Record<string, { bg: string; fg: string }> = {
     brand:   { bg: theme.colors.primarySoft,        fg: theme.colors.primaryDeep },
@@ -30,14 +30,13 @@ export function StatPill({ icon, iconColor, label, value, style, tone = 'neutral
     neutral: { bg: theme.colors.bg2,                fg: theme.colors.textSecondary },
   };
   const { bg, fg } = map[tone];
-  return (
-    <View
-      style={[
-        styles.base,
-        { backgroundColor: bg, borderRadius: theme.radius.pill },
-        style,
-      ]}
-    >
+  const containerStyle = [
+    styles.base,
+    { backgroundColor: bg, borderRadius: theme.radius.pill },
+    style,
+  ];
+  const inner = (
+    <>
       {icon ? <Icon name={icon} size={14} color={iconColor ?? fg} strokeWidth={2.2} /> : null}
       <Typography variant="caption" style={{ color: fg, fontWeight: '700' }}>
         {label}
@@ -45,8 +44,22 @@ export function StatPill({ icon, iconColor, label, value, style, tone = 'neutral
       <Typography variant="bodyBold" style={{ color: fg }}>
         {value}
       </Typography>
-    </View>
+    </>
   );
+  if (onPress) {
+    return (
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`${label} ${value}`.trim()}
+        hitSlop={6}
+        style={({ pressed }) => [...containerStyle, pressed && { opacity: 0.85 }]}
+      >
+        {inner}
+      </Pressable>
+    );
+  }
+  return <View style={containerStyle}>{inner}</View>;
 }
 
 const styles = StyleSheet.create({
