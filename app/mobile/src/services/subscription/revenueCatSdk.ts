@@ -57,14 +57,26 @@ async function loadPurchases(): Promise<PurchasesModule | null> {
 }
 
 function tierFromEntitlements(
-  active: Record<string, { isActive?: boolean }> | undefined,
+  active: Record<string, { isActive?: boolean; productIdentifier?: string }> | undefined,
 ): BillingTierId {
   if (!active) return 'free';
   const keys = Object.keys(active);
-  if (keys.some(k => k.includes('annual'))) return 'plus_annual';
-  if (keys.some(k => k.includes('plus') || k.includes('premium'))) return 'plus_monthly';
-  if (keys.length > 0) return 'plus_monthly';
-  return 'free';
+  if (keys.length === 0) return 'free';
+  // Resolve pelo productIdentifier (SKU = nosso ProductId `mascote_plus_annual`/
+  // `_monthly`), com fallback pro nome da key. Os entitlements documentados
+  // (SubscriptionTypes.EntitlementId) são 'premium'|'legendary'|'ai_plus' —
+  // NENHUM contém "annual"; casar só pelo nome do entitlement mapeava assinante
+  // anual → plus_monthly em silêncio (perdia a forma legendary). Travado por
+  // tests/services/revenuecat-sku-failclosed.test.ts ('resolução de tier').
+  const haystack = keys
+    .map(k => `${k} ${active[k]?.productIdentifier ?? ''}`)
+    .join(' ')
+    .toLowerCase();
+  if (haystack.includes('annual')) return 'plus_annual';
+  if (haystack.includes('monthly') || haystack.includes('plus') || haystack.includes('premium')) {
+    return 'plus_monthly';
+  }
+  return 'plus_monthly';
 }
 
 export async function initRevenueCatSdk(userId?: string): Promise<boolean> {

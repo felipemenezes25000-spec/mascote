@@ -14,7 +14,7 @@ export type LastCheckinSnapshot = {
 
 import { applyHabitDrift, sanitizeGenome } from '@/lib/dna';
 import { readSystemReduceMotion } from '@/lib/accessibility';
-import { mascots, profiles, runMigrations, settings, streaks, wallet as walletDb, withLock } from '@/lib/db';
+import { mascots, profiles, runMigrations, settings, streaks, sweepStaleDateKeys, wallet as walletDb, withLock } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { resolveOpenAiKey } from '@/lib/ai/credentials';
 import { SECURE_KEYS, secureRemove, secureSet } from '@/lib/secureStore';
@@ -114,6 +114,9 @@ export const useStore = create<AppState>((set, get) => ({
     } catch {
       // intencional: prossegue mesmo sem migration completa
     }
+    // GC best-effort de chaves datadas antigas (ai_usage/ai_cost/bond:daily).
+    // Fire-and-forget: não bloqueia o boot nem regride se o storage falhar.
+    void sweepStaleDateKeys();
     // Hidrata a chave OpenAI em paralelo com profile. Sem isso, BYOK
     // perde-se a cada cold start (regressão UX).
     /* v8 ignore start — `.catch(() => null)` em profiles.get é redundância

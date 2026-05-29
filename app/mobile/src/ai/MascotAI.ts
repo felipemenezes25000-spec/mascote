@@ -3,10 +3,10 @@
  */
 
 export { generateReply, type AiResponse, type GenerateReplyOptions } from '@/lib/ai';
-// PromptBuilder.buildMascotPrompt concatena userMessage cru no system prompt
-// (vetor de prompt injection). index.ts ja barra o re-export via barrel, mas
-// MascotAI re-exportava bypass via `@/ai/MascotAI`. Removido pra centralizar
-// em `lib/ai.ts:buildMascotSystemPrompt` que separa user/system roles.
+// PromptBuilder.buildMascotPrompt (REMOVIDO) concatenava userMessage cru no
+// system prompt (vetor de prompt injection). Construção de prompt é central em
+// `lib/ai.ts:buildMascotSystemPrompt`, que separa roles user/system. Não
+// reintroduzir um builder que concatene input cru no system prompt.
 export { evaluateUserMessage, sanitizeMascotOutput } from './SafetyRules';
 export { localFallbackReply } from './LocalFallbackAI';
 export { generateMissionSuggestion } from './MissionGeneratorAI';

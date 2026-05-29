@@ -112,7 +112,7 @@ export default function NotificationsScreen() {
           list.map((n, i) => {
             const color = colorFor(n.kind);
             return (
-              <StaggeredView key={n.id} index={i} step={40}>
+              <StaggeredView key={n.id} index={Math.min(i, 12)} step={40}>
                 <PressableScale
                   onPress={() => tap(n)}
                   style={[styles.item, !n.read_at && styles.itemUnread]}

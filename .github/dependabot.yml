@@ -30,10 +30,6 @@ updates:
           - "react-native"
           - "react-native-*"
           - "@react-native/*"
-      three-r3f:
-        patterns:
-          - "three"
-          - "@react-three/*"
       testing:
         patterns:
           - "vitest"

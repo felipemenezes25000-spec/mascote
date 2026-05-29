@@ -11,8 +11,7 @@
 # Landing web (Next.js)
 /app/web/                               @felipemenezes25000-spec
 
-# Núcleo 3D / DNA / criatura procedural
-/app/mobile/src/components/mascot-3d/   @felipemenezes25000-spec
+# DNA / criatura procedural
 /app/mobile/src/lib/dna/                @felipemenezes25000-spec
 /docs/design/prototypes/                @felipemenezes25000-spec
 

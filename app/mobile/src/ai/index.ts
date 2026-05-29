@@ -1,7 +1,8 @@
 export * from './MascotAI';
-// PromptBuilder NÃO é re-exportado: concatena userMessage no system prompt
-// sem passar pelas regras invioláveis de wellness (vetor de prompt injection
-// + bypass das regras de safety). Use `buildMascotSystemPrompt` em lib/ai.ts.
+// PromptBuilder.buildMascotPrompt foi REMOVIDO (concatenava userMessage cru no
+// system prompt — vetor de prompt injection + bypass das regras de wellness).
+// Construção de prompt é só via `buildMascotSystemPrompt` em lib/ai.ts, que
+// separa roles user/system. Não reintroduzir um builder que concatene input cru.
 export * from './SafetyRules';
 export * from './LocalFallbackAI';
 export * from './MissionGeneratorAI';

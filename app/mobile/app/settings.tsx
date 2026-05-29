@@ -522,6 +522,7 @@ export default function SettingsScreen() {
                 placeholderTextColor={theme.colors.textDim}
                 style={styles.inputMono}
                 multiline
+                maxLength={100000}
                 autoCapitalize="none"
                 autoCorrect={false}
               />

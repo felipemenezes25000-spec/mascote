@@ -47,3 +47,4 @@ export {
   importAll,
   type ImportResult,
 } from './export-import';
+export { sweepStaleDateKeys } from './maintenance';

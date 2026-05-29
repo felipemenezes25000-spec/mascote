@@ -65,3 +65,44 @@ describe('purchaseRevenueCatTier — fail-closed em SKU não encontrado', () => 
     expect(Purchases.purchasePackage).toHaveBeenCalledWith({ identifier: 'plus_annual' });
   });
 });
+
+describe('purchaseRevenueCatTier — resolução de tier por entitlements', () => {
+  beforeEach(() => {
+    __setRevenueCatSdkInitializedForTests(true);
+  });
+
+  afterEach(() => {
+    __resetRevenueCatSdkForTests();
+    vi.restoreAllMocks();
+  });
+
+  it('resolve plus_annual pelos entitlements documentados (premium/legendary/ai_plus)', async () => {
+    // Entitlements no dashboard RevenueCat seguem SubscriptionTypes.EntitlementId
+    // ('premium'|'legendary'|'ai_plus') — NENHUM contém "annual". O tier tem que
+    // sair do productIdentifier (SKU = mascote_plus_annual); casar pelo NOME do
+    // entitlement mapeava anual→mensal em silêncio (assinante perde forma legendary).
+    vi.mocked(Purchases.getOfferings).mockResolvedValueOnce({
+      current: {
+        availablePackages: [{ identifier: 'plus_annual' }],
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+    vi.mocked(Purchases.purchasePackage).mockResolvedValueOnce({
+      customerInfo: {
+        entitlements: {
+          active: {
+            premium: { isActive: true, productIdentifier: 'mascote_plus_annual' },
+            legendary: { isActive: true, productIdentifier: 'mascote_plus_annual' },
+            ai_plus: { isActive: true, productIdentifier: 'mascote_plus_annual' },
+          },
+        },
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    const result = await purchaseRevenueCatTier('plus_annual');
+
+    expect(result.success).toBe(true);
+    expect(result.tier).toBe('plus_annual');
+  });
+});
