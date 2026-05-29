@@ -107,12 +107,19 @@ export async function purchaseRevenueCatTier(
   try {
     const offerings = await Purchases.getOfferings();
     const pkgId = TIER_PACKAGE_IDS[tier];
-    const pkg =
-      offerings.current?.availablePackages.find(p => p.identifier === pkgId) ??
-      offerings.current?.availablePackages[0];
+    // Fail-closed: SÓ compra o pacote exato que o usuário pediu. Antes havia um
+    // fallback `?? availablePackages[0]` — se o ID não batesse (ex.: SKU do
+    // dashboard RevenueCat diferente), cobrava um pacote QUALQUER em silêncio
+    // (usuário pede anual, leva mensal). Em fluxo de dinheiro, recusar é mais
+    // seguro do que cobrar o produto errado.
+    const pkg = offerings.current?.availablePackages.find(p => p.identifier === pkgId);
 
     if (!pkg) {
-      return { success: false, tier: 'free', error: 'Nenhum pacote RevenueCat disponível.' };
+      return {
+        success: false,
+        tier: 'free',
+        error: `Pacote "${pkgId}" não encontrado no RevenueCat.`,
+      };
     }
 
     const { customerInfo } = await Purchases.purchasePackage(pkg);
