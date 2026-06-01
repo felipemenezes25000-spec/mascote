@@ -131,13 +131,12 @@ export default function Quiz() {
           </View>
           <Typography variant="body" style={styles.title}>{q.question}</Typography>
         </View>
-        <View style={{ gap: theme.spacing.sm }} accessibilityRole="radiogroup">
+        <View style={{ gap: theme.spacing.sm }}>
           {q.options.map((opt, i) => (
             <Pressable
               key={i}
               onPress={() => answer(opt)}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: false }}
+              accessibilityRole="button"
               accessibilityLabel={opt.label}
               style={styles.opt}
             >

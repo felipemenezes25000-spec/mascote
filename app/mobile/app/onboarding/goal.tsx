@@ -57,6 +57,8 @@ export default function Goal() {
               <PressableScale
                 style={[styles.opt, selectedGoal === g.id && styles.optSelected]}
                 onPress={() => setSelectedGoal(g.id)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: selectedGoal === g.id }}
                 accessibilityLabel={g.label}
               >
                 <View style={[styles.optIconWrap, selectedGoal === g.id && styles.optIconWrapSelected]}>
@@ -85,6 +87,8 @@ export default function Goal() {
                 key={m.id}
                 style={[styles.moodOpt, selectedMood === m.id && styles.moodOptSelected]}
                 onPress={() => setSelectedMood(m.id)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: selectedMood === m.id }}
                 accessibilityLabel={`Humor ${m.id} de 5`}
               >
                 <Typography variant="body" style={styles.moodEmoji}>{m.emoji}</Typography>
