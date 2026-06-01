@@ -22,12 +22,21 @@ const criticalPatterns = [
   // Eufemismos comuns no português: "dar fim em mim", "me apagar".
   /dar\s+fim\s+(em\s+mim|na\s+minha\s+vida|a\s+mim|a\s+isso\s+tudo)/i,
   /\bme\s+apagar\b/i,
-  // Auto-mutilação direta (objeto explícito).
-  /cort(ei|o|ar)\s+(meu|minha)\s+(bra[çc]o|pulso|perna|coxa|pesco[çc]o)/i,
+  // Auto-mutilação direta (objeto explícito). Cobre singular E plural, com
+  // possessivo/artigo opcional, em presente/passado/gerúndio/infinitivo.
+  // Bug anterior: só casava singular + (meu|minha) obrigatório, então
+  // "cortei meus pulsos", "cortei minhas pernas" e afins escapavam pro reply
+  // normal. Travado por tests/safety.test.ts ('auto-mutilação plural/presente').
+  /cort(ei|o|ar|ando|aram)\s+(o|a|os|as|meu|minha|meus|minhas)?\s*(bra[çc]os?|pulsos?|pernas?|coxas?|pesco[çc]o)/i,
+  // "me corto" / "me cortei" / "me cortando" (reflexivo presente/passado/gerúndio;
+  // "me cortar" infinitivo já coberto acima por /me\s+cortar/).
+  /\bme\s+cort(o|ei|ando)\b/i,
   // "Me jogar da/na/no" → ponte, janela, frente do carro etc.
   /\bme\s+jogar\s+(da|do|na|no|de)\b/i,
-  // Veneno / remédio em quantidade.
-  /tomar\s+(veneno|todos?\s+os?\s+rem[éeê]dios|um\s+monte\s+de\s+rem[éeê]dio)/i,
+  // Veneno / remédio em quantidade (presente/passado/infinitivo/gerúndio).
+  // O sinal crítico é a QUANTIDADE ("todos os", "um monte de"), não o ato de
+  // tomar remédio em si. "engoli" cobre overdose por ingestão.
+  /(tom(ar|ei|o|ando)|engol(ir|i|indo))\s+(veneno|(todos?\s+os?\s+|um\s+monte\s+de\s+|um\s+vidro\s+de\s+)(rem[éeê]dios?|comprimidos?|p[íi]lulas?))/i,
 ];
 
 const highPatterns = [

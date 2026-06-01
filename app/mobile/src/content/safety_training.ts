@@ -38,6 +38,10 @@ export const SAFETY_TRAINING_CORPUS: readonly SafetyTrainingItem[] = [
   ['estou pronto pra acabar com isso tudo', 'critical'],
   ['guardei comprimidos pra um momento', 'critical'],
   ['já decidi como vou fazer', 'critical'],
+  ['cortei meus pulsos ontem', 'critical'],
+  ['me corto quando fico mal', 'critical'],
+  ['cortei minhas pernas de novo', 'critical'],
+  ['tomei todos os remédios de uma vez', 'critical'],
 
   // ============ HIGH ============
   // Crise psicológica forte sem ideação suicida explícita

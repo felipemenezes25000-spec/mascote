@@ -39,7 +39,7 @@ const BANNED_PATTERNS: RegExp[] = [
   /<use/i,
   /<image/i,
   /xlink:/i,
-  /\son[a-z]+\s*=/i,           // onclick, onload, etc
+  /[\s/>"'`]on[a-z]+\s*=/i,    // onclick, onload, etc — separador pode ser espaço, `/`, aspas
   /javascript:/i,
   /data:[^,]*script/i,
   /xmlns:[^=]+=/i,             // xmlns custom (xmlns:xlink etc)
@@ -96,19 +96,30 @@ export function sanitizeSvg(input: string, path = 'svg'): string {
       if (nodeCount > MAX_NODES) {
         throw new SvgSanitizationError(path, `> ${MAX_NODES} nodes`);
       }
-      // Valida atributos da tag aberta
+      // Valida atributos da tag aberta.
+      // Captura TODO atributo — com valor entre aspas, sem aspas, ou sem valor —
+      // pra que NENHUM nome de atributo escape do whitelist. Bug anterior: o
+      // regex só casava valores entre aspas, então `onload=alert(1)` (sem aspas)
+      // ou `r="1"/onload=...` (separado por `/` em vez de espaço) passava sem
+      // checagem e rodava no target web via SvgXml. Travado por
+      // tests/lib/procedural/sanitizeSvg.test.ts ('atributos sem aspas / on*').
       const attrChunk = m[2] ?? '';
-      const attrPattern = /([a-zA-Z-][a-zA-Z0-9-]*)\s*=\s*("[^"]*"|'[^']*')/g;
+      const attrPattern =
+        /([a-zA-Z][a-zA-Z0-9:_-]*)(\s*=\s*("[^"]*"|'[^']*'|[^\s"'<>`]+))?/g;
       let am: RegExpExecArray | null;
       while ((am = attrPattern.exec(attrChunk)) !== null) {
         const attr = am[1].toLowerCase();
         if (!ALLOWED_ATTRS.has(attr)) {
           throw new SvgSanitizationError(path, `atributo não permitido: ${attr}`);
         }
-        const value = am[2].slice(1, -1);
-        // Bloqueia valores suspeitos
-        if (/javascript:|data:[^,]*script|<|>/i.test(value)) {
-          throw new SvgSanitizationError(path, `valor de atributo suspeito em ${attr}`);
+        const raw = am[3];
+        if (raw) {
+          const value =
+            raw.startsWith('"') || raw.startsWith("'") ? raw.slice(1, -1) : raw;
+          // Bloqueia valores suspeitos
+          if (/javascript:|data:[^,]*script|<|>/i.test(value)) {
+            throw new SvgSanitizationError(path, `valor de atributo suspeito em ${attr}`);
+          }
         }
       }
       if (!selfClose) {

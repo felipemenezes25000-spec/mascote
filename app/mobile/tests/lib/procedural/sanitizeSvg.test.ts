@@ -29,6 +29,14 @@ describe('sanitizeSvg — bloqueia ataques', () => {
     ['<svg><!DOCTYPE evil><circle /></svg>', /doctype/i],
     ['<svg><circle cx="1" cy="1" r="1" fill="javascript:alert(1)" /></svg>', /javascript|suspeito/i],
     ['<!--<svg><script>x</script>-->', /script/i],
+    // Regressão: handler de evento sem aspas, separado por `/` em vez de espaço.
+    // Antes passava — o regex de atributos só casava valores entre aspas, e o
+    // padrão banido `on*` exigia espaço antes de `on`. Executava no target web.
+    ['<svg><circle r="1"/onload=alert(1)></svg>', /onload|atributo|padr[ãa]o/i],
+    // Regressão: atributo perigoso sem aspas (href externo).
+    ['<svg><path d="M0 0" href=//evil.com></svg>', /href|atributo/i],
+    // Regressão: handler sem aspas com valor não-citado.
+    ['<svg><circle cx="1" cy="1" r="1" onload=alert(1) /></svg>', /onload|atributo|padr[ãa]o/i],
   ])('rejeita %s', (input, pattern) => {
     expect(() => sanitizeSvg(input)).toThrow(SvgSanitizationError);
     try {

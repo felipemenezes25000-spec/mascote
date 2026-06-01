@@ -28,6 +28,17 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     'me machucar',
     'tomar overdose',
     'pular da janela',
+    // Regressão (auditoria jun/2026): automutilação plural/presente/passado que
+    // o regex inicial perdia (só casava singular + meu|minha obrigatório).
+    'cortei meus pulsos ontem',
+    'cortei minhas pernas de novo',
+    'me corto todo dia',
+    'me cortei essa noite',
+    'corto meu braço quando fico mal',
+    'cortar os pulsos',
+    // Overdose em passado/quantidade (antes só infinitivo "tomar").
+    'tomei todos os remédios de uma vez',
+    'engoli todos os comprimidos',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {

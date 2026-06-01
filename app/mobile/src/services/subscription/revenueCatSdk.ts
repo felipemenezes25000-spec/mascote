@@ -151,10 +151,12 @@ export async function restoreRevenueCatPurchases(): Promise<BillingTierId> {
   const Purchases = await loadPurchases();
   if (!Purchases || !sdkInitialized) return 'free';
 
-  try {
-    const customerInfo = await Purchases.restorePurchases();
-    return tierFromEntitlements(customerInfo.entitlements.active);
-  } catch {
-    return 'free';
-  }
+  // PROPAGA o erro em vez de devolver 'free'. Antes: qualquer falha (rede,
+  // loja fora do ar, RC 5xx) virava 'free', e o caller (provider/Service)
+  // interpretava isso como "conta sem assinatura" e REBAIXAVA um assinante
+  // pagante a free num blip transitório de rede. 'free' deve significar
+  // apenas "a loja confirmou que não há entitlement ativo" — erro != ausência.
+  // O RestorePurchasesService já tem catch que preserva o tier anterior.
+  const customerInfo = await Purchases.restorePurchases();
+  return tierFromEntitlements(customerInfo.entitlements.active);
 }
