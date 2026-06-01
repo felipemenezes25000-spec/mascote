@@ -34,6 +34,7 @@ export function ModalShell({ visible, onClose, title, children, bottomSheet }: P
       animationType={bottomSheet ? 'slide' : 'fade'}
     >
       <Pressable
+        accessibilityRole="button"
         accessibilityLabel="Fechar modal"
         onPress={onClose}
         style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}

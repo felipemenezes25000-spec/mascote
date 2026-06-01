@@ -8,12 +8,23 @@ import { MascotRenderer } from '@/components/MascotRenderer';
 import { MascotInteractive, type MascotGestureKind } from '@/components/MascotInteractive';
 import { SceneBackground } from '@/components/SceneBackground';
 import { Typography } from '@/components/ui';
+import { habitMeta } from '@/content/missions';
+import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import { useStore } from '@/store';
 import { useTheme } from '@/lib/useTheme';
 import * as Haptics from 'expo-haptics';
-import type { HabitKind } from '@/types';
+import type { HabitKind, MascotMood } from '@/types';
 
-const TEST_HABITS: HabitKind[] = ['water', 'sleep', 'exercise', 'meditation', 'reading'];
+/** Hábitos-núcleo oferecidos como atalho de check-in dentro do quarto. */
+const ROOM_HABITS: HabitKind[] = ['water', 'sleep', 'exercise', 'meditation', 'reading'];
+
+const MOOD_LABELS: Record<MascotMood, string> = {
+  triste: 'Quietinho',
+  ok: 'Tranquilo',
+  feliz: 'Feliz',
+  empolgado: 'Radiante',
+  exausto: 'Precisando de descanso',
+};
 
 export default function MascotRoom() {
   const theme = useTheme();
@@ -65,13 +76,13 @@ export default function MascotRoom() {
           style={styles.identityRow}
           accessible
           accessibilityRole="text"
-          accessibilityLabel={`${mascot.name}, fase ${mascot.phase}, humor ${mascot.mood}`}
+          accessibilityLabel={`${mascot.name}, ${emergentPhaseLabels[mascot.phase]}, ${MOOD_LABELS[mascot.mood]}`}
         >
           <Typography variant="body" style={[styles.name, { color: theme.colors.text }]}>
             {mascot.name}
           </Typography>
           <Typography variant="body" style={{ color: theme.colors.textSecondary }}>
-            Fase: {mascot.phase} · Humor: {mascot.mood}
+            {emergentPhaseLabels[mascot.phase]} · {MOOD_LABELS[mascot.mood]}
           </Typography>
         </View>
 
@@ -80,7 +91,7 @@ export default function MascotRoom() {
             O que vamos fazer agora?
           </Typography>
           <View style={styles.habitsRow}>
-            {TEST_HABITS.map(h => (
+            {ROOM_HABITS.map(h => (
               <Pressable
                 key={h}
                 onPress={() => handleHabitTap(h)}
@@ -93,10 +104,10 @@ export default function MascotRoom() {
                 ]}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel={`Registrar hábito ${h}`}
+                accessibilityLabel={`Registrar: ${habitMeta[h].label}`}
               >
                 <Typography variant="body" style={{ color: theme.colors.text, fontSize: 13 }}>
-                  {h}
+                  {habitMeta[h].emoji} {habitMeta[h].label}
                 </Typography>
               </Pressable>
             ))}
