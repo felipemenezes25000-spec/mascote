@@ -290,7 +290,9 @@ function makeStyles(theme: Theme) {
     cardStats: { flexDirection: 'row', gap: theme.spacing.md, marginTop: theme.spacing.sm },
     statBox: {
       alignItems: 'center',
-      backgroundColor: 'rgba(255,255,255,0.92)',
+      // bg2 (não branco fixo): em dark mode o chip branco deixava statValue/
+      // statLabel — que usam theme.colors.text/textSecondary (claros) — ilegíveis.
+      backgroundColor: theme.colors.bg2,
       paddingHorizontal: 14,
       paddingVertical: 10,
       borderRadius: theme.radius.md,
