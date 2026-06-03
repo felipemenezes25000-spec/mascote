@@ -3,8 +3,14 @@ import type { SafetyFlag } from '@/types';
 const criticalPatterns = [
   // \bsuic pega: suicídio, suicidar, suicidei, suicid* — cobre flexões verbais
   /\bsuic[ií]d/i,
-  /me\s+matar/i,
+  // Reflexivo em qualquer flexão: "me matar" (infinitivo), "me mato"/"me mata"
+  // (presente), "me matei" (passado). Bug anterior: só casava o infinitivo
+  // "me matar", então "eu me mato", "me mata logo" escapavam pro reply normal.
+  /\bme\s+mat(ar|o|a|ei)\b/i,
   /matar\s+me/i,
+  // Eufemismo padrão pt-BR pra suicídio: "tirar a vida". Cobre "tirar minha
+  // vida", "tirar a própria vida", "tirar a vida", "tirando minha vida".
+  /tir(ar|ando|ei|o)\s+(a\s+|minha\s+|(a\s+)?pr[óo]pria\s+)vida\b/i,
   /n[ãa]o\s+quero\s+mais\s+viver/i,
   /acabar\s+com\s+tudo/i,
   /sumir\s+desse\s+mundo/i,
@@ -12,15 +18,20 @@ const criticalPatterns = [
   /me\s+machucar/i,
   /\boverdose\b/i,
   /enforcar/i,
-  /pular\s+da\s+janela/i,
+  /pular\s+(da|do|na|no|de)\s+(janela|ponte|laje|pr[éeê]dio|viaduto|trem|trilho)/i,
   // === Ampliação PT-BR (variações comuns que regex inicial perdia) ===
   // Ideação direta com verbo + morrer. Filosofia conservadora do safety —
   // melhor flagar "queria morrer (de cansaço)" hiperbólico do que perder
   // ideação real. Mock-reply é genérico, mas CRISIS_REPLY oferece CVV/CAPS.
   /quer(o|ia|emos)\s+morrer\b/i,
+  // Ideação com "morrer" em outros enquadramentos que não "querer": "penso em
+  // morrer", "pensando em morrer", "vontade de morrer", "gostaria de morrer".
+  // Sem isso, o único fallback é o sentiment, que satura "morrer" em 'watch'
+  // (reply normal, sem CVV) — falso-negativo de crise direta.
+  /(pens(o|ei|ando)\s+em|(vontade|desejo)\s+de|gostaria\s+de)\s+morrer\b/i,
   /\bprefer(ia|iria|i)\s+n[ãa]o\s+(acordar|existir|estar\s+aqui)/i,
   // Eufemismos comuns no português: "dar fim em mim", "me apagar".
-  /dar\s+fim\s+(em\s+mim|na\s+minha\s+vida|a\s+mim|a\s+isso\s+tudo)/i,
+  /dar\s+(um\s+)?fim\s+(em\s+mim|na\s+minha\s+vida|a\s+mim|a\s+isso\s+tudo|a\s+tudo)/i,
   /\bme\s+apagar\b/i,
   // Auto-mutilação direta (objeto explícito). Cobre singular E plural, com
   // possessivo/artigo opcional, em presente/passado/gerúndio/infinitivo.
@@ -32,11 +43,11 @@ const criticalPatterns = [
   // "me cortar" infinitivo já coberto acima por /me\s+cortar/).
   /\bme\s+cort(o|ei|ando)\b/i,
   // "Me jogar da/na/no" → ponte, janela, frente do carro etc.
-  /\bme\s+jogar\s+(da|do|na|no|de)\b/i,
+  /\bme\s+jogar\s+(da|do|na|no|de|embaixo)\b/i,
   // Veneno / remédio em quantidade (presente/passado/infinitivo/gerúndio).
   // O sinal crítico é a QUANTIDADE ("todos os", "um monte de"), não o ato de
   // tomar remédio em si. "engoli" cobre overdose por ingestão.
-  /(tom(ar|ei|o|ando)|engol(ir|i|indo))\s+(veneno|(todos?\s+os?\s+|um\s+monte\s+de\s+|um\s+vidro\s+de\s+)(rem[éeê]dios?|comprimidos?|p[íi]lulas?))/i,
+  /(tom(ar|ei|o|ando)|engol(ir|i|indo))\s+(veneno|(todos?\s+os?\s+|um\s+monte\s+de\s+|um\s+vidro\s+de\s+|v[áa]ri[oa]s\s+|muit[oa]s\s+|uma\s+cartela\s+de\s+|um\s+punhado\s+de\s+)(rem[éeê]dios?|comprimidos?|p[íi]lulas?))/i,
 ];
 
 const highPatterns = [

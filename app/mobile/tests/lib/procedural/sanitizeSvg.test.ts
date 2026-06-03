@@ -71,4 +71,15 @@ describe('sanitizeSvg — bloqueia ataques', () => {
   it('rejeita atributo fora do whitelist', () => {
     expect(() => sanitizeSvg('<svg><circle cx="1" cy="1" r="1" data-evil="x" /></svg>')).toThrow(/data-evil/);
   });
+
+  // Regressão (ajuste1): tags com namespace/hífen (`<a:script>`, `<my-el>`) eram
+  // capturadas só até o `:`/`-` pelo regex e escapavam do scan estrutural em vez
+  // de cair no whitelist. Agora o nome completo é capturado e rejeitado.
+  it('rejeita tag com namespace (a:script)', () => {
+    expect(() => sanitizeSvg('<svg><a:script>alert(1)</a:script></svg>')).toThrow(SvgSanitizationError);
+  });
+
+  it('rejeita tag com hífen (custom element)', () => {
+    expect(() => sanitizeSvg('<svg><my-el /></svg>')).toThrow(/my-el/);
+  });
 });

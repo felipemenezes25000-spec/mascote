@@ -127,6 +127,15 @@ export function useHomeBootstrap({ profile, mascot, tier }: Options) {
       .map(s => s.scene_id)
       .filter(id => entitlementService.canAccessScene(tier, id));
 
+    // Clamp da cena ativa ao tier atual: se um assinante ativou uma cena premium
+    // e depois caiu pra free (assinatura expirou/cancelou), a cena ativa persistida
+    // continuava sendo renderizada (background premium pra usuário free). O filtro
+    // de unlockedSceneIds já remove a cena da lista, mas activeSceneId não era
+    // revalidado — gap de entitlement-após-downgrade. Auditoria jun/2026 (ajuste1).
+    const allowedActiveScene = entitlementService.canAccessScene(tier, activeScene)
+      ? activeScene
+      : 'room';
+
     let reflectiveMood: MascotMood | null = null;
     if (mascot) {
       const cutoff = addDays(today, -7);
@@ -149,7 +158,7 @@ export function useHomeBootstrap({ profile, mascot, tier }: Options) {
       dailyClaimedToday: dailyRow.last_claimed_date === today,
       boxAvailable: boxRow.last_opened_date !== today,
       unlockedSceneIds: allowedScenes.length > 0 ? allowedScenes : ['room'],
-      activeSceneId: activeScene,
+      activeSceneId: allowedActiveScene,
       equippedAccId,
       customState: custom,
       mutationIds: mutations.map(m => m.mutation_id),

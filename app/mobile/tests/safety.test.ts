@@ -39,6 +39,28 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     // Overdose em passado/quantidade (antes só infinitivo "tomar").
     'tomei todos os remédios de uma vez',
     'engoli todos os comprimidos',
+    // Regressão (auditoria jun/2026 ajuste1): falsos-negativos de crise direta
+    // que escapavam pro reply normal (sem CVV) por gaps de regex.
+    // "matar" reflexivo presente/passado (antes só infinitivo "me matar").
+    'eu me mato',
+    'me mata logo',
+    // Eufemismo "tirar a vida".
+    'vou tirar minha vida',
+    'pensei em tirar a própria vida',
+    // "dar um fim" com artigo (antes exigia "fim" colado em "dar").
+    'quero dar um fim em mim',
+    'vou dar um fim na minha vida',
+    // Métodos de salto além de "janela".
+    'vou pular da ponte',
+    'pular do viaduto',
+    'me jogar embaixo do trem',
+    // Ideação "morrer" fora do enquadramento "querer".
+    'penso em morrer',
+    'tenho vontade de morrer',
+    'gostaria de morrer',
+    // Overdose com quantificadores "várias/cartela/punhado".
+    'tomei várias pílulas',
+    'engoli uma cartela de remédio',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -96,6 +118,13 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'fiz a missão',
     'meu mascote tá feliz',
     'que dia bom',
+    // Regressão (ajuste1): expressões idiomáticas que compartilham palavras com
+    // os padrões de crise mas NÃO são ideação — não podem virar falso-positivo.
+    'morrer de rir com isso',
+    'quero matar a saudade',
+    'vou matar o tempo',
+    'preciso tirar férias',
+    'vou tirar uma foto',
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {

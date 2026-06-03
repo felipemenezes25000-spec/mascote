@@ -77,7 +77,11 @@ export function sanitizeSvg(input: string, path = 'svg'): string {
   // Não é parser completo de XML — é validador que rejeita qualquer suspeita.
   // Atributos delimitados por `[^<>]*` pra impedir match cross-tag que ignoraria
   // tags maliciosas no meio (bug encontrado em teste: `<svg><foo />` casava só svg).
-  const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9]*)(\s+[^<>]*)?\s*\/?>/g;
+  // O nome da tag inclui `:_-` (namespaces/hifens) de propósito: assim
+  // `<a:script>`, `<my-el>` ou `<xlink:foo>` são CAPTURADOS e rejeitados
+  // explicitamente pelo whitelist abaixo, em vez de o regex parar no `:`/`-` e
+  // a tag escapar silenciosamente do scan estrutural (defesa-em-profundidade).
+  const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9:_-]*)(\s+[^<>]*)?\s*\/?>/g;
   let nodeCount = 0;
   let depth = 0;
   let maxDepth = 0;
