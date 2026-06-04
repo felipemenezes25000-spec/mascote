@@ -61,6 +61,17 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     // Overdose com quantificadores "várias/cartela/punhado".
     'tomei várias pílulas',
     'engoli uma cartela de remédio',
+    // Regressão (auditoria jun/2026 ajuste1 — 2ª passada): futuro/condicional de
+    // "me matar" (antes só infinitivo/presente/passado).
+    'eu me matarei amanhã',
+    'me mataria se pudesse',
+    // Salto fatal em passado/presente/gerúndio (antes só infinitivo "pular").
+    'pulei da ponte ontem',
+    'pulo do viaduto',
+    'pulando da laje',
+    // Enforcamento no radical "enforqu" (antes só /enforcar/ pegava o "c").
+    'me enforquei',
+    'tava me enforcando',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -125,6 +136,13 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'vou matar o tempo',
     'preciso tirar férias',
     'vou tirar uma foto',
+    // Regressão (ajuste1 2ª passada): as flexões ampliadas (matar/pular/enforcar)
+    // não podem capturar hipérbole comum sem âncora reflexiva/de local.
+    'tô me matando de rir',
+    'pulei de alegria quando soube',
+    'pulando de felicidade',
+    'vou matar a fome agora',
+    'preciso reforçar a ideia',
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {

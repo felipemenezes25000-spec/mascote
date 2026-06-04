@@ -4,9 +4,11 @@ const criticalPatterns = [
   // \bsuic pega: suicídio, suicidar, suicidei, suicid* — cobre flexões verbais
   /\bsuic[ií]d/i,
   // Reflexivo em qualquer flexão: "me matar" (infinitivo), "me mato"/"me mata"
-  // (presente), "me matei" (passado). Bug anterior: só casava o infinitivo
-  // "me matar", então "eu me mato", "me mata logo" escapavam pro reply normal.
-  /\bme\s+mat(ar|o|a|ei)\b/i,
+  // (presente), "me matei" (passado), "me matarei" (futuro), "me mataria"
+  // (condicional). Bug anterior: só casava infinitivo/presente/passado, então
+  // "eu me matarei amanhã" / "me mataria se pudesse" escapavam pro reply normal.
+  // "me" reflexivo obrigatório mantém "matar a fome/saudade" fora do crítico.
+  /\bme\s+mat(ar|o|a|ei|arei|aria)\b/i,
   /matar\s+me/i,
   // Eufemismo padrão pt-BR pra suicídio: "tirar a vida". Cobre "tirar minha
   // vida", "tirar a própria vida", "tirar a vida", "tirando minha vida".
@@ -17,8 +19,15 @@ const criticalPatterns = [
   /me\s+cortar/i,
   /me\s+machucar/i,
   /\boverdose\b/i,
-  /enforcar/i,
-  /pular\s+(da|do|na|no|de)\s+(janela|ponte|laje|pr[éeê]dio|viaduto|trem|trilho)/i,
+  // Enforcamento em qualquer flexão. Bug anterior: só /enforcar/i pegava o
+  // infinitivo/presente do "c", perdendo "me enforquei"/"me enforque" (radical
+  // "enforqu"). "enforc" não aparece em palavra benigna do pt-BR.
+  /enforc/i,
+  /enforqu(ei|e|em|emos)/i,
+  // Salto fatal com local explícito. Bug anterior: só infinitivo "pular",
+  // perdendo passado/presente/gerúndio ("pulei da ponte", "pulo do viaduto",
+  // "pulando da laje"). Âncora de local mantém "pulei de alegria" fora do crítico.
+  /pul(ar|ei|o|ou|ando)\s+(da|do|na|no|de)\s+(janela|ponte|laje|pr[éeê]dio|viaduto|trem|trilho)/i,
   // === Ampliação PT-BR (variações comuns que regex inicial perdia) ===
   // Ideação direta com verbo + morrer. Filosofia conservadora do safety —
   // melhor flagar "queria morrer (de cansaço)" hiperbólico do que perder
