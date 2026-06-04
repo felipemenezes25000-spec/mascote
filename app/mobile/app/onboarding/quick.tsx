@@ -116,7 +116,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <View style={{ gap: theme.spacing.sm }}>
       <Typography variant="body" style={{ ...theme.text.sm, color: theme.colors.textSecondary, fontWeight: '700' }}>{title}</Typography>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{children}</View>
+      <View
+        style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}
+        accessibilityRole="radiogroup"
+        accessibilityLabel={title}
+      >
+        {children}
+      </View>
     </View>
   );
 }
@@ -126,6 +132,9 @@ function Chip({ label, selected, onPress }: { label: string; selected: boolean; 
   return (
     <PressableScale
       onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      accessibilityLabel={label}
       style={{
         paddingHorizontal: 14,
         paddingVertical: 10,

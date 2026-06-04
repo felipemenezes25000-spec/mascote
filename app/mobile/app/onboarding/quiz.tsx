@@ -111,7 +111,11 @@ export default function Quiz() {
                 })
               }
             />
-            <Pressable onPress={() => router.replace('/onboarding/goal')}>
+            <Pressable
+              onPress={() => router.replace('/onboarding/goal')}
+              accessibilityRole="button"
+              accessibilityLabel="Prefiro o tour completo"
+            >
               <Typography variant="body" style={styles.linkText}>Prefiro o tour completo</Typography>
             </Pressable>
           </View>
@@ -144,7 +148,11 @@ export default function Quiz() {
             </Pressable>
           ))}
         </View>
-        <Pressable onPress={() => router.replace('/onboarding/goal')}>
+        <Pressable
+          onPress={() => router.replace('/onboarding/goal')}
+          accessibilityRole="button"
+          accessibilityLabel="Pular quiz e seguir o tour"
+        >
           <Typography variant="body" style={styles.linkText}>Pular quiz e seguir o tour</Typography>
         </Pressable>
       </View>

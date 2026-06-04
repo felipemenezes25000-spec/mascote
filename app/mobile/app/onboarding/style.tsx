@@ -39,6 +39,8 @@ export default function StyleStep() {
               <PressableScale
                 style={[styles.opt, selected === s.id && styles.optSelected]}
                 onPress={() => setSelected(s.id)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: selected === s.id }}
                 accessibilityLabel={s.label}
               >
                 <View style={[styles.iconWrap, selected === s.id && styles.iconWrapSelected]}>

@@ -197,6 +197,8 @@ function StepObjetivo({
             <PressableScale
               style={[styles.opt, selected?.id === o.id && styles.optSelected]}
               onPress={() => onSelect(o)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: selected?.id === o.id }}
               accessibilityLabel={o.label}
             >
               <View style={[styles.iconWrap, selected?.id === o.id && styles.iconWrapSelected]}>
@@ -227,6 +229,8 @@ function StepTom({
             <PressableScale
               style={[styles.opt, selected?.id === t.id && styles.optSelected]}
               onPress={() => onSelect(t)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: selected?.id === t.id }}
               accessibilityLabel={t.label}
             >
               <View style={{ flex: 1 }}>
@@ -257,6 +261,8 @@ function StepMascote({
             <PressableScale
               style={[styles.opt, selected?.id === m.id && styles.optSelected]}
               onPress={() => onSelect(m)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: selected?.id === m.id }}
               accessibilityLabel={`${m.mascotName} — ${m.label}`}
             >
               <View style={[styles.iconWrap, selected?.id === m.id && styles.iconWrapSelected]}>
