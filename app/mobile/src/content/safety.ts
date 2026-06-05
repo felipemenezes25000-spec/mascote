@@ -39,8 +39,18 @@ const criticalPatterns = [
   // (reply normal, sem CVV) — falso-negativo de crise direta.
   /(pens(o|ei|ando)\s+em|(vontade|desejo)\s+de|gostaria\s+de)\s+morrer\b/i,
   /\bprefer(ia|iria|i)\s+n[ãa]o\s+(acordar|existir|estar\s+aqui)/i,
+  // Desejo de não-existência ("queria/preferia nunca ter nascido"). Bug anterior:
+  // só /prefer.../acordar|existir cobria, então "nunca ter nascido" escapava pro
+  // reply normal. "nunca ter nascido" não aparece em frase benigna pt-BR.
+  /nunca\s+ter\s+nascido/i,
+  // Ideação passiva clássica: "dormir e não acordar" / "dormir e nunca mais
+  // acordar". A negação obrigatória entre "e" e "acordar" mantém "dormir e
+  // acordar cedo" (rotina) fora do crítico.
+  /dormir\s+e\s+(n[ãa]o\s+(mais\s+)?|nunca\s+mais\s+)acordar/i,
   // Eufemismos comuns no português: "dar fim em mim", "me apagar".
-  /dar\s+(um\s+)?fim\s+(em\s+mim|na\s+minha\s+vida|a\s+mim|a\s+isso\s+tudo|a\s+tudo)/i,
+  // "em tudo" cobre "dar um fim em tudo (isso)" — simétrico ao "a tudo" já
+  // listado, que o padrão anterior tinha mas sem a preposição "em".
+  /dar\s+(um\s+)?fim\s+(em\s+mim|em\s+tudo|na\s+minha\s+vida|a\s+mim|a\s+isso\s+tudo|a\s+tudo)/i,
   /\bme\s+apagar\b/i,
   // Auto-mutilação direta (objeto explícito). Cobre singular E plural, com
   // possessivo/artigo opcional, em presente/passado/gerúndio/infinitivo.

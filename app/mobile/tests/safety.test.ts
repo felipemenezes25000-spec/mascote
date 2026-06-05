@@ -72,6 +72,16 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     // Enforcamento no radical "enforqu" (antes só /enforcar/ pegava o "c").
     'me enforquei',
     'tava me enforcando',
+    // Regressão (auditoria 2026-06-05 ajuste1): ideação passiva / desejo de
+    // não-existência que escapava pro reply normal por gaps de regex.
+    // "nunca ter nascido" (antes só /prefer.../acordar|existir cobria).
+    'queria nunca ter nascido',
+    'preferia nunca ter nascido',
+    // "dormir e não/nunca mais acordar" — ideação passiva clássica.
+    'queria dormir e nunca mais acordar',
+    'quero dormir e não acordar',
+    // "dar um fim em tudo" (antes só "a tudo"/"a isso tudo", faltava prep. "em").
+    'vou dar um fim em tudo isso',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -143,6 +153,9 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'pulando de felicidade',
     'vou matar a fome agora',
     'preciso reforçar a ideia',
+    // Regressão (2026-06-05 ajuste1): a negação é obrigatória no padrão
+    // "dormir e ... acordar" — rotina de sono normal não pode virar crise.
+    'preciso dormir e acordar cedo amanhã',
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {
