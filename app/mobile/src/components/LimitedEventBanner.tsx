@@ -97,7 +97,10 @@ function makeStyles(theme: Theme) {
       borderColor: theme.colors.gold,
     },
     multiplierText: {
-      color: theme.colors.text,
+      // Badge bg é `theme.colors.gold` (#F2C14E, claro fixo nos dois modos).
+      // `theme.colors.text` no dark é creme (#FCF3E7) → creme-sobre-dourado
+      // ~1.8:1 (falha WCAG AA). bgDark (#15110D) é escuro fixo: ~11:1 nos dois.
+      color: theme.colors.bgDark,
       fontWeight: '800',
       fontSize: 13,
       fontFamily: 'PlusJakartaSans_700Bold',

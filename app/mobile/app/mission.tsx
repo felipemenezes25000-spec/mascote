@@ -107,7 +107,11 @@ export default function MissionDetail() {
             onPress={() => router.replace({ pathname: '/mission-done', params: { mid: mission.id } })}
             disabled={mission.status === 'completed'}
           />
-          <Pressable onPress={() => router.back()}>
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Vou tentar depois"
+          >
             <Typography variant="body" style={styles.ghost}>Vou tentar depois</Typography>
           </Pressable>
         </View>

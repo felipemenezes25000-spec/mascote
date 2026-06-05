@@ -81,7 +81,10 @@ function makeStyles(theme: Theme) {
       fontSize: 10,
       fontWeight: '800',
       letterSpacing: 1.5,
-      color: '#fff',
+      // Card bg é `theme.colors.text` (inverte light↔dark): no dark vira creme
+      // (#FCF3E7), então `#fff` fixo ficava branco-sobre-creme (~1.1:1, ilegível).
+      // inkInverse acompanha a inversão: branco em light, quase-preto em dark.
+      color: theme.colors.inkInverse,
       fontFamily: 'JetBrainsMono_500Medium',
     },
     labelDone: { color: theme.colors.textDim },

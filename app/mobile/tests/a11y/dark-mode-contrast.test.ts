@@ -11,6 +11,7 @@ import { contrast, meetsAA } from '@/lib/a11y/contrast';
 import { buildTheme } from '@/lib/themes';
 
 const dark = buildTheme('dark', 'classic');
+const light = buildTheme('light', 'classic');
 
 describe('dark mode WCAG AA contrast', () => {
   it('text on bg passes AA', () => {
@@ -49,6 +50,33 @@ describe('dark mode WCAG AA contrast', () => {
   it('textDim on surface passes AA', () => {
     const ratio = contrast(dark.colors.textDim, dark.colors.surface);
     expect(ratio).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+/**
+ * Guards de componentes específicos — pareamentos onde o fundo é um token que
+ * INVERTE (light↔dark) ou um token CLARO FIXO, e a tinta precisa permanecer
+ * legível nos dois modos. Auditoria frontend 2026-06-05 (ajuste2): regressão
+ * de `#fff` fixo sobre fundo creme no dark mode.
+ */
+describe('component ink/bg pairings pass AA in both modes', () => {
+  // MysteryBoxCard: card bg = theme.colors.text (inverte). Antes label era
+  // '#fff' fixo → branco-sobre-creme (~1.1:1) no dark. Agora inkInverse.
+  it('MysteryBoxCard label (inkInverse) on card bg (text) passes AA — dark', () => {
+    expect(meetsAA(dark.colors.inkInverse, dark.colors.text)).toBe(true);
+  });
+  it('MysteryBoxCard label (inkInverse) on card bg (text) passes AA — light', () => {
+    expect(meetsAA(light.colors.inkInverse, light.colors.text)).toBe(true);
+  });
+
+  // LimitedEventBanner: badge bg = theme.colors.gold (claro fixo nos 2 modos).
+  // Antes texto era theme.colors.text → creme-sobre-dourado (~1.8:1) no dark.
+  // Agora bgDark (escuro fixo) → legível independente do modo.
+  it('LimitedEventBanner multiplier (bgDark) on gold badge passes AA — dark', () => {
+    expect(meetsAA(dark.colors.bgDark, dark.colors.gold)).toBe(true);
+  });
+  it('LimitedEventBanner multiplier (bgDark) on gold badge passes AA — light', () => {
+    expect(meetsAA(light.colors.bgDark, light.colors.gold)).toBe(true);
   });
 });
 
