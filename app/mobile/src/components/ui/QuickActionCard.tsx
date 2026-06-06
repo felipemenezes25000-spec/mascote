@@ -28,6 +28,7 @@ export function QuickActionCard({ label, icon, onPress, onLongPress, done, iconC
   const longPress = useWebSafeLongPress(onLongPress, 400);
   return (
     <Pressable
+      accessibilityRole="button"
       accessibilityLabel={`${label}${hint ? `, ${hint}` : ''}${done ? ', feito hoje' : ''}`}
       accessibilityHint={onLongPress ? 'Segure para ajustar valor' : undefined}
       accessibilityState={{ selected: done }}

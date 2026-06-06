@@ -56,6 +56,8 @@ export function DailyRewardStrip({ currentDay, claimedToday, onClaim }: Props) {
           onPress={onClaim}
           disabled={claimedToday}
           style={[styles.claimBtn, claimedToday && styles.claimBtnDone]}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: claimedToday }}
           accessibilityLabel={claimedToday ? 'Recompensa de hoje já resgatada' : 'Resgatar recompensa diária'}
         >
           {claimedToday ? (

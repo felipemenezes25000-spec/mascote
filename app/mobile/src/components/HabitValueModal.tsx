@@ -106,6 +106,9 @@ export function HabitValueModal({ visible, kind, onClose, onConfirm }: Props) {
                 key={v}
                 onPress={() => setValue(v)}
                 style={[styles.quickBtn, value === v && styles.quickBtnActive]}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: value === v }}
+                accessibilityLabel={`${v} ${config.unit}`}
               >
                 <Text style={[styles.quickText, value === v && styles.quickTextActive]}>{v}</Text>
               </PressableScale>
