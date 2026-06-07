@@ -23,7 +23,13 @@ export default function Signup() {
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={styles.container}>
-          <Pressable onPress={() => router.back()} hitSlop={10} style={styles.back}>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={10}
+            style={styles.back}
+            accessibilityRole="button"
+            accessibilityLabel="Voltar"
+          >
             <Typography variant="body" style={styles.backText}>←</Typography>
           </Pressable>
           <View style={{ flex: 1, justifyContent: 'center', gap: theme.spacing.lg }}>
@@ -65,11 +71,11 @@ export default function Signup() {
               />
               <View style={styles.legalRow}>
                 <Typography variant="mono" tone="dim" align="center">Ao continuar, você concorda com a </Typography>
-                <Pressable onPress={() => router.push('/privacy')} hitSlop={8}>
+                <Pressable onPress={() => router.push('/privacy')} hitSlop={8} accessibilityRole="link" accessibilityLabel="Privacidade">
                   <Typography variant="mono" tone="brand" align="center" style={styles.legalLink}>Privacidade</Typography>
                 </Pressable>
                 <Typography variant="mono" tone="dim" align="center"> e </Typography>
-                <Pressable onPress={() => router.push('/terms')} hitSlop={8}>
+                <Pressable onPress={() => router.push('/terms')} hitSlop={8} accessibilityRole="link" accessibilityLabel="Termos">
                   <Typography variant="mono" tone="brand" align="center" style={styles.legalLink}>Termos</Typography>
                 </Pressable>
                 <Typography variant="mono" tone="dim" align="center">.</Typography>

@@ -298,6 +298,9 @@ export default function SettingsScreen() {
                   <Pressable
                     key={p.id}
                     onPress={() => changePersonality(p.id)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: mascot.personality === p.id }}
+                    accessibilityLabel={p.label}
                     style={[
                       styles.personalityPill,
                       mascot.personality === p.id && { backgroundColor: p.primaryColor, borderColor: p.primaryColor },
@@ -315,13 +318,13 @@ export default function SettingsScreen() {
               </View>
             </View>
           )}
-          <Pressable onPress={() => router.push('/settings/personalization')} style={styles.linkRow}>
+          <Pressable onPress={() => router.push('/settings/personalization')} style={styles.linkRow} accessibilityRole="button">
             <Typography variant="body" style={styles.linkText}>Personalização completa (estilo Sims)</Typography>
           </Pressable>
-          <Pressable onPress={() => router.push('/closet')} style={styles.linkRow}>
+          <Pressable onPress={() => router.push('/closet')} style={styles.linkRow} accessibilityRole="button">
             <Typography variant="body" style={styles.linkText}>Guarda-roupa · acessórios e cenários</Typography>
           </Pressable>
-          <Pressable onPress={() => router.push('/achievements')} style={styles.linkRow}>
+          <Pressable onPress={() => router.push('/achievements')} style={styles.linkRow} accessibilityRole="button">
             <Typography variant="body" style={styles.linkText}>Conquistas</Typography>
           </Pressable>
         </Section>
@@ -335,6 +338,9 @@ export default function SettingsScreen() {
                 <Pressable
                   key={opt}
                   onPress={() => updateSetting('theme_mode', opt)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: settings.theme_mode === opt }}
+                  accessibilityLabel={opt === 'system' ? 'Sistema' : opt === 'light' ? 'Claro' : 'Escuro'}
                   style={[styles.segmentItem, settings.theme_mode === opt && styles.segmentItemActive]}
                 >
                   <Typography variant="body"
@@ -381,10 +387,10 @@ export default function SettingsScreen() {
 
         {/* Plano */}
         <Section title="Plano">
-          <Pressable onPress={() => router.push('/subscription')} style={styles.linkRow}>
+          <Pressable onPress={() => router.push('/subscription')} style={styles.linkRow} accessibilityRole="button">
             <Typography variant="body" style={styles.linkText}>Assinatura e planos</Typography>
           </Pressable>
-          <Pressable onPress={() => router.push('/cancel')} style={styles.linkRow}>
+          <Pressable onPress={() => router.push('/cancel')} style={styles.linkRow} accessibilityRole="button">
             <Typography variant="body" style={styles.linkText}>Pausar ou cancelar assinatura</Typography>
           </Pressable>
         </Section>
@@ -503,7 +509,7 @@ export default function SettingsScreen() {
             value={settings.consent_analytics}
             onChange={v => updateSetting('consent_analytics', v)}
           />
-          <Pressable onPress={() => router.push('/feedback')} style={styles.linkRow}>
+          <Pressable onPress={() => router.push('/feedback')} style={styles.linkRow} accessibilityRole="button">
             <Typography variant="body" style={styles.linkText}>Enviar feedback</Typography>
           </Pressable>
           <Pressable
@@ -514,7 +520,7 @@ export default function SettingsScreen() {
           >
             <Typography variant="body" style={styles.linkText}>{exportingData ? 'Exportando dados...' : 'Exportar meus dados (JSON)'}</Typography>
           </Pressable>
-          <Pressable onPress={() => setShowImport(s => !s)} style={styles.linkRow}>
+          <Pressable onPress={() => setShowImport(s => !s)} style={styles.linkRow} accessibilityRole="button">
             <Typography variant="body" style={styles.linkText}>{showImport ? 'Cancelar importação' : 'Importar dados (JSON)'}</Typography>
           </Pressable>
           {showImport && (
@@ -536,23 +542,23 @@ export default function SettingsScreen() {
               <Button label="Restaurar" onPress={doImport} disabled={!importDraft.trim()} />
             </View>
           )}
-          <Pressable onPress={() => router.push('/privacy')} style={styles.linkRow}>
+          <Pressable onPress={() => router.push('/privacy')} style={styles.linkRow} accessibilityRole="button">
             <Typography variant="body" style={styles.linkText}>Política de privacidade</Typography>
           </Pressable>
-          <Pressable onPress={() => router.push('/terms')} style={styles.linkRow}>
+          <Pressable onPress={() => router.push('/terms')} style={styles.linkRow} accessibilityRole="button">
             <Typography variant="body" style={styles.linkText}>Termos de uso</Typography>
           </Pressable>
         </Section>
 
         {/* Ajuda */}
         <Section title="Ajuda e suporte">
-          <Pressable onPress={() => router.push('/help')} style={styles.linkRow}>
+          <Pressable onPress={() => router.push('/help')} style={styles.linkRow} accessibilityRole="button">
             <Typography variant="body" style={styles.linkText}>Recursos de bem-estar e crise</Typography>
           </Pressable>
-          <Pressable onPress={() => router.push('/weekly-report')} style={styles.linkRow}>
+          <Pressable onPress={() => router.push('/weekly-report')} style={styles.linkRow} accessibilityRole="button">
             <Typography variant="body" style={styles.linkText}>Ver relatório da semana</Typography>
           </Pressable>
-          <Pressable onPress={() => router.push('/monthly-report')} style={styles.linkRow}>
+          <Pressable onPress={() => router.push('/monthly-report')} style={styles.linkRow} accessibilityRole="button">
             <Typography variant="body" style={styles.linkText}>Retrospectiva do mês</Typography>
           </Pressable>
         </Section>
@@ -588,7 +594,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Row({ label, right, onPress }: { label: string; right?: string; onPress?: () => void }) {
   const styles = useStyles(makeStyles);
   return (
-    <Pressable onPress={onPress} style={styles.row}>
+    <Pressable
+      onPress={onPress}
+      style={styles.row}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={onPress ? (right ? `${label}, ${right}` : label) : undefined}
+    >
       <Typography variant="body" style={styles.rowLabel}>{label}</Typography>
       {right && <Typography variant="body" style={styles.rowRight}>{right}</Typography>}
       {onPress && <Typography variant="body" style={styles.chev}>›</Typography>}

@@ -69,7 +69,13 @@ function UniqueMascotPaywallCardImpl({ mascot, onCtaPress, ctaLabel = 'Continuar
           },
         ]}
       >
-        <Typography variant="body" style={styles.ctaLabel}>
+        <Typography
+          variant="body"
+          style={[
+            styles.ctaLabel,
+            { color: disabled ? theme.colors.textSecondary : theme.tokens.semantic.inkOnBrand },
+          ]}
+        >
           {ctaLabel}
         </Typography>
       </Pressable>
@@ -98,5 +104,5 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     alignItems: 'center',
   },
-  ctaLabel: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  ctaLabel: { fontWeight: '800', fontSize: 15 },
 });

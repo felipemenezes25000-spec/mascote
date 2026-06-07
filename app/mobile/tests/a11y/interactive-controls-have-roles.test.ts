@@ -44,4 +44,54 @@ describe('a11y: controles interativos têm accessibilityRole', () => {
       /accessibilityState=\{\{\s*disabled:\s*claimedToday/,
     );
   });
+
+  // Auditoria 2026-06-07 (ajuste2): a tela de Configurações nunca tinha sido
+  // auditada de a11y — ~11 linkRows de navegação, o picker de personalidade e o
+  // segmento de tema eram Pressables crus sem role. Profile e Signup idem.
+  it('settings: todos os linkRow de navegação são button', () => {
+    const text = read('app/settings.tsx');
+    // Não pode sobrar nenhum `style={styles.linkRow}>` sem role logo antes.
+    expect(text, 'linkRow sem accessibilityRole="button"').not.toMatch(
+      /style=\{styles\.linkRow\}>/,
+    );
+  });
+
+  it('settings: picker de personalidade e segmento de tema são radio com estado', () => {
+    const text = read('app/settings.tsx');
+    expect(text, 'sem role="radio"').toMatch(/accessibilityRole="radio"/);
+    expect(text, 'personalidade sem accessibilityState selected').toMatch(
+      /accessibilityState=\{\{\s*selected:\s*mascot\.personality === p\.id/,
+    );
+    expect(text, 'tema sem accessibilityState selected').toMatch(
+      /accessibilityState=\{\{\s*selected:\s*settings\.theme_mode === opt/,
+    );
+  });
+
+  it('profile: QuickBtn e CTAs são button', () => {
+    const text = read('app/profile.tsx');
+    expect(text, 'QuickBtn sem role').toMatch(
+      /style=\{styles\.quickBtn\} accessibilityRole="button"/,
+    );
+    expect(text, 'CTA relatório sem role').toMatch(
+      /onPress=\{\(\) => router\.push\('\/weekly-report'\)\} accessibilityRole="button"/,
+    );
+  });
+
+  it('signup: botão voltar e links legais têm role', () => {
+    const text = read('app/signup.tsx');
+    expect(text, 'voltar sem role').toMatch(
+      /accessibilityRole="button"\s+accessibilityLabel="Voltar"/,
+    );
+    expect(text, 'links legais sem role="link"').toMatch(/accessibilityRole="link"/);
+  });
+
+  it('UniqueMascotPaywallCard: label do CTA não fixa #fff (ilegível quando disabled sobre border)', () => {
+    const text = read('src/components/ui/UniqueMascotPaywallCard.tsx');
+    expect(text, 'ctaLabel ainda fixa #fff no StyleSheet').not.toMatch(
+      /ctaLabel:\s*\{[^}]*color:\s*['"]#fff['"]/,
+    );
+    expect(text, 'cor do label não reage ao disabled').toMatch(
+      /disabled\s*\?\s*theme\.colors\.textSecondary/,
+    );
+  });
 });

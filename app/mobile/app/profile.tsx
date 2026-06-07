@@ -219,7 +219,7 @@ export default function You() {
         </StaggeredView>
 
         <StaggeredView index={6}>
-          <PressableScale style={styles.linkCta} onPress={() => router.push('/weekly-report')}>
+          <PressableScale style={styles.linkCta} onPress={() => router.push('/weekly-report')} accessibilityRole="button" accessibilityLabel="Ver relatório completo">
             <Typography variant="body" style={styles.linkCtaText}>Ver relatório completo</Typography>
             <Icon name="arrow-right" size={14} color={theme.colors.primary} strokeWidth={2.4} />
           </PressableScale>
@@ -230,7 +230,7 @@ export default function You() {
         {isDemoBilling() && (
           <StaggeredView index={7}>
             <Card variant="elevated" padding="md" style={styles.paywallTeaser}>
-              <PressableScale onPress={() => router.push('/paywall')}>
+              <PressableScale onPress={() => router.push('/paywall')} accessibilityRole="button" accessibilityLabel="Ver tela de paywall">
                 <View style={styles.paywallKickerRow}>
                   <Icon name="sparkle" size={10} color={theme.colors.primary} strokeWidth={2.4} fill={theme.colors.primary} />
                   <Typography variant="body" style={styles.paywallKicker}>DEMO</Typography>
@@ -269,7 +269,7 @@ function QuickBtn({ icon, label, onPress }: { icon: IconName; label: string; onP
   const styles = useStyles(makeStyles);
   const theme = useTheme();
   return (
-    <PressableScale onPress={onPress} style={styles.quickBtn} accessibilityLabel={label}>
+    <PressableScale onPress={onPress} style={styles.quickBtn} accessibilityRole="button" accessibilityLabel={label}>
       <View style={styles.quickIconWrap}>
         <Icon name={icon} size={18} color={theme.colors.primary} strokeWidth={2.2} />
       </View>
