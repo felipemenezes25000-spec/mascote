@@ -67,6 +67,27 @@ const criticalPatterns = [
   // O sinal crítico é a QUANTIDADE ("todos os", "um monte de"), não o ato de
   // tomar remédio em si. "engoli" cobre overdose por ingestão.
   /(tom(ar|ei|o|ando)|engol(ir|i|indo))\s+(veneno|(todos?\s+os?\s+|um\s+monte\s+de\s+|um\s+vidro\s+de\s+|v[áa]ri[oa]s\s+|muit[oa]s\s+|uma\s+cartela\s+de\s+|um\s+punhado\s+de\s+)(rem[éeê]dios?|comprimidos?|p[íi]lulas?))/i,
+  // Envenenamento reflexivo: "me envenenar"/"me envenenei"/"me envenenando".
+  // O "veneno" acima só pegava "tomar veneno"; o ato reflexivo direto escapava.
+  /\bme\s+envenen(ar|ei|o|ando)\b/i,
+  // "acabar com a minha vida" / "acabar com minha vida" / "acabar com a própria
+  // vida". Bug anterior: só /acabar com tudo/ existia, então a forma mais direta
+  // ("vou acabar com minha vida") só era pega pelo sentiment (frágil) — virava
+  // reply normal quando o lexicon não pontuava. Simétrico a "dar fim na minha vida".
+  /acabar\s+com\s+(a\s+)?(minha|(a\s+)?pr[óo]pria)\s+vida\b/i,
+  // "não aguento mais viver" / "não aguento mais a vida". Ideação por exaustão;
+  // antes só "não quero mais viver" era coberto, e o resto dependia do sentiment.
+  /n[ãa]o\s+aguento\s+mais\s+(viver|a\s+vida)\b/i,
+  // Desejo de não-existência via "estar/ficar morto". Negative lookahead exclui
+  // a hipérbole pt-BR ("morto de cansaço/fome/sono/rir/medo/tédio/trabalho").
+  /quer(o|ia)\s+(estar|ficar)\s+mort[oa]\b(?!\s+de\s+(cansa|fome|sono|rir|medo|t[ée]dio|trabalh|nojo|raiva))/i,
+  // "não quero (mais) existir" — ideação direta; não havia padrão (só o
+  // "preferia não existir" que exige "preferia").
+  /n[ãa]o\s+quero\s+(mais\s+)?existir\b/i,
+  // Perda de sentido de vida: "não tenho/vejo (mais) motivo/razão/sentido
+  // pra/em viver". Ancorado em "viver|vida" pra não pegar "não vejo motivo pra
+  // continuar lendo isso". Antes dependia só do sentiment.
+  /n[ãa]o\s+(tenho|vejo)\s+(mais\s+)?(motivo|raz[ãa]o|sentido)\s+(pra|para|em|de|na|no)\s+(viver|vida)\b/i,
 ];
 
 const highPatterns = [

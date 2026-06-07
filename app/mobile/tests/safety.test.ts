@@ -82,6 +82,28 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     'quero dormir e não acordar',
     // "dar um fim em tudo" (antes só "a tudo"/"a isso tudo", faltava prep. "em").
     'vou dar um fim em tudo isso',
+    // Regressão (auditoria 2026-06-07 ajuste1): crises diretas que o regex perdia
+    // e que só o sentiment (frágil) ou nada pegava — viravam reply normal sem CVV.
+    // Envenenamento reflexivo (antes só "tomar veneno").
+    'vou me envenenar',
+    'me envenenei ontem',
+    // "acabar com a/minha vida" (antes só "acabar com tudo").
+    'vou acabar com a minha vida',
+    'queria acabar com minha vida',
+    'pensei em acabar com a própria vida',
+    // "não aguento mais viver" (antes só "não quero mais viver").
+    'não aguento mais viver',
+    'nao aguento mais a vida',
+    // Desejo de não-existência via "estar/ficar morto" (antes não coberto).
+    'queria estar morto',
+    'quero estar morta',
+    // "não quero mais existir" (antes exigia "preferia não existir").
+    'não quero mais existir',
+    'nao quero existir',
+    // Perda de sentido de vida ancorada em viver|vida.
+    'não vejo sentido em viver',
+    'não tenho mais motivo pra viver',
+    'não vejo razão na vida',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -156,6 +178,11 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     // Regressão (2026-06-05 ajuste1): a negação é obrigatória no padrão
     // "dormir e ... acordar" — rotina de sono normal não pode virar crise.
     'preciso dormir e acordar cedo amanhã',
+    // Regressão (2026-06-07 ajuste1): o lookahead de "estar morto" exclui a
+    // hipérbole pt-BR; e a âncora viver|vida evita pegar "motivo pra continuar X".
+    'quero estar morto de cansaço hoje',
+    'tava morta de fome ontem',
+    'não vejo motivo pra continuar lendo isso',
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {
