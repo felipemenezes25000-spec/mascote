@@ -88,6 +88,23 @@ const criticalPatterns = [
   // pra/em viver". Ancorado em "viver|vida" pra não pegar "não vejo motivo pra
   // continuar lendo isso". Antes dependia só do sentiment.
   /n[ãa]o\s+(tenho|vejo)\s+(mais\s+)?(motivo|raz[ãa]o|sentido)\s+(pra|para|em|de|na|no)\s+(viver|vida)\b/i,
+  // Ideação por fardo ("todos/família/mundo ficariam melhor sem mim"). Sinal
+  // clássico de suicidalidade (percepção de ser um peso). Ancorado num verbo de
+  // existência (estaria/seria/ficaria...) imediatamente antes de "melhor sem mim"
+  // pra não pegar "esse time joga melhor sem mim" (verbo de ação fora da lista).
+  /\b(estaria|estariam|seria|seriam|ficaria|ficariam|ia\s+ficar|v[ãa]o\s+ficar|v[ãa]o\s+estar)\s+melhor(es)?\s+sem\s+mim\b/i,
+  // Eufemismo "pôr/por fim" À/NA vida / em mim. Simétrico a "dar fim", que já
+  // existia. Exige o objeto (vida|mim) pra não pegar o conector "por fim" (=
+  // "finalmente"): "por fim, consegui" não casa porque não há "à vida"/"em mim".
+  /\bp[ôo]r\s+(um\s+)?fim\s+([àa]\s+(minha\s+)?vida|na\s+minha\s+vida|em\s+mim|a\s+mim)\b/i,
+  // "desistir de viver" / "desistir da minha vida". Ideação por desistência;
+  // antes só "não aguento mais viver" cobria exaustão. "da minha vida" exige
+  // "minha" pra não pegar "desisti da vida noturna" (= largar um hábito).
+  /\bdesist(ir|i|o|iu)\s+(de\s+viver|da\s+minha\s+vida)\b/i,
+  // Método com arma de fogo: "tiro na (minha) cabeça" / "tiro em mim". Ancorado
+  // na anatomia/reflexivo pra não pegar o idioma "dar um tiro no escuro"
+  // (= chutar/arriscar), que não tem "na cabeça"/"em mim".
+  /\btiro\s+(na\s+(minha\s+)?cabe[çc]a|em\s+mim)\b/i,
 ];
 
 const highPatterns = [

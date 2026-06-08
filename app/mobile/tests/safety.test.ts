@@ -104,6 +104,21 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     'não vejo sentido em viver',
     'não tenho mais motivo pra viver',
     'não vejo razão na vida',
+    // Regressão (auditoria 2026-06-08 ajuste1): crises diretas que escapavam pro
+    // reply normal (sem CVV) por gaps de regex.
+    // Ideação por fardo ("ficariam/estaria/seria melhor sem mim").
+    'todos ficariam melhor sem mim',
+    'minha família estaria melhor sem mim',
+    'o mundo seria melhor sem mim',
+    // Eufemismo "pôr/por fim" à/na vida / em mim (antes só "dar fim").
+    'vou pôr fim à minha vida',
+    'por um fim na minha vida',
+    // "desistir de viver" / "desistir da minha vida".
+    'quero desistir de viver',
+    'vou desistir da minha vida',
+    // Método com arma de fogo ancorado na anatomia/reflexivo.
+    'só penso em dar um tiro na cabeça',
+    'um tiro em mim',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -183,6 +198,12 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'quero estar morto de cansaço hoje',
     'tava morta de fome ontem',
     'não vejo motivo pra continuar lendo isso',
+    // Regressão (2026-06-08 ajuste1): as novas âncoras (fardo/pôr-fim/desistir/
+    // tiro) não podem capturar idiomas que compartilham palavras com a crise.
+    'esse time joga melhor sem mim',     // "melhor sem mim" sem verbo de existência
+    'por fim consegui terminar a tarefa', // "por fim" conector (= finalmente)
+    'desisti da vida noturna',            // largar um hábito, não a vida
+    'dar um tiro no escuro nessa prova',  // chutar/arriscar, não arma
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {
