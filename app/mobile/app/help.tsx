@@ -170,6 +170,8 @@ function ResourceRow({
       onPress={onPress ?? (() => {})}
       style={[styles.resourceRow, isLast && { borderBottomWidth: 0 }]}
       disabled={!onPress}
+      accessibilityRole={onPress ? 'link' : undefined}
+      accessibilityLabel={onPress ? `${title}. ${sub}${cta ? `. ${cta}` : ''}` : undefined}
     >
       <View style={[styles.resourceIconWrap, { backgroundColor: color + '18', borderColor: color + '30' }]}>
         <Icon name={icon} size={16} color={color} strokeWidth={2.2} />

@@ -275,7 +275,13 @@ export default function Breathe() {
             <Typography variant="body" style={styles.phaseHint}>
               {PHASES[phase as Exclude<Phase, 'idle' | 'done'>].hint}
             </Typography>
-            <Pressable onPress={stop} hitSlop={10} style={{ marginTop: 24 }}>
+            <Pressable
+              onPress={stop}
+              hitSlop={10}
+              style={{ marginTop: 24 }}
+              accessibilityRole="button"
+              accessibilityLabel="Parar sessão de respiração"
+            >
               <Typography variant="body" style={styles.stopText}>Parar</Typography>
             </Pressable>
           </>

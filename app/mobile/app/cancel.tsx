@@ -69,7 +69,13 @@ export default function Cancel() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.headerRow}>
-          <Pressable onPress={() => router.back()} hitSlop={10} style={styles.close}>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={10}
+            style={styles.close}
+            accessibilityRole="button"
+            accessibilityLabel="Voltar"
+          >
             <Typography variant="body" style={styles.closeText}>✕</Typography>
           </Pressable>
           <Typography variant="body" style={styles.kicker}>PAUSAR / CANCELAR</Typography>
@@ -102,7 +108,11 @@ export default function Cancel() {
               <Button variant="secondary" label="Mudar pra Free" onPress={() => void switchToFree()} />
             </View>
 
-            <Pressable onPress={() => setStep('confirm')}>
+            <Pressable
+              onPress={() => setStep('confirm')}
+              accessibilityRole="button"
+              accessibilityLabel="Quero cancelar mesmo assim"
+            >
               <Typography variant="body" style={styles.cancelDestructive}>Quero cancelar mesmo assim</Typography>
             </Pressable>
           </>

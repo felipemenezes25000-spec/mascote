@@ -85,6 +85,56 @@ describe('a11y: controles interativos têm accessibilityRole', () => {
     expect(text, 'links legais sem role="link"').toMatch(/accessibilityRole="link"/);
   });
 
+  // Auditoria 2026-06-08 (ajuste2): telas nunca auditadas de a11y —
+  // notifications, closet, breathe, cancel e help tinham Pressable/PressableScale
+  // crus com onPress mas sem accessibilityRole. O ✕ de cancel era icon-only sem
+  // role NEM label (leitor não anunciava nada acionável). Recursos de emergência
+  // do help (CVV/SAMU) abrem tel:/url e devem ser anunciados como link.
+  it('notifications: marcar-tudo e cards de aviso são button', () => {
+    const text = read('app/notifications.tsx');
+    expect(text, 'marcar tudo sem role').toMatch(
+      /accessibilityLabel="Marcar todos os avisos como lidos"/,
+    );
+    expect(text, 'card de aviso sem role').toMatch(
+      /onPress=\{\(\) => tap\(n\)\}[\s\S]*?accessibilityRole="button"/,
+    );
+  });
+
+  it('closet: abas Acessórios/Cenários são tab com estado selected', () => {
+    const text = read('app/closet.tsx');
+    expect(text, 'aba sem role="tab"').toMatch(/accessibilityRole="tab"/);
+    expect(text, 'aba acessórios sem estado selected').toMatch(
+      /accessibilityState=\{\{\s*selected:\s*tab === 'accessories'/,
+    );
+    expect(text, 'aba cenários sem estado selected').toMatch(
+      /accessibilityState=\{\{\s*selected:\s*tab === 'scenes'/,
+    );
+  });
+
+  it('breathe: botão Parar é button com label', () => {
+    const text = read('app/breathe.tsx');
+    expect(text, 'Parar sem label de role').toMatch(
+      /accessibilityLabel="Parar sessão de respiração"/,
+    );
+  });
+
+  it('cancel: ✕ fechar e link destrutivo têm role (✕ era icon-only sem label)', () => {
+    const text = read('app/cancel.tsx');
+    expect(text, '✕ fechar sem label').toMatch(
+      /accessibilityRole="button"\s+accessibilityLabel="Voltar"/,
+    );
+    expect(text, 'cancelar mesmo assim sem role').toMatch(
+      /accessibilityLabel="Quero cancelar mesmo assim"/,
+    );
+  });
+
+  it('help: ResourceRow interativo é link (recursos de emergência tel:/url)', () => {
+    const text = read('app/help.tsx');
+    expect(text, 'ResourceRow sem role="link" condicional').toMatch(
+      /accessibilityRole=\{onPress \? 'link' : undefined\}/,
+    );
+  });
+
   it('UniqueMascotPaywallCard: label do CTA não fixa #fff (ilegível quando disabled sobre border)', () => {
     const text = read('src/components/ui/UniqueMascotPaywallCard.tsx');
     expect(text, 'ctaLabel ainda fixa #fff no StyleSheet').not.toMatch(

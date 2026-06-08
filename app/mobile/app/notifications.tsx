@@ -90,7 +90,13 @@ export default function NotificationsScreen() {
         subtitle={list.length > 0 ? `${list.filter(n => !n.read_at).length} não lidos` : undefined}
         rightSlot={
           list.length > 0 ? (
-            <PressableScale onPress={markAllRead} hitSlop={10} style={styles.markBtn}>
+            <PressableScale
+              onPress={markAllRead}
+              hitSlop={10}
+              style={styles.markBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Marcar todos os avisos como lidos"
+            >
               <Icon name="check" size={12} color={theme.colors.primary} strokeWidth={2.4} />
               <Typography variant="body" style={styles.markRead}>Tudo</Typography>
             </PressableScale>
@@ -116,6 +122,8 @@ export default function NotificationsScreen() {
                 <PressableScale
                   onPress={() => tap(n)}
                   style={[styles.item, !n.read_at && styles.itemUnread]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${!n.read_at ? 'Não lido. ' : ''}${n.title}. ${n.body}`}
                 >
                   <View style={[styles.iconWrap, { backgroundColor: color + '18', borderColor: color + '30' }]}>
                     <Icon name={kindIcon[n.kind]} size={18} color={color} strokeWidth={2.2} />

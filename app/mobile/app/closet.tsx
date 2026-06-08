@@ -248,6 +248,9 @@ export default function Closet() {
           // tab tem paddingVertical 10 + Icon 14 + body ~16 = ~36px. hitSlop
           // estende alvo de toque pra ~44px+ sem inflar o pill visual.
           hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
+          accessibilityRole="tab"
+          accessibilityLabel="Acessórios"
+          accessibilityState={{ selected: tab === 'accessories' }}
         >
           <Icon
             name="package"
@@ -263,6 +266,9 @@ export default function Closet() {
           onPress={() => setTab('scenes')}
           style={[styles.tab, tab === 'scenes' && styles.tabActive]}
           hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
+          accessibilityRole="tab"
+          accessibilityLabel="Cenários"
+          accessibilityState={{ selected: tab === 'scenes' }}
         >
           <Icon
             name="sparkles"
