@@ -343,12 +343,13 @@ export default function ChatTab() {
             </Typography>
           </View>
         </View>
-        <PressableScale style={styles.iconBtn} onPress={clearHistory} hitSlop={6} accessibilityLabel="Nova conversa">
+        <PressableScale style={styles.iconBtn} onPress={clearHistory} hitSlop={6} accessibilityRole="button" accessibilityLabel="Nova conversa">
           <Icon name="sparkles" size={16} color={theme.colors.text} strokeWidth={2} />
         </PressableScale>
         <PressableScale
           style={[styles.iconBtn, styles.iconBtnDanger]}
           onPress={() => router.push('/help')}
+          accessibilityRole="button"
           accessibilityLabel="Ajuda emocional"
         >
           <Icon name="heart" size={16} color={theme.colors.error} strokeWidth={2.2} fill={theme.colors.error} />
@@ -457,6 +458,7 @@ export default function ChatTab() {
           <PressableScale
             style={styles.suggestionsToggle}
             onPress={() => setShowSuggestions(true)}
+            accessibilityRole="button"
             accessibilityLabel="Mostrar sugestões de conversa"
             hitSlop={{ top: 8, bottom: 8, left: 12, right: 12 }}
           >
@@ -469,6 +471,7 @@ export default function ChatTab() {
               <PressableScale
                 style={styles.suggestionsToggle}
                 onPress={() => setShowSuggestions(false)}
+                accessibilityRole="button"
                 accessibilityLabel="Ocultar sugestões"
                 hitSlop={{ top: 8, bottom: 8, left: 12, right: 12 }}
               >
@@ -486,6 +489,7 @@ export default function ChatTab() {
                   key={s.label}
                   style={styles.suggestionChip}
                   onPress={() => send(s.text)}
+                  accessibilityRole="button"
                   // hitSlop 8 garante ~44px alvo de toque sem alterar visual.
                   // suggestionChip tem paddingVertical 8 + body ~22lh = ~38px.
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -523,6 +527,7 @@ export default function ChatTab() {
             onPress={() => send()}
             disabled={!input.trim() || sending}
             style={[styles.sendBtn, (!input.trim() || sending) && { opacity: 0.4 }]}
+            accessibilityRole="button"
             accessibilityLabel="Enviar mensagem"
             hitSlop={8}
           >

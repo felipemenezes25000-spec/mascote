@@ -150,7 +150,7 @@ function PrimaryAction({
   const styles = useStyles(makeStyles);
   const theme = useTheme();
   return (
-    <PressableScale style={styles.primaryAction} onPress={onPress} accessibilityLabel={label}>
+    <PressableScale style={styles.primaryAction} onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
       <View style={styles.primaryIconWrap}>
         <Icon name={icon} size={20} color={theme.colors.primary} strokeWidth={2} />
       </View>

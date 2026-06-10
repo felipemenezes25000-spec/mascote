@@ -88,14 +88,14 @@ export function HabitValueModal({ visible, kind, onClose, onConfirm }: Props) {
           {config.tip && <Text style={styles.tip}>{config.tip}</Text>}
 
           <View style={styles.stepper}>
-            <PressableScale onPress={() => bump(-config.step)} style={styles.btnRound} accessibilityLabel="Diminuir">
+            <PressableScale onPress={() => bump(-config.step)} style={styles.btnRound} accessibilityRole="button" accessibilityLabel="Diminuir">
               <Icon name="x" size={20} color={theme.colors.text} strokeWidth={2.4} />
             </PressableScale>
             <View style={styles.valueWrap}>
               <Text style={styles.value}>{value}</Text>
               <Text style={styles.unit}>{config.unit}{value > 1 && config.unit !== 'min' && config.unit !== 'horas' && config.unit !== 'pág' ? 's' : ''}</Text>
             </View>
-            <PressableScale onPress={() => bump(config.step)} style={styles.btnRound} accessibilityLabel="Aumentar">
+            <PressableScale onPress={() => bump(config.step)} style={styles.btnRound} accessibilityRole="button" accessibilityLabel="Aumentar">
               <Icon name="plus" size={20} color={theme.colors.text} strokeWidth={2.4} />
             </PressableScale>
           </View>

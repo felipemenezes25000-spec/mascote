@@ -111,7 +111,7 @@ export function Tour({ visible, onDone }: Props) {
             ))}
           </View>
 
-          <PressableScale onPress={next} style={styles.cta} accessibilityLabel="Próximo passo do tour">
+          <PressableScale onPress={next} style={styles.cta} accessibilityRole="button" accessibilityLabel="Próximo passo do tour">
             <Text style={styles.ctaText}>
               {step + 1 < STEPS.length ? 'Próximo' : 'Bora começar'}
             </Text>
@@ -122,7 +122,7 @@ export function Tour({ visible, onDone }: Props) {
               strokeWidth={2.4}
             />
           </PressableScale>
-          <Pressable onPress={skip} hitSlop={10} style={styles.skip} accessibilityLabel="Pular tour">
+          <Pressable onPress={skip} hitSlop={10} style={styles.skip} accessibilityRole="button" accessibilityLabel="Pular tour">
             <Text style={styles.skipText}>pular</Text>
           </Pressable>
         </View>

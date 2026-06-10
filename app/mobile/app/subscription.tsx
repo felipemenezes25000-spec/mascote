@@ -138,7 +138,12 @@ export default function SubscriptionActive() {
           </Typography>
         </PressableScale>
 
-        <PressableScale onPress={() => router.push('/cancel')} style={styles.cancelLink}>
+        <PressableScale
+          onPress={() => router.push('/cancel')}
+          style={styles.cancelLink}
+          accessibilityRole="button"
+          accessibilityLabel="Pausar ou cancelar assinatura"
+        >
           <Typography variant="body" style={styles.cancelText}>Pausar ou cancelar</Typography>
         </PressableScale>
       </ScrollView>

@@ -10,7 +10,13 @@ export default function Privacy() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.headerRow}>
-        <Pressable onPress={() => router.back()} hitSlop={10} style={styles.close}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={10}
+          style={styles.close}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar"
+        >
           <Typography variant="body" style={styles.closeText}>✕</Typography>
         </Pressable>
         <Typography variant="body" style={styles.headerTitle}>Privacidade</Typography>

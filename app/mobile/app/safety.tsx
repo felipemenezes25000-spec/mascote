@@ -150,7 +150,7 @@ function CrisisBtn({
   const theme = useTheme();
   const styles = makeStyles(theme);
   return (
-    <PressableScale style={styles.crisisBtn} onPress={onPress} accessibilityLabel={`${title} — ${cta}`}>
+    <PressableScale style={styles.crisisBtn} onPress={onPress} accessibilityRole="button" accessibilityLabel={`${title} — ${cta}`}>
       <View style={styles.crisisIconWrap}>
         <Icon name={icon} size={16} color={theme.colors.error} strokeWidth={2.2} />
       </View>

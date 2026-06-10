@@ -77,7 +77,11 @@ export default function MonthlyReport() {
           </View>
         </PremiumFeatureGuard>
 
-        <Pressable onPress={() => router.push('/weekly-report')}>
+        <Pressable
+          onPress={() => router.push('/weekly-report')}
+          accessibilityRole="button"
+          accessibilityLabel="Ver relatório semanal"
+        >
           <Typography variant="body" style={{ color: theme.colors.primary, fontWeight: '600', textAlign: 'center' }}>
             Ver relatório semanal →
           </Typography>

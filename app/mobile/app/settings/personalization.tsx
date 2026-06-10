@@ -320,6 +320,9 @@ export default function PersonalizationSettings() {
                 key={p.id}
                 onPress={() => void setPalette(p.id)}
                 style={[styles.swatch, { backgroundColor: p.brand }, settings.brand_palette === p.id && styles.swatchOn]}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: settings.brand_palette === p.id }}
+                accessibilityLabel={`Paleta ${p.name}`}
               >
                 <Typography variant="body" style={styles.swatchText}>{p.name}</Typography>
               </PressableScale>

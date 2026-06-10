@@ -169,6 +169,7 @@ export default function Welcome() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Pular descobrimento e escolher direto"
+              hitSlop={{ top: 10, bottom: 10, left: 12, right: 12 }}
               onPress={() => {
                 // QA flagrou: pular sem confirmação faz o usuário perder a apresentação
                 // (mascote, missão diária, segurança) e impacta retenção. Alert.alert

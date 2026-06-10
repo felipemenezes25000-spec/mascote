@@ -51,6 +51,7 @@ export function EvolutionRevealModal({
   return (
     <Modal visible={visible} onRequestClose={onClose} transparent animationType="fade">
       <Pressable
+        accessibilityRole="button"
         accessibilityLabel="Fechar"
         onPress={onClose}
         style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}

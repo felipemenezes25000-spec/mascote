@@ -138,7 +138,7 @@ export default function MascotEditor() {
             theme={theme}
           />
           {bodyHue !== undefined && (
-            <Pressable onPress={() => setBodyHue(undefined)}>
+            <Pressable onPress={() => setBodyHue(undefined)} accessibilityRole="button" accessibilityLabel="Voltar cor do corpo ao gerado pela IA">
               <Typography variant="body" style={[styles.link, { color: theme.colors.primary }]}>
                 Voltar ao IA
               </Typography>
@@ -156,7 +156,7 @@ export default function MascotEditor() {
             theme={theme}
           />
           {accentSaturation !== undefined && (
-            <Pressable onPress={() => setAccentSaturation(undefined)}>
+            <Pressable onPress={() => setAccentSaturation(undefined)} accessibilityRole="button" accessibilityLabel="Voltar saturação do acento ao gerado pela IA">
               <Typography variant="body" style={[styles.link, { color: theme.colors.primary }]}>
                 Voltar ao IA
               </Typography>

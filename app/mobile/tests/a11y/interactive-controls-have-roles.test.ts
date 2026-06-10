@@ -144,4 +144,102 @@ describe('a11y: controles interativos têm accessibilityRole', () => {
       /disabled\s*\?\s*theme\.colors\.textSecondary/,
     );
   });
+
+  // Auditoria 2026-06-10 (ajuste2): varredura estática completa de
+  // Pressable/PressableScale/TouchableOpacity em app/ + src/components achou um
+  // cluster de controles VISÍVEIS sem role — o maior na tela de chat (header,
+  // toggles de sugestão, chips, enviar), além de safety/safe-night (botões de
+  // crise!), subscription, monthly-report, privacy, mascot, mascot-editor,
+  // settings/personalization (paleta = radio), HabitValueModal (stepper ±),
+  // Tour e EvolutionRevealModal (backdrop rotulado).
+  it('chat: header, toggles de sugestão, chips e enviar são button', () => {
+    const text = read('app/(tabs)/chat.tsx');
+    // 6 controles que antes só tinham label/hitSlop. Conta ocorrências de role
+    // pra não regredir nenhum deles silenciosamente.
+    const roles = text.match(/accessibilityRole="button"/g) ?? [];
+    expect(roles.length, 'chat perdeu accessibilityRole em controles').toBeGreaterThanOrEqual(8);
+    expect(text, 'enviar sem role').toMatch(
+      /accessibilityRole="button"\s+accessibilityLabel="Enviar mensagem"/,
+    );
+  });
+
+  it('safety/safe-night: botões de crise e ação primária são button', () => {
+    const safety = read('app/safety.tsx');
+    expect(safety, 'CrisisLine sem role').toMatch(
+      /onPress=\{onPress\}\s+accessibilityRole="button"/,
+    );
+    const night = read('app/safe-night.tsx');
+    expect(night, 'PrimaryAction sem role').toMatch(
+      /onPress=\{onPress\}\s+accessibilityRole="button"/,
+    );
+  });
+
+  it('settings/personalization: swatch de paleta é radio com estado selected', () => {
+    const text = read('app/settings/personalization.tsx');
+    expect(text, 'paleta sem role="radio"').toMatch(/accessibilityRole="radio"/);
+    expect(text, 'paleta sem estado selected').toMatch(
+      /accessibilityState=\{\{\s*selected:\s*settings\.brand_palette === p\.id/,
+    );
+  });
+
+  it('HabitValueModal: stepper ± é button', () => {
+    const text = read('src/components/HabitValueModal.tsx');
+    expect(text, 'diminuir sem role').toMatch(
+      /accessibilityRole="button"\s+accessibilityLabel="Diminuir"/,
+    );
+    expect(text, 'aumentar sem role').toMatch(
+      /accessibilityRole="button"\s+accessibilityLabel="Aumentar"/,
+    );
+  });
+
+  // Guarda global auto-mantida: nenhum Pressable/PressableScale/TouchableOpacity
+  // com onPress pode ficar sem accessibilityRole, EXCETO os casos intencionais
+  // abaixo (backdrops sem conteúdo, no-op de stop-propagation, imagebutton).
+  it('varredura global: só sobram exceções intencionais sem role', () => {
+    const cp = require('node:child_process') as typeof import('node:child_process');
+    const files = cp
+      .execSync('git ls-files "app/" "src/components/"', { cwd: ROOT, encoding: 'utf8' })
+      .trim()
+      .split('\n')
+      .filter((f: string) => f.endsWith('.tsx'));
+    const open = /<(PressableScale|Pressable|TouchableOpacity)\b/g;
+    const offenders: string[] = [];
+    // Exceções verificadas em 2026-06-10 (file:line):
+    //  - HabitValueModal:81/82 → backdrop de dismiss sem conteúdo + sheet no-op
+    //    de stop-propagation (role estaria errado).
+    //  - EvolutionModal:120 → backdrop decorativo de dismiss sem label.
+    //  - MascotInteractive:122 → já tem role="imagebutton" (regex de tag não
+    //    enxerga além do `<button>` num comentário interno; é falso-positivo).
+    const allow = new Set([
+      'src/components/HabitValueModal.tsx',
+      'src/components/EvolutionModal.tsx',
+      'src/components/MascotInteractive.tsx',
+    ]);
+    for (const f of files) {
+      const src = read(f);
+      let m: RegExpExecArray | null;
+      open.lastIndex = 0;
+      while ((m = open.exec(src))) {
+        let i = open.lastIndex;
+        let depth = 0;
+        let end = -1;
+        for (; i < src.length; i++) {
+          const c = src[i];
+          if (c === '{') depth++;
+          else if (c === '}') depth--;
+          else if (c === '>' && depth === 0) {
+            end = i;
+            break;
+          }
+        }
+        if (end < 0) continue;
+        const tag = src.slice(m.index, end + 1);
+        if (/onPress\s*=/.test(tag) && !/accessibilityRole\s*=/.test(tag) && !allow.has(f)) {
+          const line = src.slice(0, m.index).split('\n').length;
+          offenders.push(`${f}:${line}`);
+        }
+      }
+    }
+    expect(offenders, `controles sem role: ${offenders.join(', ')}`).toEqual([]);
+  });
 });

@@ -128,7 +128,7 @@ export default function MascotIdentity() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={10} accessibilityLabel="Voltar">
+        <Pressable onPress={() => router.back()} hitSlop={10} accessibilityRole="button" accessibilityLabel="Voltar">
           <Icon name="arrow-left" size={22} color={theme.colors.text} strokeWidth={2.2} />
         </Pressable>
         <Typography variant="title" style={styles.headerTitle}>Identidade</Typography>
