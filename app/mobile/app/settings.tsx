@@ -7,6 +7,7 @@ import { personalities, getPersonality } from '@/content/personalities';
 import { addDays, exportAll, importAll, mascots as mascotsDb, profiles, resetAll, settings as settingsDb, todayLocal } from '@/lib/db';
 import { clearApiKey, getApiKey, setApiKey } from '@/lib/ai/credentials';
 import { sanitizeDisplayName } from '@/lib/identity/displayName';
+import { setSfxEnabled } from '@/lib/sfx';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -53,6 +54,13 @@ export default function SettingsScreen() {
       cancelled = true;
     };
   }, [apiKey]);
+
+  // Sincroniza o gate global de SFX com a preferência persistida ao abrir a
+  // tela (best-effort: sem hydration no boot — call-sites com settings em
+  // mãos passam override por chamada; vê src/lib/sfx/player.ts).
+  useEffect(() => {
+    if (settings) setSfxEnabled(settings.sfx_enabled !== false);
+  }, [settings]);
 
   if (!profile || !mascot || !settings) return <Redirect href="/splash" />;
 
@@ -366,6 +374,15 @@ export default function SettingsScreen() {
             label="Alto contraste"
             value={settings.high_contrast}
             onChange={v => updateSetting('high_contrast', v)}
+          />
+          <ToggleRow
+            label="Sons de recompensa"
+            value={settings.sfx_enabled !== false}
+            onChange={v => {
+              // Gate global imediato (sem esperar persistência) + persiste.
+              setSfxEnabled(v);
+              void updateSetting('sfx_enabled', v);
+            }}
           />
         </Section>
 

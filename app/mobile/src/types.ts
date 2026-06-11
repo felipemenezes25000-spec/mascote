@@ -233,6 +233,8 @@ export interface Settings {
    * Aparece em /atelier/settings (Frente V).
    */
   atelier_disable_weekly_snapshot?: boolean;
+  /** Sons curtos de recompensa (jingles procedurais). Default true. */
+  sfx_enabled?: boolean;
 }
 
 export interface InAppNotification {

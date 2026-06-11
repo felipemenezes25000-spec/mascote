@@ -35,6 +35,7 @@ import {
 } from '@/game/minigames/crystal-hunt-logic';
 import { completeMinigame, type MinigameOutcome } from '@/game/minigames/service';
 import { logger } from '@/lib/logger';
+import { playSfx } from '@/lib/sfx';
 import { makeShadow } from '@/lib/themes';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
@@ -266,6 +267,8 @@ export default function CrystalHunt() {
           subtitle: 'O brilho dos cristais ajudou',
         });
       }
+      // Jingle junto com o painel de resultado — só quando a partida pagou.
+      if (out.rewarded) playSfx('coin', { enabled: useStore.getState().settings?.sfx_enabled !== false });
       setOutcome(out);
       setSaveFailed(false);
       setPhase('done');

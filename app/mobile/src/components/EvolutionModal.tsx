@@ -13,6 +13,7 @@ import Animated, {
 import { Icon } from '@/components/Icon';
 import { Mascot } from '@/components/Mascot';
 import { PressableScale } from '@/components/PressableScale';
+import { playSfx } from '@/lib/sfx';
 import type { Mascot as MascotType, MascotPhase } from '@/types';
 
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
@@ -39,6 +40,12 @@ export function EvolutionModal({ visible, mascot, fromPhase, onClose, storyTitle
   const sparkle1 = useSharedValue(0);
   const sparkle2 = useSharedValue(0);
   const sparkle3 = useSharedValue(0);
+
+  // Jingle de evolução quando o modal abre (guard: só na transição p/ visível;
+  // gate global de SFX cobre a preferência — vê src/lib/sfx/player.ts).
+  useEffect(() => {
+    if (visible) playSfx('evolve');
+  }, [visible]);
 
   useEffect(() => {
     if (visible) {

@@ -12,8 +12,10 @@ import { MascotStatusBubble, Typography } from '@/components/ui';
  *
  * Toda lógica de estado vive em `index.tsx` — esse componente é puro.
  */
+import { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTheme, useStyles } from '@/lib/useTheme';
+import { journeyVisuals } from '@/game/journey/visuals';
 import { color } from '@/design-system/tokens';
 import type { Theme } from '@/lib/themes';
 import { HeroSwipeable } from '@/components/HeroSwipeable';
@@ -91,6 +93,8 @@ export function HomeHero({
   const styles = useStyles(makeStyles);
   const displayMood = reflectiveMood ?? mascot.mood;
   const hour = sceneHour ?? new Date().getHours();
+  // Camada visual da Jornada — derivada pura do XP, memoizada por valor.
+  const journey = useMemo(() => journeyVisuals(mascot.xp), [mascot.xp]);
   return (
     <View style={styles.sceneWrap}>
       <HeroSwipeable onPrev={onPrev} onNext={onNext}>
@@ -129,6 +133,7 @@ export function HomeHero({
                 action={behaviorAction}
                 customization={customState}
                 mutationIds={mutationIds}
+                journey={journey}
               />
             </MascotAmbient>
           </MascotInteractive>

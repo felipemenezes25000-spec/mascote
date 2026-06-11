@@ -31,6 +31,8 @@ import { useTheme } from '@/lib/useTheme';
 import type { MascotCustomization, MascotDNA, MascotMood, MascotPhase, Personality, ProceduralGenome } from '@/types';
 import { hslToHex, applyUserOverrides } from '@/lib/procedural';
 import { ProceduralMarks } from '@/components/mascot/ProceduralMarks';
+import { WorldAdornments } from '@/components/mascot/WorldAdornments';
+import type { JourneyVisuals } from '@/game/journey/visuals';
 import { getPersonality } from '@/content/personalities';
 import { paletteFromGenome, type Genome } from '@/lib/dna';
 import { applyCustomization } from '@/lib/dna/customization';
@@ -98,6 +100,12 @@ interface Props {
    * Ver `docs/superpowers/specs/2026-05-27-mascote-2d-procedural-ia-design.md`.
    */
   proceduralGenome?: ProceduralGenome | null;
+  /**
+   * Visual da Jornada (anel + adorno do mundo atual). Derivado puro do XP
+   * via `journeyVisuals(xp)` — o caller computa, o renderer só desenha.
+   * Ausente → zero mudança visual (compat com todos os callers existentes).
+   */
+  journey?: JourneyVisuals | null;
 }
 
 /**
@@ -180,6 +188,7 @@ function MascotImpl({
   customization,
   mutationIds = [],
   proceduralGenome,
+  journey,
 }: Props) {
   const theme = useTheme();
   const meta = getPersonality(personality);
@@ -459,6 +468,10 @@ function MascotImpl({
 
           {/* shadow */}
           <Ellipse cx="100" cy="200" rx={45 * scaleFactor} ry="5" fill="rgba(30,20,10,0.14)" />
+
+          {/* CAMADA DA JORNADA — anel + adorno do mundo atual (atrás do corpo,
+              respira junto porque está dentro do mesmo Svg animado). */}
+          {journey && <WorldAdornments journey={journey} />}
 
           {/* AURA — stage 6 (evoluido). 3 anéis concêntricos sutis. */}
           {showAura && (

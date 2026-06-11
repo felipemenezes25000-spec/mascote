@@ -33,6 +33,7 @@ import {
 } from '@/game/minigames/energy-run-logic';
 import { completeMinigame, type MinigameOutcome } from '@/game/minigames/service';
 import { logger } from '@/lib/logger';
+import { playSfx } from '@/lib/sfx';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
@@ -177,6 +178,8 @@ export default function EnergyRun() {
           subtitle: 'A energia da corrida fez efeito',
         });
       }
+      // Jingle junto com o painel de resultado — só quando a partida pagou.
+      if (out.rewarded) playSfx('coin', { enabled: useStore.getState().settings?.sfx_enabled !== false });
       setOutcome(out);
     } catch (err) {
       logger.warn('[energy-run] completeMinigame failed', {

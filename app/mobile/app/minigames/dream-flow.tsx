@@ -43,6 +43,7 @@ import {
 import { MINIGAME_COINS_MAX, MINIGAME_XP_MAX } from '@/game/minigames/registry';
 import { completeMinigame, type MinigameOutcome } from '@/game/minigames/service';
 import { logger } from '@/lib/logger';
+import { playSfx } from '@/lib/sfx';
 import { makeShadow } from '@/lib/themes';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
@@ -182,6 +183,8 @@ export default function DreamFlow() {
           subtitle: 'Descansar também faz crescer.',
         });
       }
+      // Sino noturno junto com o painel de resultado — só se a partida pagou.
+      if (out.rewarded) playSfx('night', { enabled: useStore.getState().settings?.sfx_enabled !== false });
       setOutcome(out);
       setPhase('done');
     } catch (err) {

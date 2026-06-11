@@ -6,11 +6,15 @@
  * transforma o resultado em celebração (toasts + confetti + refreshWallet).
  */
 import { useCallback, useRef } from 'react';
+import { Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from 'expo-router';
 import { claimJourneyRewards } from '@/game/journey/service';
 import { getWorld } from '@/game/journey';
 import { phaseClaimCelebration, worldEnteredLine } from '@/content/journey-copy';
 import { logger } from '@/lib/logger';
+import { playSfx } from '@/lib/sfx';
+import { useStore } from '@/store';
 import type { Mascot, Profile } from '@/types';
 
 interface ToastInput {
@@ -46,6 +50,19 @@ export function useJourneyClaim({
         try {
           const out = await claimJourneyRewards(profile, mascot.xp);
           if (out.claimed.length === 0) return;
+          // Celebração sonora + tátil. Settings via getState: a assinatura do
+          // hook não muda e o override por chamada respeita a preferência
+          // mesmo sem o gate global hidratado (vê src/lib/sfx/player.ts).
+          const sfxOn = useStore.getState().settings?.sfx_enabled !== false;
+          playSfx('fanfare', { enabled: sfxOn });
+          if (out.newTitles.length > 0) playSfx('title', { enabled: sfxOn });
+          // Mesmo idioma do haptic() em useHomeActions: web não tem haptics
+          // e reduce_motion também silencia feedback tátil.
+          if (Platform.OS !== 'web' && !useStore.getState().settings?.reduce_motion) {
+            try {
+              void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            } catch {/* haptics opcional */}
+          }
           onConfetti();
           enqueueToast({
             kind: 'level',

@@ -16,6 +16,7 @@ function freshSettings(user_id: string): Settings {
     language: 'pt-BR',
     consent_analytics: false,
     tour_completed: false,
+    sfx_enabled: true,
   };
 }
 

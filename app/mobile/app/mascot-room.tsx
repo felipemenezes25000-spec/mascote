@@ -9,6 +9,7 @@ import { SceneBackground } from '@/components/SceneBackground';
 import { Typography } from '@/components/ui';
 import { habitMeta } from '@/content/missions';
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
+import { journeyVisuals } from '@/game/journey/visuals';
 import { applyCheckinFully } from '@/lib/checkin';
 import { activeEventBoost } from '@/lib/events';
 import { useStore } from '@/store';
@@ -111,6 +112,7 @@ export default function MascotRoom() {
                 mood={mascot.mood}
                 size={260}
                 proceduralGenome={mascot.procedural_genome ?? null}
+                journey={journeyVisuals(mascot.xp)}
               />
             </MascotInteractive>
           </View>

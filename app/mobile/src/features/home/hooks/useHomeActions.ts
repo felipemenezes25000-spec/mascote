@@ -28,6 +28,7 @@ import { copyFor, isInPaywallCooldown, markShown, shouldTrigger } from '@/lib/pa
 import { DAILY_REWARDS } from '@/components/DailyRewardStrip';
 import { createAnimationAction } from '@/lib/animation-triggers';
 import { sanitizeGenome } from '@/lib/dna';
+import { playSfx } from '@/lib/sfx';
 import { playVoiceLine, voiceProfileFromGenome } from '@/lib/voice';
 import { getEvolutionStory, type EvolutionStory } from '@/lib/evolution-stories';
 import { creatureMoments } from '@/lib/moments';
@@ -334,6 +335,8 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
       analytics.track('daily_reward_claimed', { day: claimed.current_day });
       await refreshWallet();
       onClaimed(claimed.current_day);
+      // Jingle de recompensa: baú no grande prêmio (D7), moedinha nos demais.
+      playSfx(reward.isGrand ? 'chest' : 'coin', { enabled: opts.settings?.sfx_enabled !== false });
       opts.onConfetti();
       enqueueToast({
         kind: 'info',
@@ -382,6 +385,7 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
       }
       await refreshWallet();
       onOpened();
+      playSfx('chest', { enabled: opts.settings?.sfx_enabled !== false });
       opts.onConfetti(1500);
       enqueueToast({ kind: 'info', emoji: '🎁', title: 'Caixa surpresa!', subtitle: drop.label });
     },

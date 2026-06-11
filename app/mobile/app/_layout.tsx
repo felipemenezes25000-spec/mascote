@@ -22,6 +22,7 @@ import { logger } from '@/lib/logger';
 import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import { warmReplyCache } from '@/content/replies';
+import { syncPushSchedules } from '@/lib/push';
 import { initRevenueCatSdk } from '@/services/subscription/RevenueCatBillingProvider';
 import { subscriptionService } from '@/services/subscription/SubscriptionService';
 
@@ -98,6 +99,16 @@ export default function RootLayout() {
       await subscriptionService.syncEntitlements(uid);
     })();
   }, [profile?.id]);
+
+  // Notificações LOCAIS de sistema (chegam com o app fechado). Idempotente —
+  // re-sincroniza quando consentimento/quiet hours/XP mudam; catch interno,
+  // nunca bloqueia o boot.
+  const mascot = useStore(s => s.mascot);
+  const settings = useStore(s => s.settings);
+  useEffect(() => {
+    if (!profile || !mascot || !settings) return;
+    void syncPushSchedules(profile, mascot, settings);
+  }, [profile, mascot, settings]);
 
   if (BOOT_VIOLATIONS.length > 0) {
     return (

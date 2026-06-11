@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/Icon';
 import { MascotRenderer } from '@/components/MascotRenderer';
 import { MascotAmbient } from '@/components/MascotAmbient';
+import { journeyVisuals } from '@/game/journey/visuals';
 import { PressableScale } from '@/components/PressableScale';
 import { SceneBackground } from '@/components/SceneBackground';
 import { StaggeredView } from '@/components/StaggeredView';
@@ -279,6 +280,7 @@ export default function EvolutionTab() {
                       reduceMotion={settings?.reduce_motion}
                       customization={customState}
                       mutationIds={unlockedMutations.map(u => u.mutation_id)}
+                      journey={journeyVisuals(mascot.xp)}
                     />
                   </MascotAmbient>
                 )}

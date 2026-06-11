@@ -6,6 +6,7 @@ import { memo } from 'react';
 import { Mascot2D, type AccessoryId } from '@/components/Mascot2D';
 import type { MascotCustomization, MascotMood, MascotPhase, Personality, MascotDNA, ProceduralGenome } from '@/types';
 import type { MascotAnimationKind } from '@/lib/animation-triggers';
+import type { JourneyVisuals } from '@/game/journey/visuals';
 
 export type { AccessoryId };
 
@@ -27,6 +28,8 @@ export interface MascotRendererProps {
   dnaOverride?: MascotDNA;
   /** ProceduralGenome opcional — quando presente, sobrescreve render via IA-procedural. */
   proceduralGenome?: ProceduralGenome | null;
+  /** Visual da Jornada (anel + adorno do mundo) — ver Mascot2D.journey. */
+  journey?: JourneyVisuals | null;
 }
 
 function MascotRendererImpl({
