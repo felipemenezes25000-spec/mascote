@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { router } from 'expo-router';
 import { Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { analytics } from '@/analytics';
 import {
   checkins as checkinsDb,
   combo as comboDb,
@@ -330,6 +331,7 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
       const reward = DAILY_REWARDS[idx];
       if (!reward) return;
       await walletDb.add(profile.id, reward.coins, reward.gems ?? 0);
+      analytics.track('daily_reward_claimed', { day: claimed.current_day });
       await refreshWallet();
       onClaimed(claimed.current_day);
       opts.onConfetti();
@@ -352,6 +354,9 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
       const today = todayLocal();
       const opened = await mysteryBox.open(profile.id, today);
       if (!opened) return;
+      analytics.track('mystery_box_opened', {
+        total_opened: await mysteryBox.openedCount(profile.id),
+      });
       const drops: Array<{ coins: number; gems: number; xp?: number; label: string }> = [
         { coins: 30, gems: 0, label: '+30 🪙' },
         { coins: 75, gems: 0, label: '+75 🪙' },

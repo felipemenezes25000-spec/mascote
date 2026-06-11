@@ -30,7 +30,13 @@ export type ChatMessage = { role: 'user' | 'assistant'; content: string };
 export interface SendOptions {
   history?: ChatMessage[];
   personality: Personality;
-  identity?: { name?: string; level?: number; archetype?: string };
+  identity?: {
+    name?: string;
+    level?: number;
+    archetype?: string;
+    /** Posição na Jornada (conteúdo estático do app — ver system-prompt.ts). */
+    journey?: { phase: number; world: string };
+  };
   memories?: Array<{ summary: string }>;
   mascotName?: string;
 }

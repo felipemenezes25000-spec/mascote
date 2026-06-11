@@ -71,7 +71,17 @@ export type SystemPromptPersonality = keyof typeof PERSONALITY_BLOCKS;
 
 export interface BuildSystemPromptOptions {
   personality: SystemPromptPersonality;
-  identity?: { name?: string; level?: number; archetype?: string };
+  identity?: {
+    name?: string;
+    level?: number;
+    archetype?: string;
+    /**
+     * Posição na Jornada (fase 1-100 / mundo). Conteúdo ESTÁTICO do app
+     * (worlds.ts), não user-controlled — seguro de injetar. Dá à IA
+     * consciência de progresso ("vocês estão no mundo Amizade").
+     */
+    journey?: { phase: number; world: string };
+  };
   memories?: Array<{ summary: string }>;
   historyPreamble?: string;
 }
@@ -81,8 +91,11 @@ export function buildSystemPrompt(opts: BuildSystemPromptOptions): string {
   // Nome e resumos de memória são user-controlled — sanitiza antes de injetar
   // (prompt injection via nome do mascote / mensagem que virou memória).
   const safeName = sanitizePromptValue(identity?.name, 40) || 'Pip';
+  const journeyLine = identity?.journey
+    ? ` Jornada: fase ${Math.max(1, Math.min(100, Math.floor(identity.journey.phase)))} de 100, mundo "${sanitizePromptValue(identity.journey.world, 30)}". Você pode mencionar esse progresso com orgulho leve quando fizer sentido (nunca como cobrança).`
+    : '';
   const identityBlock = identity
-    ? `Nome: ${safeName}. Nível ${identity.level ?? 1}. Arquétipo: ${sanitizePromptValue(identity.archetype, 40) || 'companheiro'}.`
+    ? `Nome: ${safeName}. Nível ${identity.level ?? 1}. Arquétipo: ${sanitizePromptValue(identity.archetype, 40) || 'companheiro'}.${journeyLine}`
     : 'Sem identidade ainda definida.';
   const memoriesBlock = memories.length
     ? memories

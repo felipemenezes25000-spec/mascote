@@ -14,6 +14,7 @@ import { getPersonality } from '@/content/personalities';
 import { dateLocal, messages as messagesDb, todayLocal } from '@/lib/db';
 import { generateReply } from '@/lib/ai';
 import { sendChatMessage } from '@/lib/ai/chat-engine';
+import { getWorld, journeyPhaseFromXp } from '@/game/journey';
 import { logger } from '@/lib/logger';
 import { rememberFromMessage } from '@/lib/memory';
 import { creatureMoments } from '@/lib/moments';
@@ -241,6 +242,16 @@ export default function ChatTab() {
           const fb = await sendChatMessage(text, {
             personality: mascot.personality,
             mascotName: mascot.name,
+            // Consciência de progresso: a IA sabe a fase/mundo da Jornada
+            // (conteúdo estático do app, não user-controlled — seguro).
+            identity: {
+              name: mascot.name,
+              level: mascot.level,
+              journey: {
+                phase: journeyPhaseFromXp(mascot.xp).n,
+                world: getWorld(journeyPhaseFromXp(mascot.xp).worldId).name,
+              },
+            },
           });
           const fbReply = await messagesDb.add({
             conversation_id: profile.id,

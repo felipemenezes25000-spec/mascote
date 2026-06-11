@@ -40,7 +40,9 @@ const free: BillingTier = {
   period: 'free',
   trialDays: 0,
   benefits: [
+    'Jornada até o Mundo 8 — 80 fases de evolução',
     'Mascote evolui até a fase Adolescente',
+    '3 minigames com recompensas diárias',
     'Chat IA 10 mensagens por dia',
     'Cenário Quartinho',
     'Relatório semanal básico',
@@ -55,8 +57,11 @@ const plusMonthly: BillingTier = {
   period: 'monthly',
   trialDays: 7,
   benefits: [
+    'Mundos 9 e 10: Forma Lendária e Mascote Supremo',
+    'Recompensas guardadas resgatadas de uma vez (retroativo)',
     'Mascote evolui até a fase Evoluído',
-    'Chat IA ilimitado',
+    'Chat IA ilimitado com memória ampliada',
+    'Dobro de partidas recompensadas nos minigames',
     'Todos os cenários (incluindo Biblioteca, Lua, Café)',
     'Streak Freeze ilimitado',
     'Acessórios e formas raras sazonais',

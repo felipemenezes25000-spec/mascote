@@ -39,6 +39,13 @@ export const ANALYTICS_EVENTS = {
   ai_reply_rated: 'ai_reply_rated',
   subscription_cancelled: 'subscription_cancelled',
   subscription_restored: 'subscription_restored',
+  journey_phase_reached: 'journey_phase_reached',
+  journey_reward_claimed: 'journey_reward_claimed',
+  journey_map_viewed: 'journey_map_viewed',
+  minigame_started: 'minigame_started',
+  minigame_completed: 'minigame_completed',
+  mystery_box_opened: 'mystery_box_opened',
+  daily_reward_claimed: 'daily_reward_claimed',
 } as const;
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS];
@@ -78,6 +85,29 @@ export interface AnalyticsEventPayload {
   ai_reply_rated: { helpful: boolean; repetition: boolean };
   subscription_cancelled: { tier: string; via: 'store' | 'expiry' | 'demo' };
   subscription_restored: { tier: string; success: boolean };
+  /** Uma por fase nova alcançada — funil de progressão D1/D7/D30. */
+  journey_phase_reached: { phase: number; world: number };
+  /** Resumo de um resgate (pode cobrir várias fases de uma vez). */
+  journey_reward_claimed: {
+    phases: number;
+    coins: number;
+    gems: number;
+    /** Fases premium pendentes vistas neste claim (sinal de upsell). */
+    premium_locked: number;
+  };
+  journey_map_viewed: { phase: number; world: number };
+  minigame_started: { game_id: string };
+  minigame_completed: {
+    game_id: string;
+    score: number;
+    duration_ms: number;
+    coins_earned: number;
+    xp_earned: number;
+    /** false = jogou além do cap diário (só diversão, sem recompensa). */
+    rewarded: boolean;
+  };
+  mystery_box_opened: { total_opened: number };
+  daily_reward_claimed: { day: number };
 }
 
 /** Type-safe helper: `event('mascot_created', { personality, phase })`. */

@@ -41,6 +41,8 @@ export { dailyReward, predictNextDailyRewardDay } from './daily-rewards';
 export { mysteryBox } from './mystery-box';
 export { combo, comboXpBonus } from './combo';
 export { notifications } from './notifications';
+export { journeyClaims } from './journey';
+export { minigamePlays, type MinigamePlayRow } from './minigames';
 export {
   resetAll,
   exportAll,

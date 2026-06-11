@@ -19,7 +19,8 @@ export type PaywallTrigger =
   | 'checkin_30'         // 30 check-ins totais
   | 'first_box_opened'   // engajamento orgânico
   | 'premium_feature'    // toque em recurso Plus
-  | 'rare_evolution';    // preview de forma rara
+  | 'rare_evolution'     // preview de forma rara
+  | 'journey_legendary'; // mundos 9-10 da Jornada (recompensas guardadas)
 
 interface Context {
   mascot: Mascot;
@@ -114,6 +115,11 @@ export function copyFor(trigger: PaywallTrigger, mascotName: string): { title: s
       return {
         title: `${mascotName} está quase rara 🌙`,
         body: 'Plus desbloqueia formas lendárias e o caminho completo de evolução.',
+      };
+    case 'journey_legendary':
+      return {
+        title: 'O Mundo Lendário guarda suas recompensas 🌌',
+        body: 'Tudo que você já conquistou nos mundos 9 e 10 está te esperando — o Plus resgata de uma vez, sem perder nada.',
       };
   }
 }

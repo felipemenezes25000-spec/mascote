@@ -23,6 +23,7 @@ const kindIcon: Record<InAppNotification['kind'], IconName> = {
   birthday: 'gift',
   seasonal: 'sparkle',
   safety: 'heart',
+  journey: 'trophy',
 };
 
 const kindColor: Record<InAppNotification['kind'], 'primary' | 'error' | 'gold' | 'sage' | 'sky'> = {
@@ -35,6 +36,7 @@ const kindColor: Record<InAppNotification['kind'], 'primary' | 'error' | 'gold' 
   birthday: 'primary',
   seasonal: 'gold',
   safety: 'error',
+  journey: 'gold',
 };
 
 export default function NotificationsScreen() {

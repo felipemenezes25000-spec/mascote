@@ -12,6 +12,7 @@ const DEDUP_PER_DAY: ReadonlyArray<InAppNotification['kind']> = [
   'weekly_report',
   'streak_at_risk',
   'reminder',
+  'journey',
 ];
 
 export async function notify(
@@ -144,6 +145,26 @@ async function tryNotifyBirthday(
   if (created) {
     await AsyncStorage.setItem(key, new Date().toISOString());
   }
+}
+
+/**
+ * "Quase evoluindo" da Jornada — antecipação ética, nunca urgência falsa.
+ * Dispara no máximo 1x/dia (DEDUP_PER_DAY) e SÓ quando o usuário está de
+ * fato a ≥80% da próxima fase — o lembrete é factual, não fabricado.
+ */
+export async function maybeNotifyJourneyPhaseClose(profile: Profile, xp: number): Promise<void> {
+  const { journeyProgress } = await import('@/game/journey');
+  const { JOURNEY_NOTIFICATIONS } = await import('@/content/journey-copy');
+  const prog = journeyProgress(xp);
+  if (!prog.nextPhase || prog.progress < 0.8) return;
+  const remaining = prog.xpNeededForNext - prog.xpIntoPhase;
+  const tpl = prog.nextPhase.reward.kind === 'chest'
+    ? JOURNEY_NOTIFICATIONS.chestWaiting()
+    : JOURNEY_NOTIFICATIONS.phaseClose(remaining, prog.nextPhase.title);
+  await notify(profile, 'journey', tpl.title, tpl.body, {
+    phase: prog.nextPhase.n,
+    xpRemaining: remaining,
+  });
 }
 
 export async function notifyMascotBirthday(profile: Profile, daysOld: number): Promise<void> {

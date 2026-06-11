@@ -28,7 +28,7 @@ import {
 } from '@/lib/db';
 import { PrimaryActionCard, Typography } from '@/components/ui';
 import { isNightBannerOnCooldown, markNightBannerDismissed } from '@/lib/nightBannerCooldown';
-import { maybeNotifyStreakAtRisk, notifyMascotBirthday } from '@/lib/notify';
+import { maybeNotifyJourneyPhaseClose, maybeNotifyStreakAtRisk, notifyMascotBirthday } from '@/lib/notify';
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import { incrementBond } from '@/lib/bond';
 import { xpToNextLevel } from '@/lib/xp';
@@ -56,7 +56,10 @@ import type {
 } from '@/types';
 
 import { HomeHeader } from '@/features/home/components/HomeHeader';
+import { HomeActionRow } from '@/features/home/components/HomeActionRow';
 import { HomeBanner } from '@/features/home/components/HomeBanner';
+import { JourneyCard } from '@/features/home/components/JourneyCard';
+import { useJourneyClaim } from '@/features/home/hooks/useJourneyClaim';
 import { HomeHero } from '@/features/home/components/HomeHero';
 import { HomeStatsBars } from '@/features/home/components/HomeStatsBars';
 import { HomeQuickActions } from '@/features/home/components/HomeQuickActions';
@@ -88,6 +91,7 @@ export default function Home() {
   const streak = useStore(s => s.streak);
   const settings = useStore(s => s.settings);
   const wallet = useStore(s => s.wallet);
+  const refreshWallet = useStore(s => s.refreshWallet);
   const enqueueToast = useStore(s => s.enqueueToast);
   const apiKey = useStore(s => s.openAiKey);
   const lifeSummaryLine = useStore(s => s.lifeSummaryLine);
@@ -160,6 +164,15 @@ export default function Home() {
     setBehaviorAction,
   });
 
+  // Resgate de fases da Jornada ao focar — idempotente (lock no service).
+  useJourneyClaim({
+    profile,
+    mascot,
+    enqueueToast,
+    refreshWallet,
+    onConfetti: showConfetti,
+  });
+
   // Cache por (profile, contexto): buildMascotContextLine pode fazer 1 request
   // OpenAI no contexto 'home'. Sem este guard, era 1 chamada por FOCO da Home
   // (cost + latência). Só recarrega quando o contexto muda (home→saudade→retorno).
@@ -206,6 +219,7 @@ export default function Home() {
   async function checkAmbientNotifications() {
     if (!profile || !streak) return;
     await maybeNotifyStreakAtRisk(profile, streak.current_streak, streak.last_active_date);
+    if (mascot) await maybeNotifyJourneyPhaseClose(profile, mascot.xp);
     const daysOld = Math.floor((Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24));
     await notifyMascotBirthday(profile, daysOld);
     setNotifKey(k => k + 1);
@@ -526,6 +540,19 @@ export default function Home() {
 
           <StaggeredView index={2}>
             <HomeStatsBars mascot={mascot} toNext={toNext} />
+          </StaggeredView>
+
+          <StaggeredView index={3}>
+            <JourneyCard xp={mascot.xp} onPress={() => router.push('/journey')} />
+          </StaggeredView>
+
+          <StaggeredView index={3} initialDelay={20}>
+            <HomeActionRow
+              onPlay={() => router.push('/minigames')}
+              onCare={() => router.push('/checkin')}
+              onTalk={() => router.push('/(tabs)/chat')}
+              onCustomize={() => router.push('/closet')}
+            />
           </StaggeredView>
 
           <StaggeredView index={3} initialDelay={30}>

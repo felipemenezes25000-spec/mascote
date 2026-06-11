@@ -184,7 +184,7 @@ export interface XpEvent {
   id: string;
   user_id: string;
   amount: number;
-  reason: 'checkin' | 'mission' | 'streak_bonus' | 'first_login' | 'manual_adjust' | 'achievement';
+  reason: 'checkin' | 'mission' | 'streak_bonus' | 'first_login' | 'manual_adjust' | 'achievement' | 'minigame';
   reference: Record<string, unknown> | null;
   created_at: string;
 }
@@ -238,7 +238,7 @@ export interface Settings {
 export interface InAppNotification {
   id: string;
   user_id: string;
-  kind: 'reminder' | 'streak_at_risk' | 'evolution' | 'level_up' | 'mission_new' | 'weekly_report' | 'birthday' | 'seasonal' | 'safety';
+  kind: 'reminder' | 'streak_at_risk' | 'evolution' | 'level_up' | 'mission_new' | 'weekly_report' | 'birthday' | 'seasonal' | 'safety' | 'journey';
   title: string;
   body: string;
   payload: Record<string, unknown> | null;
