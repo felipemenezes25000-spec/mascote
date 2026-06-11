@@ -100,12 +100,16 @@ describe('conteúdo — estrutura das 100 fases', () => {
     }
   });
 
-  it('minigames do registry destravam em fases existentes do plano', () => {
-    for (const m of MINIGAMES) {
-      expect(MINIGAME_UNLOCK_PHASES[m.id]).toBe(m.unlockPhase);
-      const phase = JOURNEY_PHASES[m.unlockPhase - 1];
+  it('minigames-recompensa da jornada batem com o registry e a fase', () => {
+    // MINIGAME_UNLOCK_PHASES = jogos concedidos COMO recompensa de fase.
+    // (Jogos extras como zen-match são jogáveis por fase mas não são reward.)
+    for (const [id, unlockPhase] of Object.entries(MINIGAME_UNLOCK_PHASES)) {
+      const m = MINIGAMES.find(g => g.id === id);
+      expect(m).toBeTruthy();
+      expect(m!.unlockPhase).toBe(unlockPhase);
+      const phase = JOURNEY_PHASES[unlockPhase - 1];
       expect(phase.reward.kind).toBe('minigame');
-      expect(phase.reward.minigameId).toBe(m.id);
+      expect(phase.reward.minigameId).toBe(id);
     }
   });
 

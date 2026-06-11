@@ -43,6 +43,7 @@ export const ANALYTICS_EVENTS = {
   journey_reward_claimed: 'journey_reward_claimed',
   journey_map_viewed: 'journey_map_viewed',
   forms_gallery_viewed: 'forms_gallery_viewed',
+  cosmos_viewed: 'cosmos_viewed',
   minigame_started: 'minigame_started',
   minigame_completed: 'minigame_completed',
   mystery_box_opened: 'mystery_box_opened',
@@ -99,6 +100,7 @@ export interface AnalyticsEventPayload {
   };
   journey_map_viewed: { phase: number; world: number };
   forms_gallery_viewed: { form: number; world: number };
+  cosmos_viewed: { archetype: string; rarity: string };
   minigame_started: { game_id: string };
   minigame_completed: {
     game_id: string;

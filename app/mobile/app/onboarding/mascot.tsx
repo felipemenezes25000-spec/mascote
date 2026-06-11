@@ -29,6 +29,7 @@ import {
 } from '@/lib/onboarding-evolution';
 import { stepLabel } from '@/lib/onboarding-flow';
 import { sanitizeGenome } from '@/lib/dna';
+import { creatureGenomeFromDNA } from '@/game/creatures';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import type { BondType, CommunicationTone, UserGoal } from '@/game/evolution/EvolutionTypes';
@@ -74,6 +75,8 @@ export default function MascotBirth() {
   // Preview onboarding: DNA gerado no fluxo, passado via dnaOverride.
   const dna = sanitizeGenome(preview.genotype.genome);
   const mood = mapMoodToMascot(answers.moodId);
+  // Espécie chocada — derivada PURA do DNA das escolhas (o "wow" do nascimento).
+  const creature = creatureGenomeFromDNA(dna);
 
   const [phase, setPhase] = useState<Phase>('reveal');
   const eggScale = useSharedValue(1);
@@ -131,9 +134,14 @@ export default function MascotBirth() {
           {phase === 'hatch' ? 'Algo está nascendo...' : 'Olha quem chegou!'}
         </Typography>
         {phase === 'birth' ? (
-          <Typography variant="body" style={styles.birthHook}>
-            Esse foi o primeiro momento de vida de vocês dois.
-          </Typography>
+          <>
+            <Typography variant="body" style={styles.speciesName}>
+              {creature.speciesName}
+            </Typography>
+            <Typography variant="body" style={styles.birthHook}>
+              Suas escolhas chocaram esse bicho — único no mundo.
+            </Typography>
+          </>
         ) : null}
         <View style={styles.sceneWrap}>
           <SceneBackground sceneId="room" height={260}>
@@ -222,6 +230,13 @@ function makeStyles(theme: Theme) {
     dnaSeed: { ...theme.text.xs, color: theme.colors.textSecondary, fontFamily: 'JetBrainsMono_500Medium' },
     dnaArchetype: { ...theme.text.sm, color: theme.colors.textSecondary, fontStyle: 'italic' },
     hint: { ...theme.text.body, color: theme.colors.textSecondary, textAlign: 'center' },
+    speciesName: {
+      ...theme.text.h2,
+      color: theme.colors.primary,
+      textAlign: 'center',
+      fontFamily: 'InstrumentSerif_400Regular',
+      marginBottom: 2,
+    },
     birthHook: {
       ...theme.text.body,
       color: theme.colors.textSecondary,

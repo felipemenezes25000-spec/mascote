@@ -46,8 +46,8 @@ beforeEach(async () => {
 });
 
 describe('registry — sanidade', () => {
-  it('3 jogos implementados, todos com rota /minigames/<id>', () => {
-    expect(MINIGAMES.length).toBe(3);
+  it('jogos implementados, todos com rota /minigames/<id>', () => {
+    expect(MINIGAMES.length).toBe(4);
     for (const m of MINIGAMES) {
       expect(m.route).toBe(`/minigames/${m.id}`);
       expect(m.name.length).toBeGreaterThan(0);

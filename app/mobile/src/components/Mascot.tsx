@@ -5,6 +5,7 @@
 import { memo } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Mascot2D, type AccessoryId } from '@/components/Mascot2D';
+import { CreatureRenderer } from '@/components/mascot/CreatureRenderer';
 import type {
   MascotCustomization,
   MascotDNA,
@@ -45,6 +46,20 @@ interface Props {
 function MascotImpl(props: Props) {
   const storeMascot = useStore(s => s.mascot);
   const dna = props.dnaOverride ?? storeMascot?.dna;
+
+  // Com DNA → a CRIATURA procedural (o ovo virou bicho). Sem → robô legado.
+  if (dna) {
+    return (
+      <CreatureRenderer
+        dna={dna}
+        mood={props.mood}
+        size={props.size}
+        reactTrigger={props.reactTrigger}
+        reduceMotion={props.reduceMotion}
+        journey={props.journey}
+      />
+    );
+  }
 
   return (
     <Mascot2D

@@ -230,10 +230,12 @@ export default function RootLayout() {
           <Stack.Screen name="safe-night" options={{ presentation: 'fullScreenModal' }} />
           <Stack.Screen name="journey" />
           <Stack.Screen name="forms" />
+          <Stack.Screen name="cosmos" />
           <Stack.Screen name="minigames/index" />
           <Stack.Screen name="minigames/energy-run" options={{ presentation: 'fullScreenModal' }} />
           <Stack.Screen name="minigames/crystal-hunt" options={{ presentation: 'fullScreenModal' }} />
           <Stack.Screen name="minigames/dream-flow" options={{ presentation: 'fullScreenModal' }} />
+          <Stack.Screen name="minigames/zen-match" options={{ presentation: 'fullScreenModal' }} />
         </Stack>
         <UnlockToast data={currentToast} onDone={shiftToast} />
         </WebFrame>

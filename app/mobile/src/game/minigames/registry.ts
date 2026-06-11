@@ -64,6 +64,17 @@ export const MINIGAMES: readonly MinigameMeta[] = [
     unlockPhase: 15,
     roundSeconds: 45,
   },
+  {
+    id: 'zen-match',
+    name: 'Zen Match',
+    emoji: '🧩',
+    tagline: '1000 fases pra desestressar — sem vidas, sem pressa, só fluir.',
+    howTo: 'Junte 3+ peças iguais. Combos viram especiais. Aqui não tem como perder.',
+    habitTheme: 'foco',
+    route: '/minigames/zen-match',
+    unlockPhase: 5,
+    roundSeconds: 120,
+  },
 ];
 
 /** Teasers honestos pro mapa/hub — claramente "em breve", sem botão morto. */

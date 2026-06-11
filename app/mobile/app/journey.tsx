@@ -93,17 +93,28 @@ export default function JourneyScreen() {
                 Próxima forma na Fase {nextForm.atPhase}: {nextForm.name} — {nextForm.trait}
               </Typography>
             )}
-            <PressableScale
-              onPress={() => router.push('/forms')}
-              accessibilityRole="button"
-              accessibilityLabel="Abrir galeria de formas"
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              style={{ alignSelf: 'flex-start' }}
-            >
-              <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>
-                Galeria de Formas →
-              </Typography>
-            </PressableScale>
+            <View style={styles.galleryLinks}>
+              <PressableScale
+                onPress={() => router.push('/forms')}
+                accessibilityRole="button"
+                accessibilityLabel="Abrir galeria de formas"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>
+                  Galeria de Formas →
+                </Typography>
+              </PressableScale>
+              <PressableScale
+                onPress={() => router.push('/cosmos')}
+                accessibilityRole="button"
+                accessibilityLabel="Abrir cosmos de espécies"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>
+                  Cosmos de Espécies →
+                </Typography>
+              </PressableScale>
+            </View>
           </View>
         </StaggeredView>
 
@@ -277,6 +288,7 @@ function makeStyles(theme: Theme) {
     },
     heroTop: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
     formRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
+    galleryLinks: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.md },
     legendaryCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.radius.lg,
