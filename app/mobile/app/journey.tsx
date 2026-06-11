@@ -93,6 +93,17 @@ export default function JourneyScreen() {
                 Próxima forma na Fase {nextForm.atPhase}: {nextForm.name} — {nextForm.trait}
               </Typography>
             )}
+            <PressableScale
+              onPress={() => router.push('/forms')}
+              accessibilityRole="button"
+              accessibilityLabel="Abrir galeria de formas"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={{ alignSelf: 'flex-start' }}
+            >
+              <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>
+                Galeria de Formas →
+              </Typography>
+            </PressableScale>
           </View>
         </StaggeredView>
 

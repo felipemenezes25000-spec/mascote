@@ -10,6 +10,8 @@ import { SceneBackground } from '@/components/SceneBackground';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { StaggeredView } from '@/components/StaggeredView';
 import { getPersonality } from '@/content/personalities';
+import { formDisplayName } from '@/game/journey/forms';
+import { journeyVisuals } from '@/game/journey/visuals';
 import { checkins as checkinsDb, todayLocal, userScenes } from '@/lib/db';
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import {
@@ -133,6 +135,7 @@ export default function ShareScreen() {
                     mood={mascot.mood}
                     size={140}
                     reduceMotion={settings?.reduce_motion}
+                    journey={journeyVisuals(mascot.xp)}
                   />
                 </MascotAmbient>
               </View>
@@ -145,7 +148,7 @@ export default function ShareScreen() {
                   </Typography>
                   <Typography variant="body" style={styles.cardName}>{mascot.name}</Typography>
                   <Typography variant="body" style={styles.cardLine}>
-                    nível {mascot.level} · {emergentPhaseLabels[mascot.phase]}
+                    nível {mascot.level} · {emergentPhaseLabels[mascot.phase]} · Forma {formDisplayName(mascot.xp, mascot.dna)}
                   </Typography>
                   <View style={styles.cardStats}>
                     <View style={styles.statBox}>

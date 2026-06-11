@@ -229,6 +229,7 @@ export default function RootLayout() {
           <Stack.Screen name="profile" options={{ presentation: 'modal' }} />
           <Stack.Screen name="safe-night" options={{ presentation: 'fullScreenModal' }} />
           <Stack.Screen name="journey" />
+          <Stack.Screen name="forms" />
           <Stack.Screen name="minigames/index" />
           <Stack.Screen name="minigames/energy-run" options={{ presentation: 'fullScreenModal' }} />
           <Stack.Screen name="minigames/crystal-hunt" options={{ presentation: 'fullScreenModal' }} />

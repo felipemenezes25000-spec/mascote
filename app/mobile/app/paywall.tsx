@@ -4,6 +4,8 @@ import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
+import { JOURNEY_PHASES } from '@/game/journey';
+import { journeyVisuals } from '@/game/journey/visuals';
 import type { ArchetypeKey } from '@/lib/themes';
 import type { Personality } from '@/types';
 import { getTier } from '@/content/billing';
@@ -99,6 +101,7 @@ export default function Paywall() {
     const valid: PaywallTrigger[] = [
       'first_evolution', 'streak_7', 'level_5', 'checkin_30',
       'first_box_opened', 'premium_feature', 'rare_evolution',
+      'journey_legendary',
     ];
     const id = valid.includes(triggerParam as PaywallTrigger)
       ? (triggerParam as PaywallTrigger)
@@ -132,17 +135,21 @@ export default function Paywall() {
               mood="ok"
               size={120}
               reduceMotion
+              journey={journeyVisuals(mascot?.xp ?? 0)}
             />
           </View>
           <Typography variant="body" style={styles.previewArrow}>→</Typography>
           <View style={styles.previewCol} importantForAccessibility="no-hide-descendants">
             <Typography variant="body" style={styles.previewLabel}>Com Plus</Typography>
+            {/* O futuro do PRÓPRIO mascote: forma Suprema completa (todos os
+                traços corporais + constelação coroada) — desejo concreto. */}
             <Mascot
               personality={mascot?.personality ?? 'fofo'}
-              phase={mascot?.phase ?? 'adulto'}
+              phase="evoluido"
               mood="empolgado"
               size={120}
               reduceMotion
+              journey={journeyVisuals(JOURNEY_PHASES[99].xp)}
             />
           </View>
         </View>

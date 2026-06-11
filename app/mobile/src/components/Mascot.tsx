@@ -14,6 +14,7 @@ import type {
   ProceduralGenome,
 } from '@/types';
 import type { MascotAnimationKind } from '@/lib/animation-triggers';
+import type { JourneyVisuals } from '@/game/journey/visuals';
 import { useStore } from '@/store';
 
 export type { AccessoryId };
@@ -37,6 +38,8 @@ interface Props {
   dnaOverride?: MascotDNA;
   /** Genome IA-procedural. Passado direto pro Mascot2D. */
   proceduralGenome?: ProceduralGenome | null;
+  /** Visual da Jornada (forma corporal + adornos) — ver Mascot2D.journey. */
+  journey?: JourneyVisuals | null;
 }
 
 function MascotImpl(props: Props) {
@@ -56,6 +59,7 @@ function MascotImpl(props: Props) {
       reduceMotion={props.reduceMotion}
       dna={dna}
       proceduralGenome={props.proceduralGenome ?? storeMascot?.procedural_genome ?? null}
+      journey={props.journey}
     />
   );
 }
