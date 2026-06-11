@@ -44,7 +44,7 @@ export default function Splash() {
   return (
     <View style={[styles.wrap, { backgroundColor: theme.colors.bg }]}>
       <Animated.View style={[styles.content, style]}>
-        <BrandLogo size={200} />
+        <BrandLogo size={200} shadow={false} />
         <Typography variant="body" style={[styles.wordmark, { color: theme.colors.primary }]}>mascote</Typography>
         <Typography variant="body" style={[styles.tagline, { color: theme.colors.textSecondary }]}>
           Seu companheiro de autocuidado.

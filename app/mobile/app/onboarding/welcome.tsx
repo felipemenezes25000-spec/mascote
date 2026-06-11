@@ -148,7 +148,7 @@ export default function Welcome() {
             {/* Glow atrás do logo */}
             <Animated.View style={[styles.glow, glowStyle]} />
             <Animated.View style={logoStyle}>
-              <BrandLogo size={180} />
+              <BrandLogo size={180} shadow={false} />
             </Animated.View>
             <Animated.Text style={[styles.wordmark, wordmarkStyle]}>mascote</Animated.Text>
           </View>
