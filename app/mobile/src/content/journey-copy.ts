@@ -36,6 +36,11 @@ export function worldEnteredLine(worldName: string, worldEmoji: string): string 
   return `${worldEmoji} Vocês chegaram ao mundo ${worldName}. Um capítulo novo começa agora.`;
 }
 
+/** Evolução de FORMA (corpo muda) — o momento mais celebrado da jornada. */
+export function formEvolvedLine(mascotName: string, formName: string, trait: string): string {
+  return `${mascotName} evoluiu pra forma ${formName}! ${trait}`;
+}
+
 /** Teaser premium ético (mundos 9-10 pra free) — desejo, não punição. */
 export const PREMIUM_WORLD_TEASER =
   'As recompensas do Mundo Lendário estão guardadas pra você. Elas não expiram — assinando o Plus, tudo que você já conquistou é resgatado de uma vez.';

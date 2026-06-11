@@ -32,6 +32,8 @@ import type { MascotCustomization, MascotDNA, MascotMood, MascotPhase, Personali
 import { hslToHex, applyUserOverrides } from '@/lib/procedural';
 import { ProceduralMarks } from '@/components/mascot/ProceduralMarks';
 import { WorldAdornments } from '@/components/mascot/WorldAdornments';
+import { FormFeaturesBody, FormFeaturesHead } from '@/components/mascot/FormFeatures';
+import { emblemForGenome, formFeaturesForWorld } from '@/game/journey/forms';
 import type { JourneyVisuals } from '@/game/journey/visuals';
 import { getPersonality } from '@/content/personalities';
 import { paletteFromGenome, type Genome } from '@/lib/dna';
@@ -398,6 +400,16 @@ function MascotImpl({
   //  evoluido (6):  + halo + asas + aura
   const isEgg = phase === 'ovo';
   const showHead = !isEgg;
+  // FORMAS da Jornada — traços corporais cumulativos por mundo (forms.ts).
+  // Derivados do worldId da prop journey; emblema usa o arquétipo do DNA.
+  const formFeatures = useMemo(
+    () => (journey ? formFeaturesForWorld(journey.worldId) : []),
+    [journey?.worldId],
+  );
+  const chestEmblem = useMemo(
+    () => (formFeatures.includes('chest_emblem') ? emblemForGenome(dna as Genome | undefined) : null),
+    [formFeatures, dna],
+  );
   const showAntenna = stage >= 3;
   const showBody = stage >= 3;
   const showTail = stage >= 4;
@@ -527,8 +539,18 @@ function MascotImpl({
               <Rect x="60" y="125" width="80" height="60" rx="22" fill={brand} />
               <Rect x="60" y="125" width="80" height="60" rx="22" fill="url(#faceGrad)" opacity="0.06" />
               <Rect x="78" y="142" width="44" height="28" rx="10" fill="#FFFFFF" />
-              <Circle cx="100" cy="156" r="3" fill={accent} />
+              {/* Ponto de acento só até o emblema da Forma chegar (Mundo 6). */}
+              {!chestEmblem && <Circle cx="100" cy="156" r="3" fill={accent} />}
               <Rect x="86" y="166" width="28" height="2" rx="1" fill="#F4ECE2" />
+              {formFeatures.length > 0 && (
+                <FormFeaturesBody
+                  features={formFeatures}
+                  brand={brand}
+                  accent={accent}
+                  gold={theme.colors.gold}
+                  emblem={chestEmblem}
+                />
+              )}
             </G>
           )}
 
@@ -561,6 +583,17 @@ function MascotImpl({
                 <Line x1="122" y1="44" x2="132" y2="32" stroke={brand} strokeWidth="3" strokeLinecap="round" />
                 <Circle cx="134" cy="30" r="4" fill={accent} />
               </>
+            )}
+
+            {/* Traços de forma ATRÁS da cabeça (orelhinhas). */}
+            {formFeatures.length > 0 && (
+              <FormFeaturesHead
+                features={formFeatures}
+                brand={brand}
+                accent={accent}
+                gold={theme.colors.gold}
+                layer="back"
+              />
             )}
 
             {/* head — proporção por personalidade (calmo arredondado, motivador alongado, fofo redondo, sabio estreito) */}
@@ -651,6 +684,19 @@ function MascotImpl({
                 <Circle cx="44" cy="74" r="1.6" />
                 <Circle cx="170" cy="110" r="1.2" />
               </G>
+            )}
+
+            {/* TRAÇOS DE FORMA frontais — depois dos acessórios pra coroa
+                etérea/crista flutuarem por cima; marcas desenham em regiões
+                que não colidem com óculos/chapéus. */}
+            {formFeatures.length > 0 && (
+              <FormFeaturesHead
+                features={formFeatures}
+                brand={brand}
+                accent={accent}
+                gold={theme.colors.gold}
+                layer="front"
+              />
             )}
           </G>
           )}

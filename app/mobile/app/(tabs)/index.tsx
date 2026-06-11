@@ -543,7 +543,7 @@ export default function Home() {
           </StaggeredView>
 
           <StaggeredView index={3}>
-            <JourneyCard xp={mascot.xp} onPress={() => router.push('/journey')} />
+            <JourneyCard xp={mascot.xp} dna={mascot.dna} onPress={() => router.push('/journey')} />
           </StaggeredView>
 
           <StaggeredView index={3} initialDelay={20}>

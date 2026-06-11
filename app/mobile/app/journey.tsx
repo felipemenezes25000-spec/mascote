@@ -24,6 +24,7 @@ import {
   phasesForWorld,
   worldMap,
 } from '@/game/journey';
+import { formDisplayName, formForWorld, mascotFormFromXp, nextFormTeaser } from '@/game/journey/forms';
 import { almostThereLine, PREMIUM_WORLD_TEASER } from '@/content/journey-copy';
 import { UPCOMING_MINIGAMES } from '@/game/minigames/registry';
 import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
@@ -41,6 +42,9 @@ export default function JourneyScreen() {
   const current = journeyPhaseFromXp(xp);
   const map = worldMap(xp);
   const milestones = catalogMilestones();
+  const form = mascotFormFromXp(xp);
+  const formName = formDisplayName(xp, mascot?.dna);
+  const nextForm = nextFormTeaser(xp);
   const [expandedWorld, setExpandedWorld] = useState<number>(prog.world.id);
 
   useEffect(() => {
@@ -76,6 +80,19 @@ export default function JourneyScreen() {
             <Typography variant="caption" tone="secondary">
               {almostThereLine(prog)}
             </Typography>
+            <View style={styles.formRow}>
+              <Typography variant="caption" style={{ color: prog.world.hue, fontWeight: '700' }}>
+                🧬 Forma {formName}
+              </Typography>
+              <Typography variant="mono" tone="dim" numberOfLines={1} style={{ flex: 1 }}>
+                {form.trait}
+              </Typography>
+            </View>
+            {nextForm && (
+              <Typography variant="mono" tone="secondary">
+                Próxima forma na Fase {nextForm.atPhase}: {nextForm.name} — {nextForm.trait}
+              </Typography>
+            )}
           </View>
         </StaggeredView>
 
@@ -152,6 +169,11 @@ export default function JourneyScreen() {
                     <Typography variant="caption" tone="secondary" style={styles.worldIntro}>
                       {world.intro}
                     </Typography>
+                    {world.id > 1 && (
+                      <Typography variant="mono" style={{ color: world.hue, fontWeight: '700' }}>
+                        🧬 Forma {formForWorld(world.id).name} — {formForWorld(world.id).trait}
+                      </Typography>
+                    )}
                     {phases.map(p => {
                       const done = current.n > p.n || (current.n === p.n && prog.progress >= 1);
                       const isCurrent = current.n === p.n;
@@ -243,6 +265,7 @@ function makeStyles(theme: Theme) {
       ...theme.shadow.sm,
     },
     heroTop: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
+    formRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
     legendaryCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.radius.lg,

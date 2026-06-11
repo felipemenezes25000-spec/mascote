@@ -11,7 +11,8 @@ import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from 'expo-router';
 import { claimJourneyRewards } from '@/game/journey/service';
 import { getWorld } from '@/game/journey';
-import { phaseClaimCelebration, worldEnteredLine } from '@/content/journey-copy';
+import { formForWorld } from '@/game/journey/forms';
+import { formEvolvedLine, phaseClaimCelebration, worldEnteredLine } from '@/content/journey-copy';
 import { logger } from '@/lib/logger';
 import { playSfx } from '@/lib/sfx';
 import { useStore } from '@/store';
@@ -82,6 +83,20 @@ export function useJourneyClaim({
               subtitle: world
                 ? worldEnteredLine(getWorld(Math.min(world.id + 1, 10)).name, getWorld(Math.min(world.id + 1, 10)).emoji)
                 : 'Um capítulo inteiro concluído.',
+            });
+          }
+          // EVOLUÇÃO DE FORMA — fase x1 (entrada de mundo) muda o CORPO do
+          // mascote (forms.ts). É o momento mais celebrado: som próprio +
+          // toast com o traço novo.
+          const worldEntries = out.claimed.filter(p => p.n % 10 === 1 && p.n > 1);
+          for (const entry of worldEntries) {
+            const form = formForWorld(entry.worldId);
+            playSfx('evolve', { enabled: sfxOn });
+            enqueueToast({
+              kind: 'mutation',
+              emoji: '🧬',
+              title: `Nova forma: ${form.name}`,
+              subtitle: formEvolvedLine(mascot.name, form.name, form.trait),
             });
           }
           for (const gameId of out.newMinigames) {

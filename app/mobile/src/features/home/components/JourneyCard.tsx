@@ -12,19 +12,24 @@ import { StyleSheet, View } from 'react-native';
 import { PressableScale } from '@/components/PressableScale';
 import { ProgressBar } from '@/design-system';
 import { journeyProgress, nextUnlockTeaser } from '@/game/journey';
+import { formDisplayName } from '@/game/journey/forms';
 import { almostThereLine } from '@/content/journey-copy';
 import { useStyles } from '@/lib/useTheme';
+import type { Genome } from '@/lib/dna';
 import type { Theme } from '@/lib/themes';
 
 interface Props {
   xp: number;
+  /** DNA do mascote — usado pro nome composto da forma ("Lúmen de Aqua"). */
+  dna?: Genome | null;
   onPress: () => void;
 }
 
-export function JourneyCard({ xp, onPress }: Props) {
+export function JourneyCard({ xp, dna, onPress }: Props) {
   const styles = useStyles(makeStyles);
   const prog = journeyProgress(xp);
   const teaser = nextUnlockTeaser(xp);
+  const formName = formDisplayName(xp, dna);
   const pct = Math.round(prog.progress * 100);
 
   return (
@@ -46,9 +51,14 @@ export function JourneyCard({ xp, onPress }: Props) {
         </Typography>
       </View>
 
-      <Typography variant="bodyBold" numberOfLines={1}>
-        {prog.phase.title}
-      </Typography>
+      <View style={styles.titleRow}>
+        <Typography variant="bodyBold" numberOfLines={1} style={{ flex: 1 }}>
+          {prog.phase.title}
+        </Typography>
+        <Typography variant="mono" style={{ color: prog.world.hue, fontWeight: '700' }}>
+          Forma {formName}
+        </Typography>
+      </View>
 
       <ProgressBar value={prog.progress * 100} max={100} color={prog.world.hue} height={8} />
 
@@ -89,6 +99,11 @@ function makeStyles(theme: Theme) {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      gap: theme.spacing.sm,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
       gap: theme.spacing.sm,
     },
     worldBadge: {
