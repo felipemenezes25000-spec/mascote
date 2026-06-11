@@ -137,6 +137,12 @@ function CrystalCard({
       </Animated.View>
       <Animated.View
         style={[styles.cardFace, styles.cardFront, matched && styles.cardMatched, frontStyle]}
+        // Carta virada pra baixo NÃO pode expor o cristal na árvore de a11y —
+        // leitor de tela leria a resposta (QA 2026-06-11). backfaceVisibility
+        // esconde só visualmente; aria-hidden cobre AT (RN 0.74 mapeia pra
+        // accessibilityElementsHidden/importantForAccessibility no nativo;
+        // accessibilityElementsHidden puro NÃO funciona no react-native-web).
+        aria-hidden={!open}
       >
         <Typography variant="title" style={styles.cardEmoji}>
           {emoji}
