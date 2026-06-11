@@ -1,10 +1,10 @@
 /**
  * BrandLogo — marca oficial do Mascote.
  *
- * Refeita em 2026-05-22 — substituiu o SVG "gota luminescente" (que nunca foi
- * adotado oficialmente) pelo PNG canônico em assets/logo-mascote.png: o
- * robozinho laranja com elmo branco, antena e sorriso. Mesma arte usada em
- * splash, app icon (via build-icons.js) e favicon web.
+ * Arte oficial (2026-06-11): a raposinha/gatinho laranja fofo dentro do
+ * contorno de ovo, com coração no peito — PNG canônico em
+ * assets/logo-mascote.png. Mesma arte em splash, app icon e favicon web
+ * (icon.png/adaptive-icon.png gerados via `node scripts/build-icons.js`).
  *
  * Props preservadas pra back-compat:
  *  - `size`: lado do quadrado em px (default 96).
