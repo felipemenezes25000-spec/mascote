@@ -43,6 +43,7 @@ export { combo, comboXpBonus } from './combo';
 export { notifications } from './notifications';
 export { journeyClaims } from './journey';
 export { minigamePlays, type MinigamePlayRow } from './minigames';
+export { eventClaims, type EventClaimRow } from './event-claims';
 export {
   resetAll,
   exportAll,

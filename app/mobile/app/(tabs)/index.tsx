@@ -7,6 +7,7 @@ import type { Theme } from '@/lib/themes';
 import { Card } from '@/components/Card';
 import { ComboRing } from '@/components/ComboRing';
 import { ConfettiBurst } from '@/components/ConfettiBurst';
+import { EventChallengeCard } from '@/components/EventChallengeCard';
 import { DailyRewardStrip } from '@/components/DailyRewardStrip';
 import { EndowmentRow } from '@/components/EndowmentCard';
 import { EvolutionModal } from '@/components/EvolutionModal';
@@ -553,6 +554,12 @@ export default function Home() {
               onTalk={() => router.push('/(tabs)/chat')}
               onCustomize={() => router.push('/closet')}
             />
+          </StaggeredView>
+
+          {/* Desafio do evento limitado — some sozinho quando não há evento.
+              reactBeat incrementa a cada check-in → progresso re-busca na hora. */}
+          <StaggeredView index={3} initialDelay={40}>
+            <EventChallengeCard refreshKey={reactBeat} onConfetti={showConfetti} />
           </StaggeredView>
 
           <StaggeredView index={3} initialDelay={30}>

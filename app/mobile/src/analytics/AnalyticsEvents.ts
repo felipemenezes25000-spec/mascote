@@ -47,6 +47,7 @@ export const ANALYTICS_EVENTS = {
   minigame_completed: 'minigame_completed',
   mystery_box_opened: 'mystery_box_opened',
   daily_reward_claimed: 'daily_reward_claimed',
+  event_challenge_claimed: 'event_challenge_claimed',
 } as const;
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS];
@@ -108,8 +109,9 @@ export interface AnalyticsEventPayload {
     /** false = jogou além do cap diário (só diversão, sem recompensa). */
     rewarded: boolean;
   };
-  mystery_box_opened: { total_opened: number };
+  mystery_box_opened: { total_opened: number; rare?: boolean };
   daily_reward_claimed: { day: number };
+  event_challenge_claimed: { event_id: string; target: number; coins: number; gems: number };
 }
 
 /** Type-safe helper: `event('mascot_created', { personality, phase })`. */

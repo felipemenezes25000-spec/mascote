@@ -22,7 +22,8 @@ import {
 } from '@/lib/db';
 import { applyCheckinFully, undoLastCheckin } from '@/lib/checkin';
 import type { CheckinOutcome } from '@/lib/checkin';
-import { activeEventBoost } from '@/lib/events';
+import { activeEventBoost, activeLimitedEvent } from '@/lib/events';
+import { mysteryBoxDrops } from '@/game/events/drops';
 import { applyXp } from '@/lib/xp';
 import { copyFor, isInPaywallCooldown, markShown, shouldTrigger } from '@/lib/paywall-triggers';
 import { DAILY_REWARDS } from '@/components/DailyRewardStrip';
@@ -357,16 +358,14 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
       const today = todayLocal();
       const opened = await mysteryBox.open(profile.id, today);
       if (!opened) return;
+      // Durante eventos limitados a caixa vira RARA (tabela ~2× — presente
+      // perceptível, ainda 1/dia). Decisão de relógio no call site, tabela pura.
+      const rareEvent = activeLimitedEvent() !== null;
       analytics.track('mystery_box_opened', {
         total_opened: await mysteryBox.openedCount(profile.id),
+        rare: rareEvent,
       });
-      const drops: Array<{ coins: number; gems: number; xp?: number; label: string }> = [
-        { coins: 30, gems: 0, label: '+30 🪙' },
-        { coins: 75, gems: 0, label: '+75 🪙' },
-        { coins: 0, gems: 2, label: '+2 💎' },
-        { coins: 50, gems: 0, xp: 50, label: '+50 XP & 🪙' },
-        { coins: 100, gems: 1, label: '+100 🪙 +1 💎' },
-      ];
+      const drops = mysteryBoxDrops(rareEvent);
       const drop = drops[Math.floor(Math.random() * drops.length)];
       await walletDb.add(profile.id, drop.coins, drop.gems);
       if (drop.xp && mascot) {
@@ -387,7 +386,12 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
       onOpened();
       playSfx('chest', { enabled: opts.settings?.sfx_enabled !== false });
       opts.onConfetti(1500);
-      enqueueToast({ kind: 'info', emoji: '🎁', title: 'Caixa surpresa!', subtitle: drop.label });
+      enqueueToast({
+        kind: 'info',
+        emoji: rareEvent ? '🎉' : '🎁',
+        title: rareEvent ? 'Caixa RARA de evento!' : 'Caixa surpresa!',
+        subtitle: drop.label,
+      });
     },
     [opts, haptic, refreshMascot, refreshWallet, enqueueToast],
   );
