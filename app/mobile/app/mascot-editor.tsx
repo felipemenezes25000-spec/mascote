@@ -193,6 +193,7 @@ export default function MascotEditor() {
                 <Switch
                   value={!disabledAccessories.includes(a.id)}
                   onValueChange={() => toggleAccessory(a.id)}
+                  accessibilityLabel={`Mostrar acessório ${a.id}`}
                 />
               </View>
             ))}

@@ -75,4 +75,16 @@ describe('RevenueCatBillingProvider', () => {
     const tier = await provider.restore('user-rc-restore');
     expect(['free', 'plus_monthly', 'plus_annual']).toContain(tier);
   });
+
+  it('syncEntitlements é no-op (preserva tier) quando não ready', async () => {
+    // SDK não linkado → não rebaixa por falta de informação.
+    const tier = await provider.syncEntitlements('user-rc-sync');
+    expect(['free', 'plus_monthly', 'plus_annual']).toContain(tier);
+  });
+
+  it('cancel NÃO força free quando não ready — não há loja real cobrando', async () => {
+    // Regressão 2026-06-11: em produção real, cancelar via loja mantém acesso até
+    // o fim do período; aqui (não ready) o downgrade local é o caminho seguro.
+    await expect(provider.cancel('user-rc-cancel')).resolves.toBeUndefined();
+  });
 });

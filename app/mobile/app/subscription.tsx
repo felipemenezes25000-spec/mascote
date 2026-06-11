@@ -17,12 +17,13 @@ import { Icon } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { StaggeredView } from '@/components/StaggeredView';
-import { formatBRL, getTier } from '@/content/billing';
+import { formatBRL, formatPerMonth, getTier } from '@/content/billing';
 import { useTheme } from '@/lib/useTheme';
 import { makeShadow } from '@/lib/themes';
 import { useStore } from '@/store';
 import { restorePurchasesService } from '@/services/subscription/RestorePurchasesService';
 import { isDemoBilling } from '@/services/subscription';
+import { useSubscriptionTier } from '@/hooks/useSubscriptionTier';
 import type { Theme } from '@/lib/themes';
 
 import { Typography } from '@/components/ui';
@@ -31,9 +32,12 @@ export default function SubscriptionActive() {
   const styles = makeStyles(theme);
   const badgePulse = useSharedValue(0.6);
   const demoBilling = isDemoBilling();
-  const free = getTier('free');
   const monthly = getTier('plus_monthly');
   const annual = getTier('plus_annual');
+  // Tier REAL do usuário (reativo no foco). Antes o card "PLANO ATUAL" hardcodava
+  // `free`, então um assinante Plus via "Grátis" como plano atual.
+  const { tier: currentTierId, isPremium } = useSubscriptionTier();
+  const currentTier = getTier(currentTierId);
   const profile = useStore(s => s.profile);
   const enqueueToast = useStore(s => s.enqueueToast);
   const [restoring, setRestoring] = useState(false);
@@ -83,14 +87,19 @@ export default function SubscriptionActive() {
             <Typography variant="body" style={styles.label}>
               {demoBilling ? 'PLANO ATUAL (DEMO)' : 'PLANO ATUAL'}
             </Typography>
-            <Typography variant="body" style={styles.planName}>{free.name}</Typography>
-            <Typography variant="body" style={styles.price}>{formatBRL(free.totalCents)}/mês</Typography>
+            <Typography variant="body" style={styles.planName}>{currentTier.name}</Typography>
+            <Typography variant="body" style={styles.price}>{formatPerMonth(currentTier)}</Typography>
             {demoBilling && (
               <Typography variant="body" style={styles.note}>
                 Esta build usa billing demo — nenhuma cobrança real ocorre.
               </Typography>
             )}
-            {free.benefits.map(b => <Benefit key={b} text={b} />)}
+            {isPremium && (
+              <Typography variant="body" style={styles.note}>
+                Você é Plus 💛 — obrigado por cuidar de você (e de mim) por aqui.
+              </Typography>
+            )}
+            {currentTier.benefits.map(b => <Benefit key={b} text={b} />)}
           </View>
         </StaggeredView>
 

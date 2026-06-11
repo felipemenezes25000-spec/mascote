@@ -51,6 +51,12 @@ export interface CheckinInput {
   coins?: number;
   /** Origem do check-in para analytics (Pilar 2). */
   analyticsPath?: CheckinAnalyticsPath;
+  /**
+   * Multiplicadores de evento limitado (XP em dobro / moedas 3×). Calculado no
+   * CALL SITE da UI via `activeEventBoost()` — o core fica puro (não lê relógio),
+   * preservando o determinismo dos testes. Default 1× = sem boost.
+   */
+  boost?: { xpMult?: number; coinMult?: number };
 }
 
 export interface CheckinOutcome {
@@ -134,8 +140,13 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
     : await comboDb.bump(profile.id);
   const bonusPct = comboXpBonus(comboAfter.current);
 
-  const baseXp = baseXpInput + (wasFirstToday ? 5 : 0);
+  // Boost de evento limitado (default 1× = no-op). Aplica ANTES do cap diário:
+  // "XP em dobro" vale até o teto, que é guardrail separado.
+  const xpMult = input.boost?.xpMult ?? 1;
+  const coinMult = input.boost?.coinMult ?? 1;
+  const baseXp = Math.round((baseXpInput + (wasFirstToday ? 5 : 0)) * xpMult);
   const xpToGive = Math.round(baseXp * (1 + bonusPct / 100));
+  const coinsToGive = Math.round(coinsInput * coinMult);
   const result = applyXp(mascot, xpToGive, dailyXpSoFar);
   const tier = await subscriptionService.getCurrentTier(profile.id);
   const tierCapped = clampMascotPhaseForTier(result.mascot, tier);
@@ -162,7 +173,7 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
     });
   }
   if (!isDedupedHit) {
-    await walletDb.add(profile.id, coinsInput, 0);
+    await walletDb.add(profile.id, coinsToGive, 0);
   }
 
   let finalMascot = tierCapped;
@@ -340,7 +351,7 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
     mascot: finalMascot,
     streak: streakResult.streak,
     xpGained: totalXpGained,
-    coinsGained: coinsInput,
+    coinsGained: coinsToGive,
     gemsGained: gems,
     leveledUp: finalLeveled,
     phaseChanged: finalPhaseChanged,
@@ -380,11 +391,12 @@ export async function applyMissionCompletion(input: {
   mascot: Mascot;
   mission: Mission;
 }): Promise<MissionCompletionOutcome> {
-  // Lock por-missão: duas conclusões paralelas da mesma missão (deep-link,
-  // re-mount do checkin-result) liam status='pending' do input args e
-  // double-spend XP/moedas. Lock força a 2ª call a esperar a 1ª, depois
-  // re-busca o status do DB e curto-circuita via alreadyCompleted.
-  return withLock(`mission:${input.mission.id}`, () => applyMissionCompletionCore(input));
+  // Lock PER-USER (mesma chave do check-in): além de impedir double-spend da
+  // mesma missão (re-leitura de status abaixo), serializa o upsert do mascote
+  // contra applyCheckinFully. Antes o lock era por-missão (`mission:${id}`),
+  // então uma conclusão de missão concorrente com um check-in liam o MESMO
+  // mascote stale e o último upsert clobberava o XP do outro (lost update).
+  return withLock(`checkin:${input.profile.id}`, () => applyMissionCompletionCore(input));
 }
 
 async function applyMissionCompletionCore(input: {
@@ -411,7 +423,11 @@ async function applyMissionCompletionCore(input: {
   }
   const today = todayLocal();
   const dailyXpSoFar = await checkinsDb.xpSumToday(profile.id, today);
-  const result = applyXp(mascot, mission.xp_reward, dailyXpSoFar);
+  // Lê o mascote FRESCO de dentro do lock — `input.mascot` pode ser um snapshot
+  // anterior a um check-in que rodou enquanto esperávamos o lock; aplicar XP
+  // sobre o stale e dar upsert perderia o ganho do check-in (lost update).
+  const baseMascot = (await mascotsDb.forUser(profile.id)) ?? mascot;
+  const result = applyXp(baseMascot, mission.xp_reward, dailyXpSoFar);
   const tier = await subscriptionService.getCurrentTier(profile.id);
   const tierCapped = clampMascotPhaseForTier(result.mascot, tier);
   const tierPhaseChanged = phaseRank(tierCapped.phase) > phaseRank(result.prevPhase);
@@ -472,29 +488,33 @@ export interface UndoOutcome {
  * loophole de farming.
  */
 export async function undoLastCheckin(input: UndoCheckinInput): Promise<UndoOutcome> {
-  const removed = await checkinsDb.remove(input.checkinId);
-  if (!removed) return { removed: false, mascot: input.mascot };
+  // Lock PER-USER (mesma chave do check-in): sem isso, um undo concorrente com
+  // um novo check-in liam o mascote stale e o upsert do undo clobberava o XP
+  // que o check-in acabou de gravar (lost update). Auditoria 2026-06-11.
+  return withLock(`checkin:${input.profile.id}`, async () => {
+    const removed = await checkinsDb.remove(input.checkinId);
+    if (!removed) return { removed: false, mascot: input.mascot };
 
-  // Recomputa o estado do mascote a partir do que sobrou: xp - xpAwarded,
-  // level/phase derivados do novo xp. Não devolve energy (UX neutra).
-  const newXp = Math.max(0, input.mascot.xp - input.xpAwarded);
-  const derivedPhase = phaseFromXp(newXp);
-  const rolled: Mascot = {
-    ...input.mascot,
-    xp: newXp,
-    level: levelFromXp(newXp),
-    phase: phaseRank(derivedPhase) <= phaseRank(input.mascot.phase) ? derivedPhase : input.mascot.phase,
-    last_seen_at: new Date().toISOString(),
-  };
-  const tier = await subscriptionService.getCurrentTier(input.profile.id);
-  const tierCapped = clampMascotPhaseForTier(rolled, tier);
-  await mascotsDb.upsert(tierCapped);
-  // Devolve moedas (spend permite negativo via add com valor negativo? Não.
-  // Usa walletDb.add com valor negativo se suportar, senão soma manual).
-  if (input.coinsRefund > 0) {
-    await walletDb.add(input.profile.id, -input.coinsRefund, 0);
-  }
-  return { removed: true, mascot: tierCapped };
+    // Recomputa a partir do mascote FRESCO (não do snapshot do input): xp -
+    // xpAwarded, level/phase derivados do novo xp. Não devolve energy (UX neutra).
+    const baseMascot = (await mascotsDb.forUser(input.profile.id)) ?? input.mascot;
+    const newXp = Math.max(0, baseMascot.xp - input.xpAwarded);
+    const derivedPhase = phaseFromXp(newXp);
+    const rolled: Mascot = {
+      ...baseMascot,
+      xp: newXp,
+      level: levelFromXp(newXp),
+      phase: phaseRank(derivedPhase) <= phaseRank(baseMascot.phase) ? derivedPhase : baseMascot.phase,
+      last_seen_at: new Date().toISOString(),
+    };
+    const tier = await subscriptionService.getCurrentTier(input.profile.id);
+    const tierCapped = clampMascotPhaseForTier(rolled, tier);
+    await mascotsDb.upsert(tierCapped);
+    if (input.coinsRefund > 0) {
+      await walletDb.add(input.profile.id, -input.coinsRefund, 0);
+    }
+    return { removed: true, mascot: tierCapped };
+  });
 }
 
 export function defaultUnit(kind: HabitKind): string {

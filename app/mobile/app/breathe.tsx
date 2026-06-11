@@ -24,6 +24,7 @@ import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
 import { applyCheckinFully } from '@/lib/checkin';
+import { activeEventBoost } from '@/lib/events';
 import { logger } from '@/lib/logger';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
@@ -153,6 +154,7 @@ export default function Breathe() {
         baseXp: 25,
         coins: 15,
         analyticsPath: 'breathe',
+        boost: activeEventBoost(),
       });
       await Promise.all([
         refreshMascot().catch(() => {}),

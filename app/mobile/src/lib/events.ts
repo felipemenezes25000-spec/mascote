@@ -10,6 +10,10 @@ export interface LimitedEvent {
   title: string;
   description: string;
   multiplier: number; // 1.5 = 50% extra
+  // A QUE recurso o multiplicador se aplica. Sem isto, o banner prometia "XP em
+  // dobro"/"moedas 3×" mas a economia (checkin.ts) nunca sabia qual recurso
+  // multiplicar — o boost ficava só na UI, uma promessa quebrada.
+  appliesTo: 'xp' | 'coins';
   // start/end recebem `now` opcional pra suportar avaliação em datas custom
   // (testes, previews). Quando omitido, usam `new Date()`.
   start: (now?: Date) => Date;
@@ -59,6 +63,7 @@ export const limitedEvents: LimitedEvent[] = [
     title: 'Fim de semana: XP em dobro',
     description: 'Todos os check-ins do sábado e domingo dão XP em dobro. Termina domingo à meia-noite.',
     multiplier: 2,
+    appliesTo: 'xp',
     start: thisWeekendStart,
     end: thisWeekendEnd,
   },
@@ -68,10 +73,30 @@ export const limitedEvents: LimitedEvent[] = [
     title: 'Noite de moedas tripla',
     description: 'Hoje das 19h às 23h: moedas triplicadas em qualquer ação.',
     multiplier: 3,
+    appliesTo: 'coins',
     start: tonightStart,
     end: tonightEnd,
   },
 ];
+
+export interface EventBoost {
+  xpMult: number;
+  coinMult: number;
+}
+
+/**
+ * Multiplicadores do evento ativo, separados por recurso. Use no CALL SITE da
+ * UI (que naturalmente tem acesso ao relógio) e passe pro pipeline de check-in
+ * via `CheckinInput.boost`. Mantém `checkin.ts` PURO (sem ler wall-clock), o
+ * que preserva o determinismo dos testes de economia.
+ */
+export function activeEventBoost(now: Date = new Date()): EventBoost {
+  const ev = activeLimitedEvent(now);
+  return {
+    xpMult: ev?.appliesTo === 'xp' ? ev.multiplier : 1,
+    coinMult: ev?.appliesTo === 'coins' ? ev.multiplier : 1,
+  };
+}
 
 export function activeLimitedEvent(now: Date = new Date()): LimitedEvent | null {
   for (const ev of limitedEvents) {

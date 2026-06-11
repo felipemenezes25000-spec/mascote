@@ -89,7 +89,7 @@ export function HabitValueModal({ visible, kind, onClose, onConfirm }: Props) {
 
           <View style={styles.stepper}>
             <PressableScale onPress={() => bump(-config.step)} style={styles.btnRound} accessibilityRole="button" accessibilityLabel="Diminuir">
-              <Icon name="x" size={20} color={theme.colors.text} strokeWidth={2.4} />
+              <Icon name="minus" size={20} color={theme.colors.text} strokeWidth={2.4} />
             </PressableScale>
             <View style={styles.valueWrap}>
               <Text style={styles.value}>{value}</Text>
@@ -101,7 +101,13 @@ export function HabitValueModal({ visible, kind, onClose, onConfirm }: Props) {
           </View>
 
           <View style={styles.quickRow}>
-            {[config.default, config.default * 2, config.max].map(v => (
+            {/* Presets clampados ao max e deduplicados. Antes era [default,
+                default*2, max] cru: pra sleep dava [7, 14, 12] — o 14 excede
+                max=12, setValue(14) não clampava, e aí o "+" do stepper
+                (que clampa) BAIXAVA o valor (14→12). Auditoria 2026-06-11. */}
+            {Array.from(
+              new Set([config.default, Math.min(config.max, config.default * 2), config.max]),
+            ).map(v => (
               <PressableScale
                 key={v}
                 onPress={() => setValue(v)}

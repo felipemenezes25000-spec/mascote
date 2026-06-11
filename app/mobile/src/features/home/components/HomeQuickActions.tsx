@@ -84,6 +84,7 @@ export function HomeQuickActions({ habits, todayCheckins, onPress, onLongPress }
           <PressableScale
             style={styles.moreTile}
             onPress={() => setSheetOpen(true)}
+            accessibilityRole="button"
             accessibilityLabel={`Ver mais ${hidden.length} cuidados`}
           >
             <Typography variant="bodyBold" style={styles.moreLabel}>+{hidden.length}</Typography>

@@ -10,9 +10,14 @@ const criticalPatterns = [
   // "me" reflexivo obrigatório mantém "matar a fome/saudade" fora do crítico.
   /\bme\s+mat(ar|o|a|ei|arei|aria)\b/i,
   /matar\s+me/i,
-  // Eufemismo padrão pt-BR pra suicídio: "tirar a vida". Cobre "tirar minha
-  // vida", "tirar a própria vida", "tirar a vida", "tirando minha vida".
-  /tir(ar|ando|ei|o)\s+(a\s+|minha\s+|(a\s+)?pr[óo]pria\s+)vida\b/i,
+  // Eufemismo padrão pt-BR pra suicídio: "tirar a vida". Determinantes empilháveis
+  // e obrigatórios (pelo menos um): "tirar a vida", "tirar minha vida", "tirar a
+  // minha vida", "tirar a própria vida", "tirar a minha própria vida". Bug anterior:
+  // o grupo era exclusivo (a | minha | própria), então "tirar a MINHA vida" — a
+  // forma mais comum em PT-BR — escapava (depois de "tirar a " exigia "vida" e
+  // encontrava "minha"). Alternativas ordenadas longest-first. Determinante exigido
+  // mantém "tirar férias/foto/uma soneca" fora do crítico.
+  /tir(ar|ando|ei|o)\s+(a\s+minha\s+pr[óo]pria|a\s+minha|minha\s+pr[óo]pria|a\s+pr[óo]pria|minha|a)\s+vida\b/i,
   /n[ãa]o\s+quero\s+mais\s+viver/i,
   /acabar\s+com\s+tudo/i,
   /sumir\s+desse\s+mundo/i,
@@ -105,6 +110,36 @@ const criticalPatterns = [
   // na anatomia/reflexivo pra não pegar o idioma "dar um tiro no escuro"
   // (= chutar/arriscar), que não tem "na cabeça"/"em mim".
   /\btiro\s+(na\s+(minha\s+)?cabe[çc]a|em\s+mim)\b/i,
+  // === Ampliação PT-BR (auditoria 2026-06-11 ajuste1) ===
+  // Particípio "morrido": "queria ter morrido", "tinha que ter morrido". Os padrões
+  // de morrer acima só casavam o infinitivo "morrer". O lookahead exclui a hipérbole
+  // ("ter morrido de rir/cansaço/fome/medo…"); `verg\w` cobre o caso "de [shame]"
+  // sem escrever o literal que o guard de copy (g2-checkin-gentle) proíbe no source.
+  /\bter\s+morrido\b(?!\s+de\s+(rir|cansa|fome|sono|medo|t[ée]dio|nojo|raiva|verg\w))/i,
+  // Salto fatal flexionado: "me jogo/joguei/jogando da ponte". A linha do infinitivo
+  // acima já cobre "me jogar embaixo do trem"; aqui as flexões exigem local fatal
+  // explícito pra não pegar "me joguei no trabalho/projeto" (= mergulhar de cabeça).
+  /\bme\s+jog(o|uei|ou|ando)\s+(da|do|na|no|de)\s+(janela|ponte|laje|pr[éeê]dio|viaduto|trem|trilho|telhado|carro)/i,
+  // Arma de fogo reflexiva: "me dar um tiro", "vou me dar um tiro" (line acima cobre
+  // "tiro na cabeça/em mim", mas não "me dar um tiro" solto). "atirar em mim mesmo"
+  // exige "mesmo" pra não confundir com relato de vítima ("alguém vai atirar em mim").
+  /\bme\s+d(ar|ei|ou|[êe]|e)\s+um\s+tiro\b/i,
+  /atir(ar|ei|o|ando)\s+(em|contra)\s+mim\s+mesm[oa]\b/i,
+  // Envenenamento: "beber veneno" (line de veneno acima só cobria tomar/engolir) e
+  // "chumbinho" (pesticida, método clássico no BR — não aparece em frase benigna).
+  /\bbeb(er|i|o|endo)\s+veneno\b/i,
+  /\bchumbinho\b/i,
+  // Eufemismos "dar cabo da minha vida / de mim" e "dar um fim À minha vida" (a linha
+  // de "dar fim" tinha "na minha vida" mas não a crase). "dar cabo" exige objeto de
+  // vida/mim pra não pegar "dar cabo do trabalho" (= concluir uma tarefa).
+  /\bdar\s+cabo\s+(d[ae]\s+minha\s+vida|de\s+mim)\b/i,
+  /\bdar\s+(um\s+)?fim\s+[àá]\s+(minha\s+)?vida\b/i,
+  // Auto-lesão sem o verbo "cortar": "abrir os pulsos/veias", "me mutilar",
+  // "automutilação", "autoextermínio". Os padrões de corte acima exigiam "cortar".
+  /\babrir\s+(os\s+|as\s+|meus\s+|minhas\s+)?(pulsos?|veias?)\b/i,
+  /\bme\s+mutil(ar|ei|o|ando)\b/i,
+  /\bautomutila[çc]/i,
+  /\bautoexterm[íi]nio\b/i,
 ];
 
 const highPatterns = [

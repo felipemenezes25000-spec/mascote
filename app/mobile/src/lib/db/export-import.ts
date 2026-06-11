@@ -4,6 +4,35 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { KEY, META_KEY, withLock, write } from './internal';
 import { secureRemove, SECURE_KEYS } from '@/lib/secureStore';
+import { sanitizeSvg } from '@/lib/procedural/sanitizeSvg';
+
+/**
+ * Sanitiza recursivamente qualquer `customSvg` (string) num row importado.
+ * O sanitizeSvg canônico só roda na GERAÇÃO do genome (schema.ts); um backup
+ * malicioso podia trazer `procedural_genome.accessories[].customSvg` hostil e
+ * o import gravava cru → renderizado depois via SvgXml sem checagem (bypass
+ * total — auditoria 2026-06-11). SVG inválido é REMOVIDO (não derruba o import).
+ */
+function scrubCustomSvgDeep(node: unknown): void {
+  if (Array.isArray(node)) {
+    for (const item of node) scrubCustomSvgDeep(item);
+    return;
+  }
+  if (node && typeof node === 'object') {
+    const obj = node as Record<string, unknown>;
+    for (const [k, v] of Object.entries(obj)) {
+      if (k === 'customSvg' && typeof v === 'string') {
+        try {
+          obj[k] = sanitizeSvg(v, 'import.customSvg');
+        } catch {
+          delete obj[k];
+        }
+      } else {
+        scrubCustomSvgDeep(v);
+      }
+    }
+  }
+}
 
 const ALL_TABLES = [
   'profiles',
@@ -177,6 +206,9 @@ export async function importAll(data: Record<string, any[]>): Promise<ImportResu
       skipped.push(t);
       continue;
     }
+    // Neutraliza SVG hostil em qualquer profundidade ANTES de persistir — o
+    // sanitizador canônico só roda na geração, então o import era o bypass.
+    for (const row of value) scrubCustomSvgDeep(row);
 
     if ((EXPORT_EXTENDED_TABLES as readonly string[]).includes(t)) {
       const row = value[0];

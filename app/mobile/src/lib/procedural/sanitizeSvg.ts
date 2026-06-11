@@ -25,8 +25,11 @@ const ALLOWED_ATTRS = new Set([
   'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin',
   'opacity', 'fill-opacity', 'stroke-opacity',
   'transform',
-  // estrutura segura
-  'viewBox',
+  // estrutura segura. NB: a comparação no scan é case-insensitive (attr.toLowerCase()),
+  // então a entrada precisa estar em minúsculas — `viewBox` ficava como entrada MORTA
+  // (nunca casava `viewbox`) e qualquer SVG com viewBox era rejeitado apesar de
+  // whitelistado. O output preserva o casing original (retornamos a string intacta).
+  'viewbox',
 ]);
 
 const BANNED_PATTERNS: RegExp[] = [
@@ -75,13 +78,21 @@ export function sanitizeSvg(input: string, path = 'svg'): string {
 
   // Scan estrutural simples: tokens de abertura <tag e fechamento </tag.
   // Não é parser completo de XML — é validador que rejeita qualquer suspeita.
-  // Atributos delimitados por `[^<>]*` pra impedir match cross-tag que ignoraria
-  // tags maliciosas no meio (bug encontrado em teste: `<svg><foo />` casava só svg).
   // O nome da tag inclui `:_-` (namespaces/hifens) de propósito: assim
   // `<a:script>`, `<my-el>` ou `<xlink:foo>` são CAPTURADOS e rejeitados
   // explicitamente pelo whitelist abaixo, em vez de o regex parar no `:`/`-` e
   // a tag escapar silenciosamente do scan estrutural (defesa-em-profundidade).
-  const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9:_-]*)(\s+[^<>]*)?\s*\/?>/g;
+  //
+  // O chunk de atributos é QUOTE-AWARE: `"[^"]*"|'[^']*'|[^<>"']`. Antes era
+  // `[^<>]*`, que parava no PRIMEIRO `>` — inclusive um `>` DENTRO de um valor
+  // entre aspas (`fill="a>b onload=…"`). Isso truncava a tag e os atributos
+  // seguintes escapavam da checagem de whitelist (bypass parcial — auditoria
+  // 2026-06-11). Agora o valor entre aspas é consumido inteiro (mesmo com `>`),
+  // e a checagem de valor abaixo (que rejeita `<`/`>`) o pega. Um parser XML real
+  // (SvgXml no web) também trata `>`-entre-aspas como parte do valor — alinhar o
+  // regex com o parser fecha a divergência onde o bypass morava. MAX_BYTES limita
+  // o input (2KB), então a alternância não abre janela de ReDoS.
+  const tagPattern = /<\/?([a-zA-Z][a-zA-Z0-9:_-]*)(\s+(?:"[^"]*"|'[^']*'|[^<>"'])*)?\s*\/?>/g;
   let nodeCount = 0;
   let depth = 0;
   let maxDepth = 0;

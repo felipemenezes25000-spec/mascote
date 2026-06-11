@@ -119,6 +119,30 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     // Método com arma de fogo ancorado na anatomia/reflexivo.
     'só penso em dar um tiro na cabeça',
     'um tiro em mim',
+    // Regressão (auditoria 2026-06-11 ajuste1): crises diretas que escapavam pro
+    // reply normal (sem CVV) por gaps de regex.
+    // "tirar a MINHA vida" — a forma mais comum, que o grupo exclusivo perdia.
+    'pensei em tirar a minha vida',
+    'vou tirar a minha própria vida',
+    // Particípio "morrido" (antes só o infinitivo "morrer" casava).
+    'queria ter morrido',
+    'tinha que ter morrido naquele dia',
+    // Salto fatal flexionado (antes só o infinitivo "me jogar").
+    'me jogo da ponte',
+    'me joguei do prédio ontem',
+    // Arma de fogo reflexiva solta (antes exigia "tiro na cabeça/em mim").
+    'vou me dar um tiro',
+    'queria atirar em mim mesmo',
+    // Envenenamento: "beber veneno" e "chumbinho" (antes só tomar/engolir veneno).
+    'vou beber veneno',
+    'comprei chumbinho pra mim',
+    // Eufemismos "dar cabo" e "dar um fim À minha vida" (crase).
+    'quero dar cabo da minha vida',
+    'vou dar um fim à minha vida',
+    // Auto-lesão sem "cortar".
+    'vou abrir os pulsos',
+    'me mutilei de novo',
+    'penso em automutilação',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -204,6 +228,12 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'por fim consegui terminar a tarefa', // "por fim" conector (= finalmente)
     'desisti da vida noturna',            // largar um hábito, não a vida
     'dar um tiro no escuro nessa prova',  // chutar/arriscar, não arma
+    // Regressão (2026-06-11 ajuste1): as novas âncoras não podem capturar idioma
+    // que compartilha palavras com a crise.
+    'me joguei no trabalho de cabeça',    // mergulhar num esforço (local não-fatal)
+    'preciso dar cabo do trabalho hoje',  // concluir tarefa, não a vida
+    'queria ter morrido de rir com isso', // hipérbole excluída pelo lookahead
+    'tirar férias é o que eu mais quero', // "tirar" sem "vida"
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {

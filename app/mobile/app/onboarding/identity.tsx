@@ -140,7 +140,7 @@ export default function IdentityOnboarding() {
           <View style={[styles.progressFill, { width: `${progress}%` }]} />
         </View>
         <View style={styles.headerRow}>
-          <Pressable onPress={back} accessibilityRole="button" accessibilityLabel="Voltar" style={styles.backBtn}>
+          <Pressable onPress={back} hitSlop={10} accessibilityRole="button" accessibilityLabel="Voltar" style={styles.backBtn}>
             <Icon name="arrow-left" size={18} color={theme.colors.textSecondary} strokeWidth={2.4} />
           </Pressable>
           <Typography variant="body" style={styles.kicker}>{stepLabel('quiz')} · {step + 1} de {totalSteps}</Typography>

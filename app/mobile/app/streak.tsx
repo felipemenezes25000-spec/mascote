@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
@@ -26,39 +27,50 @@ export default function StreakScreen() {
   const longest = streak?.longest_streak ?? 0;
   const grace = streak?.grace_days_left ?? 2;
 
+  // Guard de re-entrância: sem ele, double-tap cobrava 2× (100 moedas) mas os
+  // dois upserts liam o MESMO `streak` stale do closure e ambos gravavam
+  // grace+1 — lost update, o usuário pagava 100 e ganhava só +1 folga.
+  const buyingRef = useRef(false);
+
   async function buyFreeze() {
     if (!profile || !streak) return;
-    if ((wallet?.coins ?? 0) < FREEZE_COST) {
-      Alert.alert('Sem moedas', `Precisa de ${FREEZE_COST} moedas pra comprar um freeze. Você tem ${wallet?.coins ?? 0}.`);
-      return;
-    }
-    const spent = await walletDb.spend(profile.id, FREEZE_COST, 0);
-    if (!spent) return;
-    // Refund se upsert falhar — sem o try, falha no AsyncStorage entre os
-    // dois writes deixava as 50 moedas perdidas SEM o freeze, sem feedback.
+    if (buyingRef.current) return;
+    buyingRef.current = true;
     try {
-      await streaksDb.upsert({
-        ...streak,
-        grace_days_left: Math.min(5, streak.grace_days_left + 1),
-      });
-    } catch (err) {
-      await walletDb.add(profile.id, FREEZE_COST, 0);
+      if ((wallet?.coins ?? 0) < FREEZE_COST) {
+        Alert.alert('Sem moedas', `Precisa de ${FREEZE_COST} moedas pra comprar um freeze. Você tem ${wallet?.coins ?? 0}.`);
+        return;
+      }
+      const spent = await walletDb.spend(profile.id, FREEZE_COST, 0);
+      if (!spent) return;
+      // Refund se upsert falhar — sem o try, falha no AsyncStorage entre os
+      // dois writes deixava as 50 moedas perdidas SEM o freeze, sem feedback.
+      try {
+        await streaksDb.upsert({
+          ...streak,
+          grace_days_left: Math.min(5, streak.grace_days_left + 1),
+        });
+      } catch (err) {
+        await walletDb.add(profile.id, FREEZE_COST, 0);
+        await refreshWallet();
+        Alert.alert('Não foi possível', 'Reverti a compra. Tenta de novo.');
+        return;
+      }
+      await refreshStreak();
       await refreshWallet();
-      Alert.alert('Não foi possível', 'Reverti a compra. Tenta de novo.');
-      return;
+      // Toast em vez de Alert: Alert é modal jarring que interrompe; toast
+      // confirma sem quebrar flow. Fix auditoria 2026-05-27 — usuária reportou
+      // "compra sem feedback" provavelmente porque Alert no web é nativo do
+      // browser e fácil de perder na lateral.
+      enqueueToast({
+        kind: 'info',
+        emoji: '🛡️',
+        title: 'Streak Freeze adicionado',
+        subtitle: `Agora você tem ${Math.min(5, streak.grace_days_left + 1)} folga(s) na manga.`,
+      });
+    } finally {
+      buyingRef.current = false;
     }
-    await refreshStreak();
-    await refreshWallet();
-    // Toast em vez de Alert: Alert é modal jarring que interrompe; toast
-    // confirma sem quebrar flow. Fix auditoria 2026-05-27 — usuária reportou
-    // "compra sem feedback" provavelmente porque Alert no web é nativo do
-    // browser e fácil de perder na lateral.
-    enqueueToast({
-      kind: 'info',
-      emoji: '🛡️',
-      title: 'Streak Freeze adicionado',
-      subtitle: `Agora você tem ${Math.min(5, streak.grace_days_left + 1)} folga(s) na manga.`,
-    });
   }
 
   return (

@@ -97,6 +97,42 @@ describe('applyCheckinFully — happy path', () => {
   });
 });
 
+describe('applyCheckinFully — boost de evento limitado (regressão 2026-06-11)', () => {
+  it('coinMult triplica as moedas creditadas e retornadas', async () => {
+    const { profile, mascot } = await setupUser();
+    const out = await applyCheckinFully({
+      profile,
+      mascot,
+      kind: 'water',
+      boost: { coinMult: 3 },
+    });
+    expect(out.coinsGained).toBe(COINS_PER_CHECKIN * 3);
+    const w = await walletDb.get(profile.id);
+    expect(w.coins).toBe(COINS_PER_CHECKIN * 3);
+  });
+
+  it('xpMult dobra o XP (até o cap diário)', async () => {
+    const a = await setupUser();
+    const base = await applyCheckinFully({ profile: a.profile, mascot: a.mascot, kind: 'water' });
+    await AsyncStorage.clear();
+    const b = await setupUser();
+    const boosted = await applyCheckinFully({
+      profile: b.profile,
+      mascot: b.mascot,
+      kind: 'water',
+      boost: { xpMult: 2 },
+    });
+    // Mesmas condições (1º check-in, combo=2), só o xpMult muda — boosted > base.
+    expect(boosted.xpGained).toBeGreaterThan(base.xpGained);
+  });
+
+  it('sem boost (default) não altera economia — determinístico', async () => {
+    const { profile, mascot } = await setupUser();
+    const out = await applyCheckinFully({ profile, mascot, kind: 'water' });
+    expect(out.coinsGained).toBe(COINS_PER_CHECKIN);
+  });
+});
+
 describe('applyCheckinFully — XP cap diário (150)', () => {
   it('não passa de 150 XP/dia mesmo após muitos check-ins', async () => {
     const { profile, mascot } = await setupUser();
@@ -264,6 +300,26 @@ describe('applyMissionCompletion', () => {
 
     const w = await walletDb.get(profile.id);
     expect(w.coins).toBe(COINS_PER_MISSION); // ainda 15, não 30
+  });
+
+  it('lê o mascote FRESCO do DB (não o snapshot stale do input) — anti lost-update', async () => {
+    // Regressão 2026-06-11: applyMissionCompletion rodava sobre input.mascot.
+    // Se um check-in gravasse XP entre a captura do snapshot e a conclusão da
+    // missão, o upsert da missão clobberava o XP do check-in. Agora lê fresh.
+    const { profile, mascot } = await setupUser();
+    const stale = { ...mascot, xp: 0 }; // snapshot anterior ao check-in
+    // Check-in real grava XP no DB.
+    const ci = await applyCheckinFully({ profile, mascot, kind: 'water' });
+    const xpAfterCheckin = (await mascots.forUser(profile.id))?.xp ?? 0;
+    expect(xpAfterCheckin).toBeGreaterThan(0);
+    const mission = await makeMission(profile, { xp_reward: 20 });
+    // Passa o mascote STALE (xp=0) de propósito.
+    const out = await applyMissionCompletion({ profile, mascot: stale, mission });
+    const xpFinal = (await mascots.forUser(profile.id))?.xp ?? 0;
+    // O XP do check-in foi PRESERVADO: final ≈ pós-checkin + ganho da missão,
+    // não 0 + ganho (que seria o bug, perdendo o XP do check-in).
+    expect(xpFinal).toBe(xpAfterCheckin + out.xpGained);
+    expect(xpFinal).toBeGreaterThan(ci.xpGained);
   });
 
   it('respeita o XP daily cap quando já estourado', async () => {

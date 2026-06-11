@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams, Redirect } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
@@ -70,6 +70,10 @@ export default function Closet() {
   const [tab, setTab] = useState<'accessories' | 'scenes'>(
     initialTabParam === 'scenes' ? 'scenes' : 'accessories',
   );
+  // Guard de re-entrância de compra: walletDb.spend é atômico, mas inventory/
+  // userScenes.unlock é idempotente — sem este guard, um double-tap cobrava o
+  // preço 2× por um item que o 2º unlock só "reconfirma" (sem refund).
+  const buyingRef = useRef(false);
 
   useEffect(() => {
     if (!profile) return;
@@ -127,6 +131,7 @@ export default function Closet() {
 
   async function buyAccessory(id: string, price: number) {
     if (!profile) return;
+    if (buyingRef.current) return;
     const meta = getAccessory(id);
     if (!meta) return;
     const canUnlock = checkAccUnlock(meta, accCtx);
@@ -138,30 +143,36 @@ export default function Closet() {
       Alert.alert('Moedas insuficientes', `Custa ${price} 🪙. Você tem ${wallet?.coins ?? 0}.`);
       return;
     }
-    const spent = await walletDb.spend(profile.id, price, 0);
-    if (!spent) {
-      Alert.alert('Não foi possível', 'Saldo mudou. Tenta de novo.');
-      return;
-    }
-    // Spend já saiu — se inventory.unlock falhar, devolve as moedas pra
-    // evitar perda silenciosa do saldo (acontece se AsyncStorage corromper
-    // a tabela de inventário entre os dois writes). Sem este try, o usuário
-    // perdia coins sem o acessório.
+    buyingRef.current = true;
     try {
-      await inventory.unlock(profile.id, id);
-    } catch (err) {
-      await walletDb.add(profile.id, price, 0);
+      const spent = await walletDb.spend(profile.id, price, 0);
+      if (!spent) {
+        Alert.alert('Não foi possível', 'Saldo mudou. Tenta de novo.');
+        return;
+      }
+      // Spend já saiu — se inventory.unlock falhar, devolve as moedas pra
+      // evitar perda silenciosa do saldo (acontece se AsyncStorage corromper
+      // a tabela de inventário entre os dois writes). Sem este try, o usuário
+      // perdia coins sem o acessório.
+      try {
+        await inventory.unlock(profile.id, id);
+      } catch (err) {
+        await walletDb.add(profile.id, price, 0);
+        await refreshWallet();
+        Alert.alert('Não foi possível', 'Reverti a compra. Tenta de novo.');
+        return;
+      }
       await refreshWallet();
-      Alert.alert('Não foi possível', 'Reverti a compra. Tenta de novo.');
-      return;
+      await load();
+      Alert.alert('Comprado!', 'Equipe quando quiser.');
+    } finally {
+      buyingRef.current = false;
     }
-    await refreshWallet();
-    await load();
-    Alert.alert('Comprado!', 'Equipe quando quiser.');
   }
 
   async function buyScene(id: string, price: number) {
     if (!profile) return;
+    if (buyingRef.current) return;
     if (!entitlementService.canAccessScene(tier, id)) {
       router.push({ pathname: '/paywall', params: { trigger: 'premium_feature' } });
       return;
@@ -181,23 +192,28 @@ export default function Closet() {
       Alert.alert('Moedas insuficientes', `Custa ${price} 🪙. Você tem ${wallet?.coins ?? 0}.`);
       return;
     }
-    const spent = await walletDb.spend(profile.id, price, 0);
-    if (!spent) {
-      Alert.alert('Não foi possível', 'Saldo mudou. Tenta de novo.');
-      return;
-    }
-    // Mesma razão de buyAccessory: refund se userScenes.unlock quebrar.
+    buyingRef.current = true;
     try {
-      await userScenes.unlock(profile.id, id);
-    } catch (err) {
-      await walletDb.add(profile.id, price, 0);
+      const spent = await walletDb.spend(profile.id, price, 0);
+      if (!spent) {
+        Alert.alert('Não foi possível', 'Saldo mudou. Tenta de novo.');
+        return;
+      }
+      // Mesma razão de buyAccessory: refund se userScenes.unlock quebrar.
+      try {
+        await userScenes.unlock(profile.id, id);
+      } catch (err) {
+        await walletDb.add(profile.id, price, 0);
+        await refreshWallet();
+        Alert.alert('Não foi possível', 'Reverti a compra. Tenta de novo.');
+        return;
+      }
       await refreshWallet();
-      Alert.alert('Não foi possível', 'Reverti a compra. Tenta de novo.');
-      return;
+      await load();
+      Alert.alert('Cenário comprado!', 'Toca em "Usar" pra ativar.');
+    } finally {
+      buyingRef.current = false;
     }
-    await refreshWallet();
-    await load();
-    Alert.alert('Cenário comprado!', 'Toca em "Usar" pra ativar.');
   }
 
   async function activateScene(id: string) {

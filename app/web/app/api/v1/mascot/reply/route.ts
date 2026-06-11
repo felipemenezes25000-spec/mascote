@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
   const customSystem = asStr(body.system_prompt, MAX_SYSTEM_CHARS);
   const system =
     customSystem ||
-    `Você é um mascote digital de bem-estar. Tom: ${flavor}. Não diagnostique. Não prometá cura.`;
+    `Você é um mascote digital de bem-estar. Tom: ${flavor}. Não diagnostique. Não prometa cura.`;
 
   const rawHistory = Array.isArray(body.history) ? body.history : [];
   const history = rawHistory

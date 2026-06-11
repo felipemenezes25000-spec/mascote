@@ -20,6 +20,7 @@ export type IconName =
   | 'chevron-down'
   | 'x'
   | 'plus'
+  | 'minus'
   | 'check'
   // Gamification
   | 'flame'
@@ -144,6 +145,12 @@ export function Icon({ name, size = 24, color = 'currentColor', strokeWidth = 2,
       return (
         <Svg {...common}>
           <Line x1="12" y1="5" x2="12" y2="19" />
+          <Line x1="5" y1="12" x2="19" y2="12" />
+        </Svg>
+      );
+    case 'minus':
+      return (
+        <Svg {...common}>
           <Line x1="5" y1="12" x2="19" y2="12" />
         </Svg>
       );

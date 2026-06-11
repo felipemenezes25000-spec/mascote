@@ -238,6 +238,7 @@ export function LookManager({
           />
           <PressableScale
             onPress={handleCancel}
+            hitSlop={6}
             style={[styles.iconBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
             accessibilityRole="button"
             accessibilityLabel="Cancelar"
@@ -246,6 +247,7 @@ export function LookManager({
           </PressableScale>
           <PressableScale
             onPress={() => void handleSave()}
+            hitSlop={6}
             style={[styles.iconBtn, { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
             accessibilityRole="button"
             accessibilityLabel="Salvar"

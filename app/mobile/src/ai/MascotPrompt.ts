@@ -10,6 +10,7 @@ import type { MascotDNA, Personality } from '@/types';
 import { dnaPromptSection } from '@/lib/dna/descriptors';
 import type { Genome } from '@/lib/dna/genome';
 import { formatMemoriesForPrompt, type MemoryItem } from '@/lib/memory';
+import { sanitizePromptValue } from '@/lib/ai/sanitizePromptValue';
 
 export const PERSONALITY_FLAVOR: Record<Personality, string> = {
   calmo: 'Voz baixa, fala devagar. Sem exclamação. Foca em respiração, sono, silêncio.',
@@ -27,7 +28,10 @@ export interface BuildPromptOptions {
 
 export function buildMascotSystemPrompt(opts: BuildPromptOptions): string {
   const { personality, memories = [], mascotName, dna } = opts;
-  const base = `Você é um companheiro digital de autocuidado em PT-BR${mascotName ? `, chamado ${mascotName}` : ''}.
+  // Nome é user-controlled (e import bypassa o maxLength da UI) — sanitiza pra
+  // não injetar instruções/quebras de linha no prompt. Defesa-em-profundidade.
+  const safeName = sanitizePromptValue(mascotName, 40);
+  const base = `Você é um companheiro digital de autocuidado em PT-BR${safeName ? `, chamado ${safeName}` : ''}.
 REGRAS INVIOLÁVEIS:
 - Wellness, NUNCA terapia, diagnóstico ou cura.
 - NUNCA use: "depressão", "ansiedade clínica", "transtorno", "diagnóstico", "tratamento", "trauma", "TDAH".

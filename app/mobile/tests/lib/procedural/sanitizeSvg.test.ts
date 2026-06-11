@@ -82,4 +82,34 @@ describe('sanitizeSvg — bloqueia ataques', () => {
   it('rejeita tag com hífen (custom element)', () => {
     expect(() => sanitizeSvg('<svg><my-el /></svg>')).toThrow(/my-el/);
   });
+
+  // Regressão (auditoria 2026-06-11): um `>` DENTRO de um valor entre aspas
+  // truncava o regex de tag e os atributos seguintes escapavam do whitelist
+  // (bypass parcial). Agora o valor entre aspas é consumido inteiro e a checagem
+  // de valor (que rejeita `<`/`>`) o pega.
+  it('rejeita > dentro de valor de atributo entre aspas (bypass de whitelist)', () => {
+    expect(() =>
+      sanitizeSvg('<svg><rect fill="a>b" foo="x" /></svg>'),
+    ).toThrow(SvgSanitizationError);
+  });
+
+  it('rejeita atributo injetado após > em valor entre aspas', () => {
+    expect(() =>
+      sanitizeSvg('<svg><rect width="1>2" data-evil="x" /></svg>'),
+    ).toThrow(SvgSanitizationError);
+  });
+
+  it('ainda aceita SVG legítimo sem > em valores', () => {
+    expect(() =>
+      sanitizeSvg('<svg viewBox="0 0 10 10"><path d="M1 1 L9 9" stroke="red" /></svg>'),
+    ).not.toThrow();
+  });
+
+  // Regressão (auditoria 2026-06-11): viewBox estava na whitelist em camelCase mas
+  // a comparação lowercased nunca casava — qualquer SVG com viewBox era rejeitado.
+  it('aceita viewBox (whitelist entry antes morta por case-mismatch)', () => {
+    const out = sanitizeSvg('<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="blue" /></svg>');
+    // Output preserva o casing original do atributo.
+    expect(out).toContain('viewBox="0 0 24 24"');
+  });
 });

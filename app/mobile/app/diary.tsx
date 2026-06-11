@@ -134,6 +134,7 @@ export default function DiaryScreen() {
         <View style={styles.header}>
           <Pressable
             onPress={() => router.back()}
+            hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel="Voltar"
             style={styles.backBtn}

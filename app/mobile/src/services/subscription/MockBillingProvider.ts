@@ -39,6 +39,15 @@ export class MockBillingProvider {
     if (!__DEV__ && process.env.NODE_ENV === 'production') return;
     await localSubscriptionRepo.setTier(userId, 'free');
   }
+
+  /**
+   * Mock não tem loja externa — o tier local É a fonte da verdade, então não há
+   * nada pra reconciliar. No-op que devolve o tier atual (mesma assinatura do
+   * provider real, pra SubscriptionService delegar sem checar o tipo).
+   */
+  async syncEntitlements(userId: string): Promise<BillingTierId> {
+    return localSubscriptionRepo.getTier(userId);
+  }
 }
 
 export const mockBillingProvider = new MockBillingProvider();

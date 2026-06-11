@@ -23,6 +23,7 @@ import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import { warmReplyCache } from '@/content/replies';
 import { initRevenueCatSdk } from '@/services/subscription/RevenueCatBillingProvider';
+import { subscriptionService } from '@/services/subscription/SubscriptionService';
 
 // Fail-fast em build de produção mal-configurado. Em dev/test, sempre []
 // (a função respeita isProduction). Capturado abaixo num estado para
@@ -88,7 +89,14 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!profile?.id) return;
-    void initRevenueCatSdk(profile.id);
+    const uid = profile.id;
+    void (async () => {
+      await initRevenueCatSdk(uid);
+      // Reconcilia o tier local com o entitlement REAL da loja após o init —
+      // pega cancelamento/expiração feitos pela loja (fail-open antes). No-op
+      // no mock e quando o SDK não está pronto.
+      await subscriptionService.syncEntitlements(uid);
+    })();
   }, [profile?.id]);
 
   if (BOOT_VIOLATIONS.length > 0) {

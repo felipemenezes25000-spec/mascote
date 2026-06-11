@@ -98,6 +98,11 @@ export default function Home() {
   const lifeEvents = useStore(s => s.lifeEvents);
   const welcomeParam = useLocalSearchParams<{ welcome?: string }>().welcome;
   const welcomeFiredRef = useRef(false);
+  // Guard de re-entrância: ensureTodayMission roda no useEffect E no useFocusEffect.
+  // No mount os dois disparam no mesmo tick — sem o guard, ambos liam
+  // forDate()==[] (TOCTOU) e criavam DUAS missões pro mesmo dia (2× XP). O ref é
+  // setado de forma síncrona antes do 1º await, então a 2ª chamada sai na hora.
+  const ensuringMissionRef = useRef(false);
 
   const { isPremium, tier } = useSubscriptionTier();
   const { snapshot, reload, setSnapshot } = useHomeBootstrap({ profile, mascot, tier });
@@ -155,10 +160,18 @@ export default function Home() {
     setBehaviorAction,
   });
 
+  // Cache por (profile, contexto): buildMascotContextLine pode fazer 1 request
+  // OpenAI no contexto 'home'. Sem este guard, era 1 chamada por FOCO da Home
+  // (cost + latência). Só recarrega quando o contexto muda (home→saudade→retorno).
+  const contextLineKeyRef = useRef<string | null>(null);
+
   async function loadMascotContextLine() {
     if (!profile || !mascot) return;
     const away = returnLoopKind(hoursAway(mascot.last_seen_at));
     const ctx = away === 'retorno' ? 'return' : away === 'saudade' ? 'saudade' : 'home';
+    const key = `${profile.id}:${ctx}`;
+    if (contextLineKeyRef.current === key) return;
+    contextLineKeyRef.current = key;
     const line = await buildMascotContextLine(profile.id, mascot, ctx, apiKey);
     setMascotLine(line);
   }
@@ -231,50 +244,56 @@ export default function Home() {
   // local. Em último caso, pickDailyMission determinístico (já dentro do bandit).
   async function ensureTodayMission() {
     if (!profile || !mascot) return;
-    const existing = await missionsDb.forDate(profile.id, today);
-    if (existing.length > 0) {
-      setMission(existing[0]);
-      return;
-    }
-    // Marca como skipadas as missões anteriores ainda pending — alimentando
-    // o bandit com sinal negativo (reward 0). Roda só uma vez ao trocar de dia.
-    const allMissions = await missionsDb.list(profile.id);
-    for (const m of allMissions) {
-      if (m.status === 'pending' && m.scheduled_for < today) {
-        await missionsDb.update(m.id, { status: 'expired' });
-        if (m.template_id) void recordMissionOutcome(m.template_id, false);
-      }
-    }
-    const allCheckins = await checkinsDb.listAll(profile.id);
-    const todayRows = await checkinsDb.list(profile.id, today);
-    const recentHabits = Array.from(new Set(allCheckins.slice(-30).map(c => c.habit_kind)));
-    const tplBandit = await suggestMissionFor({
-      personality: mascot.personality,
-      mood: mascot.mood,
-      doneToday: todayRows.map(r => r.habit_kind),
-      dateKey: today,
-    });
-    let template = tplBandit;
+    if (ensuringMissionRef.current) return;
+    ensuringMissionRef.current = true;
     try {
-      const seed = Math.floor(new Date(today).getTime() / 1000);
-      const aiOut = generateMissionSuggestion(mascot.personality, seed, recentHabits);
-      if (aiOut) template = aiOut;
-    } catch {
-      /* fallback seguro */
+      const existing = await missionsDb.forDate(profile.id, today);
+      if (existing.length > 0) {
+        setMission(existing[0]);
+        return;
+      }
+      // Marca como skipadas as missões anteriores ainda pending — alimentando
+      // o bandit com sinal negativo (reward 0). Roda só uma vez ao trocar de dia.
+      const allMissions = await missionsDb.list(profile.id);
+      for (const m of allMissions) {
+        if (m.status === 'pending' && m.scheduled_for < today) {
+          await missionsDb.update(m.id, { status: 'expired' });
+          if (m.template_id) void recordMissionOutcome(m.template_id, false);
+        }
+      }
+      const allCheckins = await checkinsDb.listAll(profile.id);
+      const todayRows = await checkinsDb.list(profile.id, today);
+      const recentHabits = Array.from(new Set(allCheckins.slice(-30).map(c => c.habit_kind)));
+      const tplBandit = await suggestMissionFor({
+        personality: mascot.personality,
+        mood: mascot.mood,
+        doneToday: todayRows.map(r => r.habit_kind),
+        dateKey: today,
+      });
+      let template = tplBandit;
+      try {
+        const seed = Math.floor(new Date(today).getTime() / 1000);
+        const aiOut = generateMissionSuggestion(mascot.personality, seed, recentHabits);
+        if (aiOut) template = aiOut;
+      } catch {
+        /* fallback seguro */
+      }
+      const created = await missionsDb.add({
+        user_id: profile.id,
+        title: template.title,
+        description: template.description,
+        habit_kind: template.habit_kind,
+        target_value: template.target_value,
+        xp_reward: template.xp_reward,
+        status: 'pending',
+        scheduled_for: today,
+        completed_at: null,
+        template_id: template.id,
+      });
+      setMission(created);
+    } finally {
+      ensuringMissionRef.current = false;
     }
-    const created = await missionsDb.add({
-      user_id: profile.id,
-      title: template.title,
-      description: template.description,
-      habit_kind: template.habit_kind,
-      target_value: template.target_value,
-      xp_reward: template.xp_reward,
-      status: 'pending',
-      scheduled_for: today,
-      completed_at: null,
-      template_id: template.id,
-    });
-    setMission(created);
   }
 
   async function cycleScene(direction: 1 | -1) {
@@ -413,12 +432,15 @@ export default function Home() {
   const displayLine =
     proactiveBubbleLine ??
     lifeSummaryLine ??
+    // mascotLine (linha memória-aware, possivelmente via IA) ANTES do fallback
+    // estático: o fallback sempre retorna string (nunca null), então com ele à
+    // frente o mascotLine era inalcançável — o fetch de cada foco era jogado fora.
+    mascotLine ??
     buildMascotStatusFallback(
       reflective,
       !!evolutionVisuals?.activeEnergy,
       !!evolutionVisuals?.calmAura,
-    ) ??
-    mascotLine;
+    );
   const sceneHour = new Date().getHours();
   const missionActive = mission !== null;
   const rewardAvailable = !snapshot.dailyClaimedToday;

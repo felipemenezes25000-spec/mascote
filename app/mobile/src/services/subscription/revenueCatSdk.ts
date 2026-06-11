@@ -160,3 +160,17 @@ export async function restoreRevenueCatPurchases(): Promise<BillingTierId> {
   const customerInfo = await Purchases.restorePurchases();
   return tierFromEntitlements(customerInfo.entitlements.active);
 }
+
+/**
+ * Lê o entitlement ATUAL do RevenueCat via getCustomerInfo (NÃO dispara restore
+ * — é uma leitura barata do estado cacheado/atual). Usado pra sincronizar o tier
+ * local no launch e pegar cancelamento/expiração feitos PELA LOJA (que nunca
+ * chegam ao app sozinhos). PROPAGA erro pro caller preservar o tier atual —
+ * 'free' só quando a loja CONFIRMA ausência de entitlement, nunca num blip.
+ */
+export async function getRevenueCatEntitlementTier(): Promise<BillingTierId> {
+  const Purchases = await loadPurchases();
+  if (!Purchases || !sdkInitialized) return 'free';
+  const customerInfo = await Purchases.getCustomerInfo();
+  return tierFromEntitlements(customerInfo.entitlements.active);
+}

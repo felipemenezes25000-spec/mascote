@@ -131,6 +131,50 @@ describe('db: exportAll / importAll', () => {
     expect(r.imported).toEqual([]);
     expect(r.skipped).toEqual([]);
   });
+
+  // Regressão de segurança (auditoria 2026-06-11): um backup malicioso podia
+  // trazer customSvg hostil em procedural_genome.accessories e o import gravava
+  // cru, bypassando o sanitizeSvg que só roda na geração. Agora é scrubado.
+  it('importAll remove customSvg hostil de procedural_genome (anti-bypass)', async () => {
+    const evil = '<svg onload="alert(1)"><script>steal()</script></svg>';
+    await importAll({
+      mascots: [
+        {
+          id: 'm1',
+          user_id: 'u1',
+          name: 'Bipo',
+          procedural_genome: {
+            accessories: [{ id: 'hat', origin: 'import', customSvg: evil }],
+          },
+        },
+      ],
+      profiles: [{ id: 'u1', display_name: 'X' }],
+    });
+    const raw = JSON.parse((await AsyncStorage.getItem('mascote:mascots'))!);
+    const acc = raw[0].procedural_genome.accessories[0];
+    // SVG hostil foi REMOVIDO (não persiste cru).
+    expect(acc.customSvg).toBeUndefined();
+    // O resto do row é preservado.
+    expect(acc.id).toBe('hat');
+    expect(raw[0].name).toBe('Bipo');
+  });
+
+  it('importAll preserva customSvg legítimo (sanitizado)', async () => {
+    const safe = '<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="3" fill="red" /></svg>';
+    await importAll({
+      mascots: [
+        {
+          id: 'm2',
+          user_id: 'u2',
+          name: 'Luma',
+          procedural_genome: { accessories: [{ id: 'glow', origin: 'import', customSvg: safe }] },
+        },
+      ],
+      profiles: [{ id: 'u2', display_name: 'Y' }],
+    });
+    const raw = JSON.parse((await AsyncStorage.getItem('mascote:mascots'))!);
+    expect(raw[0].procedural_genome.accessories[0].customSvg).toContain('<circle');
+  });
 });
 
 describe('db: resetAll', () => {

@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import { activeLimitedEvent, limitedEvents, timeRemaining } from '@/lib/events';
+import { activeEventBoost, activeLimitedEvent, limitedEvents, timeRemaining } from '@/lib/events';
 
 function fakeNow(year: number, month: number, day: number, h = 12, m = 0): Date {
   return new Date(year, month - 1, day, h, m, 0, 0);
@@ -78,6 +78,32 @@ describe('limitedEvents', () => {
     it('multiplier é 3', () => {
       const t = limitedEvents.find(e => e.id === 'tonight-coins-x3')!;
       expect(t.multiplier).toBe(3);
+    });
+  });
+
+  describe('activeEventBoost (regressão 2026-06-11 — multiplicador agora atinge a economia)', () => {
+    it('weekend → xpMult 2, coinMult 1 (evento de XP)', () => {
+      // 2026-05-16 = sábado 12h
+      const boost = activeEventBoost(fakeNow(2026, 5, 16, 12));
+      expect(boost).toEqual({ xpMult: 2, coinMult: 1 });
+    });
+
+    it('noite (20h) → coinMult 3, xpMult 1 (evento de moedas)', () => {
+      // 2026-05-18 = segunda 20h
+      const boost = activeEventBoost(fakeNow(2026, 5, 18, 20));
+      expect(boost).toEqual({ xpMult: 1, coinMult: 3 });
+    });
+
+    it('sem evento ativo → tudo 1× (no-op)', () => {
+      // 2026-05-13 = quarta 12h (fora de qualquer janela)
+      const boost = activeEventBoost(fakeNow(2026, 5, 13, 12));
+      expect(boost).toEqual({ xpMult: 1, coinMult: 1 });
+    });
+
+    it('cada evento canônico declara appliesTo', () => {
+      for (const ev of limitedEvents) {
+        expect(['xp', 'coins']).toContain(ev.appliesTo);
+      }
     });
   });
 

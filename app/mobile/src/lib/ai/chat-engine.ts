@@ -21,7 +21,7 @@ import { validateAiResponse } from '@/ai/AIResponseValidator';
 import { classifyIntent, mockReply } from '@/content/replies';
 import { SAFE_FALLBACK } from '@/content/safety';
 import { logger } from '@/lib/logger';
-import type { Personality } from '@/types';
+import type { Personality, SafetyFlag } from '@/types';
 import { getOpenAI } from './openai-client';
 import { buildSystemPrompt, type SystemPromptPersonality } from './system-prompt';
 
@@ -38,6 +38,11 @@ export interface SendOptions {
 export interface SendResult {
   content: string;
   source: 'openai' | 'local';
+  // Flag de safety da decisão de input (ou da validação de output). O caller
+  // (chat.tsx, fallback path) PRECISA persistir isto — antes hardcodava 'safe',
+  // então um CRISIS_REPLY vindo do fallback era gravado como 'safe' e a UI de
+  // crise (estilo do ChatBubble, supressão do rating) não disparava.
+  safetyFlag: SafetyFlag;
 }
 
 // Personalidades do replies.ts batem 1:1 com as do system-prompt.ts (calmo,
@@ -57,6 +62,7 @@ export async function sendChatMessage(text: string, opts: SendOptions): Promise<
     return {
       content: mockReply(opts.personality, classifyIntent(''), opts.mascotName),
       source: 'local',
+      safetyFlag: 'safe',
     };
   }
 
@@ -65,7 +71,10 @@ export async function sendChatMessage(text: string, opts: SendOptions): Promise<
   // o CRISIS_REPLY canônico). Equivalente ao gate em generateReply.
   const inputDecision = evaluateUserMessage(trimmed);
   if (!inputDecision.allowed && inputDecision.redirect) {
-    return { content: inputDecision.redirect, source: 'local' };
+    // Crise (critical) ou diagnóstico (watch) — a flag PRECISA chegar no caller
+    // pra UI de crise disparar. Esse é exatamente o path que o fallback de
+    // chat.tsx usa quando generateReply quebra.
+    return { content: inputDecision.redirect, source: 'local', safetyFlag: inputDecision.flag };
   }
 
   let openai: Awaited<ReturnType<typeof getOpenAI>>;
@@ -80,13 +89,17 @@ export async function sendChatMessage(text: string, opts: SendOptions): Promise<
     return {
       content: mockReply(opts.personality, intent, opts.mascotName),
       source: 'local',
+      safetyFlag: inputDecision.flag,
     };
   }
 
   try {
     const systemPrompt = buildSystemPrompt({
       personality: asPromptPersonality(opts.personality),
-      identity: opts.identity,
+      // Mapeia mascotName -> identity quando o caller (chat.tsx) só passa o nome.
+      // Antes o nome era ignorado e o prompt sempre dizia "Você é Pip", então um
+      // mascote renomeado se apresentava como Pip no fallback local.
+      identity: opts.identity ?? (opts.mascotName ? { name: opts.mascotName } : undefined),
       memories: opts.memories,
       historyPreamble: '',
     });
@@ -107,10 +120,16 @@ export async function sendChatMessage(text: string, opts: SendOptions): Promise<
     // Diagnose acidental, prescrições, markup proibido viram SAFE_FALLBACK
     // ou CRISIS_REPLY conforme o tipo de violação.
     const validated = validateAiResponse({ reply, safety_flag: 'safe' }, inputDecision.flag);
-    if (validated.safety_flag !== 'safe') {
-      return { content: validated.reply, source: 'local' };
-    }
-    return { content: validated.reply, source: 'openai' };
+    // source='local' SÓ quando a validação REJEITOU o reply (substituiu por
+    // SAFE_FALLBACK/CRISIS_REPLY). Antes checava `safety_flag !== 'safe'`, então
+    // um flag 'watch' HERDADO do input (ex.: user citou "ansiedade") num reply
+    // VÁLIDO da OpenAI era rotulado 'local' e a UI mostrava "modo local" numa
+    // resposta real da nuvem. `validated.valid` distingue rejeição de flag herdado.
+    return {
+      content: validated.reply,
+      source: validated.valid ? 'openai' : 'local',
+      safetyFlag: validated.safety_flag,
+    };
   } catch (err) {
     // NUNCA logar o erro inteiro — pode conter o Request com Authorization
     // header e vazar a API key. Só a mensagem (que o SDK normaliza).
@@ -120,6 +139,7 @@ export async function sendChatMessage(text: string, opts: SendOptions): Promise<
     return {
       content: mockReply(opts.personality, intent, opts.mascotName) ?? SAFE_FALLBACK,
       source: 'local',
+      safetyFlag: inputDecision.flag,
     };
   }
 }

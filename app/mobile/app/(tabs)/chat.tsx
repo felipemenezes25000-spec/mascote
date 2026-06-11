@@ -155,12 +155,18 @@ export default function ChatTab() {
       // Quando algo se torna memória, emite 'chat.memory_saved' pra outros
       // sistemas reagirem (ex: ProgressPulse de "criatura aprendeu algo novo").
       void rememberFromMessage(profile.id, text)
-        .then((memory) => {
-          if (memory) {
+        .then((memories) => {
+          // rememberFromMessage retorna MemoryItem[] — `if (memory)` sobre o
+          // array era SEMPRE truthy (mesmo []), então o moment disparava em TODA
+          // mensagem e `.kind`/`.summary` (num array) eram undefined → caía no
+          // fallback. Agora só emite quando algo foi REALMENTE memorizado, com o
+          // payload do 1º item salvo. Auditoria 2026-06-11.
+          const saved = memories?.[0];
+          if (saved) {
             creatureMoments.emit('chat.memory_saved', {
-              kind: (memory as { kind?: string }).kind ?? 'message',
-              summary: (memory as { summary?: string; content?: string }).summary
-                ?? (memory as { content?: string }).content
+              kind: (saved as { kind?: string }).kind ?? 'message',
+              summary: (saved as { summary?: string; content?: string }).summary
+                ?? (saved as { content?: string }).content
                 ?? text.slice(0, 80),
             });
           }
@@ -240,7 +246,10 @@ export default function ChatTab() {
             conversation_id: profile.id,
             role: 'mascot',
             content: fb.content,
-            safety_flag: 'safe',
+            // Antes hardcodava 'safe': se generateReply quebrasse numa mensagem
+            // de crise, o CRISIS_REPLY do fallback era gravado como 'safe' e a UI
+            // de crise (estilo do ChatBubble + supressão do rating) não disparava.
+            safety_flag: fb.safetyFlag,
             cached: false,
           });
           setList(prev => [...prev, fbReply]);
@@ -349,6 +358,7 @@ export default function ChatTab() {
         <PressableScale
           style={[styles.iconBtn, styles.iconBtnDanger]}
           onPress={() => router.push('/help')}
+          hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel="Ajuda emocional"
         >

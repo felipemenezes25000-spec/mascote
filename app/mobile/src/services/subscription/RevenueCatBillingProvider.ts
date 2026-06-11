@@ -7,6 +7,7 @@ import type { BillingTierId } from '@/content/billing';
 import { localSubscriptionRepo } from '@/repositories/local';
 import type { PurchaseResult } from './MockBillingProvider';
 import {
+  getRevenueCatEntitlementTier,
   initRevenueCatSdk,
   isRevenueCatSdkInitialized,
   purchaseRevenueCatTier,
@@ -130,7 +131,43 @@ export class RevenueCatBillingProvider {
     return tier;
   }
 
+  /**
+   * Reconcilia o tier local com o entitlement REAL do RevenueCat. Chamado no
+   * launch (app/_layout) — sem isto, um cancelamento/expiração feito PELA LOJA
+   * nunca chegava ao app e o usuário mantinha premium pra sempre (fail-open).
+   * Quando o SDK não está pronto, é no-op (não rebaixa por falta de informação);
+   * em erro transitório, preserva o tier (não rebaixa pagante por blip de rede).
+   */
+  async syncEntitlements(userId: string): Promise<BillingTierId> {
+    const config = getRevenueCatConfig();
+    if (!config.ready) {
+      return localSubscriptionRepo.getTier(userId);
+    }
+    try {
+      const tier = await getRevenueCatEntitlementTier();
+      const current = await localSubscriptionRepo.getTier(userId);
+      if (tier !== current) {
+        await localSubscriptionRepo.setTier(userId, tier);
+      }
+      return tier;
+    } catch {
+      return localSubscriptionRepo.getTier(userId);
+    }
+  }
+
   async cancel(userId: string): Promise<void> {
+    const config = getRevenueCatConfig();
+    if (config.ready) {
+      // NÃO existe cancelamento programático em App Store/Play Store — a real
+      // cancelação é feita pela UI da loja (a tela /cancel deep-linka pra lá) e
+      // o acesso continua até o fim do período pago. Setar 'free' aqui revogaria
+      // acesso PAGO enquanto a loja segue cobrando (desync). Em vez disso,
+      // reconcilia com o entitlement REAL — premium permanece até a loja expirar.
+      await this.syncEntitlements(userId);
+      return;
+    }
+    // Sem loja real (stub/demo de RevenueCat ainda não linkado): downgrade local
+    // é seguro — não há cobrança real pra continuar.
     await localSubscriptionRepo.setTier(userId, 'free');
   }
 }

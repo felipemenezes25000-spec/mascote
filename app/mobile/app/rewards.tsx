@@ -41,6 +41,23 @@ interface Slice {
   color: string;
 }
 
+/**
+ * Escolhe tinta clara/escura legível sobre a cor da fatia. Antes o label era
+ * #fff fixo: sobre as fatias pastel (gold/lilac/sage/sky) o contraste caía pra
+ * ~1.7:1 (ilegível). Luminância relativa (Rec. 601) decide por fatia — pastel
+ * recebe tinta escura, fatia saturada/escura recebe branco. Auditoria 2026-06-11.
+ */
+function readableInk(hex: string): string {
+  const h = hex.replace('#', '');
+  if (h.length < 6) return '#ffffff';
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  if ([r, g, b].some(Number.isNaN)) return '#ffffff';
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum > 0.6 ? '#1B1430' : '#ffffff';
+}
+
 export default function Rewards() {
   const theme = useTheme();
   const styles = makeStyles(theme);
@@ -137,7 +154,16 @@ export default function Rewards() {
     setSpinning(true);
     setUsedTodaySpin(true);
     setBoxAvailable(false);
-    await mysteryBox.open(profile.id, today);
+    // mysteryBox.open é o lock ATÔMICO do slot diário (compartilhado com a caixa).
+    // Respeitar o retorno fecha o double-tap: duas chamadas concorrentes veem
+    // `spinning=false` no closure stale e ambas entram; a 2ª recebe false do lock
+    // e agora aborta SEM pagar (antes ignorava o retorno e creditava o prêmio 2×).
+    // openBox() já fazia exatamente isso (if (!opened) return).
+    const opened = await mysteryBox.open(profile.id, today);
+    if (!opened) {
+      setSpinning(false);
+      return;
+    }
     await walletDb.add(profile.id, slice.coins, slice.gems);
     /* v8 ignore next — refreshWallet falha só se DB indisponível; testado
        em mock mas guarda contra propagação no caminho de spin. */
@@ -238,7 +264,7 @@ export default function Rewards() {
                       <SvgText
                         x={lx}
                         y={ly}
-                        fill="#fff"
+                        fill={readableInk(s.color)}
                         fontSize="11"
                         fontWeight="800"
                         textAnchor="middle"

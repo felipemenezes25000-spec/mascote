@@ -10,6 +10,8 @@
  * é o sucessor v2 com anti-patterns explícitos e bloco DLI textual.
  */
 
+import { sanitizePromptValue } from '@/lib/ai/sanitizePromptValue';
+
 export const SYSTEM_PROMPT_BASE = `Você é Pip, um mascote digital que companha o usuário num app de bem-estar chamado Mascote.
 
 # Sua natureza
@@ -76,17 +78,24 @@ export interface BuildSystemPromptOptions {
 
 export function buildSystemPrompt(opts: BuildSystemPromptOptions): string {
   const { personality, identity, memories = [], historyPreamble = '' } = opts;
+  // Nome e resumos de memória são user-controlled — sanitiza antes de injetar
+  // (prompt injection via nome do mascote / mensagem que virou memória).
+  const safeName = sanitizePromptValue(identity?.name, 40) || 'Pip';
   const identityBlock = identity
-    ? `Nome: ${identity.name ?? 'Pip'}. Nível ${identity.level ?? 1}. Arquétipo: ${identity.archetype ?? 'companheiro'}.`
+    ? `Nome: ${safeName}. Nível ${identity.level ?? 1}. Arquétipo: ${sanitizePromptValue(identity.archetype, 40) || 'companheiro'}.`
     : 'Sem identidade ainda definida.';
   const memoriesBlock = memories.length
     ? memories
         .slice(0, 5)
-        .map((m, i) => `${i + 1}. ${m.summary}`)
+        .map((m, i) => `${i + 1}. ${sanitizePromptValue(m.summary, 160)}`)
+        .filter(line => line.trim().length > 3)
         .join('\n')
     : '(sem memórias relevantes ainda)';
   const historyBlock = historyPreamble || '(início da conversa)';
-  return SYSTEM_PROMPT_BASE.replace('{{PERSONALITY_BLOCK}}', PERSONALITY_BLOCKS[personality])
+  // Nome real do mascote no header (antes hardcodava "Você é Pip" mesmo após
+  // renomear). Cai pra "Pip" quando não há identidade definida.
+  return SYSTEM_PROMPT_BASE.replace('Você é Pip,', `Você é ${safeName},`)
+    .replace('{{PERSONALITY_BLOCK}}', PERSONALITY_BLOCKS[personality])
     .replace('{{IDENTITY_BLOCK}}', identityBlock)
     .replace('{{MEMORIES_BLOCK}}', memoriesBlock)
     .replace('{{HISTORY_BLOCK}}', historyBlock);

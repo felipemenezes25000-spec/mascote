@@ -617,6 +617,7 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
         value={value}
         onValueChange={onChange}
         trackColor={{ true: theme.colors.primary, false: theme.colors.border }}
+        accessibilityLabel={label}
       />
     </View>
   );

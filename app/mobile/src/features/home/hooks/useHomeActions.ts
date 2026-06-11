@@ -17,9 +17,11 @@ import {
   settings as settingsDb,
   todayLocal,
   wallet as walletDb,
+  withLock,
 } from '@/lib/db';
 import { applyCheckinFully, undoLastCheckin } from '@/lib/checkin';
 import type { CheckinOutcome } from '@/lib/checkin';
+import { activeEventBoost } from '@/lib/events';
 import { applyXp } from '@/lib/xp';
 import { copyFor, isInPaywallCooldown, markShown, shouldTrigger } from '@/lib/paywall-triggers';
 import { DAILY_REWARDS } from '@/components/DailyRewardStrip';
@@ -123,6 +125,10 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
         kind,
         value,
         analyticsPath: 'home',
+        // Aplica o multiplicador do evento limitado ativo (XP em dobro / moedas
+        // 3×) que o LimitedEventBanner anuncia. Calculado aqui (com relógio) e
+        // passado pro core puro.
+        boost: activeEventBoost(),
       });
       await refreshStreak();
       await refreshWallet();
@@ -356,8 +362,17 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
       const drop = drops[Math.floor(Math.random() * drops.length)];
       await walletDb.add(profile.id, drop.coins, drop.gems);
       if (drop.xp && mascot) {
-        const xpBonus = applyXp(mascot, drop.xp, 0);
-        await mascotsDb.upsert(xpBonus.mascot);
+        // Serializa o XP da caixa pelo MESMO lock per-user do check-in e lê o
+        // mascote FRESCO + o XP já ganho hoje. Antes: applyXp(mascot, xp, 0) —
+        // o `0` ignorava o cap diário (box dava XP além do teto de 150) e o
+        // upsert fora do lock, com `mascot` stale do closure, clobberava o XP
+        // de um check-in concorrente. Auditoria 2026-06-11.
+        await withLock(`checkin:${profile.id}`, async () => {
+          const fresh = (await mascotsDb.forUser(profile.id)) ?? mascot;
+          const dailyXpSoFar = await checkinsDb.xpSumToday(profile.id, today);
+          const xpBonus = applyXp(fresh, drop.xp!, dailyXpSoFar);
+          await mascotsDb.upsert(xpBonus.mascot);
+        });
         await refreshMascot();
       }
       await refreshWallet();

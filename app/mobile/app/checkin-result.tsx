@@ -11,6 +11,7 @@ import { habitMeta } from '@/content/missions';
 import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import { applyCheckinFully } from '@/lib/checkin';
+import { activeEventBoost } from '@/lib/events';
 import type { Theme } from '@/lib/themes';
 import type { HabitKind } from '@/types';
 
@@ -69,6 +70,8 @@ export default function CheckInResult() {
       let runningMascot = mascot;
       let totalXp = 0;
       let totalCoins = 0;
+      // Calcula o boost UMA vez (relógio consistente pro lote inteiro de check-ins).
+      const boost = activeEventBoost();
       for (const [kind, value] of Object.entries(answers)) {
         const out = await applyCheckinFully({
           profile,
@@ -76,6 +79,7 @@ export default function CheckInResult() {
           kind: kind as HabitKind,
           value,
           analyticsPath: 'mission',
+          boost,
         });
         if (!alive) return;
         runningMascot = out.mascot;

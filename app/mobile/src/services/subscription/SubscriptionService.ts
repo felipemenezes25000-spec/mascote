@@ -37,6 +37,17 @@ export class SubscriptionService {
     return result.tier;
   }
 
+  /**
+   * Sincroniza o tier local com o entitlement real da loja (RevenueCat). Chamado
+   * no launch — pega cancelamento/expiração feitos pela loja que de outra forma
+   * nunca chegariam ao app. No mock é no-op. Serializa com purchase/cancel via lock.
+   */
+  async syncEntitlements(userId: string) {
+    return withLock(`subscribe:${userId}`, () =>
+      getBillingProvider().syncEntitlements(userId),
+    );
+  }
+
   getBenefits(tierId: BillingTierId) {
     return getTier(tierId).benefits;
   }

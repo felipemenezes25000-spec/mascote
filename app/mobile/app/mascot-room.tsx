@@ -1,7 +1,6 @@
 /** /mascot-room — quarto do mascote com Mascot2D em destaque e gestos manuais. */
 
-import { router } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { ScrollView, StyleSheet, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MascotRenderer } from '@/components/MascotRenderer';
@@ -10,8 +9,11 @@ import { SceneBackground } from '@/components/SceneBackground';
 import { Typography } from '@/components/ui';
 import { habitMeta } from '@/content/missions';
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
+import { applyCheckinFully } from '@/lib/checkin';
+import { activeEventBoost } from '@/lib/events';
 import { useStore } from '@/store';
 import { useTheme } from '@/lib/useTheme';
+import { logger } from '@/lib/logger';
 import * as Haptics from 'expo-haptics';
 import type { HabitKind, MascotMood } from '@/types';
 
@@ -29,17 +31,59 @@ const MOOD_LABELS: Record<MascotMood, string> = {
 export default function MascotRoom() {
   const theme = useTheme();
   const mascot = useStore(s => s.mascot);
+  const profile = useStore(s => s.profile);
   const settings = useStore(s => s.settings);
+  const refreshMascot = useStore(s => s.refreshMascot);
+  const refreshStreak = useStore(s => s.refreshStreak);
+  const refreshWallet = useStore(s => s.refreshWallet);
+  const enqueueToast = useStore(s => s.enqueueToast);
+  const checkingInRef = useRef(false);
 
   const handleGesture = useCallback((kind: MascotGestureKind) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     void kind;
   }, []);
 
-  const handleHabitTap = useCallback((habit: HabitKind) => {
-    void Haptics.selectionAsync();
-    router.push({ pathname: '/checkin', params: { habit } });
-  }, []);
+  // Antes: router.push('/checkin', { habit }) — mas /checkin é um survey FIXO de
+  // 4 perguntas (sleep/water/exercise/breath) que IGNORA o param. Tocar
+  // "Meditação"/"Leitura" abria um fluxo sem essas perguntas (param morto). Agora
+  // o tap registra AQUELE hábito direto pelo pipeline canônico (com boost de
+  // evento), coerente com a label "Registrar: X". Auditoria 2026-06-11.
+  const handleHabitTap = useCallback(
+    async (habit: HabitKind) => {
+      if (!profile || !mascot || checkingInRef.current) return;
+      checkingInRef.current = true;
+      void Haptics.selectionAsync();
+      try {
+        const out = await applyCheckinFully({
+          profile,
+          mascot,
+          kind: habit,
+          analyticsPath: 'home',
+          boost: activeEventBoost(),
+        });
+        await Promise.all([
+          refreshMascot().catch(() => {}),
+          refreshStreak().catch(() => {}),
+          refreshWallet().catch(() => {}),
+        ]);
+        enqueueToast({
+          kind: 'info',
+          emoji: habitMeta[habit].emoji,
+          title: `${habitMeta[habit].label} registrado`,
+          subtitle: out.xpGained > 0 ? `+${out.xpGained} XP — ${mascot.name} sentiu o cuidado.` : 'Já contava por hoje 💛',
+        });
+      } catch (err) {
+        logger.warn('[mascot-room] check-in failed', {
+          reason: err instanceof Error ? err.message : 'unknown',
+        });
+        enqueueToast({ kind: 'info', emoji: '🌀', title: 'Não consegui registrar agora', subtitle: 'Tenta de novo num instante.' });
+      } finally {
+        checkingInRef.current = false;
+      }
+    },
+    [profile, mascot, refreshMascot, refreshStreak, refreshWallet, enqueueToast],
+  );
 
   if (!mascot) {
     return (
@@ -94,7 +138,7 @@ export default function MascotRoom() {
             {ROOM_HABITS.map(h => (
               <Pressable
                 key={h}
-                onPress={() => handleHabitTap(h)}
+                onPress={() => void handleHabitTap(h)}
                 style={({ pressed }) => [
                   styles.habitBtn,
                   {
