@@ -59,7 +59,7 @@ export default function CosmosScreen() {
           </View>
         </StaggeredView>
 
-        <Typography variant="bodyBold" style={styles.sectionLabel}>As 15 famílias</Typography>
+        <Typography variant="bodyBold" style={styles.sectionLabel}>As {ARCHETYPE_IDS.length} famílias</Typography>
 
         {ARCHETYPE_IDS.map((id, i) => {
           const sample = creatureGenomeFromDNA(dna, { forceArchetype: id });
