@@ -170,7 +170,12 @@ export function HomeHero({
           </PressableScale>
           {flash && (
             <View style={[styles.flash, { pointerEvents: 'none' }]}>
-              <Typography variant="bodyBold" style={{ color: theme.tokens.semantic.inkOnBrand }}>
+              {/* Bg do flash é `theme.colors.text` (inverte light↔dark): no dark
+                  vira creme (#FCF3E7), então `inkOnBrand` (#FFF fixo) ficava
+                  branco-sobre-creme (~1.1:1, ilegível). `inkInverse` acompanha
+                  a inversão: branco em light, quase-preto em dark. Ver
+                  MysteryBoxCard/DailyRewardStrip (mesmo padrão). */}
+              <Typography variant="bodyBold" style={{ color: theme.colors.inkInverse }}>
                 {flash}
               </Typography>
             </View>

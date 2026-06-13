@@ -69,6 +69,21 @@ describe('component ink/bg pairings pass AA in both modes', () => {
     expect(meetsAA(light.colors.inkInverse, light.colors.text)).toBe(true);
   });
 
+  // HomeHero flash (XP/coins ganhos): bubble bg = theme.colors.text (inverte).
+  // Antes a tinta era inkOnBrand (#FFF fixo) → branco-sobre-creme (~1.1:1) no
+  // dark. Agora inkInverse acompanha a inversão. Auditoria 2026-06-13 (ajuste2).
+  it('HomeHero flash (inkInverse) on bubble bg (text) passes AA — dark', () => {
+    expect(meetsAA(dark.colors.inkInverse, dark.colors.text)).toBe(true);
+  });
+  it('HomeHero flash (inkInverse) on bubble bg (text) passes AA — light', () => {
+    expect(meetsAA(light.colors.inkInverse, light.colors.text)).toBe(true);
+  });
+  // O antipadrão que foi removido: inkOnBrand (#FFF fixo) sobre text falha no
+  // dark (fundo creme). Guarda documenta por que não voltar pra inkOnBrand.
+  it('inkOnBrand on text bg FAILS AA in dark (regressão evitada)', () => {
+    expect(meetsAA(dark.tokens.semantic.inkOnBrand, dark.colors.text)).toBe(false);
+  });
+
   // LimitedEventBanner: badge bg = theme.colors.gold (claro fixo nos 2 modos).
   // Antes texto era theme.colors.text → creme-sobre-dourado (~1.8:1) no dark.
   // Agora bgDark (escuro fixo) → legível independente do modo.
