@@ -195,10 +195,16 @@ describe('a11y: controles interativos têm accessibilityRole', () => {
   // Guarda global auto-mantida: nenhum Pressable/PressableScale/TouchableOpacity
   // com onPress pode ficar sem accessibilityRole, EXCETO os casos intencionais
   // abaixo (backdrops sem conteúdo, no-op de stop-propagation, imagebutton).
+  //
+  // Auditoria 2026-06-15 (ajuste2): a varredura só cobria `app/` + `src/components/`,
+  // mas `src/features/` também tem controles interativos vivos (HomeHero,
+  // HomeBanner, HomeActionRow, HomeQuickActions, JourneyCard). Estavam todos com
+  // role correto, mas nada impedia uma regressão futura ali. Escopo estendido pra
+  // incluir `src/features/` — agora a guarda é de fato global.
   it('varredura global: só sobram exceções intencionais sem role', () => {
     const cp = require('node:child_process') as typeof import('node:child_process');
     const files = cp
-      .execSync('git ls-files "app/" "src/components/"', { cwd: ROOT, encoding: 'utf8' })
+      .execSync('git ls-files "app/" "src/components/" "src/features/"', { cwd: ROOT, encoding: 'utf8' })
       .trim()
       .split('\n')
       .filter((f: string) => f.endsWith('.tsx'));
