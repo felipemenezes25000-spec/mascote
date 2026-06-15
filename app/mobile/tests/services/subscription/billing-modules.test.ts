@@ -25,6 +25,22 @@ describe('PaywallRules', () => {
   it('requiredEntitlement mapeia ai_plus', () => {
     expect(requiredEntitlement('ai_plus')).toBe('ai_plus');
   });
+
+  // Regressão (2026-06-15 ajuste1): mutação LENDÁRIA é anual-exclusiva. plus_monthly
+  // não pode passar pelo gate de legendary_mutation (era liberado por
+  // canAccessPremiumMutation, que só barra free).
+  it('legendary_mutation: anual libera, mensal bloqueia, raridade menor segue tier pago', () => {
+    expect(evaluatePaywall('plus_annual', 'legendary_mutation').allowed).toBe(true);
+    expect(evaluatePaywall('plus_monthly', 'legendary_mutation').allowed).toBe(false);
+    expect(evaluatePaywall('free', 'legendary_mutation').allowed).toBe(false);
+    // raridade não-lendária: tier pago basta (epic), free segue regra de raridade.
+    expect(
+      evaluatePaywall('plus_monthly', 'legendary_mutation', { mutationRarity: 'epic' }).allowed,
+    ).toBe(true);
+    expect(
+      evaluatePaywall('free', 'legendary_mutation', { mutationRarity: 'rare' }).allowed,
+    ).toBe(true);
+  });
 });
 
 describe('PurchaseErrorMapper', () => {

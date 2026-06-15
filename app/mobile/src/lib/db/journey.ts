@@ -32,9 +32,16 @@ export const journeyClaims = {
       const safeTo = Number.isFinite(toPhase)
         ? Math.max(1, Math.min(100, Math.floor(toPhase)))
         : 1;
+      // Sanitiza o ponteiro vindo do storage ANTES do Math.max (mesma regra do
+      // get()): um claimed_phase corrompido (NaN, vindo de import malformado)
+      // envenenaria `Math.max(NaN, safeTo) === NaN` e persistiria um ponteiro
+      // quebrado. Clampar pra [1,100] mantém a monotonicidade real.
+      const safeCurrent = Number.isFinite(current.claimed_phase)
+        ? Math.max(1, Math.min(100, Math.floor(current.claimed_phase)))
+        : 1;
       const next: JourneyClaimRow = {
         ...current,
-        claimed_phase: Math.max(current.claimed_phase, safeTo),
+        claimed_phase: Math.max(safeCurrent, safeTo),
         updated_at: new Date().toISOString(),
       };
       const newRows = rows.some(r => r.user_id === user_id)

@@ -105,4 +105,31 @@ describe('purchaseRevenueCatTier — resolução de tier por entitlements', () =
     expect(result.success).toBe(true);
     expect(result.tier).toBe('plus_annual');
   });
+
+  // Regressão (2026-06-15 ajuste1): se a RC OMITIR o productIdentifier (sem
+  // substring "annual" em lugar nenhum), o entitlement 'legendary' — anual-exclusivo
+  // — ainda tem que resolver plus_annual, em vez de rebaixar pra plus_monthly.
+  it('resolve plus_annual via entitlement legendary mesmo sem productIdentifier', async () => {
+    vi.mocked(Purchases.getOfferings).mockResolvedValueOnce({
+      current: { availablePackages: [{ identifier: 'plus_annual' }] },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+    vi.mocked(Purchases.purchasePackage).mockResolvedValueOnce({
+      customerInfo: {
+        entitlements: {
+          active: {
+            premium: { isActive: true },
+            legendary: { isActive: true },
+            ai_plus: { isActive: true },
+          },
+        },
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    const result = await purchaseRevenueCatTier('plus_annual');
+
+    expect(result.success).toBe(true);
+    expect(result.tier).toBe('plus_annual');
+  });
 });

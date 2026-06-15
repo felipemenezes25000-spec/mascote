@@ -44,11 +44,19 @@ export function evaluatePaywall(
       );
     case 'unlimited_chat':
       return gate(entitlementService.dailyChatLimit(tier) === null, 'Chat ilimitado é Plus.');
-    case 'legendary_mutation':
-      return gate(
-        entitlementService.canAccessPremiumMutation(tier, ctx?.mutationRarity ?? 'legendary'),
-        'Mutações lendárias são Plus.',
-      );
+    case 'legendary_mutation': {
+      // Rarity 'legendary' é anual-exclusiva (canAccessLegendaryForm = entitlement
+      // 'legendary', só plus_annual). canAccessPremiumMutation libera qualquer tier
+      // pago — correto p/ raridades menores, mas concederia forma lendária a quem
+      // paga mensal. Espelha o gate vivo (PremiumFeatureGuard) p/ manter a regra
+      // consistente caso algum chamador futuro use evaluatePaywall em vez do guard.
+      const rarity = ctx?.mutationRarity ?? 'legendary';
+      const allowed =
+        rarity === 'legendary'
+          ? entitlementService.canAccessLegendaryForm(tier)
+          : entitlementService.canAccessPremiumMutation(tier, rarity);
+      return gate(allowed, 'Mutações lendárias são Plus.');
+    }
     case 'evolution_phase':
       return gate(
         ctx?.phase ? entitlementService.canEvolveToPhase(tier, ctx.phase) : tier !== 'free',

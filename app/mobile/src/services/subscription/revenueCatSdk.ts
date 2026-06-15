@@ -73,6 +73,12 @@ function tierFromEntitlements(
     .join(' ')
     .toLowerCase();
   if (haystack.includes('annual')) return 'plus_annual';
+  // 'legendary' é entitlement ANUAL-exclusivo (TIER_TO_ENTITLEMENTS.plus_annual).
+  // Sua mera presença é um sinal de anual mais confiável que o substring 'annual'
+  // no productIdentifier — que a RC pode omitir. Sem isso, um assinante anual cujo
+  // payload chega como {premium, legendary} sem 'annual' cairia em plus_monthly,
+  // rebaixando em silêncio a forma legendary que ele pagou.
+  if (haystack.includes('legendary')) return 'plus_annual';
   if (haystack.includes('monthly') || haystack.includes('plus') || haystack.includes('premium')) {
     return 'plus_monthly';
   }

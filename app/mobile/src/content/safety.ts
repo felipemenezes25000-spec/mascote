@@ -140,6 +140,29 @@ const criticalPatterns = [
   /\bme\s+mutil(ar|ei|o|ando)\b/i,
   /\bautomutila[çc]/i,
   /\bautoexterm[íi]nio\b/i,
+  // === Ampliação PT-BR (auditoria 2026-06-15 ajuste1) ===
+  // Salto/disparo reflexivo "me atirar" com local fatal explícito. As linhas de
+  // arma de fogo acima cobrem "me dar um tiro" / "atirar em mim mesmo", e "me jogar"
+  // cobre o salto — mas "me atirar da ponte" escapava. Exige local fatal (igual ao
+  // padrão de "me jogar") pra não pegar o sentido benigno de atirar-se = lançar-se
+  // ("me atirei na piscina", "me atiro de cabeça no projeto", "me atirar na água").
+  /\bme\s+atir(ar|ei|o|ando)\s+(da|do|na|no|de|contra)\s+(janela|ponte|laje|pr[éeê]dio|viaduto|trem|trilho|telhado|carro)/i,
+  // "acabar comigo" (contração com+migo) com gatilho volitivo de 1ª pessoa. A linha
+  // "acabar com a minha vida" não cobria essa forma reflexiva. O verbo volitivo
+  // (vou/quero/penso em…) é obrigatório pra não pegar a hipérbole de exaustão com
+  // sujeito externo: "essa prova vai acabar comigo" (= vai me esgotar).
+  /\b(vou|quero|queria|penso\s+em|pensando\s+em|vontade\s+de)\s+acabar\s+comigo\b/i,
+  // "não quero (mais) estar vivo/viva". Direto; antes só "não quero mais viver",
+  // "não quero (mais) existir" e "quero estar morto" eram cobertos — esta forma
+  // ("não quero estar vivo") escapava. A negação obrigatória mantém "quero estar
+  // vivo pra ver isso" fora do crítico.
+  /n[ãa]o\s+quero\s+(mais\s+)?estar\s+viv[oa]\b/i,
+  // Ideação passiva no subjuntivo: "(seria/era) melhor se eu morresse" / "queria
+  // que eu morresse". Os padrões de "morrer" acima exigem "quero/penso/vontade/
+  // gostaria + morrer"; este enquadramento condicional clássico escapava. Âncora
+  // em "(seria/era) melhor" ou "queria/gostaria que" (NÃO o bare "se eu morresse",
+  // que colide com jogo/hipérbole) + lookahead excluindo "morresse de rir/cansaço".
+  /\b((seria|era)\s+melhor\s+(se\s+)?eu\s+morr(esse|er)|(queria|gostaria)\s+que\s+eu\s+morresse)\b(?!\s+de\s+(rir|cansa|fome|sono|medo|t[ée]dio|nojo|raiva|verg\w))/i,
 ];
 
 const highPatterns = [

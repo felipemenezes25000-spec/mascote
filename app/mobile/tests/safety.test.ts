@@ -143,6 +143,19 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     'vou abrir os pulsos',
     'me mutilei de novo',
     'penso em automutilação',
+    // === Ampliação 2026-06-15 ajuste1 ===
+    // Salto reflexivo "me atirar" com local fatal (antes só "me jogar"/"pular").
+    'vou me atirar da ponte',
+    'penso em me atirar do viaduto',
+    // "acabar comigo" volitivo (antes só "acabar com a minha vida").
+    'vou acabar comigo',
+    'tenho vontade de acabar comigo',
+    // "não quero estar vivo" (antes só "não quero viver/existir").
+    'não quero mais estar vivo',
+    'nao quero estar viva',
+    // Ideação passiva no subjuntivo "(seria/era) melhor se eu morresse".
+    'seria melhor se eu morresse',
+    'queria que eu morresse',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -234,6 +247,14 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'preciso dar cabo do trabalho hoje',  // concluir tarefa, não a vida
     'queria ter morrido de rir com isso', // hipérbole excluída pelo lookahead
     'tirar férias é o que eu mais quero', // "tirar" sem "vida"
+    // Regressão (2026-06-15 ajuste1): as novas âncoras (me atirar/acabar comigo/
+    // estar vivo/morresse) não podem capturar idioma benigno homônimo.
+    'me atirei na piscina de cabeça',     // atirar-se = lançar-se (local não-fatal)
+    'vou me atirar na água da praia',     // idem, "água/praia" não é local fatal
+    'essa prova vai acabar comigo',       // exaustão, sujeito externo (não volitivo 1ªp)
+    'o calor vai acabar comigo hoje',     // idem
+    'quero estar vivo pra ver isso',      // afirmação positiva (sem "não")
+    'se eu morresse de rir não me espanto', // "morresse de rir" excluído pelo lookahead
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {
