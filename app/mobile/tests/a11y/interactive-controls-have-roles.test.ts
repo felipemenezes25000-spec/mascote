@@ -196,15 +196,20 @@ describe('a11y: controles interativos têm accessibilityRole', () => {
   // com onPress pode ficar sem accessibilityRole, EXCETO os casos intencionais
   // abaixo (backdrops sem conteúdo, no-op de stop-propagation, imagebutton).
   //
-  // Auditoria 2026-06-15 (ajuste2): a varredura só cobria `app/` + `src/components/`,
-  // mas `src/features/` também tem controles interativos vivos (HomeHero,
-  // HomeBanner, HomeActionRow, HomeQuickActions, JourneyCard). Estavam todos com
-  // role correto, mas nada impedia uma regressão futura ali. Escopo estendido pra
-  // incluir `src/features/` — agora a guarda é de fato global.
+  // Auditoria 2026-06-15 (ajuste2): a varredura cobria `app/` + `src/components/`
+  // + `src/features/`. Mas enumerar diretórios conhecidos é frágil — foi
+  // exatamente a regressão que mordeu em e77ec2a (faltava `app/` raiz) e b5ec0c8
+  // (faltava `src/features/`): cada incidente só acrescentava +1 dir reativamente.
+  //
+  // Auditoria 2026-06-17 (ajuste2): escopo estendido para TODO `app/` + `src/`
+  // (não só três subdirs). Hoje não há controle interativo fora de
+  // components/features, então a guarda segue verde — mas agora qualquer
+  // Pressable novo em `src/design-system/`, `src/game/` ou QUALQUER subdir futuro
+  // de `src/` é coberto automaticamente. Agora a guarda é de fato global.
   it('varredura global: só sobram exceções intencionais sem role', () => {
     const cp = require('node:child_process') as typeof import('node:child_process');
     const files = cp
-      .execSync('git ls-files "app/" "src/components/" "src/features/"', { cwd: ROOT, encoding: 'utf8' })
+      .execSync('git ls-files "app/" "src/"', { cwd: ROOT, encoding: 'utf8' })
       .trim()
       .split('\n')
       .filter((f: string) => f.endsWith('.tsx'));
