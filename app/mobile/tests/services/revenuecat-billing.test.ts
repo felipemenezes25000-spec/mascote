@@ -10,6 +10,7 @@ import {
   __resetRevenueCatSdkForTests,
   __setRevenueCatSdkInitializedForTests,
 } from '@/services/subscription/RevenueCatBillingProvider';
+import { packageIdForTier } from '@/services/subscription/revenueCatSdk';
 
 describe('RevenueCatBillingProvider', () => {
   const env = { ...process.env };
@@ -86,5 +87,23 @@ describe('RevenueCatBillingProvider', () => {
     // Regressão 2026-06-11: em produção real, cancelar via loja mantém acesso até
     // o fim do período; aqui (não ready) o downgrade local é o caminho seguro.
     await expect(provider.cancel('user-rc-cancel')).resolves.toBeUndefined();
+  });
+
+  describe('packageIdForTier — package id da offering configurável', () => {
+    it('default preserva plus_monthly/plus_annual (comportamento histórico)', () => {
+      delete process.env.EXPO_PUBLIC_RC_PKG_PLUS_MONTHLY;
+      delete process.env.EXPO_PUBLIC_RC_PKG_PLUS_ANNUAL;
+      expect(packageIdForTier('plus_monthly')).toBe('plus_monthly');
+      expect(packageIdForTier('plus_annual')).toBe('plus_annual');
+    });
+
+    it('env sobrescreve o package id (casar com dashboard RevenueCat sem deploy)', () => {
+      // Auditoria 2026-06-18: package id era hardcoded. Distinto do SKU de produto
+      // (mascote_plus_*) usado em tierFromEntitlements — namespaces diferentes.
+      process.env.EXPO_PUBLIC_RC_PKG_PLUS_MONTHLY = 'mascote_plus_monthly';
+      process.env.EXPO_PUBLIC_RC_PKG_PLUS_ANNUAL = 'mascote_plus_annual';
+      expect(packageIdForTier('plus_monthly')).toBe('mascote_plus_monthly');
+      expect(packageIdForTier('plus_annual')).toBe('mascote_plus_annual');
+    });
   });
 });

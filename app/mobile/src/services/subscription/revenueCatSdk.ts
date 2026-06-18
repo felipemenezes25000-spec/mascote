@@ -31,10 +31,26 @@ export function __setRevenueCatSdkInitializedForTests(value: boolean): void {
   sdkInitialized = value;
 }
 
-const TIER_PACKAGE_IDS: Record<Exclude<BillingTierId, 'free'>, string> = {
-  plus_monthly: 'plus_monthly',
-  plus_annual: 'plus_annual',
-};
+/**
+ * Resolve o IDENTIFIER do PACOTE na offering RevenueCat por tier.
+ *
+ * ⚠️ Isto é o `package.identifier` dentro da offering (o que `availablePackages
+ * .find(p => p.identifier === …)` casa) — NÃO o SKU de produto da loja
+ * (`mascote_plus_monthly`), que vive em `tierFromEntitlements` via
+ * `productIdentifier`. São namespaces distintos no RevenueCat.
+ *
+ * Configurável via env pra casar com o que o dashboard usar SEM redeploy; o
+ * fallback preserva o histórico ('plus_monthly'/'plus_annual'). Antes era
+ * hardcoded — se o dashboard nomeasse os pacotes diferente, a compra falhava em
+ * silêncio (fail-closed em purchaseRevenueCatTier devolvia "pacote não
+ * encontrado"). Agora basta setar a env certa.
+ */
+export function packageIdForTier(tier: Exclude<BillingTierId, 'free'>): string {
+  if (tier === 'plus_annual') {
+    return process.env.EXPO_PUBLIC_RC_PKG_PLUS_ANNUAL?.trim() || 'plus_annual';
+  }
+  return process.env.EXPO_PUBLIC_RC_PKG_PLUS_MONTHLY?.trim() || 'plus_monthly';
+}
 
 function resolveApiKey(): string | undefined {
   const ios = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS?.trim();
@@ -124,7 +140,7 @@ export async function purchaseRevenueCatTier(
 
   try {
     const offerings = await Purchases.getOfferings();
-    const pkgId = TIER_PACKAGE_IDS[tier];
+    const pkgId = packageIdForTier(tier);
     // Fail-closed: SÓ compra o pacote exato que o usuário pediu. Antes havia um
     // fallback `?? availablePackages[0]` — se o ID não batesse (ex.: SKU do
     // dashboard RevenueCat diferente), cobrava um pacote QUALQUER em silêncio

@@ -8,7 +8,7 @@ import { Typography } from '@/components/ui';
  * atual aparece destacada; as outras como "ainda não desperta" — antecipação
  * sem culpa ("seus hábitos guiam pra onde ele cresce").
  */
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { analytics } from '@/analytics';
@@ -31,7 +31,14 @@ export default function CosmosScreen() {
   const styles = useStyles(makeStyles);
   const mascot = useStore(s => s.mascot);
   const dna = mascot?.dna;
-  const mine = creatureGenomeFromDNA(dna);
+  // Memoiza por DNA: useStore(s => s.mascot) re-renderiza a cada mudança de
+  // mood/energy/xp (ticks de vida), mas os 16 genomes só dependem do DNA. Sem
+  // memo, eram ~16 derivações procedurais por re-render (auditoria jun/18).
+  const mine = useMemo(() => creatureGenomeFromDNA(dna), [dna]);
+  const samples = useMemo(
+    () => ARCHETYPE_IDS.map(id => creatureGenomeFromDNA(dna, { forceArchetype: id })),
+    [dna],
+  );
   const totalModels = countCoherentCreatures();
 
   useEffect(() => {
@@ -62,7 +69,7 @@ export default function CosmosScreen() {
         <Typography variant="bodyBold" style={styles.sectionLabel}>As {ARCHETYPE_IDS.length} famílias</Typography>
 
         {ARCHETYPE_IDS.map((id, i) => {
-          const sample = creatureGenomeFromDNA(dna, { forceArchetype: id });
+          const sample = samples[i];
           const isMine = id === mine.archetype;
           const spec = ARCHETYPES[id as CreatureArchetype];
           return (

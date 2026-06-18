@@ -19,6 +19,7 @@ import { logger } from '@/lib/logger';
 import { rememberFromMessage } from '@/lib/memory';
 import { creatureMoments } from '@/lib/moments';
 import {
+  clearCrisisBannerCooldown,
   isCrisisBannerOnCooldown,
   markCrisisBannerDismissed,
 } from '@/lib/crisisBannerCooldown';
@@ -225,6 +226,14 @@ export default function ChatTab() {
         source: result.source as 'mock' | 'fallback' | 'openai' | 'proxy',
         safety_flag: result.safety_flag,
       });
+      // Crise NOVA reabre o banner de CVV mesmo dentro do cooldown de 7 dias.
+      // O cooldown é anti-nag pra um banner de conveniência; mas se o user voltar
+      // a sinalizar crise, suprimir o caminho rápido pro CVV seria perigoso. Crise
+      // é o sinal mais forte de que ele PRECISA do banner agora (auditoria jun/18).
+      if (result.safety_flag === 'critical') {
+        void clearCrisisBannerCooldown();
+        setShowCvvBanner(true);
+      }
       scheduleScrollToEnd(80);
     } catch (err) {
       // Algo falhou no pipeline (persist user msg, gerar resposta, persist
@@ -269,6 +278,12 @@ export default function ChatTab() {
             next.set(fbReply.id, fb.source);
             return next;
           });
+          // Mesma reabertura de crise do happy-path: se o fallback gerou
+          // CRISIS_REPLY, o banner de CVV volta mesmo dentro do cooldown.
+          if (fb.safetyFlag === 'critical') {
+            void clearCrisisBannerCooldown();
+            setShowCvvBanner(true);
+          }
           return;
         } catch {
           /* segue pro system msg padrao abaixo */

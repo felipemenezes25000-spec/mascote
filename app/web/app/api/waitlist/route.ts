@@ -86,8 +86,12 @@ export async function POST(req: NextRequest): Promise<Response> {
     const sink = await persistLead(lead);
     return Response.json({ ok: true, sink }, { status: 201 });
   } catch (err) {
+    // Loga só a message (nunca o Error cru / stack) — em logs serverless
+    // persistidos, stack de I/O pode vazar caminhos/detalhes do sistema.
     // eslint-disable-next-line no-console
-    console.error("[waitlist] persist failed completely:", err);
+    console.error("[waitlist] persist failed:", {
+      reason: err instanceof Error ? err.message : "unknown",
+    });
     return Response.json({ error: "persist_failed" }, { status: 500 });
   }
 }

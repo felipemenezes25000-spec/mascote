@@ -47,6 +47,20 @@ describe('MascotAI layer', () => {
     expect(r.source).toBe('fallback');
   });
 
+  it('fallback local default é safe quando flag não é passada', () => {
+    const r = localFallbackReply('fofo', 'oi');
+    expect(r.safety_flag).toBe('safe');
+  });
+
+  it('fallback local preserva safety_flag de input (não rebaixa watch→safe)', () => {
+    // Regressão (auditoria 2026-06-18 ajuste2): quando OpenAI lança e mascotReply
+    // cai no fallback, a flag 'watch' do input (ex.: "fiz terapia hoje") era
+    // perdida — localFallbackReply hardcodava 'safe', então disclaimers/analytics
+    // de watch não disparavam. Agora a flag é threadada pro fallback.
+    const r = localFallbackReply('fofo', 'fiz terapia hoje', { safetyFlag: 'watch' });
+    expect(r.safety_flag).toBe('watch');
+  });
+
   it('gera missão sugerida determinística', () => {
     const a = generateMissionSuggestion('calmo', 42);
     const b = generateMissionSuggestion('calmo', 42);

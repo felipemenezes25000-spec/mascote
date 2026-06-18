@@ -7,8 +7,12 @@ const criticalPatterns = [
   // (presente), "me matei" (passado), "me matarei" (futuro), "me mataria"
   // (condicional). Bug anterior: só casava infinitivo/presente/passado, então
   // "eu me matarei amanhã" / "me mataria se pudesse" escapavam pro reply normal.
-  // "me" reflexivo obrigatório mantém "matar a fome/saudade" fora do crítico.
-  /\bme\s+mat(ar|o|a|ei|arei|aria)\b/i,
+  // Pronome reflexivo obrigatório mantém "matar a fome/saudade" fora do crítico.
+  // "se" (2ª/3ª pessoa: "você se mataria") incluído na auditoria 2026-06-18 — é
+  // inequivocamente reflexivo. "te" foi DELIBERADAMENTE omitido: "te matar" em
+  // pt-BR casual é hetero-dirigido ("vou te matar" = ameaça/brincadeira), não
+  // autolesão. "matando de rir" fica fora ("ando" não está no grupo).
+  /\b(me|se)\s+mat(ar|o|a|ei|arei|aria)\b/i,
   /matar\s+me/i,
   // Eufemismo padrão pt-BR pra suicídio: "tirar a vida". Determinantes empilháveis
   // e obrigatórios (pelo menos um): "tirar a vida", "tirar minha vida", "tirar a
@@ -127,7 +131,10 @@ const criticalPatterns = [
   /atir(ar|ei|o|ando)\s+(em|contra)\s+mim\s+mesm[oa]\b/i,
   // Envenenamento: "beber veneno" (line de veneno acima só cobria tomar/engolir) e
   // "chumbinho" (pesticida, método clássico no BR — não aparece em frase benigna).
-  /\bbeb(er|i|o|endo)\s+veneno\b/i,
+  // Auditoria 2026-06-18: + 3ª pessoa "bebe(u)" e artigo opcional ("beber O veneno")
+  // — antes só beber/bebi/bebo/bebendo sem artigo casavam; "beber o veneno" e
+  // "bebeu veneno" escapavam.
+  /\bbeb(er|i|o|e|eu|endo)(?:\s+o)?\s+veneno\b/i,
   /\bchumbinho\b/i,
   // Eufemismos "dar cabo da minha vida / de mim" e "dar um fim À minha vida" (a linha
   // de "dar fim" tinha "na minha vida" mas não a crase). "dar cabo" exige objeto de
@@ -196,6 +203,13 @@ const criticalPatterns = [
   // dual-use (dar um basta numa situação/bagunça), então exige o objeto vida|mim pra
   // virar crítico — "dar um basta nessa situação" continua fora.
   /\bdar\s+um\s+basta\s+(na\s+(minha\s+)?vida|em\s+mim)\b/i,
+  // === Ampliação PT-BR (auditoria 2026-06-18 ajuste2) ===
+  // Ênclise pt-BR (pronome reflexivo ligado por hífen): "matar-me", "cortei-me",
+  // "envenenei-me". TODOS os padrões reflexivos acima exigem espaço ("me matar"),
+  // então a ênclise — válida e usada em escrita mais formal/sob estresse — escapava.
+  // Lista EXPLÍCITA de verbos (não \w*) pra não pegar "matricular-me" (matrícula),
+  // "apresentar-me" etc. Cobre os verbos-núcleo de autolesão em inf/presente/passado.
+  /\b(matar|matei|mato|matarei|mataria|cortar|cortei|corto|enforcar|enforquei|envenenar|envenenei|mutilar|mutilei)-(me|se)\b/i,
 ];
 
 const highPatterns = [

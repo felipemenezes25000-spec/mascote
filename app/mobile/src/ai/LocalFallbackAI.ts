@@ -41,7 +41,7 @@ function pickFrom<T>(arr: readonly T[], seed: number): T {
 export function localFallbackReply(
   personality: Personality,
   userMessage: string,
-  options?: { mascotName?: string; memories?: MemoryItem[] },
+  options?: { mascotName?: string; memories?: MemoryItem[]; safetyFlag?: SafetyFlag },
 ): AiResponse {
   const intent = classifyIntent(userMessage);
   let reply = mockReply(personality, intent, options?.mascotName);
@@ -62,7 +62,10 @@ export function localFallbackReply(
   });
   return {
     reply,
-    safety_flag: 'safe' as SafetyFlag,
+    // Preserva a flag de input (default 'safe'). Sem isto, um input 'watch'
+    // (linguagem clínica) que cai no fallback por exceção do provider perdia a
+    // flag — disclaimers/analytics de watch não disparavam (paridade c/ lib/ai).
+    safety_flag: options?.safetyFlag ?? ('safe' as SafetyFlag),
     source: 'fallback',
   };
 }

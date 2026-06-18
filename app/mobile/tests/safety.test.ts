@@ -180,6 +180,21 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     // Eufemismo "dar um basta na (minha) vida / em mim".
     'quero dar um basta na minha vida',
     'dar um basta em mim',
+    // === Ampliação 2026-06-18 ajuste2 (auditoria full-stack) ===
+    // Reflexivo "se matar" (2ª/3ª pessoa; antes só "me matar" 1ª pessoa). "se"
+    // é inequivocamente reflexivo (matar-se = suicídio); "te" foi DELIBERADAMENTE
+    // omitido porque "te matar" em pt-BR é hetero-dirigido ("vou te matar").
+    'você se mataria',
+    'ela ia se matar',
+    // Ênclise pt-BR (pronome com hífen): "matar-me", "cortei-me", "envenenei-me".
+    // Os padrões reflexivos exigiam espaço ("me matar"); a ênclise escapava.
+    'vou matar-me amanhã',
+    'cortei-me ontem',
+    'envenenei-me de novo',
+    // "beber veneno" com artigo / 3ª pessoa (antes só beber/bebi/bebo/bebendo —
+    // sem artigo). "beber o veneno" e "bebeu veneno" escapavam pro reply normal.
+    'vou beber o veneno',
+    'ele bebeu veneno',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -290,6 +305,9 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'quero acordar cedo amanhã',          // "acordar" sem negação
     'comprei uma bala na padaria',        // "bala" doce (sem "na cabeça")
     'vou dar um basta nessa situação',    // "dar um basta" sem objeto vida/mim
+    // Regressão (2026-06-18 ajuste2): ênclise/reflexivo benignos não podem virar
+    // FP. Lista explícita de verbos (matar|cortar|...) evita pegar "matricular-me".
+    'preciso matricular-me no curso',     // ênclise de verbo não-crise (matrícula)
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {

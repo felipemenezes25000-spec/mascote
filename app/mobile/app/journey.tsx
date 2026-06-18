@@ -139,10 +139,16 @@ export default function JourneyScreen() {
         {/* Os 10 mundos */}
         {map.map(({ world, state }, i) => {
           const expanded = expandedWorld === world.id;
-          const phases = phasesForWorld(world.id);
-          const worldMilestones = milestones.filter(
-            m => m.phaseN >= world.firstPhase && m.phaseN <= world.lastPhase,
-          );
+          // Só computa fases/milestones/forma do mundo EXPANDIDO. Antes rodava
+          // pros 10 mundos a cada render (filter + lookup + formForWorld duplicado),
+          // 9 desperdiçados quando só 1 está aberto (auditoria jun/18).
+          const phases = expanded ? phasesForWorld(world.id) : [];
+          const worldMilestones = expanded
+            ? milestones.filter(
+                m => m.phaseN >= world.firstPhase && m.phaseN <= world.lastPhase,
+              )
+            : [];
+          const worldForm = expanded && world.id > 1 ? formForWorld(world.id) : null;
           return (
             <StaggeredView key={world.id} index={Math.min(2 + i, 8)}>
               <View
@@ -191,9 +197,9 @@ export default function JourneyScreen() {
                     <Typography variant="caption" tone="secondary" style={styles.worldIntro}>
                       {world.intro}
                     </Typography>
-                    {world.id > 1 && (
+                    {worldForm && (
                       <Typography variant="mono" style={{ color: world.hue, fontWeight: '700' }}>
-                        🧬 Forma {formForWorld(world.id).name} — {formForWorld(world.id).trait}
+                        🧬 Forma {worldForm.name} — {worldForm.trait}
                       </Typography>
                     )}
                     {phases.map(p => {

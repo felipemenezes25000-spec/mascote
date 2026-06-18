@@ -138,6 +138,10 @@ export async function mascotReply(
     const fallback = localFallbackReply(personality, userMessage, {
       mascotName: options?.mascotName,
       memories,
+      // Preserva a flag avaliada no input (safe|watch — críticas já retornaram
+      // cedo no gate de safety acima). Sem isto, "fiz terapia hoje" (watch) que
+      // caísse no fallback por exceção do provider virava 'safe'.
+      safetyFlag: safety.flag,
     });
     trackAiReplySucceeded(tier, 'local', Date.now() - startedAt);
     return fallback;

@@ -223,8 +223,10 @@ export async function POST(req: NextRequest) {
     if (isAbort) {
       console.warn('[mascot/reply] upstream timeout');
     } else {
+      // Loga só o TIPO do erro, não a message — message de falha upstream pode
+      // conter URL/host do proxy ou preview de resposta. errorType basta pra triagem.
       console.warn('[mascot/reply] proxy failure', {
-        reason: err instanceof Error ? err.message : 'unknown',
+        errorType: err instanceof Error ? err.name : 'unknown',
       });
     }
     return json(
