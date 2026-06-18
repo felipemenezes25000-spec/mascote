@@ -47,9 +47,16 @@ Pré-requisito que destrava tudo: mesmo que hábitos/chat já mexam no genoma, h
 
 **Verificação:** unit (mapeamento puro), render (fase baixa vs alta diferem; mutationIds mudam render), e **visual** (expo web + Playwright: render fase ovo vs evoluido + efeito de mutação).
 
-### Fase 2 — Chat e ações alimentam o genoma (próxima spec)
+### Fase 2 — Chat alimenta o genoma — FEITA (mesma sessão)
 
-Cada conversa = nudge minúsculo no genoma por tema/sentimento (reusar `lib/ml` de sentimento), com teto diário. Lento e significativo; hábitos já fazem, adiciona o chat. Spec própria.
+Cada conversa = nudge minúsculo no genoma por tema/sentimento, com teto diário. Lento e significativo; hábitos já faziam, adicionado o chat.
+
+- `src/lib/dna/chatToGene.ts` (PURO): `detectChatThemes` + `chatDrift(genome, message)` — 9 temas (feelings/calm/learning/creativity/social/discipline/resilience/adventure/activity) por radical sem acento; intensidade emocional (magnitude do sentimento) → emotionalDepth (desabafar aprofunda). ~0.0012/gene/msg (8× menor que hábito), teto 0.003/gene/msg. Não-negativo, determinístico.
+- `src/lib/dna/chatDriftBudget.ts`: teto DIÁRIO (8 msgs/dia driftam) via chave local auto-resetável. Anti-gaming.
+- `store.driftDnaFromChat(message)`: lock `mascot_logic:${uid}` (serializa c/ habit-drift/setDna/lifeSim); pula crise (`classifyInput === 'critical'`); só consome orçamento quando há drift real; persiste via `mascots.updateDna`.
+- Hook em `app/(tabs)/chat.tsx` send(): `void useStore.getState().driftDnaFromChat(text)` fire-and-forget, junto do `rememberFromMessage`.
+
+Verificado: simulação de ~250 msgs/tema (≈ semanas) renderiza espécies distintas (neutro=Gosminha → aprender=Cristal, sentimentos=Felino, criar=Inseto, superação=Dragão). +20 testes; 6729→6749.
 
 ## Não-objetivos (YAGNI agora)
 

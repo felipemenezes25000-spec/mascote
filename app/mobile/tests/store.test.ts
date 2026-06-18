@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as accessibility from '@/lib/accessibility';
 import { useStore } from '@/store';
 import { mascots, profiles, settings, streaks, wallet as walletDb } from '@/lib/db';
+import { CHAT_DRIFT_DAILY_CAP } from '@/lib/dna/chatDriftBudget';
 
 beforeEach(async () => {
   await AsyncStorage.clear();
@@ -196,5 +197,48 @@ describe('toast queue', () => {
     useStore.getState().shiftToast();
     expect(useStore.getState().currentToast).toBeNull();
     expect(useStore.getState().toastQueue).toEqual([]);
+  });
+});
+
+describe('driftDnaFromChat (Fase 2 — conversa molda o genoma)', () => {
+  async function setupMascot() {
+    const p = await profiles.upsert({ display_name: 'Chat' });
+    const m = await mascots.upsert({ user_id: p.id, name: 'Bipo' });
+    useStore.setState({ profile: p, mascot: m });
+    return { p, m };
+  }
+
+  it('mensagem temática drifta e PERSISTE o genoma', async () => {
+    const { p } = await setupMascot();
+    const before = useStore.getState().mascot!.dna!.intelligence;
+    await useStore.getState().driftDnaFromChat('quero aprender e estudar muito');
+    const after = useStore.getState().mascot!.dna!.intelligence;
+    expect(after).toBeGreaterThan(before);
+    const persisted = await mascots.forUser(p.id);
+    expect(persisted!.dna!.intelligence).toBeCloseTo(after);
+  });
+
+  it('mensagem fútil NÃO muda o genoma', async () => {
+    await setupMascot();
+    const before = { ...useStore.getState().mascot!.dna! };
+    await useStore.getState().driftDnaFromChat('oi');
+    expect(useStore.getState().mascot!.dna).toEqual(before);
+  });
+
+  it('mensagem em CRISE não drifta (não gamifica sofrimento)', async () => {
+    await setupMascot();
+    const before = { ...useStore.getState().mascot!.dna! };
+    await useStore.getState().driftDnaFromChat('quero me matar');
+    expect(useStore.getState().mascot!.dna).toEqual(before);
+  });
+
+  it('respeita o teto diário (para de driftar após o cap)', async () => {
+    await setupMascot();
+    for (let i = 0; i < CHAT_DRIFT_DAILY_CAP; i++) {
+      await useStore.getState().driftDnaFromChat('aprender estudar');
+    }
+    const capped = useStore.getState().mascot!.dna!.intelligence;
+    await useStore.getState().driftDnaFromChat('aprender estudar mais ainda');
+    expect(useStore.getState().mascot!.dna!.intelligence).toBeCloseTo(capped);
   });
 });

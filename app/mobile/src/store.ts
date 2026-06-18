@@ -13,6 +13,9 @@ export type LastCheckinSnapshot = {
 } | null;
 
 import { applyHabitDrift, sanitizeGenome } from '@/lib/dna';
+import { chatDrift } from '@/lib/dna/chatToGene';
+import { tryConsumeChatDriftBudget } from '@/lib/dna/chatDriftBudget';
+import { classifyInput } from '@/content/safety';
 import { readSystemReduceMotion } from '@/lib/accessibility';
 import { mascots, profiles, runMigrations, settings, streaks, sweepStaleDateKeys, wallet as walletDb, withLock } from '@/lib/db';
 import { logger } from '@/lib/logger';
@@ -64,6 +67,8 @@ interface AppState {
   shiftToast: () => void;
   /** Aplica drift de hábito no DNA. SEMPRE não-negativo (sem culpa). */
   driftDnaFromHabit: (habit: HabitKind, intensity?: number) => Promise<void>;
+  /** Drift sutil do genoma a partir de uma mensagem de chat (Fase 2). */
+  driftDnaFromChat: (message: string) => Promise<void>;
   /** Sobrescreve DNA arbitrariamente (debug/preset). Sanitiza na borda. */
   setDna: (dna: MascotDNA) => Promise<void>;
   /**
@@ -309,6 +314,26 @@ export const useStore = create<AppState>((set, get) => ({
       const persisted = await mascots.updateDna(m.user_id, nextDna);
       if (persisted) set({ mascot: persisted });
       else logger.warn('[store] driftDnaFromHabit: mascot não encontrado');
+    });
+  },
+
+  async driftDnaFromChat(message) {
+    // Fase 2: conversar molda o genoma DEVAGAR. Pula mensagens em crise (não é
+    // hora de gamificar) e respeita o teto diário (anti-gaming). Mesmo lock
+    // mascot_logic:${uid} dos outros mutadores de .dna (serializa last-writer).
+    const uid = get().mascot?.user_id;
+    if (!uid) return;
+    if (!message || !message.trim()) return;
+    if (classifyInput(message) === 'critical') return;
+    await withLock(`mascot_logic:${uid}`, async () => {
+      const m = get().mascot;
+      if (!m || !m.dna || m.user_id !== uid) return;
+      const { genome, changed } = chatDrift(m.dna, message);
+      if (!changed) return; // mensagem sem tema/emoção não gasta orçamento
+      // Só consome o orçamento do dia quando há drift REAL.
+      if (!(await tryConsumeChatDriftBudget())) return;
+      const persisted = await mascots.updateDna(m.user_id, genome);
+      if (persisted) set({ mascot: persisted });
     });
   },
 

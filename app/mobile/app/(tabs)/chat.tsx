@@ -153,6 +153,11 @@ export default function ChatTab() {
       setList(prev => [...prev, userMsg!]);
       if (!messageOverride) setInput('');
 
+      // Fase 2 da evolução visível: a conversa molda o genoma DEVAGAR (drift por
+      // tema/emoção, teto diário, pula crise). Fire-and-forget — não bloqueia a
+      // resposta; a criatura muda sutilmente ao longo de semanas.
+      void useStore.getState().driftDnaFromChat(text);
+
       // Extrai memórias da mensagem do user em background (não bloqueia resposta).
       // Quando algo se torna memória, emite 'chat.memory_saved' pra outros
       // sistemas reagirem (ex: ProgressPulse de "criatura aprendeu algo novo").
