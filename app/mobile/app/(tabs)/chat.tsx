@@ -396,7 +396,9 @@ export default function ChatTab() {
               setShowCvvBanner(false);
               void markCrisisBannerDismissed();
             }}
-            hitSlop={8}
+            // Icon 14 sem padding → hitSlop 15 leva o alvo de toque a ~44px (mín. a11y),
+            // crítico por estar no fluxo de crise/segurança.
+            hitSlop={15}
             accessibilityRole="button"
             accessibilityLabel="Fechar"
           >

@@ -112,6 +112,8 @@ export function RangeSlider({
         {!isDefault ? (
           <PressableScale
             onPress={handleReset}
+            // rótulo "reset" dá largura; só falta altura → hitSlop vertical p/ ~44px
+            hitSlop={{ top: 12, bottom: 12 }}
             style={styles.resetBtn}
             accessibilityRole="button"
             accessibilityLabel={`Resetar ${label}`}

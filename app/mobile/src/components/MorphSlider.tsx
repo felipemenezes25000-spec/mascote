@@ -119,6 +119,8 @@ export function MorphSlider({
         {onToggleLock ? (
           <PressableScale
             onPress={onToggleLock}
+            // botão icon-only ~28×20px → hitSlop leva o alvo a ~44px (mín. a11y)
+            hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
             style={[
               styles.resetBtn,
               locked && {
@@ -141,6 +143,8 @@ export function MorphSlider({
         {!isDefault && !locked && (
           <PressableScale
             onPress={handleReset}
+            // rótulo "reset" dá largura; só falta altura → hitSlop vertical p/ ~44px
+            hitSlop={{ top: 12, bottom: 12 }}
             style={styles.resetBtn}
             accessibilityRole="button"
             accessibilityLabel={`Resetar ${label}`}
