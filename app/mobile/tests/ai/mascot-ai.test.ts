@@ -25,6 +25,22 @@ describe('MascotAI layer', () => {
     expect(d.redirect).toBeTruthy();
   });
 
+  it('detecta attachment e redireciona pro ATTACHMENT_REPLY (paridade c/ lib/ai.ts)', () => {
+    // Regressão (auditoria 2026-06-18 ajuste1): evaluateUserMessage — usado pelo
+    // fallback (chat-engine/MascotAI) — não checava detectAttachment, então
+    // "você é minha única amiga" ia pra OpenAI/mock sem o nudge de autocuidado.
+    // O pipeline canônico (lib/ai.ts) já fazia; aqui estava ausente.
+    const d = evaluateUserMessage('você é minha única amiga, não tenho mais ninguém');
+    expect(d.allowed).toBe(false);
+    expect(d.flag).toBe('watch');
+    expect(d.redirect).toBeTruthy();
+  });
+
+  it('mensagem neutra continua permitida (attachment não é falso-positivo)', () => {
+    const d = evaluateUserMessage('oi, tudo bem? como você tá hoje');
+    expect(d.allowed).toBe(true);
+  });
+
   it('fallback local responde sem API', () => {
     const r = localFallbackReply('fofo', 'oi');
     expect(r.reply.length).toBeGreaterThan(0);

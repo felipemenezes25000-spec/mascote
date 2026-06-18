@@ -163,6 +163,39 @@ const criticalPatterns = [
   // em "(seria/era) melhor" ou "queria/gostaria que" (NÃO o bare "se eu morresse",
   // que colide com jogo/hipérbole) + lookahead excluindo "morresse de rir/cansaço".
   /\b((seria|era)\s+melhor\s+(se\s+)?eu\s+morr(esse|er)|(queria|gostaria)\s+que\s+eu\s+morresse)\b(?!\s+de\s+(rir|cansa|fome|sono|medo|t[ée]dio|nojo|raiva|verg\w))/i,
+  // === Ampliação PT-BR (auditoria 2026-06-18 ajuste1) ===
+  // Salto fatal com o sinônimo "saltar" (as linhas de "pular"/"me jogar"/"me atirar"
+  // acima só cobriam esses verbos). Mesma âncora de local fatal explícito pra manter
+  // o benigno "saltar de alegria"/"saltei do ônibus" fora do crítico.
+  /\bsalt(ar|ei|o|ou|ando)\s+(da|do|na|no|de)\s+(janela|ponte|laje|pr[éeê]dio|viaduto|trem|trilho|telhado)/i,
+  // Ideação com "mais" POSPOSTO: "não quero viver mais" / "não aguento viver mais".
+  // As linhas existentes exigiam "mais" ANTES de "viver" ("não quero mais viver"),
+  // então a ordem invertida — igualmente comum na fala — escapava pro reply normal.
+  // Lookahead de fim-de-frase exige que "mais" seja terminal, mantendo o benigno
+  // "não quero viver mais nessa cidade"/"longe de você" (relocação) fora do crítico.
+  /n[ãa]o\s+(quero|aguento)\s+viver\s+mais\s*(?=[.!?]|$)/i,
+  // Desesperança existencial: "a vida não vale (mais) a pena" / "não vale (mais) a
+  // pena viver". Antes só "não tenho motivo pra viver" cobria perda de sentido; este
+  // enquadramento dependia só do sentiment (frágil). Ancorado em "a vida não vale" ou
+  // em "viver" logo após, pra não pegar "não vale a pena esse filme/comprar isso".
+  /(a\s+vida\s+n[ãa]o\s+vale\s+(mais\s+)?(a\s+)?pena|n[ãa]o\s+vale\s+(mais\s+)?a\s+pena\s+viver)\b/i,
+  // Exaustão existencial: "cansei de viver" / "cansei de existir". A linha "não
+  // aguento mais viver" cobria a exaustão negada; esta forma afirmativa escapava.
+  // Ancorado em viver|existir pra manter "cansei de trabalhar/esperar/dessa rotina"
+  // (queixa cotidiana, não ideação) fora do crítico.
+  /cansei\s+de\s+(viver|existir)\b/i,
+  // Ideação passiva: "queria/quero/gostaria de não acordar". Simétrico ao "preferia
+  // não acordar" já listado — só mudava o verbo volitivo. A negação obrigatória antes
+  // de "acordar" mantém "quero acordar cedo"/"queria acordar disposto" fora do crítico.
+  /(queria|quero|gostaria\s+de)\s+n[ãa]o\s+acordar\b/i,
+  // Método com arma de fogo via projétil "bala": "(meter) uma bala na cabeça/em mim".
+  // A linha "tiro na cabeça/em mim" cobria "tiro", não o sinônimo "bala". Ancorado na
+  // anatomia/reflexivo pra não pegar a "bala" doce ("comprei uma bala", "dei uma bala").
+  /\b(meter\s+(uma\s+)?bala\s+(na\s+(minha\s+)?cabe[çc]a|em\s+mim)|(uma\s+)?bala\s+na\s+(minha\s+)?cabe[çc]a)\b/i,
+  // Eufemismo "dar um basta NA (minha) vida / em mim". "dar um basta" sozinho é
+  // dual-use (dar um basta numa situação/bagunça), então exige o objeto vida|mim pra
+  // virar crítico — "dar um basta nessa situação" continua fora.
+  /\bdar\s+um\s+basta\s+(na\s+(minha\s+)?vida|em\s+mim)\b/i,
 ];
 
 const highPatterns = [

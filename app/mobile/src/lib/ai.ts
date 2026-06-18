@@ -268,7 +268,12 @@ async function generateReplyInternal(
       }
       if (userId) await rememberReply(userId, personality, validation.reply);
       const usage = totalTokens > 0 ? { totalTokens } : undefined;
-      return finish({ reply: validation.reply, safety_flag: inputFlag, source: 'openai', usage }, false);
+      // Usa o flag do VALIDATOR (não o `inputFlag` cru). validateAiResponse funde
+      // inputFlag com o flag do OUTPUT (severer), então é sempre ≥ inputFlag: se o
+      // reply do modelo dispara uma keyword 'watch' que o input não tinha, a UI
+      // (disclaimers/rating) reflete isso. Paridade com o path do proxy, que já
+      // usa validation.safety_flag via toAiResponse. Nunca rebaixa severidade.
+      return finish({ reply: validation.reply, safety_flag: validation.safety_flag, source: 'openai', usage }, false);
     } catch (err) {
       // Loga só a MENSAGEM do erro — `err` completo pode conter o Request
       // com Authorization header e vazar a API key.

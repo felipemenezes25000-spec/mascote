@@ -35,7 +35,7 @@ export default function Cancel() {
     // settings.tsx (dialog destrutivo sempre exige confirmação explícita).
     Alert.alert(
       'Mudar pra Free?',
-      'Você perde os benefícios Plus imediatamente (atelier de customização completo, mutações raras, IA emocional). Os dados ficam aqui.',
+      'Você abre mão dos benefícios Plus (atelier de customização completo, mutações raras, IA emocional). Seus dados ficam aqui.',
       [
         { text: 'Continuo Plus', style: 'cancel' },
         {
@@ -49,6 +49,19 @@ export default function Cancel() {
               // mas continuo cobrando". subscriptionService delega pro provider
               // correto + dispara analytics + serializa via withLock.
               await subscriptionService.cancel(profile.id);
+              // Em produção (RevenueCat ligado) NÃO existe cancelamento
+              // programático: cancel() reconcilia com o entitlement real e o
+              // acesso pago PERMANECE até a loja expirar. Dizer "voltou pro Free"
+              // aqui seria mentira — e exatamente o footgun "cancelei mas continuo
+              // sendo cobrado". Se o tier seguiu premium, manda pro gerenciador da
+              // loja (step 'confirm'). Só mostra "voltou pro Free" quando o
+              // downgrade local de fato ocorreu (stub/demo sem loja real).
+              const tier = await subscriptionService.getCurrentTier(profile.id);
+              if (tier !== 'free') {
+                setStep('confirm');
+                return;
+              }
+              await refreshSettings();
               Alert.alert(
                 'Plano gratuito',
                 'Você voltou pro plano Free. Seus dados e o mascote continuam aqui; recursos premium ficam limitados.',

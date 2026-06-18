@@ -2,7 +2,13 @@
  * Regras de segurança para IA do mascote.
  */
 
-import { classifyInput, CRISIS_REPLY, DIAGNOSIS_REDIRECT } from '@/content/safety';
+import {
+  ATTACHMENT_REPLY,
+  classifyInput,
+  CRISIS_REPLY,
+  detectAttachment,
+  DIAGNOSIS_REDIRECT,
+} from '@/content/safety';
 import { classifySafetyEnsemble, moreSevere } from '@/lib/ml/safety/classifier';
 import type { SafetyFlag } from '@/types';
 
@@ -35,6 +41,14 @@ export function evaluateUserMessage(message: string): SafetyDecision {
   }
   if (/tenho (depress|ansiedade|tdah|bipolar)/i.test(message)) {
     return { allowed: false, flag: 'watch', redirect: DIAGNOSIS_REDIRECT };
+  }
+  // Attachment (user trata a IA como vínculo humano substituto) — o pipeline
+  // canônico (lib/ai.ts generateReplyInternal) já devolvia ATTACHMENT_REPLY,
+  // mas o fallback (chat-engine/MascotAI via evaluateUserMessage) não checava,
+  // então "você é minha única amiga"/"te amo" ia pra OpenAI/mock sem o nudge de
+  // autocuidado. Paridade com lib/ai.ts: flag 'watch', redirect ATTACHMENT_REPLY.
+  if (detectAttachment(message)) {
+    return { allowed: false, flag: 'watch', redirect: ATTACHMENT_REPLY };
   }
   return { allowed: true, flag };
 }

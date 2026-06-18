@@ -156,6 +156,30 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     // Ideação passiva no subjuntivo "(seria/era) melhor se eu morresse".
     'seria melhor se eu morresse',
     'queria que eu morresse',
+    // === Ampliação 2026-06-18 ajuste1 ===
+    // Salto fatal com o sinônimo "saltar" (antes só "pular"/"me jogar"/"me atirar").
+    'vou saltar da ponte',
+    'saltei do viaduto',
+    'pensei em saltar do prédio',
+    // "mais" posposto: "não quero/aguento viver mais" (antes só "mais" antes de viver).
+    'não quero viver mais',
+    'não aguento viver mais',
+    // Desesperança existencial "a vida não vale a pena" / "não vale a pena viver".
+    'a vida não vale mais a pena',
+    'não vale a pena viver',
+    'a vida não vale a pena',
+    // Exaustão existencial "cansei de viver / existir".
+    'cansei de viver',
+    'cansei de existir',
+    // Ideação passiva "queria/quero não acordar" (antes só "preferia não acordar").
+    'queria não acordar',
+    'quero não acordar mais',
+    // Arma de fogo via "bala" (antes só "tiro").
+    'uma bala na cabeça',
+    'vou meter uma bala na cabeça',
+    // Eufemismo "dar um basta na (minha) vida / em mim".
+    'quero dar um basta na minha vida',
+    'dar um basta em mim',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -255,6 +279,17 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'o calor vai acabar comigo hoje',     // idem
     'quero estar vivo pra ver isso',      // afirmação positiva (sem "não")
     'se eu morresse de rir não me espanto', // "morresse de rir" excluído pelo lookahead
+    // Regressão (2026-06-18 ajuste1): as novas âncoras (saltar/viver mais/vale a
+    // pena/cansei/acordar/bala/basta) não podem capturar idioma benigno homônimo.
+    'vou saltar de alegria',              // saltar sem local fatal
+    'saltei do ônibus no ponto certo',    // ônibus não é local fatal
+    'não quero viver mais nessa cidade',  // "mais" não-terminal (relocação)
+    'não vale a pena esse filme',         // "vale a pena" sem viver/vida
+    'cansei de trabalhar',                // exaustão cotidiana (sem viver/existir)
+    'cansei dessa rotina',                // idem
+    'quero acordar cedo amanhã',          // "acordar" sem negação
+    'comprei uma bala na padaria',        // "bala" doce (sem "na cabeça")
+    'vou dar um basta nessa situação',    // "dar um basta" sem objeto vida/mim
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {
