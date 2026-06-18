@@ -30,9 +30,10 @@ import { creatureGenomeFromDNA } from '@/game/creatures';
 import type { CreatureGenome } from '@/game/creatures';
 import { WorldAdornments } from '@/components/mascot/WorldAdornments';
 import { actionGesture } from '@/components/mascot/creatureAnimation';
+import { creatureEvolution, type EvolutionVisuals } from '@/components/mascot/creatureEvolution';
 import type { JourneyVisuals } from '@/game/journey/visuals';
 import type { MascotAnimationKind } from '@/lib/animation-triggers';
-import type { MascotDNA, MascotMood } from '@/types';
+import type { MascotDNA, MascotMood, MascotPhase } from '@/types';
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 
@@ -49,6 +50,17 @@ interface Props {
    * o renderer descartava) — ligado na auditoria 2026-06-18.
    */
   action?: { kind: MascotAnimationKind; key: number };
+  /**
+   * Fase de vida (ovo→evoluido). Dirige a REVELAÇÃO progressiva dos traços
+   * (cauda→padrão→asas→coroa→aura) — a criatura "cresce pra dentro" da forma do
+   * genoma conforme evolui. Sem isto, evoluir só mudava o tamanho.
+   */
+  phase?: MascotPhase;
+  /**
+   * Mutações desbloqueadas (ids). Tornadas VISÍVEIS aqui (antes só o Mascot2D
+   * legado consumia): brilho/pulso, padrão, olhos, faíscas — ver creatureEvolution.
+   */
+  mutationIds?: readonly string[];
   reduceMotion?: boolean;
   journey?: JourneyVisuals | null;
 }
@@ -58,7 +70,7 @@ const SIZE_SCALE: Record<string, number> = { small: 0.86, medium: 0.96, large: 1
 // Âncoras base (viewBox 200×220). Head/eyes derivam daqui.
 const CX = 100;
 
-function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0, action, reduceMotion, journey }: Props) {
+function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0, action, phase, mutationIds, reduceMotion, journey }: Props) {
   const theme = useTheme();
   const c = useMemo<CreatureGenome>(
     () => creature ?? creatureGenomeFromDNA(dna),
@@ -70,6 +82,14 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
   // Geometria do corpo por plano corporal.
   const geo = useMemo(() => bodyGeometry(c.bodyPlan, s), [c.bodyPlan, s]);
 
+  // Camada de evolução: fase + mutações → revelação progressiva + efeitos.
+  const mutKey = (mutationIds ?? []).join(',');
+  const evo = useMemo<EvolutionVisuals>(
+    () => creatureEvolution({ phase, mutationIds }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [phase, mutKey],
+  );
+
   const breath = useSharedValue(1);
   const blink = useSharedValue(1);
   const hop = useSharedValue(0);
@@ -80,6 +100,8 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
   const actScale = useSharedValue(1);
   const actX = useSharedValue(0);
   const actRot = useSharedValue(0);
+  // Pulso do brilho da aura (mutação bioluminescente / forma plena).
+  const glowPulse = useSharedValue(1);
 
   useEffect(() => {
     cancelAnimation(breath);
@@ -147,9 +169,22 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
     }
   }, [action?.key]);
 
+  // Pulso lento da aura quando a evolução pede (bioluminescente / forma plena).
+  useEffect(() => {
+    cancelAnimation(glowPulse);
+    if (!evo.pulse || reduceMotion) { glowPulse.value = 1; return; }
+    glowPulse.value = withRepeat(
+      withSequence(
+        withTiming(1.0, { duration: 1400, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0.5, { duration: 1400, easing: Easing.inOut(Easing.ease) }),
+      ), -1, false);
+    return () => cancelAnimation(glowPulse);
+  }, [evo.pulse, reduceMotion]);
+
   useEffect(() => () => {
     cancelAnimation(breath); cancelAnimation(blink); cancelAnimation(hop); cancelAnimation(tilt);
     cancelAnimation(actY); cancelAnimation(actScale); cancelAnimation(actX); cancelAnimation(actRot);
+    cancelAnimation(glowPulse);
   }, []);
 
   const wrapStyle = useAnimatedStyle(() => ({
@@ -161,6 +196,12 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
     ],
   }));
 
+  // Opacidade da aura: base cresce com o estágio/mutações (evo.glow), modulada
+  // pelo pulso. Faixa [0.10, 0.40] pra ficar de sutil (ovo) a marcante (evoluido).
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: (0.10 + evo.glow * 0.30) * glowPulse.value,
+  }));
+
   const sleepy = mood === 'exausto';
   const sad = mood === 'triste';
   const happy = mood === 'feliz' || mood === 'empolgado';
@@ -168,12 +209,12 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
 
   return (
     <View style={[styles.wrap, { width: size, height: size + 20 }]}>
-      {/* glow suave da cor do corpo */}
-      <View style={{
+      {/* aura/glow — intensidade dirigida pela evolução (estágio + mutações) */}
+      <Animated.View style={[{
         position: 'absolute', top: size * 0.08, left: size * 0.08,
         right: size * 0.08, bottom: size * 0.08, borderRadius: size / 2,
-        backgroundColor: pal.body, opacity: 0.16, pointerEvents: 'none',
-      }} />
+        backgroundColor: pal.body, pointerEvents: 'none',
+      }, glowStyle]} />
       <Animated.View style={[styles.inner, wrapStyle]}>
         <Svg width={size} height={size + 20} viewBox="0 0 200 220">
           <Defs>
@@ -193,9 +234,9 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
           {/* camada da Jornada (anel + adorno do mundo) atrás do corpo */}
           {journey && <WorldAdornments journey={journey} />}
 
-          {/* asas e cauda atrás do corpo */}
-          {drawWings(c, geo)}
-          {drawTail(c, geo)}
+          {/* asas e cauda atrás do corpo — reveladas conforme a evolução */}
+          {evo.revealWings && drawWings(c, geo)}
+          {evo.revealTail && drawTail(c, geo)}
 
           {/* membros atrás/sob o corpo */}
           {drawLimbs(c, geo)}
@@ -207,16 +248,18 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
           <Ellipse cx={CX} cy={geo.bodyCy + geo.bodyRy * 0.34} rx={geo.bodyRx * 0.6} ry={geo.bodyRy * 0.5} fill={pal.belly} opacity="0.55" />
 
 
-          {/* padrão clipado ao corpo */}
-          <G clipPath={`url(#cclip-${c.paletteId})`}>
-            {drawPattern(c, geo)}
-          </G>
+          {/* padrão clipado ao corpo — revelado pela evolução; mutação pode sobrescrever */}
+          {evo.revealPattern && (
+            <G clipPath={`url(#cclip-${c.paletteId})`}>
+              {drawPattern(c, geo, evo.patternOverride)}
+            </G>
+          )}
 
           {/* orelhas (atrás da cabeça) */}
           {drawEars(c, geo, 'back')}
 
-          {/* chifres/crista/halo acima da cabeça */}
-          {drawCrown(c, geo)}
+          {/* chifres/crista/halo acima da cabeça — revelados na fase adulta+ */}
+          {evo.revealCrown && drawCrown(c, geo)}
 
           {/* cabeça (merge no corpo nos planos blob/serpentine) */}
           {geo.separateHead && (
@@ -228,7 +271,7 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
 
           {/* rosto */}
           {drawSnout(c, geo, pal, sleepy)}
-          {drawEyes(c, geo, pal, { sleepy, sad, happy, proud, blink })}
+          {drawEyes(c, geo, pal, { sleepy, sad, happy, proud, blink }, evo.eyeScale)}
           {drawMouth(c, geo, { sleepy, sad, happy })}
           {c.cheeks || happy ? (
             <>
@@ -244,6 +287,9 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
               <Circle cx="42" cy="70" r="1.6" />
             </G>
           )}
+
+          {/* faíscas da evolução (forma plena / mutação de aura) */}
+          {drawSparkles(evo.sparkleCount, theme.colors.gold)}
         </Svg>
       </Animated.View>
     </View>
@@ -602,6 +648,7 @@ function drawSnout(c: CreatureGenome, geo: Geo, pal: CreatureGenome['palette'], 
 function drawEyes(
   c: CreatureGenome, geo: Geo, pal: CreatureGenome['palette'],
   st: { sleepy: boolean; sad: boolean; happy: boolean; proud: boolean; blink: Animated.SharedValue<number> },
+  eyeScale: number = 1,
 ) {
   const { eyeX0: x0, eyeX1: x1, eyeY: y } = geo;
   if (st.sleepy) {
@@ -618,6 +665,8 @@ function drawEyes(
   else if (c.eyes === 'sparkle') { rx = 7.5; ry = 8.5; }
   else if (c.eyes === 'sharp') { rx = 7; ry = 5.5; }
   else if (c.eyes === 'droopy') { rx = 7; ry = 7; }
+  // eyeScale (mutação "olhar profundo") amplia o olho.
+  rx *= eyeScale; ry *= eyeScale;
   return (
     <AnimatedEyes x0={x0} x1={x1} y={y} rx={rx} ry={ry} eye={pal.eye} sparkle={c.eyes === 'sparkle'} sharp={c.eyes === 'sharp'} blink={st.blink} />
   );
@@ -656,10 +705,12 @@ function drawMouth(c: CreatureGenome, geo: Geo, st: { sleepy: boolean; sad: bool
   );
 }
 
-function drawPattern(c: CreatureGenome, geo: Geo) {
+function drawPattern(c: CreatureGenome, geo: Geo, override?: CreatureGenome['pattern'] | null) {
   const accent = c.palette.accent, deep = c.palette.deep;
   const { bodyCx: cx, bodyCy: cy, bodyRx: rx, bodyRy: ry } = geo;
-  switch (c.pattern) {
+  // Mutação pode sobrescrever o padrão do genoma (marco visível).
+  const pattern = override ?? c.pattern;
+  switch (pattern) {
     case 'spots':
       return (
         <G fill={deep} opacity="0.32">
@@ -707,6 +758,30 @@ function drawPattern(c: CreatureGenome, geo: Geo) {
     default:
       return null;
   }
+}
+
+/**
+ * Faíscas da evolução ao redor da criatura (forma plena / mutação de aura).
+ * Posições fixas no viewBox 200×220 pra ficar estável (sem Math.random, que é
+ * proibido no runtime determinístico e causaria flicker a cada render).
+ */
+function drawSparkles(count: number, color: string) {
+  if (count <= 0) return null;
+  const spots: [number, number, number][] = [
+    [40, 70, 1.0], [162, 74, 0.9], [150, 150, 0.8], [48, 152, 0.85],
+    [100, 34, 1.0], [176, 116, 0.7], [26, 116, 0.7], [100, 188, 0.8],
+  ];
+  return (
+    <G fill={color}>
+      {spots.slice(0, Math.min(count, spots.length)).map(([x, y, sc], i) => (
+        <Path
+          key={i}
+          d={`M ${x} ${y - 4 * sc} l ${1.4 * sc} ${3 * sc} l ${3 * sc} ${1.4 * sc} l ${-3 * sc} ${1.4 * sc} l ${-1.4 * sc} ${3 * sc} l ${-1.4 * sc} ${-3 * sc} l ${-3 * sc} ${-1.4 * sc} l ${3 * sc} ${-1.4 * sc} z`}
+          opacity="0.85"
+        />
+      ))}
+    </G>
+  );
 }
 
 const styles = StyleSheet.create({

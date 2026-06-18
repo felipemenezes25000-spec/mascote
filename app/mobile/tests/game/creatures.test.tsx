@@ -135,6 +135,36 @@ describe('renderiza qualquer criatura sem crashar', () => {
     expect(a).not.toBe(b);
   });
 
+  it('evolução transforma a FORMA: evoluido revela mais que ovo (não é só tamanho)', () => {
+    // Mascote vivo (com phase): revelação progressiva. ovo = forma minimalista;
+    // evoluido = cauda+padrão+asas+coroa+faíscas reveladas. Spec 2026-06-18.
+    const c = creatureGenomeFromDNA(neutral, { forceArchetype: 'draconic' });
+    const ovo = JSON.stringify(TestRenderer.create(<CreatureRenderer creature={c} phase="ovo" reduceMotion />).toJSON());
+    const evo = JSON.stringify(TestRenderer.create(<CreatureRenderer creature={c} phase="evoluido" reduceMotion />).toJSON());
+    expect(ovo).not.toBe(evo);
+    expect(evo.length).toBeGreaterThan(ovo.length);
+  });
+
+  it('sem phase (preview/bestiário) = forma plena, NÃO larval', () => {
+    // Regressão: cosmos/onboarding renderizam sem phase e devem ver a criatura
+    // completa (não a forma de ovo).
+    const c = creatureGenomeFromDNA(neutral, { forceArchetype: 'draconic' });
+    const preview = JSON.stringify(TestRenderer.create(<CreatureRenderer creature={c} reduceMotion />).toJSON());
+    const evo = JSON.stringify(TestRenderer.create(<CreatureRenderer creature={c} phase="evoluido" reduceMotion />).toJSON());
+    const ovo = JSON.stringify(TestRenderer.create(<CreatureRenderer creature={c} phase="ovo" reduceMotion />).toJSON());
+    // preview revela como o evoluido (forma plena), bem mais que ovo.
+    expect(preview.length).toBeGreaterThan(ovo.length);
+  });
+
+  it('mutações mudam o render da criatura viva (sistema antes invisível)', () => {
+    const c = creatureGenomeFromDNA(neutral, { forceArchetype: 'feline' });
+    const plain = JSON.stringify(TestRenderer.create(<CreatureRenderer creature={c} phase="adulto" reduceMotion />).toJSON());
+    const mutated = JSON.stringify(TestRenderer.create(
+      <CreatureRenderer creature={c} phase="adulto" mutationIds={['mut.emergent_patterns', 'mut.deep_eyes']} reduceMotion />,
+    ).toJSON());
+    expect(plain).not.toBe(mutated);
+  });
+
   it('aceita action prop e re-render com nova key sem crashar (feature de animação)', () => {
     // O efeito de animação roda com motion ligado (sem reduceMotion). Smoke test
     // do threading action→CreatureRenderer + efeito reanimated (auditoria jun/18).
