@@ -29,7 +29,9 @@ import { useTheme } from '@/lib/useTheme';
 import { creatureGenomeFromDNA } from '@/game/creatures';
 import type { CreatureGenome } from '@/game/creatures';
 import { WorldAdornments } from '@/components/mascot/WorldAdornments';
+import { actionGesture } from '@/components/mascot/creatureAnimation';
 import type { JourneyVisuals } from '@/game/journey/visuals';
+import type { MascotAnimationKind } from '@/lib/animation-triggers';
 import type { MascotDNA, MascotMood } from '@/types';
 
 const AnimatedG = Animated.createAnimatedComponent(G);
@@ -41,6 +43,12 @@ interface Props {
   mood?: MascotMood;
   size?: number;
   reactTrigger?: number;
+  /**
+   * Ação de animação one-shot (Behavior Engine / hábito): toca um gesto distinto
+   * por `kind` sempre que `key` muda. Antes era dead-wiring (chegava até aqui mas
+   * o renderer descartava) — ligado na auditoria 2026-06-18.
+   */
+  action?: { kind: MascotAnimationKind; key: number };
   reduceMotion?: boolean;
   journey?: JourneyVisuals | null;
 }
@@ -50,7 +58,7 @@ const SIZE_SCALE: Record<string, number> = { small: 0.86, medium: 0.96, large: 1
 // Âncoras base (viewBox 200×220). Head/eyes derivam daqui.
 const CX = 100;
 
-function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0, reduceMotion, journey }: Props) {
+function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0, action, reduceMotion, journey }: Props) {
   const theme = useTheme();
   const c = useMemo<CreatureGenome>(
     () => creature ?? creatureGenomeFromDNA(dna),
@@ -66,6 +74,12 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
   const blink = useSharedValue(1);
   const hop = useSharedValue(0);
   const tilt = useSharedValue(0);
+  // Canais dedicados da AÇÃO (deltas que não interferem em breath/blink/mood):
+  // actY soma a hop, actScale multiplica breath, actX desloca, actRot soma a tilt.
+  const actY = useSharedValue(0);
+  const actScale = useSharedValue(1);
+  const actX = useSharedValue(0);
+  const actRot = useSharedValue(0);
 
   useEffect(() => {
     cancelAnimation(breath);
@@ -101,15 +115,49 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
     }
   }, [reactTrigger]);
 
+  // Ação one-shot: gesto distinto por kind, disparado a cada mudança de action.key.
+  // Cada canal vai do repouso ao pico e volta; canais não tocados ficam parados.
+  useEffect(() => {
+    if (!action?.key || reduceMotion) return;
+    const g = actionGesture(action.kind);
+    if (g.y !== 0) {
+      actY.value = withSequence(
+        withSpring(g.y, { damping: 6, stiffness: 200 }),
+        withSpring(0, { damping: 8, stiffness: 180 }),
+      );
+    }
+    if (g.scale !== 1) {
+      actScale.value = withSequence(
+        withTiming(g.scale, { duration: 180, easing: Easing.out(Easing.ease) }),
+        withTiming(1, { duration: 240, easing: Easing.inOut(Easing.ease) }),
+      );
+    }
+    if (g.x !== 0) {
+      actX.value = withSequence(
+        withTiming(-g.x, { duration: 200, easing: Easing.inOut(Easing.ease) }),
+        withTiming(g.x, { duration: 200, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0, { duration: 200, easing: Easing.inOut(Easing.ease) }),
+      );
+    }
+    if (g.rot !== 0) {
+      actRot.value = withSequence(
+        withTiming(g.rot, { duration: 200, easing: Easing.out(Easing.ease) }),
+        withTiming(0, { duration: 320, easing: Easing.inOut(Easing.ease) }),
+      );
+    }
+  }, [action?.key]);
+
   useEffect(() => () => {
     cancelAnimation(breath); cancelAnimation(blink); cancelAnimation(hop); cancelAnimation(tilt);
+    cancelAnimation(actY); cancelAnimation(actScale); cancelAnimation(actX); cancelAnimation(actRot);
   }, []);
 
   const wrapStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateY: hop.value },
-      { scale: breath.value },
-      { rotate: `${tilt.value}deg` },
+      { translateX: actX.value },
+      { translateY: hop.value + actY.value },
+      { scale: breath.value * actScale.value },
+      { rotate: `${tilt.value + actRot.value}deg` },
     ],
   }));
 

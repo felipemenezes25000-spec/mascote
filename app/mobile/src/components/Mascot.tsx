@@ -55,6 +55,7 @@ function MascotImpl(props: Props) {
         mood={props.mood}
         size={props.size}
         reactTrigger={props.reactTrigger}
+        action={props.action}
         reduceMotion={props.reduceMotion}
         journey={props.journey}
       />

@@ -134,4 +134,22 @@ describe('renderiza qualquer criatura sem crashar', () => {
     const b = JSON.stringify(TestRenderer.create(<CreatureRenderer creature={bird} reduceMotion />).toJSON());
     expect(a).not.toBe(b);
   });
+
+  it('aceita action prop e re-render com nova key sem crashar (feature de animação)', () => {
+    // O efeito de animação roda com motion ligado (sem reduceMotion). Smoke test
+    // do threading action→CreatureRenderer + efeito reanimated (auditoria jun/18).
+    const c = creatureGenomeFromDNA(neutral, { forceArchetype: 'feline' });
+    const tree = TestRenderer.create(
+      <CreatureRenderer creature={c} mood="feliz" size={160} action={{ kind: 'celebrate', key: 1 }} />,
+    );
+    expect(JSON.stringify(tree.toJSON()).length).toBeGreaterThan(200);
+    // nova key dispara outro gesto — não deve crashar
+    TestRenderer.act(() => {
+      tree.update(
+        <CreatureRenderer creature={c} mood="feliz" size={160} action={{ kind: 'stretch', key: 2 }} />,
+      );
+    });
+    expect(tree.toJSON()).toBeTruthy();
+    tree.unmount();
+  });
 });

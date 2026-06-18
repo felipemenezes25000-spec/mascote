@@ -55,6 +55,7 @@ function MascotRendererImpl({
         mood={rest.mood}
         size={rest.size}
         reactTrigger={rest.reactTrigger}
+        action={rest.action}
         reduceMotion={rest.reduceMotion}
         journey={rest.journey}
       />
