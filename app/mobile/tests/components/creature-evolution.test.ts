@@ -66,6 +66,28 @@ describe('creatureEvolution — revelação progressiva (genoma é destino, evol
   });
 });
 
+describe('creatureEvolution — crescimento e diferenciação precoce por estágio', () => {
+  it('sizeScale cresce com o estágio (ovo < adulto < evoluido)', () => {
+    expect(creatureEvolution({ phase: 'ovo' }).sizeScale)
+      .toBeLessThan(creatureEvolution({ phase: 'adulto' }).sizeScale);
+    expect(creatureEvolution({ phase: 'adulto' }).sizeScale)
+      .toBeLessThan(creatureEvolution({ phase: 'evoluido' }).sizeScale);
+  });
+
+  it('sem fase (preview) → sizeScale neutro (1) pra não inflar bestiário', () => {
+    expect(creatureEvolution({}).sizeScale).toBe(1);
+  });
+
+  it('bochechas escondidas no ovo, reveladas a partir de bebe (diferencia cedo)', () => {
+    expect(creatureEvolution({ phase: 'ovo' }).revealCheeks).toBe(false);
+    expect(creatureEvolution({ phase: 'bebe' }).revealCheeks).toBe(true);
+  });
+
+  it('preview revela bochechas (forma plena)', () => {
+    expect(creatureEvolution({}).revealCheeks).toBe(true);
+  });
+});
+
 describe('creatureEvolution — ponte de mutações (torna o sistema existente visível)', () => {
   it('mutação de glow (wisdom_glow) aumenta o glow vs sem mutação', () => {
     const base = creatureEvolution({ phase: 'bebe' }).glow;

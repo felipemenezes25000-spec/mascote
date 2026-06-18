@@ -36,6 +36,10 @@ export interface EvolutionVisuals {
   patternOverride: CreatureGenome['pattern'] | null;
   /** Multiplicador no tamanho dos olhos (de mutação). */
   eyeScale: number;
+  /** Escala geral da criatura por estágio (cresce ao evoluir; 1 em preview). */
+  sizeScale: number;
+  /** Bochechas/blush — escondidas no ovo, reveladas a partir de bebe. */
+  revealCheeks: boolean;
 }
 
 const PHASE_STAGE: Record<MascotPhase, number> = {
@@ -94,6 +98,11 @@ export function creatureEvolution(input: {
   // Olhos: só amplia (catálogo só aumenta), clamp pra não virar grotesco.
   const eyeScale = clamp(impact.morphologyMultipliers.eyeSize ?? 1, 0.8, 1.6);
 
+  // Crescimento por estágio (sutil, controlado): ovo 0.84 → evoluido 1.08. Soma
+  // às revelações de traço (crescer + transformar juntos, não no lugar de). Em
+  // preview (sem fase) fica neutro pra não inflar o bestiário.
+  const sizeScale = hasPhase ? 0.84 + (stage / MAX_STAGE) * 0.24 : 1;
+
   return {
     stage,
     // Preview (sem fase) revela tudo; mascote vivo revela por estágio.
@@ -106,5 +115,8 @@ export function creatureEvolution(input: {
     sparkleCount,
     patternOverride,
     eyeScale,
+    sizeScale,
+    // Bochechas: escondidas no ovo, reveladas de bebe pra frente (diferencia cedo).
+    revealCheeks: !hasPhase || stage >= 1,
   };
 }

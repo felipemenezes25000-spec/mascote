@@ -191,7 +191,8 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
     transform: [
       { translateX: actX.value },
       { translateY: hop.value + actY.value },
-      { scale: breath.value * actScale.value },
+      // sizeScale: crescimento controlado por estágio de evolução (ovo→evoluido).
+      { scale: breath.value * actScale.value * evo.sizeScale },
       { rotate: `${tilt.value + actRot.value}deg` },
     ],
   }));
@@ -273,7 +274,7 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
           {drawSnout(c, geo, pal, sleepy)}
           {drawEyes(c, geo, pal, { sleepy, sad, happy, proud, blink }, evo.eyeScale)}
           {drawMouth(c, geo, { sleepy, sad, happy })}
-          {c.cheeks || happy ? (
+          {(evo.revealCheeks && c.cheeks) || happy ? (
             <>
               <Ellipse cx={geo.eyeX0 - 6} cy={geo.eyeY + 10} rx="6" ry="3.4" fill={pal.accent} opacity={c.cheeks ? 0.5 : 0.4} />
               <Ellipse cx={geo.eyeX1 + 6} cy={geo.eyeY + 10} rx="6" ry="3.4" fill={pal.accent} opacity={c.cheeks ? 0.5 : 0.4} />
