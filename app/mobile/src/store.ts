@@ -16,6 +16,7 @@ import { applyHabitDrift, sanitizeGenome } from '@/lib/dna';
 import { chatDrift } from '@/lib/dna/chatToGene';
 import { tryConsumeChatDriftBudget } from '@/lib/dna/chatDriftBudget';
 import { classifyInput } from '@/content/safety';
+import { detectSpeciesDiscovery, speciesDiscoveryToast } from '@/game/creatures';
 import { readSystemReduceMotion } from '@/lib/accessibility';
 import { mascots, profiles, runMigrations, settings, streaks, sweepStaleDateKeys, wallet as walletDb, withLock } from '@/lib/db';
 import { logger } from '@/lib/logger';
@@ -312,8 +313,12 @@ export const useStore = create<AppState>((set, get) => ({
       if (!m || !m.dna || m.user_id !== uid) return;
       const nextDna = applyHabitDrift(m.dna, { habit, intensity });
       const persisted = await mascots.updateDna(m.user_id, nextDna);
-      if (persisted) set({ mascot: persisted });
-      else logger.warn('[store] driftDnaFromHabit: mascot não encontrado');
+      if (persisted) {
+        set({ mascot: persisted });
+        // Celebra UMA vez se o hábito empurrou a criatura pra uma espécie nova.
+        const discovered = await detectSpeciesDiscovery(m.dna, nextDna);
+        if (discovered) get().enqueueToast(speciesDiscoveryToast(discovered));
+      } else logger.warn('[store] driftDnaFromHabit: mascot não encontrado');
     });
   },
 
@@ -333,7 +338,12 @@ export const useStore = create<AppState>((set, get) => ({
       // Só consome o orçamento do dia quando há drift REAL.
       if (!(await tryConsumeChatDriftBudget())) return;
       const persisted = await mascots.updateDna(m.user_id, genome);
-      if (persisted) set({ mascot: persisted });
+      if (persisted) {
+        set({ mascot: persisted });
+        // Celebra UMA vez se a conversa empurrou a criatura pra uma espécie nova.
+        const discovered = await detectSpeciesDiscovery(m.dna, genome);
+        if (discovered) get().enqueueToast(speciesDiscoveryToast(discovered));
+      }
     });
   },
 

@@ -12,3 +12,9 @@ export {
   PALETTE_BUCKETS,
   type CreatureOptions,
 } from './species';
+export {
+  detectSpeciesDiscovery,
+  getDiscoveredSpecies,
+  recordSpeciesDiscovery,
+  speciesDiscoveryToast,
+} from './discovery';

@@ -8,6 +8,7 @@ import * as accessibility from '@/lib/accessibility';
 import { useStore } from '@/store';
 import { mascots, profiles, settings, streaks, wallet as walletDb } from '@/lib/db';
 import { CHAT_DRIFT_DAILY_CAP } from '@/lib/dna/chatDriftBudget';
+import { GENE_KEYS } from '@/lib/dna/genome';
 
 beforeEach(async () => {
   await AsyncStorage.clear();
@@ -240,5 +241,31 @@ describe('driftDnaFromChat (Fase 2 — conversa molda o genoma)', () => {
     const capped = useStore.getState().mascot!.dna!.intelligence;
     await useStore.getState().driftDnaFromChat('aprender estudar mais ainda');
     expect(useStore.getState().mascot!.dna!.intelligence).toBeCloseTo(capped);
+  });
+});
+
+describe('descoberta de espécie (feedback de evolução)', () => {
+  it('drift que cruza pra espécie nova dispara toast "Nova forma" (1x)', async () => {
+    const p = await profiles.upsert({ display_name: 'Disc' });
+    const neutral = Object.fromEntries(GENE_KEYS.map(k => [k, 0.5])) as Record<string, number>;
+    const m = await mascots.upsert({ user_id: p.id, name: 'B', dna: neutral as never });
+    useStore.setState({ profile: p, mascot: m });
+    // empurra forte por leitura (sem teto) até a criatura sair do estado inicial.
+    for (let i = 0; i < 80; i++) await useStore.getState().driftDnaFromHabit('reading', 1);
+    const toasts = [useStore.getState().currentToast, ...useStore.getState().toastQueue].filter(Boolean);
+    expect(toasts.some(t => t!.title.startsWith('Nova forma'))).toBe(true);
+  });
+
+  it('espécie já descoberta não re-dispara toast (não vira nag)', async () => {
+    const p = await profiles.upsert({ display_name: 'Disc2' });
+    const neutral = Object.fromEntries(GENE_KEYS.map(k => [k, 0.5])) as Record<string, number>;
+    const m = await mascots.upsert({ user_id: p.id, name: 'B', dna: neutral as never });
+    useStore.setState({ profile: p, mascot: m });
+    for (let i = 0; i < 80; i++) await useStore.getState().driftDnaFromHabit('reading', 1);
+    // limpa fila e segue driftando o MESMO arquétipo — não deve surgir nova "Nova forma".
+    useStore.setState({ currentToast: null, toastQueue: [] });
+    for (let i = 0; i < 20; i++) await useStore.getState().driftDnaFromHabit('reading', 1);
+    const toasts = [useStore.getState().currentToast, ...useStore.getState().toastQueue].filter(Boolean);
+    expect(toasts.some(t => t!.title.startsWith('Nova forma'))).toBe(false);
   });
 });
