@@ -8,7 +8,7 @@ import { Typography } from '@/components/ui';
  * atual aparece destacada; as outras como "ainda não desperta" — antecipação
  * sem culpa ("seus hábitos guiam pra onde ele cresce").
  */
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { analytics } from '@/analytics';
@@ -17,7 +17,8 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { StaggeredView } from '@/components/StaggeredView';
 import {
   ARCHETYPES, ARCHETYPE_IDS, countCoherentCreatures,
-  creatureGenomeFromDNA, type CreatureArchetype,
+  creatureGenomeFromDNA, getDiscoveredSpecies, speciesStatus,
+  type CreatureArchetype,
 } from '@/game/creatures';
 import { useStyles } from '@/lib/useTheme';
 import { useStore } from '@/store';
@@ -40,6 +41,19 @@ export default function CosmosScreen() {
     [dna],
   );
   const totalModels = countCoherentCreatures();
+
+  // Coleção: espécies que a criatura já manifestou (descobertas). A forma ATUAL
+  // conta como descoberta mesmo sem registro (ela É essa agora).
+  const [discovered, setDiscovered] = useState<readonly string[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    void getDiscoveredSpecies().then(d => { if (!cancelled) setDiscovered(d); });
+    return () => { cancelled = true; };
+  }, []);
+  const discoveredCount = useMemo(
+    () => ARCHETYPE_IDS.filter(id => speciesStatus(id, mine.archetype, discovered) !== 'undiscovered').length,
+    [mine.archetype, discovered],
+  );
 
   useEffect(() => {
     analytics.track('cosmos_viewed', { archetype: mine.archetype, rarity: mine.rarity });
@@ -66,35 +80,46 @@ export default function CosmosScreen() {
           </View>
         </StaggeredView>
 
-        <Typography variant="bodyBold" style={styles.sectionLabel}>As {ARCHETYPE_IDS.length} famílias</Typography>
+        <Typography variant="bodyBold" style={styles.sectionLabel}>
+          As {ARCHETYPE_IDS.length} famílias · {discoveredCount} descobertas
+        </Typography>
 
         {ARCHETYPE_IDS.map((id, i) => {
           const sample = samples[i];
-          const isMine = id === mine.archetype;
+          const status = speciesStatus(id, mine.archetype, discovered);
+          const isMine = status === 'current';
+          const isDiscovered = status === 'discovered';
+          const dim = status === 'undiscovered';
           const spec = ARCHETYPES[id as CreatureArchetype];
+          const statusWord = isMine ? 'sua espécie atual' : isDiscovered ? 'espécie já descoberta' : 'ainda não descoberta';
           return (
             <StaggeredView key={id} index={Math.min(1 + i, 8)}>
               <View
                 style={[styles.speciesCard, isMine && { borderColor: RARITY_TONE[sample.rarity], borderWidth: 2 }]}
                 accessibilityRole="text"
-                accessibilityLabel={`${spec.label}${isMine ? ', sua espécie atual' : ''}. Raridade ${spec.baseRarity}.`}
+                accessibilityLabel={`${spec.label}, ${statusWord}. Raridade ${spec.baseRarity}.`}
               >
-                <View style={styles.preview}>
+                <View style={[styles.preview, dim && styles.dimmed]}>
                   <CreatureRenderer creature={sample} mood={isMine ? 'feliz' : 'ok'} size={84} reduceMotion />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
                   <View style={styles.nameRow}>
-                    <Typography variant="bodyBold">{spec.label}</Typography>
+                    <Typography variant="bodyBold" tone={dim ? 'secondary' : 'default'}>{spec.label}</Typography>
                     {isMine && (
                       <View style={[styles.youBadge, { backgroundColor: RARITY_TONE[sample.rarity] }]}>
                         <Typography variant="mono" tone="inkOnBrand" style={{ fontWeight: '700' }}>VOCÊ</Typography>
+                      </View>
+                    )}
+                    {isDiscovered && (
+                      <View style={styles.discoveredBadge}>
+                        <Typography variant="mono" tone="inkOnBrand" style={{ fontWeight: '700' }}>✓ DESCOBERTA</Typography>
                       </View>
                     )}
                   </View>
                   <Typography variant="caption" tone="secondary">{sample.speciesName}</Typography>
                   <Typography variant="mono" tone="dim">
                     {spec.baseRarity}
-                    {isMine ? ' · sua forma agora' : ' · ainda não desperta'}
+                    {isMine ? ' · sua forma agora' : isDiscovered ? ' · já despertou' : ' · ainda não desperta'}
                   </Typography>
                 </View>
               </View>
@@ -130,7 +155,12 @@ function makeStyles(theme: Theme) {
       borderWidth: 1, borderColor: theme.colors.border, padding: theme.spacing.sm,
     },
     preview: { width: 92, alignItems: 'center' },
-    nameRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
+    dimmed: { opacity: 0.4 },
+    nameRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, flexWrap: 'wrap' },
     youBadge: { borderRadius: theme.radius.pill, paddingHorizontal: theme.spacing.sm, paddingVertical: 2 },
+    discoveredBadge: {
+      borderRadius: theme.radius.pill, paddingHorizontal: theme.spacing.sm, paddingVertical: 2,
+      backgroundColor: '#5AA06E',
+    },
   });
 }

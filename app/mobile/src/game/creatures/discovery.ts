@@ -55,6 +55,24 @@ export async function detectSpeciesDiscovery(
   return isNew ? nextArch : null;
 }
 
+export type SpeciesStatus = 'current' | 'discovered' | 'undiscovered';
+
+/**
+ * Status de uma espécie pra coleção do cosmos: a forma ATUAL, uma já DESCOBERTA
+ * (a criatura já foi essa), ou ainda NÃO descoberta. `current` tem precedência.
+ */
+export function speciesStatus(
+  archetype: string,
+  current: string,
+  discovered: ReadonlySet<string> | readonly string[],
+): SpeciesStatus {
+  if (archetype === current) return 'current';
+  const has = Array.isArray(discovered)
+    ? discovered.includes(archetype)
+    : (discovered as ReadonlySet<string>).has(archetype);
+  return has ? 'discovered' : 'undiscovered';
+}
+
 /** Toast (compatível com UnlockToastData) celebrando uma nova espécie. */
 export function speciesDiscoveryToast(archetype: CreatureArchetype): {
   kind: 'info';

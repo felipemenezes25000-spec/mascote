@@ -9,6 +9,7 @@ import {
   getDiscoveredSpecies,
   recordSpeciesDiscovery,
   speciesDiscoveryToast,
+  speciesStatus,
 } from '@/game/creatures';
 import { archetypeFromGenome } from '@/game/creatures';
 import { GENE_KEYS, type Genome } from '@/lib/dna/genome';
@@ -50,6 +51,21 @@ describe('detectSpeciesDiscovery', () => {
 
   it('sem mudança de arquétipo → null', async () => {
     expect(await detectSpeciesDiscovery(gDiff, gDiff)).toBeNull();
+  });
+});
+
+describe('speciesStatus (coleção do cosmos)', () => {
+  it('arquétipo atual → current (mesmo se também estiver no set)', () => {
+    expect(speciesStatus('feline', 'feline', ['feline', 'avian'])).toBe('current');
+  });
+  it('no set mas não atual → discovered', () => {
+    expect(speciesStatus('avian', 'feline', ['avian'])).toBe('discovered');
+  });
+  it('fora do set e não atual → undiscovered', () => {
+    expect(speciesStatus('draconic', 'feline', ['avian'])).toBe('undiscovered');
+  });
+  it('aceita Set além de array', () => {
+    expect(speciesStatus('avian', 'feline', new Set(['avian']))).toBe('discovered');
   });
 });
 

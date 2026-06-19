@@ -17,4 +17,6 @@ export {
   getDiscoveredSpecies,
   recordSpeciesDiscovery,
   speciesDiscoveryToast,
+  speciesStatus,
+  type SpeciesStatus,
 } from './discovery';
