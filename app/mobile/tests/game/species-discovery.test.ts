@@ -14,7 +14,8 @@ import {
 import { archetypeFromGenome } from '@/game/creatures';
 import { GENE_KEYS, type Genome } from '@/lib/dna/genome';
 
-const KEY = 'mascote:discovered_species';
+const UID = 'u_test_1';
+const KEY = `mascote:discovered_species:${UID}`;
 
 function genome(over: Partial<Genome>): Genome {
   const base = Object.fromEntries(GENE_KEYS.map(k => [k, 0.5])) as Genome;
@@ -30,10 +31,15 @@ beforeEach(async () => {
 
 describe('recordSpeciesDiscovery', () => {
   it('primeira vez → true; repetida → false; persiste na coleção', async () => {
-    expect(await recordSpeciesDiscovery('feline')).toBe(true);
-    expect(await recordSpeciesDiscovery('feline')).toBe(false);
-    expect(await recordSpeciesDiscovery('avian')).toBe(true);
-    expect((await getDiscoveredSpecies()).sort()).toEqual(['avian', 'feline']);
+    expect(await recordSpeciesDiscovery(UID, 'feline')).toBe(true);
+    expect(await recordSpeciesDiscovery(UID, 'feline')).toBe(false);
+    expect(await recordSpeciesDiscovery(UID, 'avian')).toBe(true);
+    expect((await getDiscoveredSpecies(UID)).sort()).toEqual(['avian', 'feline']);
+  });
+
+  it('coleções são POR-USUÁRIO (não vazam entre perfis)', async () => {
+    await recordSpeciesDiscovery(UID, 'feline');
+    expect(await getDiscoveredSpecies('u_outro')).toEqual([]);
   });
 });
 
@@ -44,13 +50,13 @@ describe('detectSpeciesDiscovery', () => {
 
   it('transição pra espécie nova → retorna o arquétipo novo (1x)', async () => {
     const newArch = archetypeFromGenome(gDiff);
-    expect(await detectSpeciesDiscovery(gSlime, gDiff)).toBe(newArch);
+    expect(await detectSpeciesDiscovery(UID, gSlime, gDiff)).toBe(newArch);
     // já descoberta → null na segunda
-    expect(await detectSpeciesDiscovery(gSlime, gDiff)).toBeNull();
+    expect(await detectSpeciesDiscovery(UID, gSlime, gDiff)).toBeNull();
   });
 
   it('sem mudança de arquétipo → null', async () => {
-    expect(await detectSpeciesDiscovery(gDiff, gDiff)).toBeNull();
+    expect(await detectSpeciesDiscovery(UID, gDiff, gDiff)).toBeNull();
   });
 });
 

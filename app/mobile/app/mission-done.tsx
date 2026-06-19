@@ -6,6 +6,7 @@ import { Button } from '@/components/Button';
 import { ConfettiBurst } from '@/components/ConfettiBurst';
 import { Mascot } from '@/components/Mascot';
 import { applyMissionCompletion, COINS_PER_MISSION } from '@/lib/checkin';
+import { activeEventBoost } from '@/lib/events';
 import { buildMascotContextLine } from '@/lib/mascot-context-line';
 import { missions as missionsDb, todayLocal } from '@/lib/db';
 import { recordMissionOutcome } from '@/services/missions';
@@ -59,7 +60,8 @@ export default function MissionDone() {
         if (alive) setReward({ xp: 0, coins: 0, leveledUp: false, phaseChanged: false });
         return;
       }
-      const out = await applyMissionCompletion({ profile, mascot, mission });
+      // Boost de evento limitado também vale pra missão (paridade c/ check-in).
+      const out = await applyMissionCompletion({ profile, mascot, mission, boost: activeEventBoost() });
       if (!alive) return;
       // Bandit feedback — alimenta o ranker pra a próxima sugestão. Só conta
       // como "completion success" se o pipeline efetivamente registrou (não

@@ -106,7 +106,20 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
   useEffect(() => {
     cancelAnimation(breath);
     cancelAnimation(blink);
-    if (reduceMotion) { breath.value = 1; blink.value = 1; return; }
+    if (reduceMotion) {
+      breath.value = 1; blink.value = 1;
+      // Acessibilidade: ao LIGAR reduce motion, também para/reseta os one-shots
+      // (hop do reactTrigger + canais de ação) que possam estar a meio caminho.
+      // Feito aqui (efeito keyed em reduceMotion) em vez de nas deps dos efeitos
+      // one-shot — adicionar reduceMotion lá re-dispararia a última animação ao
+      // DESLIGAR reduce motion (action.key/reactTrigger inalterados).
+      cancelAnimation(hop); hop.value = 0;
+      cancelAnimation(actY); actY.value = 0;
+      cancelAnimation(actScale); actScale.value = 1;
+      cancelAnimation(actX); actX.value = 0;
+      cancelAnimation(actRot); actRot.value = 0;
+      return;
+    }
     breath.value = withRepeat(
       withSequence(
         withTiming(1.035, { duration: 2100, easing: Easing.inOut(Easing.ease) }),
@@ -141,32 +154,28 @@ function CreatureImpl({ dna, creature, mood = 'ok', size = 220, reactTrigger = 0
   // Cada canal vai do repouso ao pico e volta; canais não tocados ficam parados.
   useEffect(() => {
     if (!action?.key || reduceMotion) return;
+    // Cancela a ação ANTERIOR antes de aplicar o novo gesto — sem isso, quando
+    // action.key muda rápido, um canal não tocado pelo novo gesto continuaria a
+    // animação antiga (reanimated não auto-cancela ao reatribuir shared value).
+    cancelAnimation(actY); cancelAnimation(actScale); cancelAnimation(actX); cancelAnimation(actRot);
     const g = actionGesture(action.kind);
-    if (g.y !== 0) {
-      actY.value = withSequence(
-        withSpring(g.y, { damping: 6, stiffness: 200 }),
-        withSpring(0, { damping: 8, stiffness: 180 }),
-      );
-    }
-    if (g.scale !== 1) {
-      actScale.value = withSequence(
-        withTiming(g.scale, { duration: 180, easing: Easing.out(Easing.ease) }),
-        withTiming(1, { duration: 240, easing: Easing.inOut(Easing.ease) }),
-      );
-    }
-    if (g.x !== 0) {
-      actX.value = withSequence(
-        withTiming(-g.x, { duration: 200, easing: Easing.inOut(Easing.ease) }),
-        withTiming(g.x, { duration: 200, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0, { duration: 200, easing: Easing.inOut(Easing.ease) }),
-      );
-    }
-    if (g.rot !== 0) {
-      actRot.value = withSequence(
-        withTiming(g.rot, { duration: 200, easing: Easing.out(Easing.ease) }),
-        withTiming(0, { duration: 320, easing: Easing.inOut(Easing.ease) }),
-      );
-    }
+    // Cada canal: anima se o gesto o usa, senão volta ao repouso (limpa sobra).
+    actY.value = g.y !== 0
+      ? withSequence(withSpring(g.y, { damping: 6, stiffness: 200 }), withSpring(0, { damping: 8, stiffness: 180 }))
+      : 0;
+    actScale.value = g.scale !== 1
+      ? withSequence(withTiming(g.scale, { duration: 180, easing: Easing.out(Easing.ease) }), withTiming(1, { duration: 240, easing: Easing.inOut(Easing.ease) }))
+      : 1;
+    actX.value = g.x !== 0
+      ? withSequence(
+          withTiming(-g.x, { duration: 200, easing: Easing.inOut(Easing.ease) }),
+          withTiming(g.x, { duration: 200, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0, { duration: 200, easing: Easing.inOut(Easing.ease) }),
+        )
+      : 0;
+    actRot.value = g.rot !== 0
+      ? withSequence(withTiming(g.rot, { duration: 200, easing: Easing.out(Easing.ease) }), withTiming(0, { duration: 320, easing: Easing.inOut(Easing.ease) }))
+      : 0;
   }, [action?.key]);
 
   // Pulso lento da aura quando a evolução pede (bioluminescente / forma plena).

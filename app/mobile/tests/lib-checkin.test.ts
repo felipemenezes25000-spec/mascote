@@ -457,6 +457,37 @@ describe('applyCheckinFully — race condition (regressão)', () => {
   });
 });
 
+describe('applyMissionCompletion — boost de evento limitado (regressão 2026-06-19)', () => {
+  it('coinMult multiplica as moedas da missão (paridade com check-in)', async () => {
+    const { profile, mascot } = await setupUser();
+    const mission = await makeMission(profile);
+    const out = await applyMissionCompletion({ profile, mascot, mission, boost: { coinMult: 3 } });
+    expect(out.coinsGained).toBe(COINS_PER_MISSION * 3);
+    const w = await walletDb.get(profile.id);
+    expect(w.coins).toBe(COINS_PER_MISSION * 3);
+  });
+
+  it('xpMult multiplica o XP da missão', async () => {
+    const a = await setupUser();
+    const mA = await makeMission(a.profile);
+    const base = await applyMissionCompletion({ profile: a.profile, mascot: a.mascot, mission: mA });
+    await AsyncStorage.clear();
+    const b = await setupUser();
+    const mB = await makeMission(b.profile);
+    const boosted = await applyMissionCompletion({
+      profile: b.profile, mascot: b.mascot, mission: mB, boost: { xpMult: 2 },
+    });
+    expect(boosted.xpGained).toBeGreaterThan(base.xpGained);
+  });
+
+  it('sem boost = comportamento original (1×)', async () => {
+    const { profile, mascot } = await setupUser();
+    const mission = await makeMission(profile);
+    const out = await applyMissionCompletion({ profile, mascot, mission });
+    expect(out.coinsGained).toBe(COINS_PER_MISSION);
+  });
+});
+
 describe('applyMissionCompletion — race condition (regressão)', () => {
   // Idêntico: dois callsites (deep link + screen re-mount) podiam disparar
   // applyMissionCompletion em paralelo com a mesma mission.status='pending',

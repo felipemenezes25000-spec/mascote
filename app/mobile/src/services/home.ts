@@ -140,11 +140,13 @@ export async function completeMissionForToday(
   mascot: Mascot,
   mission: Mission,
   _coinsRewardLegacy?: number,
+  boost?: { xpMult?: number; coinMult?: number },
 ): Promise<MissionCompletionResult> {
   const out: MissionCompletionOutcome = await applyMissionCompletion({
     profile,
     mascot,
     mission,
+    boost,
   });
   return {
     mascot: out.mascot,

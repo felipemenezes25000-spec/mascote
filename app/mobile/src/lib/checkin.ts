@@ -390,6 +390,9 @@ export async function applyMissionCompletion(input: {
   profile: Profile;
   mascot: Mascot;
   mission: Mission;
+  /** Boost de evento limitado (xp/coins) — paridade com applyCheckinFully.
+   *  Default 1× = sem boost. Passado pelo call site via activeEventBoost(). */
+  boost?: { xpMult?: number; coinMult?: number };
 }): Promise<MissionCompletionOutcome> {
   // Lock PER-USER (mesma chave do check-in): além de impedir double-spend da
   // mesma missão (re-leitura de status abaixo), serializa o upsert do mascote
@@ -403,6 +406,7 @@ async function applyMissionCompletionCore(input: {
   profile: Profile;
   mascot: Mascot;
   mission: Mission;
+  boost?: { xpMult?: number; coinMult?: number };
 }): Promise<MissionCompletionOutcome> {
   const { profile, mascot, mission } = input;
   // Re-busca status do DB pra detectar conclusão que ocorreu enquanto
@@ -427,7 +431,11 @@ async function applyMissionCompletionCore(input: {
   // anterior a um check-in que rodou enquanto esperávamos o lock; aplicar XP
   // sobre o stale e dar upsert perderia o ganho do check-in (lost update).
   const baseMascot = (await mascotsDb.forUser(profile.id)) ?? mascot;
-  const result = applyXp(baseMascot, mission.xp_reward, dailyXpSoFar);
+  // Boost de evento (paridade com check-in): multiplica XP e moedas da missão.
+  const xpMult = input.boost?.xpMult ?? 1;
+  const coinMult = input.boost?.coinMult ?? 1;
+  const boostedXp = Math.round(mission.xp_reward * xpMult);
+  const result = applyXp(baseMascot, boostedXp, dailyXpSoFar);
   const tier = await subscriptionService.getCurrentTier(profile.id);
   const tierCapped = clampMascotPhaseForTier(result.mascot, tier);
   const tierPhaseChanged = phaseRank(tierCapped.phase) > phaseRank(result.prevPhase);
@@ -448,12 +456,13 @@ async function applyMissionCompletionCore(input: {
     });
   }
   await mascotsDb.upsert(tierCapped);
-  await walletDb.add(profile.id, COINS_PER_MISSION, 0);
+  const coinsToGive = Math.round(COINS_PER_MISSION * coinMult);
+  await walletDb.add(profile.id, coinsToGive, 0);
   return {
     mascot: tierCapped,
     mission: updatedMission,
     xpGained: result.delta,
-    coinsGained: COINS_PER_MISSION,
+    coinsGained: coinsToGive,
     leveledUp: result.leveledUp,
     phaseChanged: tierPhaseChanged,
     prevPhase: result.prevPhase,

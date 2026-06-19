@@ -19,6 +19,32 @@ function localDay(now: number): string {
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 }
 
+async function countToday(now: number): Promise<number> {
+  const today = localDay(now);
+  const raw = await AsyncStorage.getItem(KEY);
+  if (!raw) return 0;
+  try {
+    const parsed = JSON.parse(raw) as { date?: string; count?: number };
+    if (parsed && parsed.date === today && Number.isFinite(parsed.count)) return parsed.count as number;
+  } catch {
+    // corrompido → trata como dia novo.
+  }
+  return 0;
+}
+
+/**
+ * Espia se ainda há orçamento HOJE sem consumir. Usado pra GATE antes de
+ * persistir — só consome (tryConsume) após a persistência dar certo, evitando
+ * gastar uma cota quando o drift não chega a ser salvo.
+ */
+export async function hasChatDriftBudget(now: number = Date.now()): Promise<boolean> {
+  try {
+    return (await countToday(now)) < CHAT_DRIFT_DAILY_CAP;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Tenta consumir 1 unidade do orçamento do dia. Retorna true (e incrementa o
  * contador) se ainda há orçamento; false se o teto do dia foi atingido ou o

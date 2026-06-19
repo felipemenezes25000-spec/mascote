@@ -45,11 +45,13 @@ export default function CosmosScreen() {
   // Coleção: espécies que a criatura já manifestou (descobertas). A forma ATUAL
   // conta como descoberta mesmo sem registro (ela É essa agora).
   const [discovered, setDiscovered] = useState<readonly string[]>([]);
+  const userId = mascot?.user_id;
   useEffect(() => {
+    if (!userId) return;
     let cancelled = false;
-    void getDiscoveredSpecies().then(d => { if (!cancelled) setDiscovered(d); });
+    void getDiscoveredSpecies(userId).then(d => { if (!cancelled) setDiscovered(d); });
     return () => { cancelled = true; };
-  }, []);
+  }, [userId]);
   const discoveredCount = useMemo(
     () => ARCHETYPE_IDS.filter(id => speciesStatus(id, mine.archetype, discovered) !== 'undiscovered').length,
     [mine.archetype, discovered],
