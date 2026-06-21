@@ -30,20 +30,35 @@ de chaves entre idiomas — QA grátis. Cada feature ganha seu namespace dentro 
 - `Locale = 'pt' | 'en' | 'es'`; `atelier-strings-es.ts` completo; export + mapa.
 - Verificado: `tsc --noEmit` exit 0 + 18 testes de i18n verdes.
 
-### Fase 2 — Detecção de idioma + troca manual
-- Detectar o locale do aparelho no boot e passar pra `LocaleProvider initialLocale`.
-- Toggle de idioma em Ajustes (pt/en/es) persistido (AsyncStorage).
+### Fase 2a — Troca manual de idioma (FEITA, 2026-06-21 noite)
+- `localeFromLanguage()`/`languageFromLocale()` mapeiam o campo livre
+  `settings.language` (pt-BR/en-US/es-419) ↔ `Locale`. Zero mudança de schema.
+- `RootLayout` chama `setLocale(localeFromLanguage(settings.language))` no render:
+  cold-boot correto + troca reativa (RootLayout assina settings → re-render).
+- Seletor pt/en/es na tela de Personalização.
+- Verificado: tsc + suíte completa (6768) + lint. **Runtime (boot/reatividade em
+  device) pendente do QA do Felipe.** Falta só a **Fase 2b** (auto-detect do device
+  via expo-localization, dep nativa + rebuild).
+
+### Fase 3 — Extração de strings (EM ANDAMENTO, 2026-06-21 noite)
+Padrão provado e telas FEITAS (namespace por feature em STRINGS_PT/EN/ES):
+- `onboarding.welcome` (11 strings) ✅
+- `checkin` (11 strings) ✅ — armadilha resolvida: array de perguntas saiu de
+  módulo-level pra `buildQuestions()` no render (senão `t()` congela no import).
+Padrão repetível: (1) achar strings cravadas; (2) namespace nos 3 bundles (pt =
+cópia atual EXATA → zero mudança pro usuário pt); (3) `t('ns.key')` no componente,
+import `{ t } from '@/lib/i18n'`; (4) tsc + testes; (5) commit. **Const/array em
+módulo-level: transformar em builder chamado no render.**
+Próximas por tráfego: signup, home `(tabs)/index`, mission/mission-done,
+chat UI `(tabs)/chat`, resto do onboarding, settings, paywall, journey, cosmos.
+
+### Fase 2b — Auto-detecção do idioma do aparelho (opcional/futuro)
+- Default inteligente: detectar o locale do aparelho no boot e gravar em
+  `settings.language` na 1ª execução (o usuário ainda pode trocar manual na 2a).
 - **Custo real:** `expo-localization` é **dep nativa** → precisa `expo prebuild`/rebuild
   do `android/` (que é commitado). Não dá pra verificar sem o pipeline de build/dispositivo.
 - Fallback sem dep nativa (menos confiável): `Intl.DateTimeFormat().resolvedOptions().locale`.
-- **Sem esta fase, nenhuma tradução aparece pro usuário** (o app fica preso em `pt`).
-
-### Fase 3 — Extração de strings (o grosso)
-- Inventariar os ~108 componentes; mover texto cravado pra bundles `t(...)`.
-- Traduzir pt→en→es por namespace, **na ordem de tráfego**:
-  onboarding → home → check-in → missão → chat (UI) → jornada → ajustes → closet → cosmos.
-  (atelier já feito.)
-- Cada PR: um cluster de telas + testes de paridade de chave. Manter os ~6.7k testes verdes.
+- Não é bloqueante: com a 2a o usuário já escolhe idioma; isto só melhora o default.
 
 ### Fase 4 — IA + SEGURANÇA (a mais arriscada)
 - Prompts/personalidades do chat passam a depender do `locale` (responder no idioma do user).
