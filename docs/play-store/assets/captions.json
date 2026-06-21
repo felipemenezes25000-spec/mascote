@@ -1,7 +1,7 @@
 {
   "ptBR": {
     "title": "Meu Mascote",
-    "fg": { "line1": "Cuide de você.", "line2pre": "Veja seu mascote ", "line2hl": "evoluir", "line2pos": ".", "sub": "Hábitos saudáveis, do seu jeito — um amigo que cresce com você.", "cta": "Comece grátis" },
+    "fg": { "tag": "PRÉ-REGISTRO ABERTO", "line1": "Cuide de você.", "line2pre": "Veja seu mascote ", "line2hl": "evoluir", "line2pos": ".", "sub": "Uma criatura única que ninguém mais tem — evolui a cada hábito seu.", "cta": "Pré-registre grátis" },
     "features": [
       "Cuide de você.\nSeu Mascote evolui junto.",
       "Uma criatura única,\nnascida do seu jeito",
@@ -15,7 +15,7 @@
   },
   "enUS": {
     "title": "My Mascot",
-    "fg": { "line1": "Take care of you.", "line2pre": "Watch your mascot ", "line2hl": "evolve", "line2pos": ".", "sub": "Healthy habits, your way — a friend that grows with you.", "cta": "Start free" },
+    "fg": { "tag": "PRE-REGISTRATION OPEN", "line1": "Take care of you.", "line2pre": "Watch your mascot ", "line2hl": "evolve", "line2pos": ".", "sub": "A one-of-a-kind creature no one else has — it grows with every habit.", "cta": "Pre-register free" },
     "features": [
       "Take care of you.\nYour Mascot grows too.",
       "A one-of-a-kind\ncreature, born from you",
@@ -29,7 +29,7 @@
   },
   "es419": {
     "title": "Mi Mascota",
-    "fg": { "line1": "Cuídate.", "line2pre": "Mira tu mascota ", "line2hl": "evolucionar", "line2pos": ".", "sub": "Hábitos saludables, a tu manera — un amigo que crece contigo.", "cta": "Empieza gratis" },
+    "fg": { "tag": "PRE-REGISTRO ABIERTO", "line1": "Cuídate.", "line2pre": "Mira tu mascota ", "line2hl": "evolucionar", "line2pos": ".", "sub": "Una criatura única que nadie más tiene — crece con cada hábito.", "cta": "Pre-regístrate gratis" },
     "features": [
       "Cuídate.\nTu Mascota crece contigo.",
       "Una criatura única,\nnacida a tu manera",

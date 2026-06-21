@@ -6,11 +6,11 @@
 **Title:** My Mascot
 **Short (≤80):**
 ```
-A little creature that truly grows when you take care of you. Cozy wellness
+A one-of-a-kind creature that only evolves when you take care of you 🥚
 ```
 **Full:**
 ```
-There's a little creature waiting for you. And it only grows when you take care of you. 🌱
+There's a little creature waiting for you. And it only evolves when you take care of you. 🌱
 
 Your mascot is born from a one-of-a-kind genome — nobody in the world has one like yours. Every glass of water, every good night's sleep, every deep breath makes it glow, grow, and unfold into new shapes. Your self-care becomes something alive, adorable, and truly yours. 💛
 
@@ -43,18 +43,18 @@ Unlock advanced worlds, rare mutations, a 12-week story-style recap, and unlimit
 
 My Mascot is a wellness and healthy-habits app. Here, caring for yourself feels light, guilt-free, and always welcomes you back.
 
-Download now and discover what your creature will become. 🌟
+Pre-register now and be one of the first to discover what your creature will become. 🌟
 ```
 
 ## es-419
 **Title:** Mi Mascota
 **Short (≤80):**
 ```
-Una criatura que evoluciona de verdad cuando te cuidas. Bienestar tierno 🌱
+Una criatura única que solo evoluciona cuando te cuidas. Nadie tiene otra 🥚
 ```
 **Full:**
 ```
-Hay una criatura esperándote. Y solo crece cuando tú te cuidas. 🌱
+Hay una criatura esperándote. Y solo evoluciona cuando tú te cuidas. 🌱
 
 Tu mascota nace de un genoma único: nadie en el mundo tiene una igual a la tuya. Cada vaso de agua, cada noche de sueño, cada respiro profundo la hace brillar, crecer y revelar formas nuevas. Tu autocuidado se vuelve algo vivo, tierno y tuyo. 💛
 
@@ -87,5 +87,5 @@ Desbloquea mundos avanzados, mutaciones raras, un reporte narrativo de 12 semana
 
 Mi Mascota es una app de bienestar y hábitos saludables. Aquí el cuidado es ligero, sin culpa y siempre te recibe de vuelta.
 
-Descarga ahora y descubre en qué se va a convertir tu criatura. 🌟
+Prerregístrate ahora y sé de los primeros en descubrir en qué se convertirá tu criatura. 🌟
 ```

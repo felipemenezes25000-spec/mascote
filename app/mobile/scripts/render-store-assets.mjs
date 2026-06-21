@@ -29,6 +29,8 @@ function featureHTML(c) {
   .fg{width:1024px;height:500px;position:relative;overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;
       background:radial-gradient(120% 130% at 78% 50%, #FFF1E6 0%, #FBF6F1 60%);}
   .left{position:absolute;left:64px;top:50%;transform:translateY(-50%);width:540px}
+  .tag{display:inline-flex;align-items:center;gap:9px;background:#FF8030;color:#fff;font-family:'Quicksand',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.6px;padding:7px 16px 7px 14px;border-radius:999px;margin-bottom:16px;box-shadow:0 6px 16px rgba(255,128,48,.32)}
+  .tag::before{content:"";width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.45)}
   .logo{font-family:'Quicksand',sans-serif;font-weight:700;font-size:26px;color:#1F1A14;margin-bottom:18px;letter-spacing:.2px}
   .logo b{color:#FF8030}
   h1{font-family:'Instrument Serif',serif;font-weight:400;font-size:66px;line-height:1.02;color:#1F1A14;letter-spacing:.2px}
@@ -50,6 +52,7 @@ function featureHTML(c) {
   </style></head><body>
   <div class="fg">
     <div class="left">
+      ${c.fg.tag ? `<div class="tag">${c.fg.tag}</div>` : ''}
       <div class="logo">Meu Mascote <b>•</b></div>
       <h1>${c.fg.line1}<br>${c.fg.line2pre}<span class="hl">${c.fg.line2hl}</span>${c.fg.line2pos}</h1>
       <div class="sub">${c.fg.sub}</div>

@@ -5,14 +5,14 @@
 ## Nome do app (30 max)
 **Meu Mascote**
 
-## Descrição curta (80 max) — usa 75
+## Descrição curta (80 max) — usa 74
 ```
-Um bichinho que evolui de verdade quando você cuida de você. Bem-estar fofo
+Um bichinho único que só evolui quando você se cuida. Ninguém tem igual 🥚
 ```
 
 ## Descrição completa (4000 max) — usa 2734
 ```
-Tem um bichinho esperando por você. E ele só cresce quando você cuida de você. 🌱
+Tem um bichinho te esperando. E ele só evolui quando você cuida de você. 🌱
 
 Seu mascote nasce de um genoma único — ninguém no mundo tem um igual ao seu. Cada copo d'água, cada noite de sono, cada respiro fundo faz ele brilhar, crescer e revelar formas novas. Seu autocuidado vira algo vivo, fofo e seu. 💛
 
@@ -48,7 +48,7 @@ Desbloqueie mundos avançados, mutações raras, um relatório narrativo de 12 s
 
 Meu Mascote é um app de bem-estar e hábitos saudáveis. Aqui o cuidado é leve, sem culpa e sempre te acolhe de volta.
 
-Baixe agora e descubra no que sua criatura vai virar. 🌟
+Pré-registre agora e seja um dos primeiros a descobrir no que sua criatura vai virar. 🌟
 ```
 
 ## Storyboard dos screenshots (ordem de conversão)
