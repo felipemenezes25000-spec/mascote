@@ -42,11 +42,13 @@ de chaves entre idiomas — QA grátis. Cada feature ganha seu namespace dentro 
 
 ### Fase 3 — Extração de strings (EM ANDAMENTO, 2026-06-21 noite)
 Padrão provado e telas FEITAS (namespace por feature em STRINGS_PT/EN/ES):
-- `onboarding.welcome` (11 strings) ✅
-- `checkin` (11 strings) ✅ — armadilha: array de perguntas saiu de módulo-level
-  pra `buildQuestions()` no render (senão `t()` congela no import).
-- `checkin_result` (9 strings, 3 funções de interpolação) ✅
-- `mission_done` (10 strings, 5 funções) ✅ — loop diário inteiro traduzido.
+- Loop diário: `checkin`, `checkin_result` (3 funções), `mission_done` (5 funções) ✅
+- Funil onboarding: `onboarding.welcome`, `signup`, `onboarding.age`,
+  `onboarding.goal`, `onboarding.style` ✅ (fluxo welcome→signup→age→goal→style)
+- `common` (continue/ok) — reusado p/ reduzir duplicação.
+- Armadilhas: (a) const/array módulo-level → builder no render; (b) interpolação =
+  entrada FUNÇÃO + `t(path,...args)`; (c) `const t` local renomeado; (d) guards a11y
+  estáticos que checam `accessibilityLabel="literal"` → generalizar regex p/ `{t('...')}`.
 Padrão repetível: (1) achar strings cravadas; (2) namespace nos 3 bundles (pt =
 cópia atual EXATA → zero mudança pro usuário pt); (3) `t('ns.key')` no componente,
 import `{ t } from '@/lib/i18n'`; (4) tsc + testes; (5) commit. **Const/array em
