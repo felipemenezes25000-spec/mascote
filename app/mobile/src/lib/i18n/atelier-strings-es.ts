@@ -122,4 +122,19 @@ export const STRINGS_ES: StringsBundle = {
       preferences_link: 'Preferencias del Atelier',
     },
   },
+  onboarding: {
+    welcome: {
+      title_line1: 'Cuídate.',
+      title_line2: 'Tu Mascota evoluciona contigo.',
+      subtitle: 'En 30 segundos al día, te cuidas y ella crece a tu ritmo. Sin presión, sin culpa.',
+      promise: 'Cuando el día pese, no te juzga: te recuerda respirar, descansar y volver a empezar con cariño.',
+      cta_start: 'Empezar',
+      skip_label: 'Saltar la introducción y elegir directo',
+      skip_alert_title: '¿Saltar el tour?',
+      skip_alert_body: 'Te pierdes la presentación de la mascota y la explicación rápida de las misiones. Puedes volver luego en ajustes.',
+      skip_alert_cancel: 'Volver al tour',
+      skip_alert_confirm: 'Saltar de todos modos',
+      disclaimer: 'Mascota es bienestar y autocuidado. No sustituye el acompañamiento profesional.',
+    },
+  },
 };

@@ -120,6 +120,21 @@ export const STRINGS_PT = {
       preferences_link: 'Preferências do Ateliê',
     },
   },
+  onboarding: {
+    welcome: {
+      title_line1: 'Cuide de você.',
+      title_line2: 'Seu Mascote evolui junto.',
+      subtitle: 'Em 30 segundos por dia, você cuida de você e ele cresce no seu ritmo. Sem cobrança, sem culpa.',
+      promise: 'Quando o dia pesar, ele não te julga: lembra de respirar, descansar e recomeçar com gentileza.',
+      cta_start: 'Começar',
+      skip_label: 'Pular descobrimento e escolher direto',
+      skip_alert_title: 'Pular o tour?',
+      skip_alert_body: 'Você perde a apresentação do mascote e a explicação rápida das missões. Dá pra voltar depois nas configurações.',
+      skip_alert_cancel: 'Volto pro tour',
+      skip_alert_confirm: 'Pular mesmo assim',
+      disclaimer: 'Mascote é wellness e autocuidado. Não substitui acompanhamento profissional.',
+    },
+  },
 };
 
 export type StringsPT = typeof STRINGS_PT;

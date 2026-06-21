@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BrandLogo } from '@/components/BrandLogo';
 import { Button } from '@/components/Button';
 import { useStyles, useTheme } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 
@@ -153,22 +154,22 @@ export default function Welcome() {
             <Animated.Text style={[styles.wordmark, wordmarkStyle]}>mascote</Animated.Text>
           </View>
           <View style={styles.textWrap}>
-            <Animated.Text style={[styles.title, titleStyle]}>Cuide de você.</Animated.Text>
+            <Animated.Text style={[styles.title, titleStyle]}>{t('onboarding.welcome.title_line1')}</Animated.Text>
             <Animated.Text style={[styles.title, titleStyle]}>
-              Seu Mascote evolui junto.
+              {t('onboarding.welcome.title_line2')}
             </Animated.Text>
             <Animated.Text style={[styles.subtitle, subtitleStyle]}>
-              Em 30 segundos por dia, você cuida de você e ele cresce no seu ritmo. Sem cobrança, sem culpa.
+              {t('onboarding.welcome.subtitle')}
             </Animated.Text>
             <Animated.Text style={[styles.promise, subtitleStyle]}>
-              Quando o dia pesar, ele não te julga: lembra de respirar, descansar e recomeçar com gentileza.
+              {t('onboarding.welcome.promise')}
             </Animated.Text>
           </View>
           <Animated.View style={[styles.footer, footerStyle]}>
-            <Button label="Começar" onPress={() => router.push('/signup')} />
+            <Button label={t('onboarding.welcome.cta_start')} onPress={() => router.push('/signup')} />
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Pular descobrimento e escolher direto"
+              accessibilityLabel={t('onboarding.welcome.skip_label')}
               hitSlop={{ top: 10, bottom: 10, left: 12, right: 12 }}
               onPress={() => {
                 // QA flagrou: pular sem confirmação faz o usuário perder a apresentação
@@ -178,19 +179,19 @@ export default function Welcome() {
                 const goSkip = () =>
                   router.push({ pathname: '/onboarding/age', params: { express: '1' } });
                 Alert.alert(
-                  'Pular o tour?',
-                  'Você perde a apresentação do mascote e a explicação rápida das missões. Dá pra voltar depois nas configurações.',
+                  t('onboarding.welcome.skip_alert_title'),
+                  t('onboarding.welcome.skip_alert_body'),
                   [
-                    { text: 'Volto pro tour', style: 'cancel' },
-                    { text: 'Pular mesmo assim', style: 'destructive', onPress: goSkip },
+                    { text: t('onboarding.welcome.skip_alert_cancel'), style: 'cancel' },
+                    { text: t('onboarding.welcome.skip_alert_confirm'), style: 'destructive', onPress: goSkip },
                   ],
                 );
               }}
             >
-              <Typography variant="body" style={styles.linkText}>Pular descobrimento e escolher direto</Typography>
+              <Typography variant="body" style={styles.linkText}>{t('onboarding.welcome.skip_label')}</Typography>
             </Pressable>
             <Typography variant="body" style={styles.disclaimer}>
-              Mascote é wellness e autocuidado. Não substitui acompanhamento profissional.
+              {t('onboarding.welcome.disclaimer')}
             </Typography>
           </Animated.View>
         </View>

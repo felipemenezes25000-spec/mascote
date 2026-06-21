@@ -122,4 +122,19 @@ export const STRINGS_EN: StringsBundle = {
       preferences_link: 'Atelier preferences',
     },
   },
+  onboarding: {
+    welcome: {
+      title_line1: 'Take care of you.',
+      title_line2: 'Your Mascot grows with you.',
+      subtitle: 'In 30 seconds a day, you take care of you and it grows at your pace. No pressure, no guilt.',
+      promise: "When the day gets heavy, it doesn't judge you: it reminds you to breathe, rest, and begin again gently.",
+      cta_start: 'Get started',
+      skip_label: 'Skip the intro and choose directly',
+      skip_alert_title: 'Skip the tour?',
+      skip_alert_body: "You'll miss the mascot intro and the quick rundown of missions. You can come back later in settings.",
+      skip_alert_cancel: 'Back to the tour',
+      skip_alert_confirm: 'Skip anyway',
+      disclaimer: 'Mascot is wellness and self-care. It does not replace professional care.',
+    },
+  },
 };
