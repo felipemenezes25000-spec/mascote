@@ -7,6 +7,7 @@ import { Input, Typography } from '@/components/ui';
 
 import { clearOnboardingDraft, setOnboardingDraft } from '@/lib/onboarding-draft';
 import { useTheme } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 
 export default function Signup() {
@@ -28,32 +29,32 @@ export default function Signup() {
             hitSlop={10}
             style={styles.back}
             accessibilityRole="button"
-            accessibilityLabel="Voltar"
+            accessibilityLabel={t('signup.back')}
           >
             <Typography variant="body" style={styles.backText}>←</Typography>
           </Pressable>
           <View style={{ flex: 1, justifyContent: 'center', gap: theme.spacing.lg }}>
             <View style={{ gap: theme.spacing.sm }}>
-              <Typography variant="mono" tone="brand" style={styles.kicker}>BEM-VINDO</Typography>
-              <Typography variant="title">Criar conta</Typography>
+              <Typography variant="mono" tone="brand" style={styles.kicker}>{t('signup.kicker')}</Typography>
+              <Typography variant="title">{t('signup.title')}</Typography>
               <Typography tone="secondary">
-                Tudo fica no seu dispositivo. O e-mail é opcional — só pedimos pra te avisar de novidades.
+                {t('signup.subtitle')}
               </Typography>
             </View>
             <View style={{ gap: theme.spacing.md }}>
               <Input
-                label="Como você quer ser chamado(a)?"
+                label={t('signup.name_label')}
                 value={name}
                 onChangeText={setName}
-                placeholder="Seu nome"
+                placeholder={t('signup.name_placeholder')}
                 autoFocus
                 maxLength={40}
               />
               <Input
-                label="Email (opcional)"
+                label={t('signup.email_label')}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="voce@exemplo.com"
+                placeholder={t('signup.email_placeholder')}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 maxLength={100}
@@ -61,24 +62,24 @@ export default function Signup() {
             </View>
             <View style={{ gap: theme.spacing.sm }}>
               <Button
-                label="Continuar"
+                label={t('signup.cta_continue')}
                 onPress={() => {
-                  const display_name = name.trim() || 'Você';
+                  const display_name = name.trim() || t('signup.default_name');
                   setOnboardingDraft({ display_name });
                   router.push({ pathname: '/onboarding/age', params: { display_name } });
                 }}
                 disabled={!name.trim()}
               />
               <View style={styles.legalRow}>
-                <Typography variant="mono" tone="dim" align="center">Ao continuar, você concorda com a </Typography>
-                <Pressable onPress={() => router.push('/privacy')} hitSlop={8} accessibilityRole="link" accessibilityLabel="Privacidade">
-                  <Typography variant="mono" tone="brand" align="center" style={styles.legalLink}>Privacidade</Typography>
+                <Typography variant="mono" tone="dim" align="center">{t('signup.legal_prefix')}</Typography>
+                <Pressable onPress={() => router.push('/privacy')} hitSlop={8} accessibilityRole="link" accessibilityLabel={t('signup.legal_privacy')}>
+                  <Typography variant="mono" tone="brand" align="center" style={styles.legalLink}>{t('signup.legal_privacy')}</Typography>
                 </Pressable>
-                <Typography variant="mono" tone="dim" align="center"> e </Typography>
-                <Pressable onPress={() => router.push('/terms')} hitSlop={8} accessibilityRole="link" accessibilityLabel="Termos">
-                  <Typography variant="mono" tone="brand" align="center" style={styles.legalLink}>Termos</Typography>
+                <Typography variant="mono" tone="dim" align="center">{t('signup.legal_and')}</Typography>
+                <Pressable onPress={() => router.push('/terms')} hitSlop={8} accessibilityRole="link" accessibilityLabel={t('signup.legal_terms')}>
+                  <Typography variant="mono" tone="brand" align="center" style={styles.legalLink}>{t('signup.legal_terms')}</Typography>
                 </Pressable>
-                <Typography variant="mono" tone="dim" align="center">.</Typography>
+                <Typography variant="mono" tone="dim" align="center">{t('signup.legal_suffix')}</Typography>
               </View>
             </View>
           </View>

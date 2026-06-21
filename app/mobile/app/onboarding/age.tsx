@@ -6,32 +6,38 @@ import { Button } from '@/components/Button';
 import { setOnboardingDraft } from '@/lib/onboarding-draft';
 import { stepLabel } from '@/lib/onboarding-flow';
 import { useStyles } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 import type { Profile } from '@/types';
 
 import { Typography } from '@/components/ui';
 type AgeBand = NonNullable<Profile['age_band']> | 'under16';
 
-const options: { id: AgeBand; label: string; allowed: boolean }[] = [
-  { id: 'under16', label: 'Menos de 16', allowed: false },
-  { id: '16-24', label: '16–24', allowed: true },
-  { id: '25-34', label: '25–34', allowed: true },
-  { id: '35-44', label: '35–44', allowed: true },
-  { id: '45+', label: '45 ou mais', allowed: true },
-];
+// Por render (não módulo-level): t() tem que pegar o locale atual. Labels
+// numéricos seguem literais (unidades neutras); só palavras traduzem.
+function buildOptions(): { id: AgeBand; label: string; allowed: boolean }[] {
+  return [
+    { id: 'under16', label: t('onboarding.age.opt_under16'), allowed: false },
+    { id: '16-24', label: '16–24', allowed: true },
+    { id: '25-34', label: '25–34', allowed: true },
+    { id: '35-44', label: '35–44', allowed: true },
+    { id: '45+', label: t('onboarding.age.opt_45plus'), allowed: true },
+  ];
+}
 
 export default function Age() {
   const styles = useStyles(makeStyles);
   const params = useLocalSearchParams<{ display_name?: string; express?: string }>();
   const [selected, setSelected] = useState<AgeBand | null>(null);
+  const options = buildOptions();
 
   function next() {
     if (!selected) return;
     if (selected === 'under16') {
       Alert.alert(
-        'Você precisa ter 16 anos ou mais',
-        'O Mascote é pensado pra esse público. Volta quando puder. Cuida de você.',
-        [{ text: 'OK' }]
+        t('onboarding.age.under16_alert_title'),
+        t('onboarding.age.under16_alert_body'),
+        [{ text: t('common.ok') }]
       );
       return;
     }
@@ -55,9 +61,9 @@ export default function Age() {
       <View style={styles.container}>
         <View>
           <Typography variant="body" style={styles.kicker}>{stepLabel('age')}</Typography>
-          <Typography variant="body" style={styles.title}>Qual sua faixa de idade?</Typography>
+          <Typography variant="body" style={styles.title}>{t('onboarding.age.title')}</Typography>
           <Typography variant="body" style={styles.subtitle}>
-            Vou usar isso só pra adaptar o tom. Idade fica no seu dispositivo, não compartilhamos.
+            {t('onboarding.age.subtitle')}
           </Typography>
         </View>
         <View style={styles.options} accessibilityRole="radiogroup">
@@ -76,7 +82,7 @@ export default function Age() {
             </Pressable>
           ))}
         </View>
-        <Button label="Continuar" onPress={next} disabled={!selected} />
+        <Button label={t('common.continue')} onPress={next} disabled={!selected} />
       </View>
     </SafeAreaView>
   );

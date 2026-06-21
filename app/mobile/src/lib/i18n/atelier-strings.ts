@@ -134,6 +134,14 @@ export const STRINGS_PT = {
       skip_alert_confirm: 'Pular mesmo assim',
       disclaimer: 'Mascote é wellness e autocuidado. Não substitui acompanhamento profissional.',
     },
+    age: {
+      title: 'Qual sua faixa de idade?',
+      subtitle: 'Vou usar isso só pra adaptar o tom. Idade fica no seu dispositivo, não compartilhamos.',
+      opt_under16: 'Menos de 16',
+      opt_45plus: '45 ou mais',
+      under16_alert_title: 'Você precisa ter 16 anos ou mais',
+      under16_alert_body: 'O Mascote é pensado pra esse público. Volta quando puder. Cuida de você.',
+    },
   },
   checkin: {
     back: 'Voltar',
@@ -171,6 +179,27 @@ export const STRINGS_PT = {
     toast_accessory_sub: 'Equipe no Closet',
     toast_scene_sub: 'Cenário desbloqueado',
     back_home: 'Voltar pra Home',
+  },
+  signup: {
+    back: 'Voltar',
+    kicker: 'BEM-VINDO',
+    title: 'Criar conta',
+    subtitle: 'Tudo fica no seu dispositivo. O e-mail é opcional — só pedimos pra te avisar de novidades.',
+    name_label: 'Como você quer ser chamado(a)?',
+    name_placeholder: 'Seu nome',
+    email_label: 'Email (opcional)',
+    email_placeholder: 'voce@exemplo.com',
+    cta_continue: 'Continuar',
+    default_name: 'Você',
+    legal_prefix: 'Ao continuar, você concorda com a ',
+    legal_privacy: 'Privacidade',
+    legal_and: ' e ',
+    legal_terms: 'Termos',
+    legal_suffix: '.',
+  },
+  common: {
+    continue: 'Continuar',
+    ok: 'OK',
   },
 };
 

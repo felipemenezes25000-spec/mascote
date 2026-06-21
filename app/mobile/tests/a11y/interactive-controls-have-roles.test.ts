@@ -79,8 +79,10 @@ describe('a11y: controles interativos têm accessibilityRole', () => {
 
   it('signup: botão voltar e links legais têm role', () => {
     const text = read('app/signup.tsx');
+    // Aceita label cru ("Voltar") ou i18n ({t('signup.back')}) — a label
+    // continua garantida, só virou traduzível na Fase 3 de i18n.
     expect(text, 'voltar sem role').toMatch(
-      /accessibilityRole="button"\s+accessibilityLabel="Voltar"/,
+      /accessibilityRole="button"\s+accessibilityLabel=(\{t\('[^']+'\)\}|"[^"]+")/,
     );
     expect(text, 'links legais sem role="link"').toMatch(/accessibilityRole="link"/);
   });
