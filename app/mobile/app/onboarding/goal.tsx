@@ -8,18 +8,22 @@ import { PressableScale } from '@/components/PressableScale';
 import { StaggeredView } from '@/components/StaggeredView';
 import { stepLabel } from '@/lib/onboarding-flow';
 import { useTheme } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 
 import { Typography } from '@/components/ui';
-const GOALS: { id: string; label: string; icon: IconName }[] = [
-  { id: 'sono', label: 'Melhorar meu sono', icon: 'moon' },
-  { id: 'agua', label: 'Beber mais água', icon: 'droplet' },
-  { id: 'movimento', label: 'Me movimentar mais', icon: 'dumbbell' },
-  { id: 'ansiedade', label: 'Lidar com ansiedade do dia', icon: 'wind' },
-  { id: 'rotina', label: 'Criar uma rotina mais leve', icon: 'tree' },
-  { id: 'energia', label: 'Ter mais energia no dia', icon: 'zap' },
-  { id: 'companhia', label: 'Só ter companhia leve', icon: 'heart' },
-];
+// Por render (não módulo-level): t() pega o locale atual.
+function buildGoals(): { id: string; label: string; icon: IconName }[] {
+  return [
+    { id: 'sono', label: t('onboarding.goal.g_sono'), icon: 'moon' },
+    { id: 'agua', label: t('onboarding.goal.g_agua'), icon: 'droplet' },
+    { id: 'movimento', label: t('onboarding.goal.g_movimento'), icon: 'dumbbell' },
+    { id: 'ansiedade', label: t('onboarding.goal.g_ansiedade'), icon: 'wind' },
+    { id: 'rotina', label: t('onboarding.goal.g_rotina'), icon: 'tree' },
+    { id: 'energia', label: t('onboarding.goal.g_energia'), icon: 'zap' },
+    { id: 'companhia', label: t('onboarding.goal.g_companhia'), icon: 'heart' },
+  ];
+}
 
 const MOODS = [
   { id: '1', emoji: '😞' },
@@ -35,6 +39,7 @@ export default function Goal() {
   const params = useLocalSearchParams<{ display_name?: string; age_band?: string }>();
   const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const GOALS = buildGoals();
 
   const canContinue = !!(selectedGoal && selectedMood);
 
@@ -47,8 +52,8 @@ export default function Goal() {
               <Icon name="target" size={12} color={theme.colors.primary} strokeWidth={2.4} />
               <Typography variant="body" style={styles.kicker}>{stepLabel('goal')}</Typography>
             </View>
-            <Typography variant="body" style={styles.title}>O que tá te chamando pra cá?</Typography>
-            <Typography variant="body" style={styles.subtitle}>Pode mudar depois. Vou usar pra começar com o pé direito.</Typography>
+            <Typography variant="body" style={styles.title}>{t('onboarding.goal.title')}</Typography>
+            <Typography variant="body" style={styles.subtitle}>{t('onboarding.goal.subtitle')}</Typography>
           </View>
         </StaggeredView>
         <ScrollView contentContainerStyle={{ gap: theme.spacing.sm, paddingBottom: theme.spacing.md }}>
@@ -80,7 +85,7 @@ export default function Goal() {
           ))}
         </ScrollView>
         <View style={styles.moodSection}>
-          <Typography variant="body" style={styles.moodKicker}>E como você tá agora?</Typography>
+          <Typography variant="body" style={styles.moodKicker}>{t('onboarding.goal.mood_kicker')}</Typography>
           <View style={styles.moodRow}>
             {MOODS.map(m => (
               <Pressable
@@ -89,7 +94,7 @@ export default function Goal() {
                 onPress={() => setSelectedMood(m.id)}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: selectedMood === m.id }}
-                accessibilityLabel={`Humor ${m.id} de 5`}
+                accessibilityLabel={t('onboarding.goal.mood_a11y', m.id)}
               >
                 <Typography variant="body" style={styles.moodEmoji}>{m.emoji}</Typography>
               </Pressable>
@@ -97,7 +102,7 @@ export default function Goal() {
           </View>
         </View>
         <Button
-          label="Continuar"
+          label={t('common.continue')}
           disabled={!canContinue}
           onPress={() =>
             router.push({
