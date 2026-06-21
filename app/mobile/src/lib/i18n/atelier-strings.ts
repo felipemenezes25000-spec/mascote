@@ -160,6 +160,18 @@ export const STRINGS_PT = {
     toast_scene_sub: 'Cenário desbloqueado',
     back_home: 'Voltar pra Home',
   },
+  mission_done: {
+    kicker: 'MISSÃO CONCLUÍDA',
+    saving: 'Salvando...',
+    reward_xp: (xp: number, coins: number) => `+${xp} XP · +${coins} 🪙`,
+    reward_capped: (coins: number) => `+${coins} 🪙 — XP do dia já atingiu o limite`,
+    title_phase: (name: string, phase: string) => `${name} entrou em ${phase}`,
+    title_levelup: (name: string, level: number) => `${name} subiu pro nv ${level}!`,
+    title_proud: (name: string) => `${name} tá orgulhoso.`,
+    toast_accessory_sub: 'Equipe no Closet',
+    toast_scene_sub: 'Cenário desbloqueado',
+    back_home: 'Voltar pra Home',
+  },
 };
 
 export type StringsPT = typeof STRINGS_PT;

@@ -13,6 +13,7 @@ import { recordMissionOutcome } from '@/services/missions';
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
 import { processUnlocks } from '@/lib/unlock';
 import { useTheme } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 
@@ -96,9 +97,9 @@ export default function MissionDone() {
         for (const a of unlocks.achievements)
           enqueueToast({ kind: 'achievement', emoji: a.emoji, title: a.title, subtitle: a.description });
         for (const acc of unlocks.accessories)
-          enqueueToast({ kind: 'accessory', emoji: acc.emoji, title: acc.name, subtitle: 'Equipe no Closet' });
+          enqueueToast({ kind: 'accessory', emoji: acc.emoji, title: acc.name, subtitle: t('mission_done.toast_accessory_sub') });
         for (const sc of unlocks.scenes)
-          enqueueToast({ kind: 'scene', emoji: sc.emoji, title: sc.name, subtitle: 'Cenário desbloqueado' });
+          enqueueToast({ kind: 'scene', emoji: sc.emoji, title: sc.name, subtitle: t('mission_done.toast_scene_sub') });
       }
     })();
     return () => {
@@ -107,8 +108,8 @@ export default function MissionDone() {
   }, [profile?.id, mascot?.id]);
 
   useEffect(() => {
-    const t = setTimeout(() => setConfetti(false), 1800);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setConfetti(false), 1800);
+    return () => clearTimeout(timer);
   }, []);
 
   if (!mascot) return <Redirect href='/splash' />;
@@ -117,22 +118,22 @@ export default function MissionDone() {
 
   const xpText = reward
     ? reward.xp > 0
-      ? `+${reward.xp} XP · +${reward.coins} 🪙`
-      : `+${COINS_PER_MISSION} 🪙 — XP do dia já atingiu o limite`
-    : 'Salvando...';
+      ? t('mission_done.reward_xp', reward.xp, reward.coins)
+      : t('mission_done.reward_capped', COINS_PER_MISSION)
+    : t('mission_done.saving');
 
   const titleText = reward?.phaseChanged
-    ? `${displayMascot.name} entrou em ${emergentPhaseLabels[displayMascot.phase]}`
+    ? t('mission_done.title_phase', displayMascot.name, emergentPhaseLabels[displayMascot.phase])
     : reward?.leveledUp
-      ? `${displayMascot.name} subiu pro nv ${displayMascot.level}!`
-      : `${displayMascot.name} tá orgulhoso.`;
+      ? t('mission_done.title_levelup', displayMascot.name, displayMascot.level)
+      : t('mission_done.title_proud', displayMascot.name);
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <View style={{ alignItems: 'center', gap: theme.spacing.md }}>
           <Mascot personality={displayMascot.personality} phase={displayMascot.phase} mood="empolgado" size={180} />
-          <Typography variant="body" style={styles.kicker}>MISSÃO CONCLUÍDA</Typography>
+          <Typography variant="body" style={styles.kicker}>{t('mission_done.kicker')}</Typography>
           <Typography variant="body" style={styles.title}>{titleText}</Typography>
           <Typography variant="body" style={styles.subtitle}>{xpText}</Typography>
           {mascotLine && (
@@ -141,7 +142,7 @@ export default function MissionDone() {
             </Typography>
           )}
         </View>
-        <Button label="Voltar pra Home" onPress={() => router.replace('/(tabs)')} />
+        <Button label={t('mission_done.back_home')} onPress={() => router.replace('/(tabs)')} />
       </View>
       <ConfettiBurst visible={confetti} />
     </SafeAreaView>

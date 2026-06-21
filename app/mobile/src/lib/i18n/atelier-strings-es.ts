@@ -162,4 +162,16 @@ export const STRINGS_ES: StringsBundle = {
     toast_scene_sub: 'Escenario desbloqueado',
     back_home: 'Volver al inicio',
   },
+  mission_done: {
+    kicker: 'MISIÓN COMPLETADA',
+    saving: 'Guardando...',
+    reward_xp: (xp: number, coins: number) => `+${xp} XP · +${coins} 🪙`,
+    reward_capped: (coins: number) => `+${coins} 🪙 — el XP del día ya llegó al límite`,
+    title_phase: (name: string, phase: string) => `${name} entró en ${phase}`,
+    title_levelup: (name: string, level: number) => `${name} subió al nv ${level}!`,
+    title_proud: (name: string) => `${name} está orgulloso.`,
+    toast_accessory_sub: 'Equípalo en el Clóset',
+    toast_scene_sub: 'Escenario desbloqueado',
+    back_home: 'Volver al inicio',
+  },
 };

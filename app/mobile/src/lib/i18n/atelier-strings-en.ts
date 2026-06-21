@@ -162,4 +162,16 @@ export const STRINGS_EN: StringsBundle = {
     toast_scene_sub: 'Scene unlocked',
     back_home: 'Back to Home',
   },
+  mission_done: {
+    kicker: 'MISSION COMPLETE',
+    saving: 'Saving...',
+    reward_xp: (xp: number, coins: number) => `+${xp} XP · +${coins} 🪙`,
+    reward_capped: (coins: number) => `+${coins} 🪙 — daily XP already maxed out`,
+    title_phase: (name: string, phase: string) => `${name} entered ${phase}`,
+    title_levelup: (name: string, level: number) => `${name} leveled up to lv ${level}!`,
+    title_proud: (name: string) => `${name} is proud.`,
+    toast_accessory_sub: 'Equip it in the Closet',
+    toast_scene_sub: 'Scene unlocked',
+    back_home: 'Back to Home',
+  },
 };
