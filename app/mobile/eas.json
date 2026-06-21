@@ -32,6 +32,7 @@
       }
     },
     "production": {
+      "credentialsSource": "local",
       "channel": "production",
       "autoIncrement": true,
       "env": {

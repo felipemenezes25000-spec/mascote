@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "main": "expo-router/entry",
   "scripts": {
+    "postinstall": "patch-package",
     "start": "expo start",
     "web": "expo start --web",
     "android": "expo run:android",
@@ -94,6 +95,7 @@
     "eslint-plugin-react-native": "^4.1.0",
     "fast-check": "^3.23.2",
     "jsdom": "^25.0.1",
+    "patch-package": "^8.0.1",
     "playwright": "^1.60.0",
     "react-test-renderer": "18.2.0",
     "typescript": "~5.3.3",

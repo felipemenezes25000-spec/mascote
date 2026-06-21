@@ -15,3 +15,7 @@ Thumbs.db
 e2e-results.json
 scripts/e2e-web-results.json
 
+
+# Play upload signing (NAO COMMITAR)
+meumascote-upload.jks
+credentials.json

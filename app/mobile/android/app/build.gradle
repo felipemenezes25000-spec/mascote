@@ -111,10 +111,10 @@ android {
 
     namespace 'app.meumascote.dev'
     defaultConfig {
-        applicationId 'app.meumascote.dev'
+        applicationId 'app.meumascote'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        versionCode 6
         versionName "0.1.0"
     }
     signingConfigs {
