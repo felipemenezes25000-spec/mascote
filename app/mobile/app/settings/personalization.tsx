@@ -18,6 +18,7 @@ import {
   storedToPartial,
 } from '@/lib/personalization-service';
 import { creatureMoments } from '@/lib/moments';
+import { setLocale, languageFromLocale, localeFromLanguage, type Locale } from '@/lib/i18n';
 import { personalityFromBond, seedFromOnboardingAnswers, type OnboardingAnswers } from '@/lib/onboarding-evolution';
 import { useEvolutionState } from '@/hooks/useEvolutionState';
 import { useStore } from '@/store';
@@ -65,6 +66,13 @@ const PRONOUNS: { id: MascotPronoun; label: string }[] = [
   { id: 'ele', label: 'Ele / dele' },
   { id: 'ela', label: 'Ela / dela' },
   { id: 'elu', label: 'Elu / dele' },
+];
+
+// Idioma do app — nomes no próprio idioma (autônimos), não traduzir.
+const LANGUAGES: { id: Locale; label: string }[] = [
+  { id: 'pt', label: 'Português' },
+  { id: 'en', label: 'English' },
+  { id: 'es', label: 'Español' },
 ];
 
 export default function PersonalizationSettings() {
@@ -203,7 +211,16 @@ export default function PersonalizationSettings() {
     });
   }
 
+  async function setLanguage(loc: Locale) {
+    // Persiste no campo livre settings.language (tag canônica) e aplica já no
+    // motor de strings. RootLayout assina settings → re-render traduzido.
+    const next = await settingsDb.update(profile!.id, { language: languageFromLocale(loc) });
+    setSettings(next);
+    setLocale(loc);
+  }
+
   const pmeta = getPersonality(draft.personality);
+  const currentLocale = localeFromLanguage(settings.language);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -328,6 +345,19 @@ export default function PersonalizationSettings() {
               </PressableScale>
             ))}
           </View>
+        </Section>
+
+        <Section title="Idioma">
+          <ChipRow>
+            {LANGUAGES.map(l => (
+              <Chip
+                key={l.id}
+                label={l.label}
+                selected={currentLocale === l.id}
+                onPress={() => void setLanguage(l.id)}
+              />
+            ))}
+          </ChipRow>
         </Section>
 
         <Section title="Cenário inicial">

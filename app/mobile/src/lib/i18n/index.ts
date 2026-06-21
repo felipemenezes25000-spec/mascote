@@ -49,6 +49,23 @@ export function getLocale(): Locale {
   return currentLocale;
 }
 
+/**
+ * Mapeia o campo livre `settings.language` (ex.: 'pt-BR', 'en-US', 'es-419',
+ * ou valores legados) para um Locale suportado. Tolerante a região e a nulos;
+ * cai em 'pt' como fallback seguro.
+ */
+export function localeFromLanguage(language: string | null | undefined): Locale {
+  const tag = (language ?? '').toLowerCase();
+  if (tag.startsWith('en')) return 'en';
+  if (tag.startsWith('es')) return 'es';
+  return 'pt';
+}
+
+/** Inverso de localeFromLanguage — tag canônica armazenada em settings.language. */
+export function languageFromLocale(locale: Locale): string {
+  return locale === 'en' ? 'en-US' : locale === 'es' ? 'es-419' : 'pt-BR';
+}
+
 export function t(path: string, ...args: unknown[]): string {
   const fromLocale = lookup(STRINGS_BY_LOCALE[currentLocale], path);
   const resolved = fromLocale ?? lookup(STRINGS_BY_LOCALE.pt, path);

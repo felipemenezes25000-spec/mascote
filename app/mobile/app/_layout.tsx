@@ -20,6 +20,7 @@ import { getProductionViolations, type ProductionConfigViolation } from '@/lib/e
 import { installTelemetry } from '@/lib/telemetry';
 import { logger } from '@/lib/logger';
 import { useTheme } from '@/lib/useTheme';
+import { setLocale, localeFromLanguage } from '@/lib/i18n';
 import { useStore } from '@/store';
 import { warmReplyCache } from '@/content/replies';
 import { syncPushSchedules } from '@/lib/push';
@@ -177,6 +178,12 @@ export default function RootLayout() {
   }
   // fontsLoaded é só telemetria pra dev — não bloqueia mais.
   void fontsLoaded;
+
+  // i18n: aplica o idioma escolhido (settings.language) ao motor de strings de
+  // forma SÍNCRONA, antes de renderizar as telas. Corrige cold-boot (idioma
+  // salvo vale já no 1º render) e dá troca reativa (RootLayout assina settings
+  // → re-render da árvore quando o idioma muda). Idempotente; i18n é singleton.
+  setLocale(localeFromLanguage(settings?.language));
 
   return (
     <ErrorBoundary>
