@@ -22,6 +22,8 @@ const SPK = (x, y, s, o) => `<svg style="position:absolute;left:${x};top:${y};wi
 // headline/sub/cta por idioma
 const COPY = {
   ptBR: { tag: 'PRÉ-REGISTRO ABERTO', h1: 'Ninguém tem um', h2: 'igual ao seu.', sub: 'Um bichinho que só evolui quando você cuida de você.', cta: 'Pré-registre grátis' },
+  enUS: { tag: 'PRE-REGISTRATION OPEN', h1: 'No one has one', h2: 'like yours.', sub: 'A little creature that only evolves when you take care of you.', cta: 'Pre-register free' },
+  es419: { tag: 'PRE-REGISTRO ABIERTO', h1: 'Nadie tiene una', h2: 'igual a la tuya.', sub: 'Una criatura que solo evoluciona cuando te cuidas.', cta: 'Pre-regístrate gratis' },
 };
 
 function adHTML(c, W, H, kind) {
