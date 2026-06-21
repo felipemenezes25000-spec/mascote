@@ -4,23 +4,31 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { habitMeta } from '@/content/missions';
 import { useTheme } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
 import type { HabitKind } from '@/types';
 
 import { Typography } from '@/components/ui';
-const QUESTIONS: { kind: HabitKind; q: string; options: { label: string; value: number }[] }[] = [
-  { kind: 'sleep', q: 'Quantas horas você dormiu?', options: [{ label: '< 5h', value: 4 }, { label: '5–6h', value: 6 }, { label: '7–8h', value: 7 }, { label: '> 8h', value: 9 }] },
-  { kind: 'water', q: 'Quantos copos de água até agora?', options: [{ label: '0–1', value: 1 }, { label: '2–3', value: 3 }, { label: '4–6', value: 5 }, { label: '7+', value: 7 }] },
-  { kind: 'exercise', q: 'Movimento hoje?', options: [{ label: 'Nada', value: 0 }, { label: '< 10min', value: 5 }, { label: '10–30min', value: 20 }, { label: '> 30min', value: 45 }] },
-  { kind: 'breath', q: 'Como tá o nervo?', options: [{ label: 'Calmo', value: 1 }, { label: 'OK', value: 2 }, { label: 'Tenso', value: 3 }, { label: 'Surtando', value: 4 }] },
-];
+type CheckinQuestion = { kind: HabitKind; q: string; options: { label: string; value: number }[] };
+
+// Construído POR RENDER (não módulo-level): t() tem que ser avaliado com o
+// locale atual. No topo do módulo, congelaria no idioma do import.
+function buildQuestions(): CheckinQuestion[] {
+  return [
+    { kind: 'sleep', q: t('checkin.q_sleep'), options: [{ label: '< 5h', value: 4 }, { label: '5–6h', value: 6 }, { label: '7–8h', value: 7 }, { label: '> 8h', value: 9 }] },
+    { kind: 'water', q: t('checkin.q_water'), options: [{ label: '0–1', value: 1 }, { label: '2–3', value: 3 }, { label: '4–6', value: 5 }, { label: '7+', value: 7 }] },
+    { kind: 'exercise', q: t('checkin.q_exercise'), options: [{ label: t('checkin.opt_exercise_none'), value: 0 }, { label: '< 10min', value: 5 }, { label: '10–30min', value: 20 }, { label: '> 30min', value: 45 }] },
+    { kind: 'breath', q: t('checkin.q_breath'), options: [{ label: t('checkin.opt_breath_calm'), value: 1 }, { label: t('checkin.opt_breath_ok'), value: 2 }, { label: t('checkin.opt_breath_tense'), value: 3 }, { label: t('checkin.opt_breath_panic'), value: 4 }] },
+  ];
+}
 
 export default function CheckIn() {
   const theme = useTheme();
   const styles = makeStyles(theme);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
+  const QUESTIONS = buildQuestions();
 
   function pick(value: number) {
     const q = QUESTIONS[step];
@@ -50,11 +58,11 @@ export default function CheckIn() {
             hitSlop={10}
             style={styles.close}
             accessibilityRole="button"
-            accessibilityLabel="Voltar"
+            accessibilityLabel={t('checkin.back')}
           >
             <Typography variant="body" style={styles.closeText}>←</Typography>
           </Pressable>
-          <Typography variant="body" style={styles.kicker}>CHECK-IN {step + 1}/{QUESTIONS.length}</Typography>
+          <Typography variant="body" style={styles.kicker}>{t('checkin.kicker')} {step + 1}/{QUESTIONS.length}</Typography>
           <View style={{ width: 36 }} />
         </View>
         <View style={styles.progress}>

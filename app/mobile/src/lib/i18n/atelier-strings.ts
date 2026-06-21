@@ -135,6 +135,19 @@ export const STRINGS_PT = {
       disclaimer: 'Mascote é wellness e autocuidado. Não substitui acompanhamento profissional.',
     },
   },
+  checkin: {
+    back: 'Voltar',
+    kicker: 'CHECK-IN',
+    q_sleep: 'Quantas horas você dormiu?',
+    q_water: 'Quantos copos de água até agora?',
+    q_exercise: 'Movimento hoje?',
+    q_breath: 'Como tá o nervo?',
+    opt_exercise_none: 'Nada',
+    opt_breath_calm: 'Calmo',
+    opt_breath_ok: 'OK',
+    opt_breath_tense: 'Tenso',
+    opt_breath_panic: 'Surtando',
+  },
 };
 
 export type StringsPT = typeof STRINGS_PT;

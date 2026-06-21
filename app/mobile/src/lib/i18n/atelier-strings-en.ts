@@ -137,4 +137,17 @@ export const STRINGS_EN: StringsBundle = {
       disclaimer: 'Mascot is wellness and self-care. It does not replace professional care.',
     },
   },
+  checkin: {
+    back: 'Back',
+    kicker: 'CHECK-IN',
+    q_sleep: 'How many hours did you sleep?',
+    q_water: 'How many glasses of water so far?',
+    q_exercise: 'Movement today?',
+    q_breath: 'How are your nerves?',
+    opt_exercise_none: 'None',
+    opt_breath_calm: 'Calm',
+    opt_breath_ok: 'OK',
+    opt_breath_tense: 'Tense',
+    opt_breath_panic: 'Freaking out',
+  },
 };

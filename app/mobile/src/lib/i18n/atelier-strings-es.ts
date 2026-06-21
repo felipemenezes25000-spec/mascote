@@ -137,4 +137,17 @@ export const STRINGS_ES: StringsBundle = {
       disclaimer: 'Mascota es bienestar y autocuidado. No sustituye el acompañamiento profesional.',
     },
   },
+  checkin: {
+    back: 'Volver',
+    kicker: 'CHECK-IN',
+    q_sleep: '¿Cuántas horas dormiste?',
+    q_water: '¿Cuántos vasos de agua hasta ahora?',
+    q_exercise: '¿Movimiento hoy?',
+    q_breath: '¿Cómo están los nervios?',
+    opt_exercise_none: 'Nada',
+    opt_breath_calm: 'Tranquilo',
+    opt_breath_ok: 'OK',
+    opt_breath_tense: 'Tenso',
+    opt_breath_panic: 'En pánico',
+  },
 };
