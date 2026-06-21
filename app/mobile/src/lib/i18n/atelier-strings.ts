@@ -155,6 +155,18 @@ export const STRINGS_PT = {
       g_energia: 'Ter mais energia no dia',
       g_companhia: 'Só ter companhia leve',
     },
+    style: {
+      title: 'Como você imagina seu mascote?',
+      subtitle: 'Isso define a paleta e a vibe inicial — hábitos ainda moldam a evolução.',
+      soft_label: 'Suave',
+      soft_desc: 'Tons pastéis, presença acolhedora',
+      vivid_label: 'Vívido',
+      vivid_desc: 'Cores vivas, energia radiante',
+      mystic_label: 'Místico',
+      mystic_desc: 'Brilhos etéreos, aura onírica',
+      bold_label: 'Ousado',
+      bold_desc: 'Contornos fortes, presença marcante',
+    },
   },
   checkin: {
     back: 'Voltar',

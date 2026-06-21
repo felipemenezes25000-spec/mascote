@@ -157,6 +157,18 @@ export const STRINGS_EN: StringsBundle = {
       g_energia: 'Have more energy in the day',
       g_companhia: 'Just some light company',
     },
+    style: {
+      title: 'How do you picture your mascot?',
+      subtitle: 'This sets the palette and the starting vibe — habits still shape the evolution.',
+      soft_label: 'Soft',
+      soft_desc: 'Pastel tones, a cozy presence',
+      vivid_label: 'Vivid',
+      vivid_desc: 'Bright colors, radiant energy',
+      mystic_label: 'Mystic',
+      mystic_desc: 'Ethereal glows, a dreamy aura',
+      bold_label: 'Bold',
+      bold_desc: 'Strong outlines, a striking presence',
+    },
   },
   checkin: {
     back: 'Back',

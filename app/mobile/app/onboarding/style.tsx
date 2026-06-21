@@ -9,29 +9,34 @@ import { StaggeredView } from '@/components/StaggeredView';
 import type { StylePreset } from '@/lib/onboarding-evolution';
 import { stepLabel } from '@/lib/onboarding-flow';
 import { useTheme } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 
 import { Typography } from '@/components/ui';
-const STYLES: { id: StylePreset; label: string; desc: string; icon: IconName }[] = [
-  { id: 'soft', label: 'Suave', desc: 'Tons pastéis, presença acolhedora', icon: 'heart' },
-  { id: 'vivid', label: 'Vívido', desc: 'Cores vivas, energia radiante', icon: 'zap' },
-  { id: 'mystic', label: 'Místico', desc: 'Brilhos etéreos, aura onírica', icon: 'sparkle' },
-  { id: 'bold', label: 'Ousado', desc: 'Contornos fortes, presença marcante', icon: 'flame' },
-];
+// Por render (não módulo-level): t() pega o locale atual.
+function buildStylePresets(): { id: StylePreset; label: string; desc: string; icon: IconName }[] {
+  return [
+    { id: 'soft', label: t('onboarding.style.soft_label'), desc: t('onboarding.style.soft_desc'), icon: 'heart' },
+    { id: 'vivid', label: t('onboarding.style.vivid_label'), desc: t('onboarding.style.vivid_desc'), icon: 'zap' },
+    { id: 'mystic', label: t('onboarding.style.mystic_label'), desc: t('onboarding.style.mystic_desc'), icon: 'sparkle' },
+    { id: 'bold', label: t('onboarding.style.bold_label'), desc: t('onboarding.style.bold_desc'), icon: 'flame' },
+  ];
+}
 
 export default function StyleStep() {
   const theme = useTheme();
   const styles = makeStyles(theme);
   const params = useLocalSearchParams();
   const [selected, setSelected] = useState<StylePreset | null>(null);
+  const STYLES = buildStylePresets();
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <StaggeredView index={0}>
           <Typography variant="body" style={styles.kicker}>{stepLabel('style')}</Typography>
-          <Typography variant="body" style={styles.title}>Como você imagina seu mascote?</Typography>
-          <Typography variant="body" style={styles.subtitle}>Isso define a paleta e a vibe inicial — hábitos ainda moldam a evolução.</Typography>
+          <Typography variant="body" style={styles.title}>{t('onboarding.style.title')}</Typography>
+          <Typography variant="body" style={styles.subtitle}>{t('onboarding.style.subtitle')}</Typography>
         </StaggeredView>
         <ScrollView contentContainerStyle={{ gap: theme.spacing.sm }}>
           {STYLES.map((s, i) => (
@@ -55,7 +60,7 @@ export default function StyleStep() {
           ))}
         </ScrollView>
         <Button
-          label="Continuar"
+          label={t('common.continue')}
           disabled={!selected}
           onPress={() =>
             router.push({

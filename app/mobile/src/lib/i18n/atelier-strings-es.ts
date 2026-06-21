@@ -157,6 +157,18 @@ export const STRINGS_ES: StringsBundle = {
       g_energia: 'Tener más energía en el día',
       g_companhia: 'Solo tener compañía ligera',
     },
+    style: {
+      title: '¿Cómo imaginas tu mascota?',
+      subtitle: 'Esto define la paleta y la vibra inicial — los hábitos siguen moldeando la evolución.',
+      soft_label: 'Suave',
+      soft_desc: 'Tonos pastel, presencia acogedora',
+      vivid_label: 'Vívido',
+      vivid_desc: 'Colores vivos, energía radiante',
+      mystic_label: 'Místico',
+      mystic_desc: 'Brillos etéreos, aura onírica',
+      bold_label: 'Atrevido',
+      bold_desc: 'Contornos fuertes, presencia marcante',
+    },
   },
   checkin: {
     back: 'Volver',
