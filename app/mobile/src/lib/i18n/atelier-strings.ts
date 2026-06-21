@@ -148,6 +148,18 @@ export const STRINGS_PT = {
     opt_breath_tense: 'Tenso',
     opt_breath_panic: 'Surtando',
   },
+  checkin_result: {
+    saving_a11y: 'Salvando check-in',
+    saving: 'Salvando seu check-in...',
+    smiled: (name: string) => `${name} sorriu.`,
+    summary_xp: (xp: number, coins: number, good: number, total: number) =>
+      `+${xp} XP · +${coins} 🪙 · ${good}/${total} marcadores bons hoje`,
+    summary_capped: (coins: number, good: number, total: number) =>
+      `+${coins} 🪙 · ${good}/${total} bons · XP do dia no máximo (cuidado em dobro)`,
+    toast_accessory_sub: 'Equipe no Closet',
+    toast_scene_sub: 'Cenário desbloqueado',
+    back_home: 'Voltar pra Home',
+  },
 };
 
 export type StringsPT = typeof STRINGS_PT;

@@ -150,4 +150,16 @@ export const STRINGS_ES: StringsBundle = {
     opt_breath_tense: 'Tenso',
     opt_breath_panic: 'En pánico',
   },
+  checkin_result: {
+    saving_a11y: 'Guardando registro',
+    saving: 'Guardando tu registro...',
+    smiled: (name: string) => `${name} sonrió.`,
+    summary_xp: (xp: number, coins: number, good: number, total: number) =>
+      `+${xp} XP · +${coins} 🪙 · ${good}/${total} marcadores buenos hoy`,
+    summary_capped: (coins: number, good: number, total: number) =>
+      `+${coins} 🪙 · ${good}/${total} buenos · XP del día al máximo (cuidado doble)`,
+    toast_accessory_sub: 'Equípalo en el Clóset',
+    toast_scene_sub: 'Escenario desbloqueado',
+    back_home: 'Volver al inicio',
+  },
 };

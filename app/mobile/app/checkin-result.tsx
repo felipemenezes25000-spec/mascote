@@ -9,6 +9,7 @@ import { ConfettiBurst } from '@/components/ConfettiBurst';
 import { getPersonality } from '@/content/personalities';
 import { habitMeta } from '@/content/missions';
 import { useTheme } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import { useStore } from '@/store';
 import { applyCheckinFully } from '@/lib/checkin';
 import { activeEventBoost } from '@/lib/events';
@@ -88,9 +89,9 @@ export default function CheckInResult() {
         for (const a of out.unlocks.achievements)
           enqueueToast({ kind: 'achievement', emoji: a.emoji, title: a.title, subtitle: a.description });
         for (const acc of out.unlocks.accessories)
-          enqueueToast({ kind: 'accessory', emoji: acc.emoji, title: acc.name, subtitle: 'Equipe no Closet' });
+          enqueueToast({ kind: 'accessory', emoji: acc.emoji, title: acc.name, subtitle: t('checkin_result.toast_accessory_sub') });
         for (const sc of out.unlocks.scenes)
-          enqueueToast({ kind: 'scene', emoji: sc.emoji, title: sc.name, subtitle: 'Cenário desbloqueado' });
+          enqueueToast({ kind: 'scene', emoji: sc.emoji, title: sc.name, subtitle: t('checkin_result.toast_scene_sub') });
       }
       if (!alive) return;
       setPersistedXp(totalXp);
@@ -113,8 +114,8 @@ export default function CheckInResult() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-          <ActivityIndicator size="large" accessibilityLabel="Salvando check-in" />
-          <Typography variant="body" style={styles.subtitle}>Salvando seu check-in...</Typography>
+          <ActivityIndicator size="large" accessibilityLabel={t('checkin_result.saving_a11y')} />
+          <Typography variant="body" style={styles.subtitle}>{t('checkin_result.saving')}</Typography>
         </View>
       </SafeAreaView>
     );
@@ -143,14 +144,14 @@ export default function CheckInResult() {
         </SceneBackground>
 
         <View style={{ alignItems: 'center', gap: theme.spacing.sm }}>
-          <Typography variant="body" style={styles.title}>{meta.mascotName} sorriu.</Typography>
+          <Typography variant="body" style={styles.title}>{t('checkin_result.smiled', meta.mascotName)}</Typography>
           <Typography variant="body" style={styles.subtitle}>
             {persistedXp > 0
-              ? `+${persistedXp} XP · +${coinsGained} 🪙 · ${goodCount}/${Object.keys(answers).length} marcadores bons hoje`
+              ? t('checkin_result.summary_xp', persistedXp, coinsGained, goodCount, Object.keys(answers).length)
               // Quando totalXp=0 é porque user já bateu o cap diário (150 XP)
               // antes do guided checkin. Copy honesta — fix auditoria 2026-05-27
               // que viu "+0 XP" e interpretou como bug. Não é bug: é cap.
-              : `+${coinsGained} 🪙 · ${goodCount}/${Object.keys(answers).length} bons · XP do dia no máximo (cuidado em dobro)`}
+              : t('checkin_result.summary_capped', coinsGained, goodCount, Object.keys(answers).length)}
           </Typography>
         </View>
 
@@ -168,7 +169,7 @@ export default function CheckInResult() {
           })}
         </View>
 
-        <Button label="Voltar pra Home" onPress={() => router.replace('/(tabs)')} />
+        <Button label={t('checkin_result.back_home')} onPress={() => router.replace('/(tabs)')} />
         <ConfettiBurst visible={goodCount >= 3} />
       </View>
     </SafeAreaView>
