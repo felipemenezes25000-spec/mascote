@@ -10,9 +10,12 @@ const ROOT = 'C:/Users/Felipe/Documents/mascote';
 const A = `${ROOT}/docs/play-store/assets`;
 const MUSIC_SRC = `${A}/promo-en.mp4`; // fonte da trilha (áudio)
 
-const SHOTS = ['01-onboarding_welcome', '02-dna', '03-checkin', '04-mission-done', '05-evolution', '06-mutations', '07-chat', '08-subscription'];
+// Arco de promo (NÃO termina no paywall): abre no gancho, constrói, fecha no
+// clímax de evolução. Cena 08-subscription (paywall) sai de propósito — fechar
+// um promo em "pague" derruba conversão, principalmente pra ads.
+const SHOTS = ['01-onboarding_welcome', '02-dna', '03-checkin', '04-mission-done', '06-mutations', '07-chat', '05-evolution'];
 const LANGS = ['ptBR', 'enUS', 'es419'];
-const DUR = 3.75; // s por cena -> 8 * 3.75 = 30s (casa com a trilha)
+const DUR = 4.3; // s por cena -> 7 * 4.3 ≈ 30s (trim em -t 30; casa com a trilha)
 
 if (!fs.existsSync(MUSIC_SRC)) throw new Error('faltou ' + MUSIC_SRC);
 
