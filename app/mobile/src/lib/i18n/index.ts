@@ -27,12 +27,14 @@ import {
 } from 'react';
 import { STRINGS_PT, type StringsBundle } from './atelier-strings';
 import { STRINGS_EN } from './atelier-strings-en';
+import { STRINGS_ES } from './atelier-strings-es';
 
-export type Locale = 'pt' | 'en';
+export type Locale = 'pt' | 'en' | 'es';
 
 const STRINGS_BY_LOCALE: Record<Locale, StringsBundle> = {
   pt: STRINGS_PT,
   en: STRINGS_EN,
+  es: STRINGS_ES,
 };
 
 const DEFAULT_LOCALE: Locale = 'pt';
@@ -124,4 +126,4 @@ export function useLocale(): LocaleContextValue {
   return { locale: currentLocale, setLocale, t };
 }
 
-export { STRINGS_PT, STRINGS_EN };
+export { STRINGS_PT, STRINGS_EN, STRINGS_ES };
