@@ -31,6 +31,7 @@ import { stepLabel } from '@/lib/onboarding-flow';
 import { sanitizeGenome } from '@/lib/dna';
 import { creatureGenomeFromDNA } from '@/game/creatures';
 import { useTheme } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 import type { BondType, CommunicationTone, UserGoal } from '@/game/evolution/EvolutionTypes';
 import type { Personality } from '@/types';
@@ -92,8 +93,8 @@ export default function MascotBirth() {
     );
     eggOpacity.value = withTiming(0, { duration: dur * 0.5 });
     mascotOpacity.value = withTiming(1, { duration: dur * 0.6 });
-    const t = setTimeout(() => setPhase('birth'), dur);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setPhase('birth'), dur);
+    return () => clearTimeout(timer);
   }, [phase, preview.seed]);
 
   const eggStyle = useAnimatedStyle(() => ({
@@ -107,20 +108,20 @@ export default function MascotBirth() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.container}>
           <Typography variant="body" style={styles.kicker}>{stepLabel('mascot')}</Typography>
-          <Typography variant="body" style={styles.title}>O DNA dele está pronto</Typography>
+          <Typography variant="body" style={styles.title}>{t('onboarding.mascot.reveal_title')}</Typography>
           <View
             style={styles.dnaCard}
             accessible
             accessibilityRole="text"
-            accessibilityLabel={`Traço raro: ${formatRareTrait(preview)}. Seed número ${preview.seed.toString(16).toUpperCase()}. Arquétipo: ${preview.genotype.archetype}`}
+            accessibilityLabel={t('onboarding.mascot.dna_card_a11y', formatRareTrait(preview), preview.seed.toString(16).toUpperCase(), preview.genotype.archetype)}
           >
-            <Typography variant="body" style={styles.dnaLabel}>TRAÇO RARO</Typography>
+            <Typography variant="body" style={styles.dnaLabel}>{t('onboarding.mascot.dna_label')}</Typography>
             <Typography variant="body" style={styles.dnaTrait}>{formatRareTrait(preview)}</Typography>
-            <Typography variant="body" style={styles.dnaSeed}>Seed #{preview.seed.toString(16).toUpperCase()}</Typography>
-            <Typography variant="body" style={styles.dnaArchetype}>Arquétipo · {preview.genotype.archetype}</Typography>
+            <Typography variant="body" style={styles.dnaSeed}>{t('onboarding.mascot.seed', preview.seed.toString(16).toUpperCase())}</Typography>
+            <Typography variant="body" style={styles.dnaArchetype}>{t('onboarding.mascot.archetype', preview.genotype.archetype)}</Typography>
           </View>
-          <Typography variant="body" style={styles.hint}>Cada escolha sua deixou marcas únicas. Ninguém terá esse mascote.</Typography>
-          <Button label="Chocar o ovo" onPress={() => setPhase('hatch')} />
+          <Typography variant="body" style={styles.hint}>{t('onboarding.mascot.hint')}</Typography>
+          <Button label={t('onboarding.mascot.cta_hatch')} onPress={() => setPhase('hatch')} />
         </View>
       </SafeAreaView>
     );
@@ -131,7 +132,7 @@ export default function MascotBirth() {
       <View style={styles.container}>
         <Typography variant="body" style={styles.kicker}>{stepLabel('mascot')}</Typography>
         <Typography variant="body" style={styles.title}>
-          {phase === 'hatch' ? 'Algo está nascendo...' : 'Olha quem chegou!'}
+          {phase === 'hatch' ? t('onboarding.mascot.hatch_title') : t('onboarding.mascot.birth_title')}
         </Typography>
         {phase === 'birth' ? (
           <>
@@ -139,7 +140,7 @@ export default function MascotBirth() {
               {creature.speciesName}
             </Typography>
             <Typography variant="body" style={styles.birthHook}>
-              Suas escolhas chocaram esse bicho — único no mundo.
+              {t('onboarding.mascot.birth_hook')}
             </Typography>
           </>
         ) : null}
@@ -167,13 +168,13 @@ export default function MascotBirth() {
               style={styles.bubble}
               accessible
               accessibilityRole="text"
-              accessibilityLabel={`Primeiras palavras: "${preview.firstWords}". Traço: ${formatRareTrait(preview)}`}
+              accessibilityLabel={t('onboarding.mascot.bubble_a11y', preview.firstWords, formatRareTrait(preview))}
             >
               <Typography variant="body" style={styles.bubbleText}>"{preview.firstWords}"</Typography>
-              <Typography variant="body" style={styles.bubbleSub}>Traço: {formatRareTrait(preview)}</Typography>
+              <Typography variant="body" style={styles.bubbleSub}>{t('onboarding.mascot.bubble_sub', formatRareTrait(preview))}</Typography>
             </View>
             <Button
-              label="Dar um nome"
+              label={t('onboarding.mascot.cta_name')}
               onPress={() =>
                 router.push({
                   pathname: '/onboarding/name',
@@ -194,9 +195,9 @@ export default function MascotBirth() {
               onPress={() => setPhase('reveal')}
               hitSlop={12}
               accessibilityRole="button"
-              accessibilityLabel="Ver DNA de novo"
+              accessibilityLabel={t('onboarding.mascot.link_see_dna')}
             >
-              <Typography variant="body" style={styles.link}>Ver DNA de novo</Typography>
+              <Typography variant="body" style={styles.link}>{t('onboarding.mascot.link_see_dna')}</Typography>
             </Pressable>
           </>
         )}

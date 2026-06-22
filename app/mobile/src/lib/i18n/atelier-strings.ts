@@ -182,6 +182,24 @@ export const STRINGS_PT = {
       aro_label: 'Aro · O Sábio',
       aro_tagline: 'Pergunta que ilumina.',
     },
+    mascot: {
+      reveal_title: 'O DNA dele está pronto',
+      dna_label: 'TRAÇO RARO',
+      seed: (hex: string) => `Seed #${hex}`,
+      archetype: (a: string) => `Arquétipo · ${a}`,
+      hint: 'Cada escolha sua deixou marcas únicas. Ninguém terá esse mascote.',
+      cta_hatch: 'Chocar o ovo',
+      hatch_title: 'Algo está nascendo...',
+      birth_title: 'Olha quem chegou!',
+      birth_hook: 'Suas escolhas chocaram esse bicho — único no mundo.',
+      bubble_sub: (trait: string) => `Traço: ${trait}`,
+      cta_name: 'Dar um nome',
+      link_see_dna: 'Ver DNA de novo',
+      dna_card_a11y: (trait: string, seedHex: string, archetype: string) =>
+        `Traço raro: ${trait}. Seed número ${seedHex}. Arquétipo: ${archetype}`,
+      bubble_a11y: (firstWords: string, trait: string) =>
+        `Primeiras palavras: "${firstWords}". Traço: ${trait}`,
+    },
   },
   checkin: {
     back: 'Voltar',

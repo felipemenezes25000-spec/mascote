@@ -184,6 +184,24 @@ export const STRINGS_EN: StringsBundle = {
       aro_label: 'Aro · The Wise',
       aro_tagline: 'A question that lights the way.',
     },
+    mascot: {
+      reveal_title: 'Its DNA is ready',
+      dna_label: 'RARE TRAIT',
+      seed: (hex: string) => `Seed #${hex}`,
+      archetype: (a: string) => `Archetype · ${a}`,
+      hint: 'Each of your choices left unique marks. No one else will have this mascot.',
+      cta_hatch: 'Hatch the egg',
+      hatch_title: 'Something is being born...',
+      birth_title: 'Look who showed up!',
+      birth_hook: 'Your choices hatched this creature — one of a kind in the world.',
+      bubble_sub: (trait: string) => `Trait: ${trait}`,
+      cta_name: 'Give it a name',
+      link_see_dna: 'See the DNA again',
+      dna_card_a11y: (trait: string, seedHex: string, archetype: string) =>
+        `Rare trait: ${trait}. Seed number ${seedHex}. Archetype: ${archetype}`,
+      bubble_a11y: (firstWords: string, trait: string) =>
+        `First words: "${firstWords}". Trait: ${trait}`,
+    },
   },
   checkin: {
     back: 'Back',

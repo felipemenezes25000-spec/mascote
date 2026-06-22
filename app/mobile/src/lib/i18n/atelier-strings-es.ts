@@ -184,6 +184,24 @@ export const STRINGS_ES: StringsBundle = {
       aro_label: 'Aro · El Sabio',
       aro_tagline: 'Una pregunta que ilumina.',
     },
+    mascot: {
+      reveal_title: 'Su ADN está listo',
+      dna_label: 'RASGO RARO',
+      seed: (hex: string) => `Semilla #${hex}`,
+      archetype: (a: string) => `Arquetipo · ${a}`,
+      hint: 'Cada una de tus decisiones dejó marcas únicas. Nadie tendrá esta mascota.',
+      cta_hatch: 'Incubar el huevo',
+      hatch_title: 'Algo está naciendo...',
+      birth_title: '¡Mira quién llegó!',
+      birth_hook: 'Tus decisiones incubaron a esta criatura — única en el mundo.',
+      bubble_sub: (trait: string) => `Rasgo: ${trait}`,
+      cta_name: 'Ponerle un nombre',
+      link_see_dna: 'Ver el ADN de nuevo',
+      dna_card_a11y: (trait: string, seedHex: string, archetype: string) =>
+        `Rasgo raro: ${trait}. Número de semilla ${seedHex}. Arquetipo: ${archetype}`,
+      bubble_a11y: (firstWords: string, trait: string) =>
+        `Primeras palabras: "${firstWords}". Rasgo: ${trait}`,
+    },
   },
   checkin: {
     back: 'Volver',
