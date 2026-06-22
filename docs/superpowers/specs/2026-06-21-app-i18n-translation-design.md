@@ -43,11 +43,12 @@ de chaves entre idiomas — QA grátis. Cada feature ganha seu namespace dentro 
 ### Fase 3 — Extração de strings (EM ANDAMENTO, 2026-06-21 noite)
 Padrão provado e telas FEITAS (namespace por feature em STRINGS_PT/EN/ES):
 - Loop diário: `checkin`, `checkin_result` (3 funções), `mission_done` (5 funções) ✅
-- **Onboarding — fluxo principal COMPLETO** ✅: `welcome`, `signup`, `age`, `goal`,
-  `style`, `quick`, `mascot` (clímax do reveal), `name` (welcome→…→name).
-- `common` (continue/ok) + `tones` + `pronouns` — namespaces compartilhados.
+- **Onboarding 100%** ✅: `welcome`, `signup`, `age`, `goal`, `style`, `quick`,
+  `mascot`, `name`, `quiz`, `identity` (fluxo principal + express). Só `notice` fora.
+- `common` (continue/ok/back) + `tones` + `pronouns` — namespaces compartilhados.
 - **`notice` FORA de propósito** (hotlines de crise BR — ver Fase 4).
-- Falta do onboarding: `quiz`, `identity` (caminhos express/alternativos).
+- **Falta: telas grandes pós-onboarding** — home (multi-arquivo, delega a
+  `src/features/home/`), chat, settings, paywall, journey, cosmos, closet, etc.
 - Armadilhas: (a) const/array módulo-level → builder no render; (b) interpolação =
   entrada FUNÇÃO + `t(path,...args)`; (c) `const t` local renomeado; (d) guards a11y
   estáticos que checam `accessibilityLabel="literal"` → generalizar regex p/ `{t('...')}`.
