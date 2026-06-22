@@ -167,6 +167,21 @@ export const STRINGS_PT = {
       bold_label: 'Ousado',
       bold_desc: 'Contornos fortes, presença marcante',
     },
+    quick: {
+      title: 'Só mais 3 toques',
+      section_mascot: 'Seu mascote',
+      section_tone: 'Tom de conversa',
+      section_pronoun: 'Pronome do mascote',
+      cta_reveal: 'Revelar DNA',
+      bipo_label: 'Bipo · O Calmo',
+      bipo_tagline: 'Presença que não corre.',
+      zip_label: 'Zip · O Motivador',
+      zip_tagline: 'Energia que não bate.',
+      lulu_label: 'Lulu · A Companheira',
+      lulu_tagline: 'Carinho que escuta.',
+      aro_label: 'Aro · O Sábio',
+      aro_tagline: 'Pergunta que ilumina.',
+    },
   },
   checkin: {
     back: 'Voltar',
@@ -225,6 +240,17 @@ export const STRINGS_PT = {
   common: {
     continue: 'Continuar',
     ok: 'OK',
+  },
+  tones: {
+    carinhoso: 'Carinhoso',
+    direto: 'Direto',
+    poetico: 'Poético',
+    engracado: 'Engraçado',
+  },
+  pronouns: {
+    ele: 'Ele / dele',
+    ela: 'Ela / dela',
+    elu: 'Elu / dele',
   },
 };
 

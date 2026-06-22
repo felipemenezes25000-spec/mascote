@@ -169,6 +169,21 @@ export const STRINGS_ES: StringsBundle = {
       bold_label: 'Atrevido',
       bold_desc: 'Contornos fuertes, presencia marcante',
     },
+    quick: {
+      title: 'Solo 3 toques más',
+      section_mascot: 'Tu mascota',
+      section_tone: 'Tono de conversación',
+      section_pronoun: 'Pronombre de la mascota',
+      cta_reveal: 'Revelar ADN',
+      bipo_label: 'Bipo · El Tranquilo',
+      bipo_tagline: 'Una presencia que no corre.',
+      zip_label: 'Zip · El Motivador',
+      zip_tagline: 'Energía que no se apaga.',
+      lulu_label: 'Lulu · La Compañera',
+      lulu_tagline: 'Cariño que escucha.',
+      aro_label: 'Aro · El Sabio',
+      aro_tagline: 'Una pregunta que ilumina.',
+    },
   },
   checkin: {
     back: 'Volver',
@@ -227,5 +242,16 @@ export const STRINGS_ES: StringsBundle = {
   common: {
     continue: 'Continuar',
     ok: 'OK',
+  },
+  tones: {
+    carinhoso: 'Cariñoso',
+    direto: 'Directo',
+    poetico: 'Poético',
+    engracado: 'Gracioso',
+  },
+  pronouns: {
+    ele: 'Él / de él',
+    ela: 'Ella / de ella',
+    elu: 'Elle / de elle',
   },
 };

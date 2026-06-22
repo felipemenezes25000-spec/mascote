@@ -169,6 +169,21 @@ export const STRINGS_EN: StringsBundle = {
       bold_label: 'Bold',
       bold_desc: 'Strong outlines, a striking presence',
     },
+    quick: {
+      title: 'Just 3 more taps',
+      section_mascot: 'Your mascot',
+      section_tone: 'Conversation tone',
+      section_pronoun: 'Mascot pronoun',
+      cta_reveal: 'Reveal DNA',
+      bipo_label: 'Bipo · The Calm',
+      bipo_tagline: 'A presence that never rushes.',
+      zip_label: 'Zip · The Motivator',
+      zip_tagline: "Energy that doesn't crash.",
+      lulu_label: 'Lulu · The Companion',
+      lulu_tagline: 'Care that listens.',
+      aro_label: 'Aro · The Wise',
+      aro_tagline: 'A question that lights the way.',
+    },
   },
   checkin: {
     back: 'Back',
@@ -227,5 +242,16 @@ export const STRINGS_EN: StringsBundle = {
   common: {
     continue: 'Continue',
     ok: 'OK',
+  },
+  tones: {
+    carinhoso: 'Caring',
+    direto: 'Direct',
+    poetico: 'Poetic',
+    engracado: 'Funny',
+  },
+  pronouns: {
+    ele: 'He / him',
+    ela: 'She / her',
+    elu: 'They / them',
   },
 };

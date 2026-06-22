@@ -9,6 +9,7 @@ import type { BondType, CommunicationTone } from '@/game/evolution/EvolutionType
 import { mapGoalToUserGoal } from '@/lib/onboarding-evolution';
 import { stepLabel } from '@/lib/onboarding-flow';
 import { useTheme } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 import type { Personality } from '@/types';
 
@@ -24,26 +25,32 @@ interface MascoteEscolha {
 
 // Alinhado com landing mascotevirtual.com.br — usuário escolhe DIRETAMENTE
 // entre os 4 personagens canônicos. Bond derivado pra alimentar DNA sem
-// pedir uma 2ª pergunta redundante.
-const MASCOTES: MascoteEscolha[] = [
-  { id: 'bipo', mascotName: 'Bipo', label: 'Bipo · O Calmo',       tagline: 'Presença que não corre.', personality: 'calmo',     bond: 'companheiro' },
-  { id: 'zip',  mascotName: 'Zip',  label: 'Zip · O Motivador',    tagline: 'Energia que não bate.',   personality: 'motivador', bond: 'guardiao' },
-  { id: 'lulu', mascotName: 'Lulu', label: 'Lulu · A Companheira', tagline: 'Carinho que escuta.',     personality: 'fofo',      bond: 'criatura_fofa' },
-  { id: 'aro',  mascotName: 'Aro',  label: 'Aro · O Sábio',        tagline: 'Pergunta que ilumina.',   personality: 'sabio',     bond: 'espirito' },
-];
+// pedir uma 2ª pergunta redundante. Builders por render: t() pega o locale atual.
+function buildMascotes(): MascoteEscolha[] {
+  return [
+    { id: 'bipo', mascotName: 'Bipo', label: t('onboarding.quick.bipo_label'), tagline: t('onboarding.quick.bipo_tagline'), personality: 'calmo',     bond: 'companheiro' },
+    { id: 'zip',  mascotName: 'Zip',  label: t('onboarding.quick.zip_label'),  tagline: t('onboarding.quick.zip_tagline'),  personality: 'motivador', bond: 'guardiao' },
+    { id: 'lulu', mascotName: 'Lulu', label: t('onboarding.quick.lulu_label'), tagline: t('onboarding.quick.lulu_tagline'), personality: 'fofo',      bond: 'criatura_fofa' },
+    { id: 'aro',  mascotName: 'Aro',  label: t('onboarding.quick.aro_label'),  tagline: t('onboarding.quick.aro_tagline'),  personality: 'sabio',     bond: 'espirito' },
+  ];
+}
 
-const TONES: { id: CommunicationTone; label: string }[] = [
-  { id: 'carinhoso', label: 'Carinhoso' },
-  { id: 'direto', label: 'Direto' },
-  { id: 'poetico', label: 'Poético' },
-  { id: 'engracado', label: 'Engraçado' },
-];
+function buildTones(): { id: CommunicationTone; label: string }[] {
+  return [
+    { id: 'carinhoso', label: t('tones.carinhoso') },
+    { id: 'direto', label: t('tones.direto') },
+    { id: 'poetico', label: t('tones.poetico') },
+    { id: 'engracado', label: t('tones.engracado') },
+  ];
+}
 
-const PRONOUNS = [
-  { id: 'ele', label: 'Ele / dele' },
-  { id: 'ela', label: 'Ela / dela' },
-  { id: 'elu', label: 'Elu / dele' },
-] as const;
+function buildPronouns(): { id: 'ele' | 'ela' | 'elu'; label: string }[] {
+  return [
+    { id: 'ele', label: t('pronouns.ele') },
+    { id: 'ela', label: t('pronouns.ela') },
+    { id: 'elu', label: t('pronouns.elu') },
+  ];
+}
 
 export default function QuickQuestions() {
   const theme = useTheme();
@@ -52,6 +59,9 @@ export default function QuickQuestions() {
   const [mascote, setMascote] = useState<MascoteEscolha | null>(null);
   const [tone, setTone] = useState<CommunicationTone | null>(null);
   const [pronoun, setPronoun] = useState<'ele' | 'ela' | 'elu' | null>(null);
+  const MASCOTES = buildMascotes();
+  const TONES = buildTones();
+  const PRONOUNS = buildPronouns();
 
   const canContinue = !!(mascote && tone && pronoun);
 
@@ -60,10 +70,10 @@ export default function QuickQuestions() {
       <View style={styles.container}>
         <StaggeredView index={0}>
           <Typography variant="body" style={styles.kicker}>{stepLabel('quick')}</Typography>
-          <Typography variant="body" style={styles.title}>Só mais 3 toques</Typography>
+          <Typography variant="body" style={styles.title}>{t('onboarding.quick.title')}</Typography>
         </StaggeredView>
         <ScrollView contentContainerStyle={{ gap: theme.spacing.lg }}>
-          <Section title="Seu mascote">
+          <Section title={t('onboarding.quick.section_mascot')}>
             {MASCOTES.map(m => (
               <Chip
                 key={m.id}
@@ -78,19 +88,19 @@ export default function QuickQuestions() {
               "{mascote.tagline}"
             </Typography>
           )}
-          <Section title="Tom de conversa">
-            {TONES.map(t => (
-              <Chip key={t.id} label={t.label} selected={tone === t.id} onPress={() => setTone(t.id)} />
+          <Section title={t('onboarding.quick.section_tone')}>
+            {TONES.map(tn => (
+              <Chip key={tn.id} label={tn.label} selected={tone === tn.id} onPress={() => setTone(tn.id)} />
             ))}
           </Section>
-          <Section title="Pronome do mascote">
+          <Section title={t('onboarding.quick.section_pronoun')}>
             {PRONOUNS.map(p => (
               <Chip key={p.id} label={p.label} selected={pronoun === p.id} onPress={() => setPronoun(p.id)} />
             ))}
           </Section>
         </ScrollView>
         <Button
-          label="Revelar DNA"
+          label={t('onboarding.quick.cta_reveal')}
           disabled={!canContinue}
           onPress={() =>
             router.push({
