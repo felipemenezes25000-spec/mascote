@@ -8,6 +8,7 @@ import { addDays, exportAll, importAll, mascots as mascotsDb, profiles, resetAll
 import { clearApiKey, getApiKey, setApiKey } from '@/lib/ai/credentials';
 import { sanitizeDisplayName } from '@/lib/identity/displayName';
 import { setSfxEnabled } from '@/lib/sfx';
+import { t } from '@/lib/i18n';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -255,24 +256,24 @@ export default function SettingsScreen() {
           hitSlop={10}
           style={styles.close}
           accessibilityRole="button"
-          accessibilityLabel="Fechar configurações"
+          accessibilityLabel={t('settings.close_a11y')}
         >
           <Typography variant="body" style={styles.closeText}>✕</Typography>
         </Pressable>
-        <Typography variant="body" style={styles.headerTitle}>Configurações</Typography>
+        <Typography variant="body" style={styles.headerTitle}>{t('settings.title')}</Typography>
         <View style={{ width: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* Perfil */}
-        <Section title="Perfil">
-          <Row label="Seu nome" right={profile.display_name} onPress={() => setEditingName(true)} />
+        <Section title={t('settings.sec_profile')}>
+          <Row label={t('settings.your_name')} right={profile.display_name} onPress={() => setEditingName(true)} />
           {editingName && (
             <View style={styles.editBox}>
               <TextInput value={userNameDraft} onChangeText={setUserNameDraft} style={styles.input} maxLength={40} />
               <View style={styles.rowBtns}>
-                <Button variant="secondary" label="Cancelar" style={{ flex: 1 }} onPress={() => setEditingName(false)} />
-                <Button label="Salvar" style={{ flex: 1 }} onPress={saveUserName} />
+                <Button variant="secondary" label={t('common.cancel')} style={{ flex: 1 }} onPress={() => setEditingName(false)} />
+                <Button label={t('common.save')} style={{ flex: 1 }} onPress={saveUserName} />
               </View>
             </View>
           )}
@@ -281,7 +282,7 @@ export default function SettingsScreen() {
         {/* Mascote */}
         <Section title={`${mascot.name} · ${pmeta.label}`}>
           <Row
-            label="Nome do mascote"
+            label={t('settings.mascot_name')}
             right={mascot.name}
             onPress={() => {
               setMascotNameDraft(mascot.name);
@@ -292,15 +293,15 @@ export default function SettingsScreen() {
             <View style={styles.editBox}>
               <TextInput value={mascotNameDraft} onChangeText={setMascotNameDraft} style={styles.input} maxLength={30} />
               <View style={styles.rowBtns}>
-                <Button variant="secondary" label="Cancelar" style={{ flex: 1 }} onPress={() => setEditingMascotName(false)} />
-                <Button label="Salvar" style={{ flex: 1 }} onPress={saveMascotName} />
+                <Button variant="secondary" label={t('common.cancel')} style={{ flex: 1 }} onPress={() => setEditingMascotName(false)} />
+                <Button label={t('common.save')} style={{ flex: 1 }} onPress={saveMascotName} />
               </View>
             </View>
           )}
-          <Row label="Personalidade" right={pmeta.label} onPress={() => setEditingPersonality(v => !v)} />
+          <Row label={t('settings.personality')} right={pmeta.label} onPress={() => setEditingPersonality(v => !v)} />
           {editingPersonality && (
             <View style={styles.editBox}>
-              <Typography variant="body" style={styles.hint}>Atenção: o tom da IA muda. Conversas anteriores ficam.</Typography>
+              <Typography variant="body" style={styles.hint}>{t('settings.personality_warn')}</Typography>
               <View style={styles.personalityGrid}>
                 {personalities.map(p => (
                   <Pressable
@@ -327,20 +328,20 @@ export default function SettingsScreen() {
             </View>
           )}
           <Pressable onPress={() => router.push('/settings/personalization')} style={styles.linkRow} accessibilityRole="button">
-            <Typography variant="body" style={styles.linkText}>Personalização completa (estilo Sims)</Typography>
+            <Typography variant="body" style={styles.linkText}>{t('settings.link_personalization')}</Typography>
           </Pressable>
           <Pressable onPress={() => router.push('/closet')} style={styles.linkRow} accessibilityRole="button">
-            <Typography variant="body" style={styles.linkText}>Guarda-roupa · acessórios e cenários</Typography>
+            <Typography variant="body" style={styles.linkText}>{t('settings.link_closet')}</Typography>
           </Pressable>
           <Pressable onPress={() => router.push('/achievements')} style={styles.linkRow} accessibilityRole="button">
-            <Typography variant="body" style={styles.linkText}>Conquistas</Typography>
+            <Typography variant="body" style={styles.linkText}>{t('settings.link_achievements')}</Typography>
           </Pressable>
         </Section>
 
         {/* Aparência */}
-        <Section title="Aparência">
+        <Section title={t('settings.sec_appearance')}>
           <View style={styles.row}>
-            <Typography variant="body" style={styles.rowLabel}>Tema</Typography>
+            <Typography variant="body" style={styles.rowLabel}>{t('settings.theme')}</Typography>
             <View style={styles.segment}>
               {themeOptions.map(opt => (
                 <Pressable
@@ -348,35 +349,35 @@ export default function SettingsScreen() {
                   onPress={() => updateSetting('theme_mode', opt)}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: settings.theme_mode === opt }}
-                  accessibilityLabel={opt === 'system' ? 'Sistema' : opt === 'light' ? 'Claro' : 'Escuro'}
+                  accessibilityLabel={opt === 'system' ? t('settings.theme_system') : opt === 'light' ? t('settings.theme_light') : t('settings.theme_dark')}
                   style={[styles.segmentItem, settings.theme_mode === opt && styles.segmentItemActive]}
                 >
                   <Typography variant="body"
                     style={[styles.segmentText, settings.theme_mode === opt && styles.segmentTextActive]}
                   >
-                    {opt === 'system' ? 'Sistema' : opt === 'light' ? 'Claro' : 'Escuro'}
+                    {opt === 'system' ? t('settings.theme_system') : opt === 'light' ? t('settings.theme_light') : t('settings.theme_dark')}
                   </Typography>
                 </Pressable>
               ))}
             </View>
           </View>
           <ToggleRow
-            label="Reduzir animações"
+            label={t('settings.reduce_motion')}
             value={settings.reduce_motion}
             onChange={v => updateSetting('reduce_motion', v)}
           />
           <ToggleRow
-            label="Texto dinâmico do sistema"
+            label={t('settings.dynamic_text')}
             value={settings.dynamic_text}
             onChange={v => updateSetting('dynamic_text', v)}
           />
           <ToggleRow
-            label="Alto contraste"
+            label={t('settings.high_contrast')}
             value={settings.high_contrast}
             onChange={v => updateSetting('high_contrast', v)}
           />
           <ToggleRow
-            label="Sons de recompensa"
+            label={t('settings.sfx')}
             value={settings.sfx_enabled !== false}
             onChange={v => {
               // Gate global imediato (sem esperar persistência) + persiste.
@@ -387,44 +388,44 @@ export default function SettingsScreen() {
         </Section>
 
         {/* Notificações */}
-        <Section title="Notificações">
+        <Section title={t('settings.sec_notifications')}>
           <ToggleRow
-            label="Permitir notificações"
+            label={t('settings.allow_push')}
             value={settings.push_enabled}
             onChange={v => updateSetting('push_enabled', v)}
           />
           <View style={styles.row}>
-            <Typography variant="body" style={styles.rowLabel}>Não perturbar</Typography>
+            <Typography variant="body" style={styles.rowLabel}>{t('settings.dnd')}</Typography>
             <Typography variant="body" style={styles.rowRight}>{settings.quiet_start} – {settings.quiet_end}</Typography>
           </View>
           <Typography variant="body" style={styles.hintSmall}>
-            (No app local não enviamos push real, mas o horário fica salvo pra quando ligar o servidor.)
+            {t('settings.push_local_hint')}
           </Typography>
         </Section>
 
         {/* Plano */}
-        <Section title="Plano">
+        <Section title={t('settings.sec_plan')}>
           <Pressable onPress={() => router.push('/subscription')} style={styles.linkRow} accessibilityRole="button">
-            <Typography variant="body" style={styles.linkText}>Assinatura e planos</Typography>
+            <Typography variant="body" style={styles.linkText}>{t('settings.link_subscription')}</Typography>
           </Pressable>
           <Pressable onPress={() => router.push('/cancel')} style={styles.linkRow} accessibilityRole="button">
-            <Typography variant="body" style={styles.linkText}>Pausar ou cancelar assinatura</Typography>
+            <Typography variant="body" style={styles.linkText}>{t('settings.link_cancel')}</Typography>
           </Pressable>
         </Section>
 
         {/* Pausa */}
-        <Section title="Pausa">
+        <Section title={t('settings.sec_pause')}>
           {paused ? (
             <View style={styles.editBox}>
-              <Typography variant="body" style={styles.hint}>Pausado até {settings.paused_until}</Typography>
-              <Button label="Voltar agora" onPress={resumeNow} />
+              <Typography variant="body" style={styles.hint}>{t('settings.paused_until', settings.paused_until)}</Typography>
+              <Button label={t('settings.resume_now')} onPress={resumeNow} />
             </View>
           ) : (
             <View style={styles.editBox}>
               <Typography variant="body" style={styles.hint}>
-                Pausa por 30 dias sem perder dados. Mascote fica esperando.
+                {t('settings.pause_body')}
               </Typography>
-              <Button variant="secondary" label="Pausar por 30 dias" onPress={pause30Days} />
+              <Button variant="secondary" label={t('settings.pause_cta')} onPress={pause30Days} />
             </View>
           )}
         </Section>
@@ -432,25 +433,19 @@ export default function SettingsScreen() {
         {/* IA na nuvem (Plus) — wire to credentials helpers (validating wrapper)
             que também atualiza o store via setOpenAiKey. setApiKey valida prefixo
             e tamanho mínimo; em caso de erro, exibe Alert com a mensagem do throw. */}
-        <Section title="IA na nuvem (Plus)">
+        <Section title={t('settings.sec_ai')}>
           <Typography variant="body" style={styles.hint}>
-            {keyConfigured
-              ? '✓ Chave configurada — conversas usando OpenAI (gpt-4o-mini, BYOK).'
-              : 'Modo offline. Respostas pré-escritas seguras por personalidade.'}
+            {keyConfigured ? t('settings.ai_status_on') : t('settings.ai_status_off')}
           </Typography>
           <Typography variant="body" style={styles.hintSmall}>
-            Conecte uma chave OpenAI (sk-...) para conversas mais profundas com
-            seu mascote. Sem chave, o app responde em modo local — menos custo,
-            menos contexto. BYOK = "bring your own key" — só você paga, só você
-            decide. A chave fica criptografada no Keychain/Keystore do aparelho
-            (e localStorage prefixado no web).
+            {t('settings.ai_byok_hint')}
           </Typography>
           {!showKey ? (
             <Button
               variant="ghost"
-              label={keyConfigured ? 'Trocar chave OpenAI' : 'Conectar chave (BYOK)'}
+              label={keyConfigured ? t('settings.key_change') : t('settings.key_connect')}
               onPress={() => setShowKey(true)}
-              accessibilityLabel={keyConfigured ? 'Trocar chave OpenAI' : 'Conectar chave OpenAI para IA na nuvem'}
+              accessibilityLabel={keyConfigured ? t('settings.key_change') : t('settings.key_connect_a11y')}
             />
           ) : (
             <View style={styles.editBox}>
@@ -464,11 +459,11 @@ export default function SettingsScreen() {
                 autoCorrect={false}
                 secureTextEntry
                 maxLength={200}
-                accessibilityLabel="Chave OpenAI (entrada secreta)"
+                accessibilityLabel={t('settings.key_input_a11y')}
               />
               <View style={styles.rowBtns}>
-                <Button variant="secondary" label="Cancelar" style={{ flex: 1 }} onPress={() => { setShowKey(false); setKeyDraft(''); }} />
-                <Button label="Salvar" style={{ flex: 1 }} onPress={async () => {
+                <Button variant="secondary" label={t('common.cancel')} style={{ flex: 1 }} onPress={() => { setShowKey(false); setKeyDraft(''); }} />
+                <Button label={t('common.save')} style={{ flex: 1 }} onPress={async () => {
                   const trimmed = keyDraft.trim();
                   if (!trimmed) {
                     // Vazio = remover (mantém compat com fluxo anterior).
@@ -488,62 +483,59 @@ export default function SettingsScreen() {
                     setKeyDraft('');
                   } catch (err) {
                     Alert.alert(
-                      'Chave inválida',
-                      err instanceof Error ? err.message : 'Verifique o formato da chave OpenAI (deve começar com "sk-").',
+                      t('settings.invalid_key_title'),
+                      err instanceof Error ? err.message : t('settings.invalid_key_body'),
                     );
                   }
                 }} />
               </View>
               <Typography variant="body" style={styles.hintSmall}>
-                Mensagens viajam direto pra OpenAI — sem nosso servidor.
-                Quando o proxy oficial estiver no ar, ele será preferido
-                automaticamente e você pode remover a chave sem perder o
-                modo IA.
+                {t('settings.key_direct_hint')}
               </Typography>
             </View>
           )}
           {keyConfigured && !showKey && (
             <Button
               variant="ghost"
-              label="Remover chave"
+              label={t('settings.key_remove')}
               onPress={async () => {
                 await clearApiKey();
                 setOpenAiKey(null);
                 setKeyConfigured(false);
               }}
-              accessibilityLabel="Remover chave OpenAI e voltar para modo local"
+              accessibilityLabel={t('settings.key_remove_a11y')}
             />
           )}
         </Section>
 
         {/* Privacidade */}
-        <Section title="Privacidade e dados">
+        <Section title={t('settings.sec_privacy')}>
           <Typography variant="body" style={styles.hintSmall}>
-            Seus dados ficam no aparelho. Você pode exportar backup em JSON ou excluir tudo quando quiser.
+            {t('settings.privacy_hint')}
           </Typography>
           <ToggleRow
-            label="Permitir analytics anônimo"
+            label={t('settings.allow_analytics')}
             value={settings.consent_analytics}
             onChange={v => updateSetting('consent_analytics', v)}
           />
           <Pressable onPress={() => router.push('/feedback')} style={styles.linkRow} accessibilityRole="button">
-            <Typography variant="body" style={styles.linkText}>Enviar feedback</Typography>
+            <Typography variant="body" style={styles.linkText}>{t('settings.link_feedback')}</Typography>
           </Pressable>
           <Pressable
             onPress={exportData}
             style={styles.linkRow}
             accessibilityRole="button"
-            accessibilityLabel="Exportar meus dados em JSON"
+            accessibilityLabel={t('settings.export_a11y')}
           >
-            <Typography variant="body" style={styles.linkText}>{exportingData ? 'Exportando dados...' : 'Exportar meus dados (JSON)'}</Typography>
+            <Typography variant="body" style={styles.linkText}>{exportingData ? t('settings.export_doing') : t('settings.export')}</Typography>
           </Pressable>
           <Pressable onPress={() => setShowImport(s => !s)} style={styles.linkRow} accessibilityRole="button">
-            <Typography variant="body" style={styles.linkText}>{showImport ? 'Cancelar importação' : 'Importar dados (JSON)'}</Typography>
+            <Typography variant="body" style={styles.linkText}>{showImport ? t('settings.import_cancel') : t('settings.import')}</Typography>
           </Pressable>
           {showImport && (
             <View style={styles.editBox}>
               <Typography variant="body" style={styles.hint}>
-                Cole o JSON exportado anteriormente. Isso vai sobrescrever tudo.
+                {t('settings.import_hint')}
               </Typography>
               <TextInput
                 value={importDraft}
@@ -556,36 +548,36 @@ export default function SettingsScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
               />
-              <Button label="Restaurar" onPress={doImport} disabled={!importDraft.trim()} />
+              <Button label={t('settings.restore')} onPress={doImport} disabled={!importDraft.trim()} />
             </View>
           )}
           <Pressable onPress={() => router.push('/privacy')} style={styles.linkRow} accessibilityRole="button">
-            <Typography variant="body" style={styles.linkText}>Política de privacidade</Typography>
+            <Typography variant="body" style={styles.linkText}>{t('settings.link_privacy')}</Typography>
           </Pressable>
           <Pressable onPress={() => router.push('/terms')} style={styles.linkRow} accessibilityRole="button">
-            <Typography variant="body" style={styles.linkText}>Termos de uso</Typography>
+            <Typography variant="body" style={styles.linkText}>{t('settings.link_terms')}</Typography>
           </Pressable>
         </Section>
 
         {/* Ajuda */}
-        <Section title="Ajuda e suporte">
+        <Section title={t('settings.sec_help')}>
           <Pressable onPress={() => router.push('/help')} style={styles.linkRow} accessibilityRole="button">
-            <Typography variant="body" style={styles.linkText}>Recursos de bem-estar e crise</Typography>
+            <Typography variant="body" style={styles.linkText}>{t('settings.link_help_crisis')}</Typography>
           </Pressable>
           <Pressable onPress={() => router.push('/weekly-report')} style={styles.linkRow} accessibilityRole="button">
-            <Typography variant="body" style={styles.linkText}>Ver relatório da semana</Typography>
+            <Typography variant="body" style={styles.linkText}>{t('settings.link_weekly')}</Typography>
           </Pressable>
           <Pressable onPress={() => router.push('/monthly-report')} style={styles.linkRow} accessibilityRole="button">
-            <Typography variant="body" style={styles.linkText}>Retrospectiva do mês</Typography>
+            <Typography variant="body" style={styles.linkText}>{t('settings.link_monthly')}</Typography>
           </Pressable>
         </Section>
 
         {/* Conta */}
-        <Section title="Zona de perigo">
+        <Section title={t('settings.sec_danger')}>
           <Typography variant="body" style={styles.hintSmall}>
-            Excluir conta remove todos os dados locais deste dispositivo e não pode ser desfeito.
+            {t('settings.danger_hint')}
           </Typography>
-          <Button variant="ghost" label="Excluir conta" onPress={confirmDelete} />
+          <Button variant="ghost" label={t('settings.delete_account')} onPress={confirmDelete} />
         </Section>
 
         <Typography variant="body" style={styles.disclaimer}>
