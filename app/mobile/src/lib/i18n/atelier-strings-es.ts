@@ -343,4 +343,24 @@ export const STRINGS_ES: StringsBundle = {
     ela: 'Ella / de ella',
     elu: 'Elle / de elle',
   },
+  habits: {
+    water: 'Agua',
+    sleep: 'Sueño',
+    exercise: 'Mover',
+    breath: 'Respirar',
+    meditation: 'Meditar',
+    reading: 'Leer',
+    journaling: 'Diario',
+    outdoor: 'Aire libre',
+    sun: 'Sol',
+  },
+  home: {
+    quick: {
+      section_title: 'Cuídate',
+      section_hint: 'toca · mantén · sin chat ahora',
+      more_a11y: (n: number) => `Ver ${n} cuidados más`,
+      more_sub: 'más',
+      sheet_title: 'Más cuidados',
+    },
+  },
 };

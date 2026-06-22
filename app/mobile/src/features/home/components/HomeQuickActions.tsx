@@ -6,6 +6,7 @@ import { QuickActionCard, Typography } from '@/components/ui';
 import { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useStyles } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 
 import { BottomSheet } from '@/components/ui/ModalShell';
@@ -13,16 +14,18 @@ import { PressableScale } from '@/components/PressableScale';
 import type { IconName } from '@/components/Icon';
 import type { HabitKind } from '@/types';
 
-const HABIT_LABELS: Record<HabitKind, { label: string; icon: IconName }> = {
-  water:      { label: 'Água',     icon: 'droplet' },
-  sleep:      { label: 'Sono',     icon: 'moon' },
-  exercise:   { label: 'Mover',    icon: 'dumbbell' },
-  breath:     { label: 'Respirar', icon: 'wind' },
-  meditation: { label: 'Meditar',  icon: 'heart' },
-  reading:    { label: 'Ler',      icon: 'book' },
-  journaling: { label: 'Diário',   icon: 'pencil' },
-  outdoor:    { label: 'Ar livre', icon: 'tree' },
-  sun:        { label: 'Sol',      icon: 'sun' },
+// Ícone é dado fixo; o label vem do namespace compartilhado `habits` via t()
+// (avaliado no render p/ pegar o locale atual).
+const HABIT_ICONS: Record<HabitKind, IconName> = {
+  water: 'droplet',
+  sleep: 'moon',
+  exercise: 'dumbbell',
+  breath: 'wind',
+  meditation: 'heart',
+  reading: 'book',
+  journaling: 'pencil',
+  outdoor: 'tree',
+  sun: 'sun',
 };
 
 const MAX_VISIBLE = 5;
@@ -45,11 +48,10 @@ function HabitTile({
   onPress: () => void;
   onLongPress: () => void;
 }) {
-  const meta = HABIT_LABELS[kind];
   return (
     <QuickActionCard
-      label={meta.label}
-      icon={meta.icon}
+      label={t(`habits.${kind}`)}
+      icon={HABIT_ICONS[kind]}
       hint={count > 0 ? `${count}×` : undefined}
       done={count > 0}
       onPress={onPress}
@@ -67,8 +69,8 @@ export function HomeQuickActions({ habits, todayCheckins, onPress, onLongPress }
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Typography variant="title" style={styles.sectionH2}>Cuide de você</Typography>
-        <Typography variant="mono" tone="dim" style={styles.sectionHint}>toque · segure · sem chat agora</Typography>
+        <Typography variant="title" style={styles.sectionH2}>{t('home.quick.section_title')}</Typography>
+        <Typography variant="mono" tone="dim" style={styles.sectionHint}>{t('home.quick.section_hint')}</Typography>
       </View>
       <View style={styles.grid}>
         {visible.map(h => (
@@ -85,10 +87,10 @@ export function HomeQuickActions({ habits, todayCheckins, onPress, onLongPress }
             style={styles.moreTile}
             onPress={() => setSheetOpen(true)}
             accessibilityRole="button"
-            accessibilityLabel={`Ver mais ${hidden.length} cuidados`}
+            accessibilityLabel={t('home.quick.more_a11y', hidden.length)}
           >
             <Typography variant="bodyBold" style={styles.moreLabel}>+{hidden.length}</Typography>
-            <Typography variant="mono" tone="dim" style={styles.moreSub}>mais</Typography>
+            <Typography variant="mono" tone="dim" style={styles.moreSub}>{t('home.quick.more_sub')}</Typography>
           </PressableScale>
         )}
       </View>
@@ -96,7 +98,7 @@ export function HomeQuickActions({ habits, todayCheckins, onPress, onLongPress }
       <BottomSheet
         visible={sheetOpen}
         onClose={() => setSheetOpen(false)}
-        title="Mais cuidados"
+        title={t('home.quick.sheet_title')}
       >
         <View style={styles.sheetGrid}>
           {hidden.map(h => (

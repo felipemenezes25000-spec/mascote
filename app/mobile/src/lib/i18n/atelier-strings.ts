@@ -341,6 +341,26 @@ export const STRINGS_PT = {
     ela: 'Ela / dela',
     elu: 'Elu / dele',
   },
+  habits: {
+    water: 'Água',
+    sleep: 'Sono',
+    exercise: 'Mover',
+    breath: 'Respirar',
+    meditation: 'Meditar',
+    reading: 'Ler',
+    journaling: 'Diário',
+    outdoor: 'Ar livre',
+    sun: 'Sol',
+  },
+  home: {
+    quick: {
+      section_title: 'Cuide de você',
+      section_hint: 'toque · segure · sem chat agora',
+      more_a11y: (n: number) => `Ver mais ${n} cuidados`,
+      more_sub: 'mais',
+      sheet_title: 'Mais cuidados',
+    },
+  },
 };
 
 export type StringsPT = typeof STRINGS_PT;

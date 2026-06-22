@@ -343,4 +343,24 @@ export const STRINGS_EN: StringsBundle = {
     ela: 'She / her',
     elu: 'They / them',
   },
+  habits: {
+    water: 'Water',
+    sleep: 'Sleep',
+    exercise: 'Move',
+    breath: 'Breathe',
+    meditation: 'Meditate',
+    reading: 'Read',
+    journaling: 'Journal',
+    outdoor: 'Outdoors',
+    sun: 'Sun',
+  },
+  home: {
+    quick: {
+      section_title: 'Take care of you',
+      section_hint: 'tap · hold · no chat right now',
+      more_a11y: (n: number) => `See ${n} more care actions`,
+      more_sub: 'more',
+      sheet_title: 'More care',
+    },
+  },
 };
