@@ -371,5 +371,13 @@ export const STRINGS_ES: StringsBundle = {
       empty_title: 'Misión del día muy pronto',
       empty_body: 'Haz un check-in o vuelve mañana — una nueva misión aparece aquí.',
     },
+    hero: {
+      pet_a11y: (name: string) => `Cariño a ${name}`,
+      scene_badge_a11y: (sceneName: string) => `Cambiar escenario, actual ${sceneName}`,
+      identity_a11y: (name: string) => `Identidad de ${name}`,
+      identity_hint: 'Abre detalles de afinidades, genes y próximos hitos',
+      level_arch: (level: number, archLabel: string, pct: number) => `nv ${level} · ${archLabel} ${pct}%`,
+      level_phase: (level: number, phaseLabel: string) => `nv ${level} · ${phaseLabel}`,
+    },
   },
 };

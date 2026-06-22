@@ -371,5 +371,13 @@ export const STRINGS_EN: StringsBundle = {
       empty_title: 'Daily mission coming soon',
       empty_body: 'Do a check-in or come back tomorrow — a new mission shows up here.',
     },
+    hero: {
+      pet_a11y: (name: string) => `Pet ${name}`,
+      scene_badge_a11y: (sceneName: string) => `Switch scene, current ${sceneName}`,
+      identity_a11y: (name: string) => `${name}'s identity`,
+      identity_hint: 'Opens affinity, gene, and milestone details',
+      level_arch: (level: number, archLabel: string, pct: number) => `lv ${level} · ${archLabel} ${pct}%`,
+      level_phase: (level: number, phaseLabel: string) => `lv ${level} · ${phaseLabel}`,
+    },
   },
 };

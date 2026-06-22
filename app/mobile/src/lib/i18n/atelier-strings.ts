@@ -369,6 +369,14 @@ export const STRINGS_PT = {
       empty_title: 'Missão do dia em breve',
       empty_body: 'Faça um check-in ou volte amanhã — uma nova missão aparece aqui.',
     },
+    hero: {
+      pet_a11y: (name: string) => `Carinho no ${name}`,
+      scene_badge_a11y: (sceneName: string) => `Trocar cenário, atual ${sceneName}`,
+      identity_a11y: (name: string) => `Identidade de ${name}`,
+      identity_hint: 'Abre detalhes de afinidades, genes e próximos marcos',
+      level_arch: (level: number, archLabel: string, pct: number) => `nv ${level} · ${archLabel} ${pct}%`,
+      level_phase: (level: number, phaseLabel: string) => `nv ${level} · ${phaseLabel}`,
+    },
   },
 };
 

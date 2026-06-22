@@ -15,6 +15,7 @@ import { MascotStatusBubble, Typography } from '@/components/ui';
 import { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useTheme, useStyles } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import { journeyVisuals } from '@/game/journey/visuals';
 import { color } from '@/design-system/tokens';
 import type { Theme } from '@/lib/themes';
@@ -114,7 +115,7 @@ export function HomeHero({
             style={styles.mascotInScene}
             onGesture={onGesture}
             reduceMotion={reduceMotion}
-            accessibilityLabel={`Carinho no ${mascot.name}`}
+            accessibilityLabel={t('home.hero.pet_a11y', mascot.name)}
           >
             <MascotAmbient
               size={mascotSize}
@@ -142,7 +143,7 @@ export function HomeHero({
               style={styles.sceneBadge}
               onPress={onSceneBadge}
               accessibilityRole="button"
-              accessibilityLabel={`Trocar cenário, atual ${scene.name}`}
+              accessibilityLabel={t('home.hero.scene_badge_a11y', scene.name)}
             >
               <Typography style={styles.sceneEmoji}>{scene.emoji}</Typography>
               <Typography variant="mono" style={styles.sceneName}>{scene.name}</Typography>
@@ -155,16 +156,16 @@ export function HomeHero({
             onPress={onIdentityPress}
             disabled={!onIdentityPress}
             accessibilityRole="button"
-            accessibilityLabel={`Identidade de ${mascot.name}`}
-            accessibilityHint="Abre detalhes de afinidades, genes e próximos marcos"
+            accessibilityLabel={t('home.hero.identity_a11y', mascot.name)}
+            accessibilityHint={t('home.hero.identity_hint')}
           >
             <Typography style={styles.mascotNameStrong}>{mascot.name}</Typography>
             <Typography variant="mono" tone="secondary">
               {(() => {
                 const arch = mascot.dna ? dominantArchetype(sanitizeGenome(mascot.dna)) : null;
                 return arch
-                  ? `nv ${mascot.level} · ${arch.label} ${Math.round(arch.percent * 100)}%`
-                  : `nv ${mascot.level} · ${emergentPhaseLabels[mascot.phase]}`;
+                  ? t('home.hero.level_arch', mascot.level, arch.label, Math.round(arch.percent * 100))
+                  : t('home.hero.level_phase', mascot.level, emergentPhaseLabels[mascot.phase]);
               })()}
             </Typography>
           </PressableScale>
