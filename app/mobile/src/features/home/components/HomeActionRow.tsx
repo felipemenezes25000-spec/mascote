@@ -8,6 +8,7 @@ import { StyleSheet, View } from 'react-native';
 import { PressableScale } from '@/components/PressableScale';
 import { HOME_ACTIONS_COPY } from '@/content/journey-copy';
 import { useStyles } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 
 interface Props {
@@ -20,10 +21,10 @@ interface Props {
 export function HomeActionRow({ onPlay, onCare, onTalk, onCustomize }: Props) {
   const styles = useStyles(makeStyles);
   const actions = [
-    { emoji: '🎮', label: HOME_ACTIONS_COPY.play, onPress: onPlay, hint: 'Abre os minigames' },
-    { emoji: '💧', label: HOME_ACTIONS_COPY.care, onPress: onCare, hint: 'Abre o check-in guiado' },
-    { emoji: '💬', label: HOME_ACTIONS_COPY.talk, onPress: onTalk, hint: 'Abre a conversa com o mascote' },
-    { emoji: '🎀', label: HOME_ACTIONS_COPY.customize, onPress: onCustomize, hint: 'Abre o closet de acessórios e cenários' },
+    { emoji: '🎮', label: HOME_ACTIONS_COPY.play, onPress: onPlay, hint: t('home.actions.hint_play') },
+    { emoji: '💧', label: HOME_ACTIONS_COPY.care, onPress: onCare, hint: t('home.actions.hint_care') },
+    { emoji: '💬', label: HOME_ACTIONS_COPY.talk, onPress: onTalk, hint: t('home.actions.hint_talk') },
+    { emoji: '🎀', label: HOME_ACTIONS_COPY.customize, onPress: onCustomize, hint: t('home.actions.hint_customize') },
   ];
   return (
     <View style={styles.row}>

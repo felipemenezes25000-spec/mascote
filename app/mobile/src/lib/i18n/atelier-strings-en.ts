@@ -401,5 +401,11 @@ export const STRINGS_EN: StringsBundle = {
       bad_moment_a11y: 'Hard night mode',
       bad_moment_link: "I'm having a rough time",
     },
+    actions: {
+      hint_play: 'Opens the mini-games',
+      hint_care: 'Opens the guided check-in',
+      hint_talk: 'Opens the chat with your mascot',
+      hint_customize: 'Opens the closet of accessories and scenes',
+    },
   },
 };

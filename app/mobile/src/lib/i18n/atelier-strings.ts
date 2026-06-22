@@ -399,6 +399,12 @@ export const STRINGS_PT = {
       bad_moment_a11y: 'Modo noite difícil',
       bad_moment_link: 'Tô em momento ruim',
     },
+    actions: {
+      hint_play: 'Abre os minigames',
+      hint_care: 'Abre o check-in guiado',
+      hint_talk: 'Abre a conversa com o mascote',
+      hint_customize: 'Abre o closet de acessórios e cenários',
+    },
   },
 };
 

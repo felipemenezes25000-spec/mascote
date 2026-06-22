@@ -5,6 +5,7 @@ import { Typography } from '@/components/ui';
  */
 import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import { useTheme, useStyles } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 import { BrandLogo } from '@/components/BrandLogo';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -34,7 +35,7 @@ export function HomeHeader({ profile, wallet, streak, notifKey, greet, showBrand
   // + texto sem sentido — auditoria reportada) caem pra "Você" em vez de
   // vazar o lixo no header. Sanitização também já é usada em diary/copy.
   const sanitized = sanitizeDisplayName(profile.display_name);
-  const firstName = sanitized?.split(' ')[0] ?? 'Você';
+  const firstName = sanitized?.split(' ')[0] ?? t('signup.default_name');
 
   return (
     <View style={styles.wrap}>
