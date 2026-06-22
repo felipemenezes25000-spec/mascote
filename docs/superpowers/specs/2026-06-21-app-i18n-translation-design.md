@@ -43,9 +43,11 @@ de chaves entre idiomas — QA grátis. Cada feature ganha seu namespace dentro 
 ### Fase 3 — Extração de strings (EM ANDAMENTO, 2026-06-21 noite)
 Padrão provado e telas FEITAS (namespace por feature em STRINGS_PT/EN/ES):
 - Loop diário: `checkin`, `checkin_result` (3 funções), `mission_done` (5 funções) ✅
-- Funil onboarding: `onboarding.welcome`, `signup`, `onboarding.age`,
-  `onboarding.goal`, `onboarding.style` ✅ (fluxo welcome→signup→age→goal→style)
-- `common` (continue/ok) — reusado p/ reduzir duplicação.
+- **Onboarding — fluxo principal COMPLETO** ✅: `welcome`, `signup`, `age`, `goal`,
+  `style`, `quick`, `mascot` (clímax do reveal), `name` (welcome→…→name).
+- `common` (continue/ok) + `tones` + `pronouns` — namespaces compartilhados.
+- **`notice` FORA de propósito** (hotlines de crise BR — ver Fase 4).
+- Falta do onboarding: `quiz`, `identity` (caminhos express/alternativos).
 - Armadilhas: (a) const/array módulo-level → builder no render; (b) interpolação =
   entrada FUNÇÃO + `t(path,...args)`; (c) `const t` local renomeado; (d) guards a11y
   estáticos que checam `accessibilityLabel="literal"` → generalizar regex p/ `{t('...')}`.
@@ -70,6 +72,12 @@ chat UI `(tabs)/chat`, resto do onboarding, settings, paywall, journey, cosmos.
   **antes** de liberar o chat nesses idiomas — senão crise em en/es passa batida.
   Ver [[project_mascote_safety_architecture]] e o histórico de falsos-negativos pt.
 - Custo de tokens/QA da IA multiplica por idioma.
+- **HOTLINES DE CRISE POR PAÍS (decisão do Felipe):** `onboarding/notice.tsx` (e as
+  telas `safety.tsx`/`safe-night.tsx`/`help.tsx`) exibem **CVV 188 / SAMU 192 — números
+  do BRASIL**. NÃO traduzir essas telas mantendo os números BR: um user en/es leria um
+  número que não funciona no país dele. Localizar de verdade = mapear recurso de crise
+  por país/idioma (US 988, UK Samaritans 116 123, ES 024, etc.). **`notice` ficou DE FORA
+  da Fase 3 de propósito** até essa decisão — não se improvisa conteúdo de crise.
 
 ### Fase 5 — QA & loja
 - e2e por locale; revisar truncamento/overflow de UI (es/de costumam ser ~20% mais longos);
