@@ -72,8 +72,8 @@ export default function SettingsScreen() {
     const sanitized = sanitizeDisplayName(userNameDraft);
     if (!sanitized) {
       Alert.alert(
-        'Nome inválido',
-        'Use ao menos 2 letras. Pode incluir espaços, hífen ou apóstrofo.',
+        t('onboarding.name.invalid_alert_title'),
+        t('onboarding.name.invalid_alert_body'),
       );
       return;
     }
@@ -88,7 +88,7 @@ export default function SettingsScreen() {
     // Espelha saveUserName: dá feedback em vez de no-op silencioso quando o
     // campo está vazio/só espaços (auditoria 2026-05-29).
     if (!trimmed) {
-      Alert.alert('Nome inválido', 'Dê ao menos 1 caractere ao seu mascote.');
+      Alert.alert(t('onboarding.name.invalid_alert_title'), t('settings.alert_mascot_name_body'));
       return;
     }
     const updated = await mascotsDb.upsert({ user_id: mascot.user_id, name: trimmed });
@@ -114,8 +114,8 @@ export default function SettingsScreen() {
       setSettings(next);
     } catch (err) {
       Alert.alert(
-        'Não consegui salvar',
-        'Tenta de novo em alguns segundos. Se persistir, reinicia o app.',
+        t('settings.save_fail_title'),
+        t('settings.save_fail_body'),
       );
     }
   }
@@ -125,7 +125,7 @@ export default function SettingsScreen() {
     const until = addDays(todayLocal(), 30);
     await settingsDb.update(profile.id, { paused_until: until });
     await refreshSettings();
-    Alert.alert('Pausa ativada', `Mascote pausado até ${until}. Volta quando quiser.`);
+    Alert.alert(t('settings.pause_on_title'), t('settings.pause_on_body', until));
   }
 
   async function resumeNow() {
@@ -144,15 +144,15 @@ export default function SettingsScreen() {
       const Clipboard = await import('expo-clipboard');
       await Clipboard.setStringAsync(json);
       Alert.alert(
-        'Dados copiados',
-        `${Object.keys(data).length} tabelas (${json.length} caracteres) copiadas. Guarde em local seguro.`,
-        [{ text: 'OK' }]
+        t('settings.export_ok_title'),
+        t('settings.export_ok_body', Object.keys(data).length, json.length),
+        [{ text: t('common.ok') }]
       );
     } catch {
       Alert.alert(
-        'Falha ao exportar',
-        'Não consegui copiar agora. Tente de novo em alguns instantes.',
-        [{ text: 'OK' }]
+        t('settings.export_fail_title'),
+        t('settings.export_fail_body'),
+        [{ text: t('common.ok') }]
       );
     } finally {
       setExportingData(false);
@@ -175,12 +175,12 @@ export default function SettingsScreen() {
         }
       }
       Alert.alert(
-        'Restaurar dados',
-        'Isso vai SOBRESCREVER tudo que você tem agora. Vai precisar reiniciar o app pra ver as mudanças. Continuar?',
+        t('settings.import_confirm_title'),
+        t('settings.import_confirm_body'),
         [
-          { text: 'Cancelar', style: 'cancel' },
+          { text: t('common.cancel'), style: 'cancel' },
           {
-            text: 'Restaurar',
+            text: t('settings.restore'),
             style: 'destructive',
             onPress: async () => {
               await importAll(parsed as Record<string, unknown[]>);
@@ -191,35 +191,35 @@ export default function SettingsScreen() {
               await hydrate();
               setShowImport(false);
               setImportDraft('');
-              Alert.alert('Restaurado', 'Dados importados com sucesso.', [
-                { text: 'OK', onPress: () => router.replace('/(tabs)') },
+              Alert.alert(t('settings.import_ok_title'), t('settings.import_ok_body'), [
+                { text: t('common.ok'), onPress: () => router.replace('/(tabs)') },
               ]);
             },
           },
         ]
       );
     } catch (e) {
-      Alert.alert('JSON inválido', 'Não consegui ler. Verifica o formato.');
+      Alert.alert(t('settings.import_invalid_title'), t('settings.import_invalid_body'));
     }
   }
 
   function confirmDelete() {
     Alert.alert(
-      'Excluir conta',
-      'Vai apagar TUDO: perfil, mascote, check-ins, conversas, acessórios. Sem volta.',
+      t('settings.delete_account'),
+      t('settings.delete_confirm_body'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Tenho certeza',
+          text: t('settings.delete_confirm_yes'),
           style: 'destructive',
           onPress: () => {
             Alert.alert(
-              'Tem certeza mesmo?',
-              'Última chance. Vou apagar tudo localmente.',
+              t('settings.delete_final_title'),
+              t('settings.delete_final_body'),
               [
-                { text: 'Cancelar', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                  text: 'Apagar',
+                  text: t('settings.delete_final_yes'),
                   style: 'destructive',
                   onPress: async () => {
                     // resetAll() limpa o DB local (AsyncStorage). Mas a chave
