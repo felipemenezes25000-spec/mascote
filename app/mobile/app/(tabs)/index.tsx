@@ -31,6 +31,7 @@ import { PrimaryActionCard, Typography } from '@/components/ui';
 import { isNightBannerOnCooldown, markNightBannerDismissed } from '@/lib/nightBannerCooldown';
 import { maybeNotifyJourneyPhaseClose, maybeNotifyStreakAtRisk, notifyMascotBirthday } from '@/lib/notify';
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
+import { t } from '@/lib/i18n';
 import { incrementBond } from '@/lib/bond';
 import { xpToNextLevel } from '@/lib/xp';
 import { buildProactiveContext, runProactiveScan } from '@/lib/proactive';
@@ -566,27 +567,27 @@ export default function Home() {
             <View style={{ paddingHorizontal: theme.spacing.lg }}>
               {snapshot.firstMissionPending ? (
                 <PrimaryActionCard
-                  title={`Beber água com ${mascot.name}`}
+                  title={t('home.screen.first_mission_title', mascot.name)}
                   subtitle={FIRST_MISSION.description}
-                  ctaLabel="Bebi 1 copo"
+                  ctaLabel={t('home.screen.first_mission_cta')}
                   icon="droplet"
                   onPress={() => void actions.handleCheckin('water')}
-                  accessibilityHint="Marca primeiro check-in de água"
+                  accessibilityHint={t('home.screen.first_mission_hint')}
                 />
               ) : missionActive && mission ? (
                 <PrimaryActionCard
                   title={mission.title}
-                  subtitle={mission.status === 'completed' ? 'Feito hoje · valeu' : mission.description}
-                  ctaLabel={mission.status === 'completed' ? 'Ver detalhes' : 'Cuidar agora'}
+                  subtitle={mission.status === 'completed' ? t('home.screen.mission_done_subtitle') : mission.description}
+                  ctaLabel={mission.status === 'completed' ? t('home.screen.mission_cta_details') : t('home.screen.mission_cta_care')}
                   icon="sparkles"
                   onPress={() => router.push('/mission')}
-                  accessibilityHint="Abre a missão do dia"
+                  accessibilityHint={t('home.screen.mission_hint')}
                 />
               ) : (
                 <PrimaryActionCard
-                  title="Cuidar agora"
-                  subtitle="Anote como você está em 2 minutos."
-                  ctaLabel="Começar"
+                  title={t('home.screen.care_title')}
+                  subtitle={t('home.screen.care_subtitle')}
+                  ctaLabel={t('home.screen.care_cta')}
                   icon="sparkles"
                   onPress={() => router.push('/checkin')}
                 />
@@ -600,16 +601,16 @@ export default function Home() {
           {undoData && undoData.checkin && (
             <View style={styles.undoWrap}>
               <Typography variant="caption" tone="secondary">
-                +{undoData.xpGained} XP · +{undoData.coinsGained} 🪙 anotado
+                {t('home.screen.undo_noted', undoData.xpGained, undoData.coinsGained)}
               </Typography>
               <Pressable
                 onPress={() => void actions.handleUndoCheckin(undoData)}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="Desfazer último check-in"
+                accessibilityLabel={t('home.screen.undo_a11y')}
                 style={styles.undoBtn}
               >
-                <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>Desfazer</Typography>
+                <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>{t('home.screen.undo')}</Typography>
               </Pressable>
             </View>
           )}
@@ -686,9 +687,9 @@ export default function Home() {
             <StaggeredView index={10}>
               <EndowmentRow
                 items={[
-                  { icon: 'check', value: `${snapshot.totalCheckinsAll}`, label: 'check-ins' },
-                  { icon: 'flame', value: `${streak?.longest_streak ?? 0}`, label: 'recorde' },
-                  { icon: 'star', value: `${mascot.level}`, label: 'nível' },
+                  { icon: 'check', value: `${snapshot.totalCheckinsAll}`, label: t('home.screen.stat_checkins') },
+                  { icon: 'flame', value: `${streak?.longest_streak ?? 0}`, label: t('home.screen.stat_record') },
+                  { icon: 'star', value: `${mascot.level}`, label: t('home.screen.stat_level') },
                 ]}
               />
             </StaggeredView>
@@ -699,21 +700,21 @@ export default function Home() {
               <PressableScale
                 onPress={() => router.push('/checkin')}
                 accessibilityRole="button"
-                accessibilityLabel="Check-in completo guiado"
+                accessibilityLabel={t('home.screen.guided_a11y')}
                 // Texto plano (caption ~14lh, sem padding) — hitSlop garante
                 // alvo de toque mínimo de 44px sem inflar o visual da linha.
                 hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
               >
-                <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>Check-in guiado →</Typography>
+                <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>{t('home.screen.guided_link')}</Typography>
               </PressableScale>
               <PressableScale
                 onPress={() => router.push('/safe-night')}
                 accessibilityRole="button"
-                accessibilityLabel="Modo noite difícil"
+                accessibilityLabel={t('home.screen.bad_moment_a11y')}
                 hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
               >
                 <Typography variant="caption" tone="secondary" style={{ textDecorationLine: 'underline' }}>
-                  Tô em momento ruim
+                  {t('home.screen.bad_moment_link')}
                 </Typography>
               </PressableScale>
             </View>
