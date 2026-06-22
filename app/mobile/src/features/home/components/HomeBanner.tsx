@@ -9,6 +9,7 @@ import { Typography } from '@/components/ui';
  */
 import { Pressable, View, StyleSheet } from 'react-native';
 import { useTheme, useStyles } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 import { Icon } from '@/components/Icon';
 import { LimitedEventBanner } from '@/components/LimitedEventBanner';
@@ -36,14 +37,14 @@ export function HomeBanner({ showNightWarning, onDismissNight, seasonalEvent }: 
           <Icon name="moon" size={20} color={theme.tokens.semantic.inkOnDark} strokeWidth={2} />
         </View>
         <View style={{ flex: 1 }}>
-          <Typography variant="bodyBold" tone="inkOnBrand" style={styles.nightTitle}>Tá tarde aqui</Typography>
-          <Typography variant="caption" tone="inkOnDark">Já passou da 1h. Sono bom é cuidado também.</Typography>
+          <Typography variant="bodyBold" tone="inkOnBrand" style={styles.nightTitle}>{t('home.banner.night_title')}</Typography>
+          <Typography variant="caption" tone="inkOnDark">{t('home.banner.night_body')}</Typography>
         </View>
         <Pressable
           onPress={onDismissNight}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel="Fechar aviso noturno"
+          accessibilityLabel={t('home.banner.night_dismiss_a11y')}
         >
           <Icon name="x" size={16} color={theme.tokens.semantic.inkOnDark} strokeWidth={2.2} />
         </Pressable>

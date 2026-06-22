@@ -5,6 +5,7 @@ import { Typography } from '@/components/ui';
  */
 import { View, StyleSheet } from 'react-native';
 import { useStyles } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 import { MissionCard } from '@/components/MissionCard';
 import { MysteryBoxCard } from '@/components/MysteryBoxCard';
@@ -32,9 +33,9 @@ export function HomeMissionCard({ mission, onPressMission, boxAvailable, onOpenB
           />
         ) : (
           <View style={styles.missionEmpty} accessibilityRole="text">
-            <Typography variant="bodyBold">Missão do dia em breve</Typography>
+            <Typography variant="bodyBold">{t('home.mission.empty_title')}</Typography>
             <Typography variant="mono" tone="secondary">
-              Faça um check-in ou volte amanhã — uma nova missão aparece aqui.
+              {t('home.mission.empty_body')}
             </Typography>
           </View>
         )}

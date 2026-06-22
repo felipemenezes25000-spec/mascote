@@ -362,5 +362,14 @@ export const STRINGS_EN: StringsBundle = {
       more_sub: 'more',
       sheet_title: 'More care',
     },
+    banner: {
+      night_title: "It's late here",
+      night_body: "It's past 1 AM. Good sleep is care too.",
+      night_dismiss_a11y: 'Dismiss night warning',
+    },
+    mission: {
+      empty_title: 'Daily mission coming soon',
+      empty_body: 'Do a check-in or come back tomorrow — a new mission shows up here.',
+    },
   },
 };

@@ -360,6 +360,15 @@ export const STRINGS_PT = {
       more_sub: 'mais',
       sheet_title: 'Mais cuidados',
     },
+    banner: {
+      night_title: 'Tá tarde aqui',
+      night_body: 'Já passou da 1h. Sono bom é cuidado também.',
+      night_dismiss_a11y: 'Fechar aviso noturno',
+    },
+    mission: {
+      empty_title: 'Missão do dia em breve',
+      empty_body: 'Faça um check-in ou volte amanhã — uma nova missão aparece aqui.',
+    },
   },
 };
 
