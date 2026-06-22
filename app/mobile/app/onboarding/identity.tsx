@@ -23,6 +23,7 @@ import { StaggeredView } from '@/components/StaggeredView';
 import { mapGoalToUserGoal } from '@/lib/onboarding-evolution';
 import { stepLabel } from '@/lib/onboarding-flow';
 import { useTheme } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 import type { BondType, CommunicationTone } from '@/game/evolution/EvolutionTypes';
 import type { Personality } from '@/types';
@@ -53,32 +54,40 @@ interface Mascote {
   icon: IconName;
 }
 
-const OBJETIVOS: Objetivo[] = [
-  { id: 'energia',    label: 'Ter mais energia',         goalId: 'energia',   icon: 'zap' },
-  { id: 'sono',       label: 'Dormir melhor',            goalId: 'sono',      icon: 'moon' },
-  { id: 'mental',     label: 'Cuidar da saúde mental',   goalId: 'ansiedade', icon: 'heart' },
-  { id: 'disciplina', label: 'Ser mais disciplinado',    goalId: 'rotina',    icon: 'target' },
-  { id: 'rotina',     label: 'Criar uma rotina',         goalId: 'rotina',    icon: 'tree' },
-  { id: 'estresse',   label: 'Reduzir estresse',         goalId: 'ansiedade', icon: 'wind' },
-];
+// Builders por render: t() pega o locale atual. goalId/tone/bond/icon são dados
+// fixos; só label/desc/tagline traduzem.
+function buildObjetivos(): Objetivo[] {
+  return [
+    { id: 'energia',    label: t('onboarding.identity.obj_energia'),    goalId: 'energia',   icon: 'zap' },
+    { id: 'sono',       label: t('onboarding.identity.obj_sono'),       goalId: 'sono',      icon: 'moon' },
+    { id: 'mental',     label: t('onboarding.identity.obj_mental'),     goalId: 'ansiedade', icon: 'heart' },
+    { id: 'disciplina', label: t('onboarding.identity.obj_disciplina'), goalId: 'rotina',    icon: 'target' },
+    { id: 'rotina',     label: t('onboarding.identity.obj_rotina'),     goalId: 'rotina',    icon: 'tree' },
+    { id: 'estresse',   label: t('onboarding.identity.obj_estresse'),   goalId: 'ansiedade', icon: 'wind' },
+  ];
+}
 
-const TONS: Tom[] = [
-  { id: 'fofo',       label: 'Fofo',       desc: 'Doce, acolhedor, com carinho',     tone: 'carinhoso' },
-  { id: 'engracado',  label: 'Engraçado',  desc: 'Solta uma piada quando precisa',   tone: 'engracado' },
-  { id: 'motivador',  label: 'Motivador',  desc: 'Empurra com leveza, sem grito',    tone: 'direto' },
-  { id: 'calmo',      label: 'Calmo',      desc: 'Fala pausado, respira junto',      tone: 'poetico' },
-  { id: 'direto',     label: 'Direto',     desc: 'Vai no ponto, sem rodeio',         tone: 'direto' },
-];
+function buildTons(): Tom[] {
+  return [
+    { id: 'fofo',       label: t('onboarding.identity.tom_fofo'),      desc: t('onboarding.identity.tom_fofo_desc'),      tone: 'carinhoso' },
+    { id: 'engracado',  label: t('onboarding.identity.tom_engracado'), desc: t('onboarding.identity.tom_engracado_desc'), tone: 'engracado' },
+    { id: 'motivador',  label: t('onboarding.identity.tom_motivador'), desc: t('onboarding.identity.tom_motivador_desc'), tone: 'direto' },
+    { id: 'calmo',      label: t('onboarding.identity.tom_calmo'),     desc: t('onboarding.identity.tom_calmo_desc'),     tone: 'poetico' },
+    { id: 'direto',     label: t('onboarding.identity.tom_direto'),    desc: t('onboarding.identity.tom_direto_desc'),    tone: 'direto' },
+  ];
+}
 
-// Substituído "Energia" abstrata pela escolha direta dos 4 mascotes oficiais —
-// alinha com landing mascotevirtual.com.br. Bond é derivado do mascote pra
-// alimentar o motor de DNA sem perder a essência procedural.
-const MASCOTES: Mascote[] = [
-  { id: 'bipo', mascotName: 'Bipo', label: 'O Calmo',       tagline: 'Presença que não corre.',  personality: 'calmo',     bond: 'companheiro',   icon: 'wind' },
-  { id: 'zip',  mascotName: 'Zip',  label: 'O Motivador',   tagline: 'Energia que não bate.',    personality: 'motivador', bond: 'guardiao',      icon: 'zap' },
-  { id: 'lulu', mascotName: 'Lulu', label: 'A Companheira', tagline: 'Carinho que escuta.',      personality: 'fofo',      bond: 'criatura_fofa', icon: 'heart' },
-  { id: 'aro',  mascotName: 'Aro',  label: 'O Sábio',       tagline: 'Pergunta que ilumina.',    personality: 'sabio',     bond: 'espirito',      icon: 'sparkle' },
-];
+// Escolha direta dos 4 mascotes oficiais — alinha com landing mascotevirtual.com.br.
+// Bond é derivado do mascote pra alimentar o motor de DNA sem perder a essência
+// procedural. Taglines reusam o namespace de onboarding.quick (idênticas).
+function buildMascotes(): Mascote[] {
+  return [
+    { id: 'bipo', mascotName: 'Bipo', label: t('onboarding.identity.m_bipo'), tagline: t('onboarding.quick.bipo_tagline'), personality: 'calmo',     bond: 'companheiro',   icon: 'wind' },
+    { id: 'zip',  mascotName: 'Zip',  label: t('onboarding.identity.m_zip'),  tagline: t('onboarding.quick.zip_tagline'),  personality: 'motivador', bond: 'guardiao',      icon: 'zap' },
+    { id: 'lulu', mascotName: 'Lulu', label: t('onboarding.identity.m_lulu'), tagline: t('onboarding.quick.lulu_tagline'), personality: 'fofo',      bond: 'criatura_fofa', icon: 'heart' },
+    { id: 'aro',  mascotName: 'Aro',  label: t('onboarding.identity.m_aro'),  tagline: t('onboarding.quick.aro_tagline'),  personality: 'sabio',     bond: 'espirito',      icon: 'sparkle' },
+  ];
+}
 
 export default function IdentityOnboarding() {
   const theme = useTheme();
@@ -140,10 +149,10 @@ export default function IdentityOnboarding() {
           <View style={[styles.progressFill, { width: `${progress}%` }]} />
         </View>
         <View style={styles.headerRow}>
-          <Pressable onPress={back} hitSlop={10} accessibilityRole="button" accessibilityLabel="Voltar" style={styles.backBtn}>
+          <Pressable onPress={back} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('common.back')} style={styles.backBtn}>
             <Icon name="arrow-left" size={18} color={theme.colors.textSecondary} strokeWidth={2.4} />
           </Pressable>
-          <Typography variant="body" style={styles.kicker}>{stepLabel('quiz')} · {step + 1} de {totalSteps}</Typography>
+          <Typography variant="body" style={styles.kicker}>{stepLabel('quiz')} · {t('onboarding.identity.step_of', step + 1, totalSteps)}</Typography>
           <View style={styles.backBtn} />
         </View>
 
@@ -173,7 +182,7 @@ export default function IdentityOnboarding() {
         )}
 
         <Button
-          label={step === 2 ? 'Gerar meu mascote' : 'Continuar'}
+          label={step === 2 ? t('onboarding.identity.cta_generate') : t('common.continue')}
           onPress={proceed}
           disabled={!canProceed}
         />
@@ -185,11 +194,12 @@ export default function IdentityOnboarding() {
 function StepObjetivo({
   theme, styles, selected, onSelect,
 }: { theme: Theme; styles: ReturnType<typeof makeStyles>; selected: Objetivo | null; onSelect: (o: Objetivo) => void }) {
+  const OBJETIVOS = buildObjetivos();
   return (
     <>
       <StaggeredView index={0}>
-        <Typography variant="body" style={styles.title}>O que tá te trazendo aqui hoje?</Typography>
-        <Typography variant="body" style={styles.subtitle}>Pode mudar depois. Vou usar pra começar pelo lugar certo.</Typography>
+        <Typography variant="body" style={styles.title}>{t('onboarding.identity.obj_title')}</Typography>
+        <Typography variant="body" style={styles.subtitle}>{t('onboarding.identity.obj_subtitle')}</Typography>
       </StaggeredView>
       <ScrollView contentContainerStyle={{ gap: theme.spacing.sm, paddingBottom: theme.spacing.md }}>
         {OBJETIVOS.map((o, i) => (
@@ -217,27 +227,28 @@ function StepObjetivo({
 function StepTom({
   theme, styles, selected, onSelect,
 }: { theme: Theme; styles: ReturnType<typeof makeStyles>; selected: Tom | null; onSelect: (t: Tom) => void }) {
+  const TONS = buildTons();
   return (
     <>
       <StaggeredView index={0}>
-        <Typography variant="body" style={styles.title}>Como você quer que ele fale com você?</Typography>
-        <Typography variant="body" style={styles.subtitle}>O jeito de falar muda quando seu mascote evolui — mas começa por aqui.</Typography>
+        <Typography variant="body" style={styles.title}>{t('onboarding.identity.tom_title')}</Typography>
+        <Typography variant="body" style={styles.subtitle}>{t('onboarding.identity.tom_subtitle')}</Typography>
       </StaggeredView>
       <ScrollView contentContainerStyle={{ gap: theme.spacing.sm, paddingBottom: theme.spacing.md }}>
-        {TONS.map((t, i) => (
-          <StaggeredView key={t.id} index={i + 1} step={40}>
+        {TONS.map((tm, i) => (
+          <StaggeredView key={tm.id} index={i + 1} step={40}>
             <PressableScale
-              style={[styles.opt, selected?.id === t.id && styles.optSelected]}
-              onPress={() => onSelect(t)}
+              style={[styles.opt, selected?.id === tm.id && styles.optSelected]}
+              onPress={() => onSelect(tm)}
               accessibilityRole="radio"
-              accessibilityState={{ selected: selected?.id === t.id }}
-              accessibilityLabel={t.label}
+              accessibilityState={{ selected: selected?.id === tm.id }}
+              accessibilityLabel={tm.label}
             >
               <View style={{ flex: 1 }}>
-                <Typography variant="body" style={[styles.optLabel, selected?.id === t.id && styles.optLabelSelected]}>{t.label}</Typography>
-                <Typography variant="body" style={[styles.optDesc, selected?.id === t.id && styles.optDescSelected]}>{t.desc}</Typography>
+                <Typography variant="body" style={[styles.optLabel, selected?.id === tm.id && styles.optLabelSelected]}>{tm.label}</Typography>
+                <Typography variant="body" style={[styles.optDesc, selected?.id === tm.id && styles.optDescSelected]}>{tm.desc}</Typography>
               </View>
-              {selected?.id === t.id && <Icon name="check" size={18} color="#fff" strokeWidth={2.8} />}
+              {selected?.id === tm.id && <Icon name="check" size={18} color="#fff" strokeWidth={2.8} />}
             </PressableScale>
           </StaggeredView>
         ))}
@@ -249,11 +260,12 @@ function StepTom({
 function StepMascote({
   theme, styles, selected, onSelect,
 }: { theme: Theme; styles: ReturnType<typeof makeStyles>; selected: Mascote | null; onSelect: (m: Mascote) => void }) {
+  const MASCOTES = buildMascotes();
   return (
     <>
       <StaggeredView index={0}>
-        <Typography variant="body" style={styles.title}>Quem vai cuidar com você?</Typography>
-        <Typography variant="body" style={styles.subtitle}>Quatro almas, um mascote. Escolhe quem combina com seu momento.</Typography>
+        <Typography variant="body" style={styles.title}>{t('onboarding.identity.mascote_title')}</Typography>
+        <Typography variant="body" style={styles.subtitle}>{t('onboarding.identity.mascote_subtitle')}</Typography>
       </StaggeredView>
       <ScrollView contentContainerStyle={{ gap: theme.spacing.sm, paddingBottom: theme.spacing.md }}>
         {MASCOTES.map((m, i) => (
@@ -263,14 +275,14 @@ function StepMascote({
               onPress={() => onSelect(m)}
               accessibilityRole="radio"
               accessibilityState={{ selected: selected?.id === m.id }}
-              accessibilityLabel={`${m.mascotName} — ${m.label}`}
+              accessibilityLabel={t('onboarding.identity.m_a11y', m.mascotName, m.label)}
             >
               <View style={[styles.iconWrap, selected?.id === m.id && styles.iconWrapSelected]}>
                 <Icon name={m.icon} size={18} color={selected?.id === m.id ? '#fff' : theme.colors.primary} strokeWidth={2.2} />
               </View>
               <View style={{ flex: 1 }}>
                 <Typography variant="body" style={[styles.optLabel, selected?.id === m.id && styles.optLabelSelected]}>
-                  {m.mascotName} · {m.label}
+                  {t('onboarding.identity.m_display', m.mascotName, m.label)}
                 </Typography>
                 <Typography variant="body" style={[styles.optDesc, selected?.id === m.id && styles.optDescSelected]} numberOfLines={2}>
                   "{m.tagline}"
