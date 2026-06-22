@@ -18,6 +18,7 @@ import { getOnboardingDraft } from '@/lib/onboarding-draft';
 import { stepLabel } from '@/lib/onboarding-flow';
 import { useStore } from '@/store';
 import { useStyles } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 import type { MascotMood, Personality } from '@/types';
 import { Input, Typography } from '@/components/ui';
@@ -82,8 +83,8 @@ export default function NameStep() {
     if (!sanitizedName) {
       const { Alert } = await import('react-native');
       Alert.alert(
-        'Nome inválido',
-        'Use ao menos 2 letras. Pode incluir espaços, hífen ou apóstrofo.',
+        t('onboarding.name.invalid_alert_title'),
+        t('onboarding.name.invalid_alert_body'),
       );
       return;
     }
@@ -194,22 +195,22 @@ export default function NameStep() {
           </View>
           <View style={styles.form}>
             <Typography variant="mono" tone="brand" style={styles.kicker}>{stepLabel('name')}</Typography>
-            <Typography variant="title">Vamos nos apresentar</Typography>
+            <Typography variant="title">{t('onboarding.name.title')}</Typography>
 
             <Input
               testID="user_name_input"
-              accessibilityLabel="Seu nome"
-              label="Como você quer ser chamado(a)?"
+              accessibilityLabel={t('onboarding.name.user_name_a11y')}
+              label={t('onboarding.name.user_name_label')}
               value={userName}
               onChangeText={setUserName}
-              placeholder="Seu nome"
+              placeholder={t('onboarding.name.user_name_placeholder')}
               returnKeyType="done"
               blurOnSubmit
               maxLength={40}
             />
 
             <Input
-              label="Nome do seu Mascote"
+              label={t('onboarding.name.mascot_name_label')}
               value={mascotName}
               onChangeText={setMascotName}
               placeholder={defaultMascotName}
@@ -219,7 +220,7 @@ export default function NameStep() {
           </View>
           <Button
             testID="onboarding_name_finish"
-            label={saving ? 'Criando seu mascote...' : 'Pronto. Vamos começar.'}
+            label={saving ? t('onboarding.name.cta_saving') : t('onboarding.name.cta_finish')}
             onPress={finish}
             disabled={!userName.trim() || saving}
           />

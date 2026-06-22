@@ -200,6 +200,17 @@ export const STRINGS_PT = {
       bubble_a11y: (firstWords: string, trait: string) =>
         `Primeiras palavras: "${firstWords}". Traço: ${trait}`,
     },
+    name: {
+      title: 'Vamos nos apresentar',
+      invalid_alert_title: 'Nome inválido',
+      invalid_alert_body: 'Use ao menos 2 letras. Pode incluir espaços, hífen ou apóstrofo.',
+      user_name_a11y: 'Seu nome',
+      user_name_label: 'Como você quer ser chamado(a)?',
+      user_name_placeholder: 'Seu nome',
+      mascot_name_label: 'Nome do seu Mascote',
+      cta_saving: 'Criando seu mascote...',
+      cta_finish: 'Pronto. Vamos começar.',
+    },
   },
   checkin: {
     back: 'Voltar',

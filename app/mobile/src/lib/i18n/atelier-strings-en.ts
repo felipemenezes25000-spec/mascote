@@ -202,6 +202,17 @@ export const STRINGS_EN: StringsBundle = {
       bubble_a11y: (firstWords: string, trait: string) =>
         `First words: "${firstWords}". Trait: ${trait}`,
     },
+    name: {
+      title: "Let's introduce ourselves",
+      invalid_alert_title: 'Invalid name',
+      invalid_alert_body: 'Use at least 2 letters. You can include spaces, hyphens, or apostrophes.',
+      user_name_a11y: 'Your name',
+      user_name_label: 'What should we call you?',
+      user_name_placeholder: 'Your name',
+      mascot_name_label: "Your Mascot's name",
+      cta_saving: 'Creating your mascot...',
+      cta_finish: "Done. Let's begin.",
+    },
   },
   checkin: {
     back: 'Back',
