@@ -6,6 +6,7 @@ import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
 import { personalities } from '@/content/personalities';
 import { useStyles, useTheme } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 import type { Personality } from '@/types';
 
@@ -20,44 +21,48 @@ interface QuizQ {
   options: QuizOption[];
 }
 
-const quiz: QuizQ[] = [
-  {
-    question: 'Quando você tá numa fase corrida, o que você mais precisa ouvir?',
-    options: [
-      { label: '"Respira, sem pressa."', weights: { calmo: 2 } },
-      { label: '"Bora, uma coisa de cada vez!"', weights: { motivador: 2 } },
-      { label: '"Eu fico aqui com você."', weights: { fofo: 2 } },
-      { label: '"O que importa de verdade hoje?"', weights: { sabio: 2 } },
-    ],
-  },
-  {
-    question: 'Como você gosta de ser elogiado?',
-    options: [
-      { label: 'Em silêncio, com presença', weights: { calmo: 2, sabio: 1 } },
-      { label: 'Com energia: "boa, mandou bem!"', weights: { motivador: 2 } },
-      { label: 'Com carinho fofo, emojis 💛', weights: { fofo: 2 } },
-      { label: 'Com uma pergunta que me faça notar a conquista', weights: { sabio: 2 } },
-    ],
-  },
-  {
-    question: 'Domingo à noite — que vibe combina mais com você?',
-    options: [
-      { label: 'Chá, pijama, silêncio', weights: { calmo: 2, fofo: 1 } },
-      { label: 'Planejar a semana animado', weights: { motivador: 2 } },
-      { label: 'Ligar pra alguém querido', weights: { fofo: 2 } },
-      { label: 'Refletir sobre o que aprendi essa semana', weights: { sabio: 2 } },
-    ],
-  },
-  {
-    question: 'Qual frase você gostaria de receber numa segunda de manhã?',
-    options: [
-      { label: '"Vai devagar, o dia cabe."', weights: { calmo: 2 } },
-      { label: '"Bora! Hoje tem missão pequena pronta pra você."', weights: { motivador: 2 } },
-      { label: '"Oi 🌱 que bom te ver hoje."', weights: { fofo: 2 } },
-      { label: '"O que merece atenção hoje?"', weights: { sabio: 2 } },
-    ],
-  },
-];
+// Por render (não módulo-level): t() pega o locale atual. Os pesos (weights)
+// são dados fixos; só question/label traduzem.
+function buildQuiz(): QuizQ[] {
+  return [
+    {
+      question: t('onboarding.quiz.q1'),
+      options: [
+        { label: t('onboarding.quiz.q1_o1'), weights: { calmo: 2 } },
+        { label: t('onboarding.quiz.q1_o2'), weights: { motivador: 2 } },
+        { label: t('onboarding.quiz.q1_o3'), weights: { fofo: 2 } },
+        { label: t('onboarding.quiz.q1_o4'), weights: { sabio: 2 } },
+      ],
+    },
+    {
+      question: t('onboarding.quiz.q2'),
+      options: [
+        { label: t('onboarding.quiz.q2_o1'), weights: { calmo: 2, sabio: 1 } },
+        { label: t('onboarding.quiz.q2_o2'), weights: { motivador: 2 } },
+        { label: t('onboarding.quiz.q2_o3'), weights: { fofo: 2 } },
+        { label: t('onboarding.quiz.q2_o4'), weights: { sabio: 2 } },
+      ],
+    },
+    {
+      question: t('onboarding.quiz.q3'),
+      options: [
+        { label: t('onboarding.quiz.q3_o1'), weights: { calmo: 2, fofo: 1 } },
+        { label: t('onboarding.quiz.q3_o2'), weights: { motivador: 2 } },
+        { label: t('onboarding.quiz.q3_o3'), weights: { fofo: 2 } },
+        { label: t('onboarding.quiz.q3_o4'), weights: { sabio: 2 } },
+      ],
+    },
+    {
+      question: t('onboarding.quiz.q4'),
+      options: [
+        { label: t('onboarding.quiz.q4_o1'), weights: { calmo: 2 } },
+        { label: t('onboarding.quiz.q4_o2'), weights: { motivador: 2 } },
+        { label: t('onboarding.quiz.q4_o3'), weights: { fofo: 2 } },
+        { label: t('onboarding.quiz.q4_o4'), weights: { sabio: 2 } },
+      ],
+    },
+  ];
+}
 
 export default function Quiz() {
   const theme = useTheme();
@@ -71,6 +76,7 @@ export default function Quiz() {
     sabio: 0,
   });
   const [showResult, setShowResult] = useState(false);
+  const quiz = buildQuiz();
 
   function answer(opt: QuizOption) {
     const next: Record<Personality, number> = { ...scores };
@@ -96,14 +102,14 @@ export default function Quiz() {
             <Mascot personality={winner} phase="ovo" mood="feliz" size={180} />
           </View>
           <View>
-            <Typography variant="body" style={styles.kicker}>Combinou contigo</Typography>
+            <Typography variant="body" style={styles.kicker}>{t('onboarding.quiz.result_kicker')}</Typography>
             <Typography variant="body" style={styles.title}>{meta.label}</Typography>
             <Typography variant="body" style={styles.tagline}>{meta.tagline}</Typography>
             <Typography variant="body" style={styles.subtitle}>{meta.description}</Typography>
           </View>
           <View style={{ gap: theme.spacing.sm }}>
             <Button
-              label={`Vou de ${meta.label}`}
+              label={t('onboarding.quiz.cta_pick', meta.label)}
               onPress={() =>
                 router.replace({
                   pathname: '/onboarding/goal',
@@ -114,9 +120,9 @@ export default function Quiz() {
             <Pressable
               onPress={() => router.replace('/onboarding/goal')}
               accessibilityRole="button"
-              accessibilityLabel="Prefiro o tour completo"
+              accessibilityLabel={t('onboarding.quiz.link_full_tour')}
             >
-              <Typography variant="body" style={styles.linkText}>Prefiro o tour completo</Typography>
+              <Typography variant="body" style={styles.linkText}>{t('onboarding.quiz.link_full_tour')}</Typography>
             </Pressable>
           </View>
         </View>
@@ -129,7 +135,7 @@ export default function Quiz() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <View style={{ gap: theme.spacing.sm }}>
-          <Typography variant="body" style={styles.kicker}>Passo 2 de 4 · pergunta {step + 1}/{quiz.length}</Typography>
+          <Typography variant="body" style={styles.kicker}>{t('onboarding.quiz.progress', step + 1, quiz.length)}</Typography>
           <View style={styles.progress}>
             <View style={[styles.progressFill, { width: `${((step + 1) / quiz.length) * 100}%` }]} />
           </View>
@@ -151,9 +157,9 @@ export default function Quiz() {
         <Pressable
           onPress={() => router.replace('/onboarding/goal')}
           accessibilityRole="button"
-          accessibilityLabel="Pular quiz e seguir o tour"
+          accessibilityLabel={t('onboarding.quiz.link_skip')}
         >
-          <Typography variant="body" style={styles.linkText}>Pular quiz e seguir o tour</Typography>
+          <Typography variant="body" style={styles.linkText}>{t('onboarding.quiz.link_skip')}</Typography>
         </Pressable>
       </View>
     </SafeAreaView>
