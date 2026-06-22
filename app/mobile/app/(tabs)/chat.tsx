@@ -11,6 +11,7 @@ import { Icon } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
 import { chatSuggestions } from '@/content/replies';
 import { getPersonality } from '@/content/personalities';
+import { t } from '@/lib/i18n';
 import { dateLocal, messages as messagesDb, todayLocal } from '@/lib/db';
 import { generateReply } from '@/lib/ai';
 import { sendChatMessage } from '@/lib/ai/chat-engine';
@@ -378,12 +379,12 @@ export default function ChatTab() {
           <View style={styles.headerSubRow}>
             <View style={[styles.statusDot, { backgroundColor: apiKey ? theme.colors.success : theme.colors.textDim }]} />
             <Typography variant="body" style={styles.headerSub}>
-              {meta.label} · {apiKey ? 'IA conectada' : 'modo offline'}
-              {!isPremium && dailyLimit !== null ? ` · ${dailyLimit} msgs/dia` : ''}
+              {meta.label} · {apiKey ? t('chat.status_online') : t('chat.status_offline')}
+              {!isPremium && dailyLimit !== null ? t('chat.daily_limit', dailyLimit) : ''}
             </Typography>
           </View>
         </View>
-        <PressableScale style={styles.iconBtn} onPress={clearHistory} hitSlop={6} accessibilityRole="button" accessibilityLabel="Nova conversa">
+        <PressableScale style={styles.iconBtn} onPress={clearHistory} hitSlop={6} accessibilityRole="button" accessibilityLabel={t('chat.new_chat_a11y')}>
           <Icon name="sparkles" size={16} color={theme.colors.text} strokeWidth={2} />
         </PressableScale>
         <PressableScale
@@ -391,7 +392,7 @@ export default function ChatTab() {
           onPress={() => router.push('/help')}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel="Ajuda emocional"
+          accessibilityLabel={t('chat.help_a11y')}
         >
           <Icon name="heart" size={16} color={theme.colors.error} strokeWidth={2.2} fill={theme.colors.error} />
         </PressableScale>
@@ -403,13 +404,13 @@ export default function ChatTab() {
             style={styles.cvvMain}
             onPress={() => router.push('/safe-night')}
             accessibilityRole="button"
-            accessibilityLabel="Tô em momento ruim · só presença"
+            accessibilityLabel={t('chat.crisis_banner')}
             // cvvBanner tem paddingVertical 10 + Icon 14 → ~34px height. hitSlop
             // top/bottom 6 leva alvo pra ~46px sem encostar no input bar acima.
             hitSlop={{ top: 6, bottom: 6 }}
           >
             <Icon name="shield" size={14} color={theme.colors.warning} strokeWidth={2} />
-            <Typography variant="body" style={styles.cvvText}>Tô em momento ruim · só presença</Typography>
+            <Typography variant="body" style={styles.cvvText}>{t('chat.crisis_banner')}</Typography>
           </Pressable>
           <Pressable
             onPress={() => {
@@ -420,7 +421,7 @@ export default function ChatTab() {
             // crítico por estar no fluxo de crise/segurança.
             hitSlop={15}
             accessibilityRole="button"
-            accessibilityLabel="Fechar"
+            accessibilityLabel={t('chat.close_a11y')}
           >
             <Icon name="x" size={14} color={theme.colors.text} strokeWidth={2.2} />
           </Pressable>
@@ -440,8 +441,8 @@ export default function ChatTab() {
           ListEmptyComponent={
             !sending ? (
               <View style={styles.emptyWrap}>
-                <Typography variant="body" style={styles.emptyTitle}>Conversa vazia por enquanto</Typography>
-                <Typography variant="body" style={styles.emptyBody}>Escolha uma sugestão ou escreva como você está agora.</Typography>
+                <Typography variant="body" style={styles.emptyTitle}>{t('chat.empty_title')}</Typography>
+                <Typography variant="body" style={styles.emptyBody}>{t('chat.empty_body')}</Typography>
               </View>
             ) : null
           }
@@ -481,9 +482,9 @@ export default function ChatTab() {
                     <Typography
                       variant="body"
                       style={styles.localBadge}
-                      accessibilityLabel="Resposta local sem IA na nuvem"
+                      accessibilityLabel={t('chat.local_badge_a11y')}
                     >
-                      modo local
+                      {t('chat.local_badge')}
                     </Typography>
                   </View>
                 ) : null}
@@ -502,10 +503,10 @@ export default function ChatTab() {
             style={styles.suggestionsToggle}
             onPress={() => setShowSuggestions(true)}
             accessibilityRole="button"
-            accessibilityLabel="Mostrar sugestões de conversa"
+            accessibilityLabel={t('chat.suggestions_show_a11y')}
             hitSlop={{ top: 8, bottom: 8, left: 12, right: 12 }}
           >
-            <Typography variant="body" style={styles.suggestionsToggleText}>Sugestões ▸</Typography>
+            <Typography variant="body" style={styles.suggestionsToggleText}>{t('chat.suggestions_open')}</Typography>
           </PressableScale>
         ) : null}
         {showSuggestions ? (
@@ -515,10 +516,10 @@ export default function ChatTab() {
                 style={styles.suggestionsToggle}
                 onPress={() => setShowSuggestions(false)}
                 accessibilityRole="button"
-                accessibilityLabel="Ocultar sugestões"
+                accessibilityLabel={t('chat.suggestions_hide_a11y')}
                 hitSlop={{ top: 8, bottom: 8, left: 12, right: 12 }}
               >
-                <Typography variant="body" style={styles.suggestionsToggleText}>Sugestões ▾</Typography>
+                <Typography variant="body" style={styles.suggestionsToggleText}>{t('chat.suggestions_close')}</Typography>
               </PressableScale>
             ) : null}
             <ScrollView
@@ -547,10 +548,10 @@ export default function ChatTab() {
         <View style={styles.inputBar}>
           <TextInput
             testID="chat_input"
-            accessibilityLabel="Mensagem pro mascote"
+            accessibilityLabel={t('chat.input_a11y')}
             value={input}
             onChangeText={setInput}
-            placeholder="Conta como você tá..."
+            placeholder={t('chat.input_placeholder')}
             placeholderTextColor={theme.colors.textDim}
             style={styles.input}
             onSubmitEditing={() => send()}
@@ -571,7 +572,7 @@ export default function ChatTab() {
             disabled={!input.trim() || sending}
             style={[styles.sendBtn, (!input.trim() || sending) && { opacity: 0.4 }]}
             accessibilityRole="button"
-            accessibilityLabel="Enviar mensagem"
+            accessibilityLabel={t('chat.send_a11y')}
             hitSlop={8}
           >
             {sending ? (

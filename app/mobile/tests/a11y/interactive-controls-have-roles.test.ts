@@ -160,8 +160,10 @@ describe('a11y: controles interativos têm accessibilityRole', () => {
     // pra não regredir nenhum deles silenciosamente.
     const roles = text.match(/accessibilityRole="button"/g) ?? [];
     expect(roles.length, 'chat perdeu accessibilityRole em controles').toBeGreaterThanOrEqual(8);
+    // Aceita label cru ("Enviar mensagem") ou i18n ({t('chat.send_a11y')}) — a
+    // label segue garantida, só virou traduzível na Fase 3 de i18n.
     expect(text, 'enviar sem role').toMatch(
-      /accessibilityRole="button"\s+accessibilityLabel="Enviar mensagem"/,
+      /accessibilityRole="button"\s+accessibilityLabel=(\{t\('[^']+'\)\}|"[^"]+")/,
     );
   });
 

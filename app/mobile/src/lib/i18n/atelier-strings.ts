@@ -406,6 +406,26 @@ export const STRINGS_PT = {
       hint_customize: 'Abre o closet de acessórios e cenários',
     },
   },
+  chat: {
+    status_online: 'IA conectada',
+    status_offline: 'modo offline',
+    daily_limit: (n: number) => ` · ${n} msgs/dia`,
+    new_chat_a11y: 'Nova conversa',
+    help_a11y: 'Ajuda emocional',
+    crisis_banner: 'Tô em momento ruim · só presença',
+    close_a11y: 'Fechar',
+    empty_title: 'Conversa vazia por enquanto',
+    empty_body: 'Escolha uma sugestão ou escreva como você está agora.',
+    local_badge: 'modo local',
+    local_badge_a11y: 'Resposta local sem IA na nuvem',
+    suggestions_show_a11y: 'Mostrar sugestões de conversa',
+    suggestions_hide_a11y: 'Ocultar sugestões',
+    suggestions_open: 'Sugestões ▸',
+    suggestions_close: 'Sugestões ▾',
+    input_a11y: 'Mensagem pro mascote',
+    input_placeholder: 'Conta como você tá...',
+    send_a11y: 'Enviar mensagem',
+  },
 };
 
 export type StringsPT = typeof STRINGS_PT;
