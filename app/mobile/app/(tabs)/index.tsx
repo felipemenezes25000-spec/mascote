@@ -341,9 +341,9 @@ export default function Home() {
   useEffect(() => {
     if (welcomeParam !== '1' || welcomeFiredRef.current) return;
     welcomeFiredRef.current = true;
-    enqueueToast({ kind: 'level', emoji: '⭐', title: 'Nível 2 desbloqueado', subtitle: '+50 XP de boas-vindas' });
-    enqueueToast({ kind: 'accessory', emoji: '🧢', title: 'Boné azul equipado', subtitle: 'Seu primeiro acessório' });
-    enqueueToast({ kind: 'info', emoji: '🪙', title: '+25 moedas', subtitle: 'Use na loja quando quiser' });
+    enqueueToast({ kind: 'level', emoji: '⭐', title: t('home.screen.welcome_level_title'), subtitle: t('home.screen.welcome_level_sub') });
+    enqueueToast({ kind: 'accessory', emoji: '🧢', title: t('home.screen.welcome_accessory_title'), subtitle: t('home.screen.welcome_accessory_sub') });
+    enqueueToast({ kind: 'info', emoji: '🪙', title: t('home.screen.welcome_coins_title'), subtitle: t('home.screen.welcome_coins_sub') });
   }, [welcomeParam, enqueueToast]);
 
   useFocusEffect(
@@ -389,8 +389,8 @@ export default function Home() {
         enqueueToast({
           kind: 'info',
           emoji: '💧',
-          title: 'Primeira evolução!',
-          subtitle: `${out.mascot.name} brilhou um pouco mais — você cuidou de si.`,
+          title: t('home.screen.first_evo_title'),
+          subtitle: t('home.screen.first_evo_sub', out.mascot.name),
         });
       }
       if (out.streakMilestone && out.streak.current_streak >= 7) {

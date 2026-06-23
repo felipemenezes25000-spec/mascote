@@ -299,7 +299,7 @@ export default function ChatTab() {
         const sysMsg = await messagesDb.add({
           conversation_id: profile.id,
           role: 'system',
-          content: 'Não consegui responder agora. Tenta de novo em um instante.',
+          content: t('chat.error_reply'),
           safety_flag: 'safe',
           cached: false,
         });
@@ -592,8 +592,8 @@ function formatDate(date: string): string {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const ydStr = dateLocal(yesterday);
-  if (date === today) return 'Hoje';
-  if (date === ydStr) return 'Ontem';
+  if (date === today) return t('chat.date_today');
+  if (date === ydStr) return t('chat.date_yesterday');
   const [, m, d] = date.split('-');
   return `${d}/${m}`;
 }

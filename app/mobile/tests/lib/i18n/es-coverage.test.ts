@@ -42,6 +42,13 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     'onboarding.style.title',
     'checkin.q_sleep',
     'checkin_result.saving',
+    // Regressão jun/23: strings que tinham vazado hardcoded em PT nas telas
+    // chat/home/settings (não passavam por t()), agora extraídas.
+    'home.actions.label_play',
+    'chat.date_today',
+    'chat.error_reply',
+    'home.screen.welcome_level_title',
+    'settings.disclaimer',
   ];
 
   it('EN e ES diferem do PT (e não devolvem o path literal)', () => {
@@ -67,6 +74,17 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     setLocale('en');
     expect(t('checkin_result.smiled', 'Lumo')).toBe('Lumo smiled.');
     expect(t('mission_done.reward_xp', 10, 5)).toBe('+10 XP · +5 🪙');
+  });
+
+  it('first_evo_sub interpola o nome do mascote por idioma', () => {
+    setLocale('pt');
+    expect(t('home.screen.first_evo_sub', 'Lumo')).toContain('Lumo');
+    setLocale('en');
+    const en = t('home.screen.first_evo_sub', 'Lumo');
+    expect(en).toContain('Lumo');
+    expect(en).toContain('brighter');
+    setLocale('es');
+    expect(t('home.screen.first_evo_sub', 'Lumo')).toContain('Lumo');
   });
 });
 

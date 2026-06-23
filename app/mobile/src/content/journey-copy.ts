@@ -67,11 +67,3 @@ export const JOURNEY_NOTIFICATIONS = {
     body: 'Seu Mascote guardou seu lugar. A jornada continua exatamente de onde parou.',
   }),
 } as const;
-
-/** Microcopy dos botões de ação da Home. */
-export const HOME_ACTIONS_COPY = {
-  play: 'Jogar',
-  care: 'Cuidar',
-  talk: 'Conversar',
-  customize: 'Personalizar',
-} as const;

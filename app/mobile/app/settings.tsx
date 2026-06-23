@@ -581,7 +581,7 @@ export default function SettingsScreen() {
         </Section>
 
         <Typography variant="body" style={styles.disclaimer}>
-          Mascote é wellness e autocuidado. Não substitui acompanhamento profissional. Em crise: CVV 188.
+          {t('settings.disclaimer')}
         </Typography>
         <View style={{ height: 60 }} />
       </ScrollView>
