@@ -195,6 +195,19 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     // sem artigo). "beber o veneno" e "bebeu veneno" escapavam pro reply normal.
     'vou beber o veneno',
     'ele bebeu veneno',
+    // === Ampliação 2026-06-23 ajuste1 (auditoria backend) ===
+    // "mata" (3ª pessoa) faltava na ênclise (matar-/matei-/mato- já casavam).
+    'mata-me logo',
+    // "beber UM veneno" — antes o artigo opcional só cobria "o", não "um".
+    'vou beber um veneno',
+    // "gostaria/preferia de não estar vivo" — condicional escapava (só o volitivo
+    // "não quero estar vivo" e "preferia não acordar/existir" eram cobertos).
+    'gostaria de não estar vivo',
+    'preferia não estar viva',
+    // "(tenho) vontade de ficar morta" — enquadramento nominal (só "quero/queria
+    // estar/ficar morto" era coberto).
+    'tenho vontade de ficar morta',
+    'desejo de estar morto',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -213,6 +226,13 @@ describe('classifyInput — high (crise emocional aguda)', () => {
     'pensamento intrusivo',
     'tô surtando',
     'quero desaparecer',
+    // === Ampliação 2026-06-23 ajuste1 (auditoria backend) ===
+    // Desejo de sumir no enquadramento nominal (só "quero desaparecer" cobria).
+    'tenho vontade de desaparecer',
+    'desejo de desaparecer',
+    // Percepção de ser um peso (burdensomeness) — presente direto.
+    'sou um fardo pra todos',
+    'me sinto um peso pra minha família',
   ];
 
   it.each(highPhrases)('"%s" → high', phrase => {
@@ -308,6 +328,11 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     // Regressão (2026-06-18 ajuste2): ênclise/reflexivo benignos não podem virar
     // FP. Lista explícita de verbos (matar|cortar|...) evita pegar "matricular-me".
     'preciso matricular-me no curso',     // ênclise de verbo não-crise (matrícula)
+    // Regressão (2026-06-23 ajuste1): as novas âncoras (estar vivo condicional /
+    // ficar morto nominal / fardo-peso) não podem capturar idioma benigno.
+    'gostaria de estar vivo pra ver isso', // "estar vivo" SEM negação (afirmação)
+    'tô com vontade de ficar morto de cansaço', // hipérbole excluída pelo lookahead
+    'esse projeto é um peso pra equipe',  // "é um peso" (carga), não "sou/me sinto"
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {

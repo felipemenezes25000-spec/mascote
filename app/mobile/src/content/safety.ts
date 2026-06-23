@@ -134,7 +134,7 @@ const criticalPatterns = [
   // Auditoria 2026-06-18: + 3ª pessoa "bebe(u)" e artigo opcional ("beber O veneno")
   // — antes só beber/bebi/bebo/bebendo sem artigo casavam; "beber o veneno" e
   // "bebeu veneno" escapavam.
-  /\bbeb(er|i|o|e|eu|endo)(?:\s+o)?\s+veneno\b/i,
+  /\bbeb(er|i|o|e|eu|endo)(?:\s+(?:o|um))?\s+veneno\b/i,
   /\bchumbinho\b/i,
   // Eufemismos "dar cabo da minha vida / de mim" e "dar um fim À minha vida" (a linha
   // de "dar fim" tinha "na minha vida" mas não a crase). "dar cabo" exige objeto de
@@ -209,7 +209,22 @@ const criticalPatterns = [
   // então a ênclise — válida e usada em escrita mais formal/sob estresse — escapava.
   // Lista EXPLÍCITA de verbos (não \w*) pra não pegar "matricular-me" (matrícula),
   // "apresentar-me" etc. Cobre os verbos-núcleo de autolesão em inf/presente/passado.
-  /\b(matar|matei|mato|matarei|mataria|cortar|cortei|corto|enforcar|enforquei|envenenar|envenenei|mutilar|mutilei)-(me|se)\b/i,
+  // "mata" (3ª pessoa presente) faltava na lista de ênclise — "mata-me" /
+  // "mata-se" (escrita formal/sob estresse) escapava enquanto matar-/matei-/mato-
+  // já casavam. Adicionada na auditoria 2026-06-23 ajuste1.
+  /\b(matar|mata|matei|mato|matarei|mataria|cortar|cortei|corto|enforcar|enforquei|envenenar|envenenei|mutilar|mutilei)-(me|se)\b/i,
+  // === Ampliação PT-BR (auditoria 2026-06-23 ajuste1) ===
+  // "gostaria/preferia de não estar vivo/a". As linhas existentes cobriam
+  // "não quero (mais) estar vivo" (volitivo direto) e "preferia não
+  // acordar|existir|estar aqui" — mas "não estar VIVO" no modo condicional
+  // (gostaria/preferia) escapava pro reply normal. A negação obrigatória mantém
+  // "gostaria de estar vivo pra ver isso" fora do crítico.
+  /(gostaria\s+de|prefer(ia|iria|i))\s+n[ãa]o\s+estar\s+viv[oa]\b/i,
+  // Não-existência via enquadramento nominal: "(tenho) vontade/desejo de
+  // ficar/estar morto/a" ou "gostaria de ficar morto". A linha de "quero/queria
+  // estar/ficar morto" só cobria o verbo querer. Mesmo lookahead da hipérbole
+  // pt-BR ("morto de cansaço/fome/sono/rir…") pra não pegar exaustão.
+  /((vontade|desejo)\s+de|gostaria\s+de)\s+(estar|ficar)\s+mort[oa]\b(?!\s+de\s+(cansa|fome|sono|rir|medo|t[ée]dio|trabalh|nojo|raiva))/i,
 ];
 
 const highPatterns = [
@@ -222,6 +237,15 @@ const highPatterns = [
   /pensamento\s+(ruim|intrusivo)/i,
   /t[ôo]\s+surtando/i,
   /quero\s+desaparecer/i,
+  // === Ampliação PT-BR (auditoria 2026-06-23 ajuste1) ===
+  // Desejo de sumir além do volitivo direto: "(tenho) vontade/desejo de
+  // desaparecer". A linha "quero desaparecer" só cobria o verbo querer.
+  /(vontade|desejo)\s+de\s+desaparecer/i,
+  // Percepção de ser um peso (burdensomeness) — sinal de risco reconhecido.
+  // Presente direto "sou/me sinto um fardo|peso|estorvo" ancorado num
+  // destinatário (todos/família/mundo/vocês) pra não pegar "isso é um peso pra
+  // equipe" (carga de trabalho). High → acolhimento + CVV.
+  /\b(sou|me\s+sinto)\s+(um\s+)?(fardo|peso|estorvo)\s+(pra|para|p\/)\s+(todos?|tod[ao]s|todo\s+mundo|minha\s+fam[íi]lia|a\s+fam[íi]lia|voc[êe]s|os\s+outros|as\s+pessoas)/i,
   // === Sintomas físicos comuns de crise ansiosa ===
   /ataque\s+de\s+p[âa]nico/i,
   /taquicardia/i,
