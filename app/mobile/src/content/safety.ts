@@ -56,6 +56,13 @@ const criticalPatterns = [
   // acordar". A negação obrigatória entre "e" e "acordar" mantém "dormir e
   // acordar cedo" (rotina) fora do crítico.
   /dormir\s+e\s+(n[ãa]o\s+(mais\s+)?|nunca\s+mais\s+)acordar/i,
+  // === Ampliação PT-BR (auditoria 2026-06-24 ajuste1) ===
+  // Eufemismo de sono eterno: "dormir pra/para sempre". A linha "dormir e não
+  // acordar" exigia o verbo "acordar"; "queria dormir pra sempre" — igualmente
+  // clássico como ideação passiva — escapava pro reply normal. "dormir" precisa
+  // ser IMEDIATAMENTE seguido de "pra/para sempre" pra não pegar o benigno
+  // "dormir cedo pra sempre acordar disposto" (há palavra entre dormir e pra).
+  /\bdormir\s+(pra|para)\s+sempre\b/i,
   // Eufemismos comuns no português: "dar fim em mim", "me apagar".
   // "em tudo" cobre "dar um fim em tudo (isso)" — simétrico ao "a tudo" já
   // listado, que o padrão anterior tinha mas sem a preposição "em".
@@ -97,6 +104,19 @@ const criticalPatterns = [
   // pra/em viver". Ancorado em "viver|vida" pra não pegar "não vejo motivo pra
   // continuar lendo isso". Antes dependia só do sentiment.
   /n[ãa]o\s+(tenho|vejo)\s+(mais\s+)?(motivo|raz[ãa]o|sentido)\s+(pra|para|em|de|na|no)\s+(viver|vida)\b/i,
+  // === Ampliação PT-BR (auditoria 2026-06-24 ajuste1) ===
+  // Exaustão existencial por falta de forças: "não tenho (mais) força(s) pra
+  // viver". A linha "não aguento mais viver" cobria a exaustão negada e "não
+  // tenho motivo pra viver" a perda de sentido — mas "não tenho forças pra
+  // viver" (esgotamento volitivo) escapava. Ancorado em "viver" pra manter o
+  // cotidiano "não tenho forças pra terminar isso/pra academia" fora do crítico.
+  /n[ãa]o\s+tenho\s+(mais\s+)?for[çc]as?\s+(pra|para|de)\s+viver\b/i,
+  // Desesperança existencial direta: "a/minha vida não faz/tem (mais) sentido".
+  // A linha "não tenho/vejo sentido pra viver" exigia o verbo "ter/ver" + sujeito
+  // em 1ª pessoa; o enquadramento impessoal ("a vida não faz mais sentido") caía
+  // só no sentiment (frágil). Ancorado em "(a|minha) vida" pra não pegar o
+  // genérico "isso/essa regra não faz sentido".
+  /\b(a|minha)\s+vida\s+(j[áa]\s+)?n[ãa]o\s+(faz|tem)\s+(mais\s+)?sentido\b/i,
   // Ideação por fardo ("todos/família/mundo ficariam melhor sem mim"). Sinal
   // clássico de suicidalidade (percepção de ser um peso). Ancorado num verbo de
   // existência (estaria/seria/ficaria...) imediatamente antes de "melhor sem mim"
@@ -236,7 +256,11 @@ const highPatterns = [
   /sem\s+esperan[çc]a/i,
   /pensamento\s+(ruim|intrusivo)/i,
   /t[ôo]\s+surtando/i,
-  /quero\s+desaparecer/i,
+  // "quero desaparecer" / "queria desaparecer". Bug anterior: só o presente
+  // "quero" casava, então o imperfeito "queria desaparecer" — fraseado
+  // igualmente comum de desejo de sumir — caía no reply normal (auditoria
+  // 2026-06-24 ajuste1). Simétrico ao quero/queria já usado nos críticos.
+  /quer(o|ia)\s+desaparecer/i,
   // === Ampliação PT-BR (auditoria 2026-06-23 ajuste1) ===
   // Desejo de sumir além do volitivo direto: "(tenho) vontade/desejo de
   // desaparecer". A linha "quero desaparecer" só cobria o verbo querer.

@@ -72,7 +72,7 @@ export async function rememberReply(
   });
 }
 
-/** Heurística simples: Jaccard 80%+ de palavras longas em comum. */
+/** Heurística simples: Jaccard ≥0.5 de palavras longas (>3 chars) em comum. */
 export function isNearDuplicate(a: string, b: string): boolean {
   const wordsA = new Set(a.toLowerCase().split(/\s+/).filter(w => w.length > 3));
   const wordsB = new Set(b.toLowerCase().split(/\s+/).filter(w => w.length > 3));

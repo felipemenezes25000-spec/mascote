@@ -208,6 +208,19 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     // estar/ficar morto" era coberto).
     'tenho vontade de ficar morta',
     'desejo de estar morto',
+    // === Ampliação 2026-06-24 ajuste1 (auditoria backend) ===
+    // "dormir pra/para sempre" — eufemismo de sono eterno (antes só "dormir e
+    // não acordar" exigindo o verbo acordar).
+    'queria dormir pra sempre',
+    'só queria dormir para sempre',
+    // "não tenho (mais) força(s) pra viver" — exaustão volitiva ancorada em viver
+    // (antes só "não aguento mais viver" / "não tenho motivo pra viver").
+    'não tenho mais forças pra viver',
+    'não tenho força pra viver',
+    // "a/minha vida não faz/tem (mais) sentido" — desesperança impessoal (antes
+    // só "não tenho/vejo sentido pra viver" com sujeito em 1ª pessoa).
+    'a vida não faz mais sentido',
+    'minha vida não tem mais sentido',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -233,6 +246,9 @@ describe('classifyInput — high (crise emocional aguda)', () => {
     // Percepção de ser um peso (burdensomeness) — presente direto.
     'sou um fardo pra todos',
     'me sinto um peso pra minha família',
+    // === Ampliação 2026-06-24 ajuste1 (auditoria backend) ===
+    // "queria desaparecer" — imperfeito (antes só o presente "quero desaparecer").
+    'queria desaparecer',
   ];
 
   it.each(highPhrases)('"%s" → high', phrase => {
@@ -333,6 +349,11 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'gostaria de estar vivo pra ver isso', // "estar vivo" SEM negação (afirmação)
     'tô com vontade de ficar morto de cansaço', // hipérbole excluída pelo lookahead
     'esse projeto é um peso pra equipe',  // "é um peso" (carga), não "sou/me sinto"
+    // Regressão (2026-06-24 ajuste1): as novas âncoras (dormir pra sempre / forças
+    // pra viver / vida não faz sentido) não podem capturar idioma benigno homônimo.
+    'preciso dormir cedo pra sempre acordar disposto', // palavra entre dormir e "pra sempre"
+    'não tenho forças pra terminar esse projeto hoje', // "forças pra" sem viver
+    'essa regra não faz sentido nenhum',  // "não faz sentido" sem "(a|minha) vida"
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {
