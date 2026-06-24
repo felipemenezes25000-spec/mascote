@@ -49,6 +49,10 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     'chat.error_reply',
     'home.screen.welcome_level_title',
     'settings.disclaimer',
+    // Regressão jun/24: toasts de check-in da Home (streak/nível/microevolução/
+    // unlock) que ainda vazavam PT cru em useHomeActions, agora via t().
+    'home.screen.checkin_level_sub',
+    'home.screen.unlock_scene_sub',
   ];
 
   it('EN e ES diferem do PT (e não devolvem o path literal)', () => {
@@ -74,6 +78,9 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     setLocale('en');
     expect(t('checkin_result.smiled', 'Lumo')).toBe('Lumo smiled.');
     expect(t('mission_done.reward_xp', 10, 5)).toBe('+10 XP · +5 🪙');
+    expect(t('home.screen.checkin_streak_title', 7)).toBe('7-day streak!');
+    setLocale('es');
+    expect(t('home.screen.checkin_streak_title', 7)).toBe('¡Racha de 7 días!');
   });
 
   it('first_evo_sub interpola o nome do mascote por idioma', () => {

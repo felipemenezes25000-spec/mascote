@@ -33,6 +33,7 @@ import { playSfx } from '@/lib/sfx';
 import { playVoiceLine, voiceProfileFromGenome } from '@/lib/voice';
 import { getEvolutionStory, type EvolutionStory } from '@/lib/evolution-stories';
 import { creatureMoments } from '@/lib/moments';
+import { t } from '@/lib/i18n';
 import { mascotMemoryService } from '@/game/memory/MascotMemoryService';
 import { hasRareFormTrigger } from '@/game/evolution/EvolutionMilestones';
 import type { HabitKind, Mascot, MascotPhase, Profile, Settings, Streak } from '@/types';
@@ -164,7 +165,7 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
         enqueueToast({
           kind: 'info',
           emoji: '🔥',
-          title: `Streak de ${out.streak.current_streak} dias!`,
+          title: t('home.screen.checkin_streak_title', out.streak.current_streak),
           subtitle: `+${out.xpGained} XP · +${out.gemsGained} 💎`,
         });
         creatureMoments.emit('streak.milestone', {
@@ -212,11 +213,11 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
       } else if (out.leveledUp) {
         haptic('success');
         opts.onLevelUp(out.mascot);
-        enqueueToast({ kind: 'level', emoji: '⭐', title: `Nível ${out.mascot.level}`, subtitle: 'Continue assim' });
+        enqueueToast({ kind: 'level', emoji: '⭐', title: t('home.screen.checkin_level_title', out.mascot.level), subtitle: t('home.screen.checkin_level_sub') });
       } else if (out.xpGained > 0) {
         opts.onFlash(`+${out.xpGained} XP · +${out.coinsGained} 🪙`);
       } else {
-        opts.onFlash('Anotado (limite diário atingido)', 1800);
+        opts.onFlash(t('home.screen.checkin_daily_limit'), 1800);
       }
 
       // Janela de undo (15s) — não oferece se evoluiu ou se foi idempotente.
@@ -232,8 +233,8 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
         enqueueToast({
           kind: 'info',
           emoji: '✨',
-          title: 'Microevolução!',
-          subtitle: first?.label ?? 'Seu mascote mudou sutilmente',
+          title: t('home.screen.micro_evo_title'),
+          subtitle: first?.label ?? t('home.screen.micro_evo_sub'),
         });
         creatureMoments.emit('microevolution.observed', {
           kind: (first as { kind?: string } | undefined)?.kind ?? 'unknown',
@@ -246,16 +247,16 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
           enqueueToast({
             kind: 'mutation',
             emoji: '🌟',
-            title: 'Forma rara',
-            subtitle: first?.label ?? 'Um traço raro apareceu no mascote.',
+            title: t('home.screen.rare_form_title'),
+            subtitle: first?.label ?? t('home.screen.rare_form_sub'),
             rarity: 'rare',
           });
         }
       }
 
       for (const a of out.unlocks.achievements) enqueueToast({ kind: 'achievement', emoji: a.emoji, title: a.title, subtitle: a.description });
-      for (const acc of out.unlocks.accessories) enqueueToast({ kind: 'accessory', emoji: acc.emoji, title: acc.name, subtitle: 'Equipe no Closet' });
-      for (const sc of out.unlocks.scenes) enqueueToast({ kind: 'scene', emoji: sc.emoji, title: sc.name, subtitle: 'Cenário desbloqueado' });
+      for (const acc of out.unlocks.accessories) enqueueToast({ kind: 'accessory', emoji: acc.emoji, title: acc.name, subtitle: t('home.screen.unlock_accessory_sub') });
+      for (const sc of out.unlocks.scenes) enqueueToast({ kind: 'scene', emoji: sc.emoji, title: sc.name, subtitle: t('home.screen.unlock_scene_sub') });
       for (const mut of out.newMutations) {
         enqueueToast({
           kind: 'mutation',
