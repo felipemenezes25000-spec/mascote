@@ -245,6 +245,37 @@ const criticalPatterns = [
   // estar/ficar morto" só cobria o verbo querer. Mesmo lookahead da hipérbole
   // pt-BR ("morto de cansaço/fome/sono/rir…") pra não pegar exaustão.
   /((vontade|desejo)\s+de|gostaria\s+de)\s+(estar|ficar)\s+mort[oa]\b(?!\s+de\s+(cansa|fome|sono|rir|medo|t[ée]dio|trabalh|nojo|raiva))/i,
+  // === Ampliação PT-BR (auditoria 2026-06-25 ajuste1) ===
+  // Forma BARE "não quero viver" (sem o "mais" que as linhas existentes exigem:
+  // "não quero MAIS viver" e "não quero viver MAIS"). A negação volitiva direta é
+  // ideação inequívoca; o lookahead de fim-de-frase mantém o benigno "não quero
+  // viver assim/nessa cidade/com medo" (relocação/condicional) fora do crítico,
+  // já que essas formas continuam a frase depois de "viver".
+  /n[ãa]o\s+quero\s+viver\s*(?=[.!?]|$)/i,
+  // Perda da vontade de viver: "não tenho (mais) vontade de viver" / "perdi a
+  // vontade de viver" / "sem vontade de viver". "vontade" não estava no grupo
+  // (motivo|razão|sentido) da linha de perda-de-sentido, então a anedonia
+  // existencial mais direta caía só no sentiment (frágil). A negação/perda é
+  // obrigatória (exclui o positivo "tenho vontade de viver a vida ao máximo") e o
+  // lookahead exclui o transitivo benigno "viver isso de novo / longe / com você".
+  /(n[ãa]o\s+tenho\s+(mais\s+)?|perdi\s+(toda\s+)?(a\s+)?(minha\s+)?|sem\s+)vontade\s+de\s+viver\b(?!\s+(isso|aquilo|essa|esse|de\s+novo|longe|junto|perto|sozinh|com\s+voc[êe]))/i,
+  // Artigo opcional no veneno ingerido: "tomar/engolir UM/O veneno". A linha de
+  // BEBER veneno ganhou o artigo opcional na auditoria 2026-06-23, mas a de
+  // tomar/engolir ficou sem — "tomei um veneno" / "engoli o veneno" escapavam por
+  // simetria perdida. O artigo é opcional pra manter "tomar veneno" (sem artigo)
+  // ainda coberto. A âncora do verbo de ingestão mantém o benigno fora.
+  /(tom(ar|ei|o|ando)|engol(ir|i|indo))\s+(o\s+|um\s+)?veneno\b/i,
+  // Não-existência via "nunca ter existido" — simétrico a "nunca ter nascido", já
+  // listado. "queria/preferia nunca ter existido" é desejo de não-existência
+  // inequívoco em 1ª pessoa; "ter existido" referido a uma coisa é gramaticalmente
+  // incomum ("preferia que isso nunca TIVESSE existido" usa o imperfeito, não "ter").
+  /nunca\s+ter\s+(nascido|existido)\b/i,
+  // Ideação passiva no subjuntivo com verbo de não-existência: "(seria/era) melhor
+  // se eu não existisse / sumisse / desaparecesse". A linha "melhor se eu morresse"
+  // (2026-06-15) só cobria "morrer"; estes sinônimos de não-existência no mesmo
+  // enquadramento condicional escapavam. A âncora "(seria|era) melhor se eu" + esses
+  // verbos específicos mantém "seria melhor se eu estudasse mais/saísse" fora.
+  /(seria|era)\s+melhor\s+(se\s+)?eu\s+(n[ãa]o\s+existisse|sumisse|desaparecesse)\b/i,
 ];
 
 const highPatterns = [

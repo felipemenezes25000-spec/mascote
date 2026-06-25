@@ -221,6 +221,26 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     // só "não tenho/vejo sentido pra viver" com sujeito em 1ª pessoa).
     'a vida não faz mais sentido',
     'minha vida não tem mais sentido',
+    // === Ampliação 2026-06-25 ajuste1 (auditoria backend) ===
+    // Forma bare "não quero viver" (só "não quero MAIS viver" / "viver MAIS" eram
+    // cobertos) — terminal pra excluir "não quero viver assim/nessa cidade".
+    'não quero viver',
+    'não quero viver.',
+    // Perda da vontade de viver — "vontade" não estava no grupo motivo|razão|sentido.
+    'perdi a vontade de viver',
+    'não tenho mais vontade de viver',
+    'sem vontade de viver',
+    // "tomar/engolir UM/O veneno" — só "beber um veneno" ganhou o artigo opcional
+    // (2026-06-23); a simetria com tomar/engolir faltava.
+    'tomei um veneno',
+    'vou engolir o veneno',
+    // "nunca ter existido" — simétrico a "nunca ter nascido" (não-existência).
+    'queria nunca ter existido',
+    // "(seria/era) melhor se eu não existisse/sumisse/desaparecesse" — subjuntivo de
+    // não-existência (antes só "melhor se eu morresse").
+    'seria melhor se eu não existisse',
+    'era melhor se eu sumisse',
+    'seria melhor se eu desaparecesse',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -354,6 +374,17 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'preciso dormir cedo pra sempre acordar disposto', // palavra entre dormir e "pra sempre"
     'não tenho forças pra terminar esse projeto hoje', // "forças pra" sem viver
     'essa regra não faz sentido nenhum',  // "não faz sentido" sem "(a|minha) vida"
+    // Regressão (2026-06-25 ajuste1): as novas âncoras (não quero viver / vontade
+    // de viver / tomar veneno / nunca ter existido / melhor se eu) não podem
+    // capturar idioma benigno homônimo.
+    'não quero viver nessa cidade',        // "não quero viver" não-terminal (relocação)
+    'não quero viver assim, vou mudar',    // idem, continua a frase
+    'tenho vontade de viver a vida ao máximo', // afirmação positiva (sem negação)
+    'não tenho vontade de viver isso de novo', // "viver isso" transitivo (lookahead)
+    'vou tomar um café agora',             // "tomar um X" não-veneno
+    'tomar uma soneca agora',              // "tomar" sem veneno
+    'seria melhor se eu estudasse mais',   // subjuntivo benigno (verbo fora da lista)
+    'era melhor se eu saísse mais de casa', // idem
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {

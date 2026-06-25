@@ -33,8 +33,14 @@ export class SubscriptionService {
   }
 
   async restore(userId: string) {
-    const result = await restorePurchasesService.restore(userId);
-    return result.tier;
+    // withLock serializa com subscribe/cancel/syncEntitlements (mesma key). Sem
+    // isto, restore — que faz read-then-write do tier (getTier previous → setTier)
+    // — podia interlear com o syncEntitlements disparado no launch, gerando
+    // lost-update na reconciliação. Era o único mutador de tier sem o lock.
+    return withLock(`subscribe:${userId}`, async () => {
+      const result = await restorePurchasesService.restore(userId);
+      return result.tier;
+    });
   }
 
   /**
