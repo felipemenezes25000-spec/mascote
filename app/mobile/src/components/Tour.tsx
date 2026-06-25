@@ -7,42 +7,19 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
+import { t } from '@/lib/i18n';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
 /**
  * Tour de onboarding — 4 passos com SVG icons, dots indicators e CTA pill.
  * Cinematográfico: fade backdrop escuro, card centralizado com icon hero.
+ *
+ * Copy via i18n (tour.step{N}_*); só o ícone fica no código.
  */
 
-interface Step {
-  icon: IconName;
-  title: string;
-  body: string;
-}
-
-const STEPS: Step[] = [
-  {
-    icon: 'sparkles',
-    title: 'Esse é seu Mascote',
-    body: 'Ele evolui quando você se cuida. Não precisa cuidar dele — você cuida de você, e ele cresce junto.',
-  },
-  {
-    icon: 'check',
-    title: 'Toque rápido = +1',
-    body: 'Toca num chip de hábito (água, sono, respirar) e marca check-in. Segura pra abrir slider e ajustar quantidade.',
-  },
-  {
-    icon: 'target',
-    title: 'Missão do dia',
-    body: 'Sempre tem uma missão pequena esperando. Curtinha, sem cobrança. Conclua pra +XP e moedas.',
-  },
-  {
-    icon: 'gift',
-    title: 'Volta amanhã',
-    body: 'Tem caixa surpresa, recompensa diária, roda da sorte. Construir constância é o jogo.',
-  },
-];
+const STEP_ICONS: readonly IconName[] = ['sparkles', 'check', 'target', 'gift'];
+const STEP_COUNT = STEP_ICONS.length;
 
 interface Props {
   visible: boolean;
@@ -63,7 +40,7 @@ export function Tour({ visible, onDone }: Props) {
   }, []);
 
   function next() {
-    if (step + 1 < STEPS.length) {
+    if (step + 1 < STEP_COUNT) {
       setStep(step + 1);
     } else {
       opacity.value = withTiming(0, { duration: 200 });
@@ -88,7 +65,10 @@ export function Tour({ visible, onDone }: Props) {
   }
 
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
-  const s = STEPS[step];
+  const icon = STEP_ICONS[step];
+  const title = t(`tour.step${step + 1}_title`);
+  const body = t(`tour.step${step + 1}_body`);
+  const isLast = step + 1 >= STEP_COUNT;
 
   if (!visible) return null;
 
@@ -97,33 +77,33 @@ export function Tour({ visible, onDone }: Props) {
       <Animated.View style={[styles.backdrop, animatedStyle]}>
         <View style={styles.card}>
           <View style={styles.iconCircle}>
-            <Icon name={s.icon} size={40} color={theme.colors.primary} strokeWidth={1.6} />
+            <Icon name={icon} size={40} color={theme.colors.primary} strokeWidth={1.6} />
           </View>
           <Text style={styles.kicker}>
-            PASSO {step + 1} DE {STEPS.length}
+            {t('tour.step_kicker', step + 1, STEP_COUNT)}
           </Text>
-          <Text style={styles.title}>{s.title}</Text>
-          <Text style={styles.body}>{s.body}</Text>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.body}>{body}</Text>
 
           <View style={styles.dots}>
-            {STEPS.map((_, i) => (
+            {STEP_ICONS.map((_, i) => (
               <View key={i} style={[styles.dot, i === step && styles.dotActive]} />
             ))}
           </View>
 
-          <PressableScale onPress={next} style={styles.cta} accessibilityRole="button" accessibilityLabel="Próximo passo do tour">
+          <PressableScale onPress={next} style={styles.cta} accessibilityRole="button" accessibilityLabel={t('tour.next_a11y')}>
             <Text style={styles.ctaText}>
-              {step + 1 < STEPS.length ? 'Próximo' : 'Bora começar'}
+              {isLast ? t('tour.start') : t('tour.next')}
             </Text>
             <Icon
-              name={step + 1 < STEPS.length ? 'arrow-right' : 'sparkles'}
+              name={isLast ? 'sparkles' : 'arrow-right'}
               size={16}
               color="#fff"
               strokeWidth={2.4}
             />
           </PressableScale>
-          <Pressable onPress={skip} hitSlop={10} style={styles.skip} accessibilityRole="button" accessibilityLabel="Pular tour">
-            <Text style={styles.skipText}>pular</Text>
+          <Pressable onPress={skip} hitSlop={10} style={styles.skip} accessibilityRole="button" accessibilityLabel={t('tour.skip_a11y')}>
+            <Text style={styles.skipText}>{t('tour.skip')}</Text>
           </Pressable>
         </View>
       </Animated.View>

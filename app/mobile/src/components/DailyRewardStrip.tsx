@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
+import { t } from '@/lib/i18n';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import { noShadow, type Theme } from '@/lib/themes';
 
@@ -48,9 +49,9 @@ export function DailyRewardStrip({ currentDay, claimedToday, onClaim }: Props) {
         <View>
           <View style={styles.kickerRow}>
             <Icon name="gift" size={10} color={theme.colors.primary} strokeWidth={2.4} />
-            <Text style={styles.kicker}>RECOMPENSA DIÁRIA</Text>
+            <Text style={styles.kicker}>{t('home.screen.daily_reward_kicker')}</Text>
           </View>
-          <Text style={styles.title}>Volta todo dia</Text>
+          <Text style={styles.title}>{t('home.screen.daily_reward_card_title')}</Text>
         </View>
         <PressableScale
           onPress={onClaim}
@@ -58,13 +59,13 @@ export function DailyRewardStrip({ currentDay, claimedToday, onClaim }: Props) {
           style={[styles.claimBtn, claimedToday && styles.claimBtnDone]}
           accessibilityRole="button"
           accessibilityState={{ disabled: claimedToday }}
-          accessibilityLabel={claimedToday ? 'Recompensa de hoje já resgatada' : 'Resgatar recompensa diária'}
+          accessibilityLabel={claimedToday ? t('home.screen.daily_reward_claimed_a11y') : t('home.screen.daily_reward_claim_a11y')}
         >
           {claimedToday ? (
             <Icon name="check" size={12} color={theme.colors.textSecondary} strokeWidth={2.6} />
           ) : null}
           <Text style={[styles.claimText, claimedToday && styles.claimTextDone]}>
-            {claimedToday ? 'HOJE' : 'RESGATAR'}
+            {claimedToday ? t('home.screen.daily_reward_today') : t('home.screen.daily_reward_claim')}
           </Text>
         </PressableScale>
       </View>

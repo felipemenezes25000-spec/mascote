@@ -22,6 +22,7 @@ import {
 } from '@/game/events/challenge';
 import { eventClaims } from '@/lib/db';
 import { timeRemaining } from '@/lib/events';
+import { t } from '@/lib/i18n';
 import { playSfx } from '@/lib/sfx';
 import { useStyles } from '@/lib/useTheme';
 import { useStore } from '@/store';
@@ -65,8 +66,8 @@ export function EventChallengeCard({ refreshKey = 0, onConfetti }: Props) {
   const remaining = timeRemaining(challenge.windowEnd);
   const complete = progress >= challenge.target;
   const countdown = remaining.hours > 0
-    ? `${remaining.hours}h ${remaining.minutes}min`
-    : `${remaining.minutes}min`;
+    ? t('home.screen.event_countdown_hm', remaining.hours, remaining.minutes)
+    : t('home.screen.event_countdown_m', remaining.minutes);
 
   async function claim() {
     if (!profile || !challenge || claimingRef.current) return;
@@ -84,8 +85,8 @@ export function EventChallengeCard({ refreshKey = 0, onConfetti }: Props) {
       enqueueToast({
         kind: 'info',
         emoji: '🏆',
-        title: 'Baú do desafio aberto!',
-        subtitle: `+${out.coins} 🪙 +${out.gems} 💎 — constância premiada.`,
+        title: t('home.screen.event_chest_toast_title'),
+        subtitle: t('home.screen.event_chest_toast_sub', out.coins, out.gems),
       });
     } finally {
       claimingRef.current = false;
@@ -96,9 +97,17 @@ export function EventChallengeCard({ refreshKey = 0, onConfetti }: Props) {
     <View
       style={styles.card}
       accessibilityRole="text"
-      accessibilityLabel={`${challenge.title}: ${Math.min(progress, challenge.target)} de ${challenge.target} check-ins. ${
-        claimed ? 'Baú já resgatado.' : complete ? 'Completo, baú disponível.' : `Termina em ${countdown}.`
-      }`}
+      accessibilityLabel={t(
+        'home.screen.event_a11y',
+        challenge.title,
+        Math.min(progress, challenge.target),
+        challenge.target,
+        claimed
+          ? t('home.screen.event_a11y_claimed')
+          : complete
+          ? t('home.screen.event_a11y_complete')
+          : t('home.screen.event_a11y_ends', countdown),
+      )}
     >
       <View style={styles.headerRow}>
         <Typography variant="bodyBold">
@@ -115,14 +124,14 @@ export function EventChallengeCard({ refreshKey = 0, onConfetti }: Props) {
       />
       <View style={styles.footerRow}>
         <Typography variant="mono" tone="dim">
-          {Math.min(progress, challenge.target)}/{challenge.target} check-ins
+          {t('home.screen.event_checkins_count', Math.min(progress, challenge.target), challenge.target)}
         </Typography>
         {claimed ? (
           <Typography variant="caption" tone="success" style={{ fontWeight: '700' }}>
-            Baú resgatado ✓
+            {t('home.screen.event_chest_claimed')}
           </Typography>
         ) : complete ? (
-          <Button label="Abrir baú 🏆" onPress={() => void claim()} />
+          <Button label={t('home.screen.event_chest_open')} onPress={() => void claim()} />
         ) : (
           <Typography variant="mono" tone="secondary">
             +{challenge.reward.coins} 🪙 +{challenge.reward.gems} 💎

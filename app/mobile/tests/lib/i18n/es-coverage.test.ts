@@ -53,6 +53,20 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     // unlock) que ainda vazavam PT cru em useHomeActions, agora via t().
     'home.screen.checkin_level_sub',
     'home.screen.unlock_scene_sub',
+    // Regressão jun/25: chrome PT cru da Home (DailyRewardStrip / MysteryBoxCard /
+    // EventChallengeCard / Tour) que nunca passou por t(), agora extraído.
+    'home.screen.daily_reward_kicker',
+    'home.screen.daily_reward_card_title',
+    'home.screen.daily_reward_grand',
+    'home.screen.mystery_label_done',
+    'home.screen.mystery_toast_rare',
+    'home.screen.event_chest_open',
+    'home.screen.event_chest_claimed',
+    'home.screen.event_a11y_claimed',
+    'tour.next',
+    'tour.start',
+    'tour.step1_title',
+    'tour.step4_body',
   ];
 
   it('EN e ES diferem do PT (e não devolvem o path literal)', () => {
@@ -81,6 +95,14 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     expect(t('home.screen.checkin_streak_title', 7)).toBe('7-day streak!');
     setLocale('es');
     expect(t('home.screen.checkin_streak_title', 7)).toBe('¡Racha de 7 días!');
+    // jun/25: interpolação dos novos leaks da Home (daily reward + tour + event).
+    setLocale('en');
+    expect(t('home.screen.daily_reward_toast_title', 7, 150, 3)).toBe('Day 7 · +150 🪙 +3 💎');
+    expect(t('home.screen.daily_reward_toast_title', 1, 10, 0)).toBe('Day 1 · +10 🪙');
+    expect(t('tour.step_kicker', 2, 4)).toBe('STEP 2 OF 4');
+    setLocale('es');
+    expect(t('home.screen.daily_reward_toast_title', 7, 150, 3)).toBe('Día 7 · +150 🪙 +3 💎');
+    expect(t('tour.step_kicker', 2, 4)).toBe('PASO 2 DE 4');
   });
 
   it('first_evo_sub interpola o nome do mascote por idioma', () => {

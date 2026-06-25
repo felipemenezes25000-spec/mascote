@@ -316,7 +316,7 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
       });
       await refreshMascot();
       await refreshWallet();
-      opts.onFlash('Desfeito', 1200);
+      opts.onFlash(t('home.screen.undo_done'), 1200);
     },
     [opts, haptic, refreshMascot, refreshWallet],
   );
@@ -343,8 +343,8 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
       enqueueToast({
         kind: 'info',
         emoji: reward.isGrand ? '🏆' : reward.gems ? '💎' : '🪙',
-        title: `Dia ${claimed.current_day} · +${reward.coins} 🪙${reward.gems ? ` +${reward.gems} 💎` : ''}`,
-        subtitle: reward.isGrand ? 'GRANDE PRÊMIO!' : 'Volta amanhã pra mais.',
+        title: t('home.screen.daily_reward_toast_title', claimed.current_day, reward.coins, reward.gems ?? 0),
+        subtitle: reward.isGrand ? t('home.screen.daily_reward_grand') : t('home.screen.daily_reward_more'),
       });
     },
     [opts, haptic, refreshWallet, enqueueToast],
@@ -390,7 +390,7 @@ export function useHomeActions(opts: UseHomeActionsOptions) {
       enqueueToast({
         kind: 'info',
         emoji: rareEvent ? '🎉' : '🎁',
-        title: rareEvent ? 'Caixa RARA de evento!' : 'Caixa surpresa!',
+        title: rareEvent ? t('home.screen.mystery_toast_rare') : t('home.screen.mystery_toast_normal'),
         subtitle: drop.label,
       });
     },

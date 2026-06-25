@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Icon } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
+import { t } from '@/lib/i18n';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import { noShadow, type Theme } from '@/lib/themes';
 
@@ -24,7 +25,7 @@ export function MysteryBoxCard({ available, onOpen }: Props) {
       disabled={!available}
       style={[styles.card, !available && styles.cardDone]}
       accessibilityRole="button"
-      accessibilityLabel={available ? 'Abrir caixa surpresa' : 'Caixa amanhã'}
+      accessibilityLabel={available ? t('home.screen.mystery_open_a11y') : t('home.screen.mystery_tomorrow_a11y')}
       accessibilityState={{ disabled: !available }}
     >
       <View style={[styles.iconWrap, !available && styles.iconWrapDone]}>
@@ -36,7 +37,7 @@ export function MysteryBoxCard({ available, onOpen }: Props) {
         />
       </View>
       <Text style={[styles.label, !available && styles.labelDone]}>
-        {available ? 'CAIXA' : 'AMANHÃ'}
+        {available ? t('home.screen.mystery_label') : t('home.screen.mystery_label_done')}
       </Text>
       {available && (
         <View style={styles.badge}>
