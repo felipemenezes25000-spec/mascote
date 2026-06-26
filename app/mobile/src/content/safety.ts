@@ -270,6 +270,21 @@ const criticalPatterns = [
   // inequívoco em 1ª pessoa; "ter existido" referido a uma coisa é gramaticalmente
   // incomum ("preferia que isso nunca TIVESSE existido" usa o imperfeito, não "ter").
   /nunca\s+ter\s+(nascido|existido)\b/i,
+  // === Ampliação PT-BR (auditoria 2026-06-26 ajuste1) ===
+  // Não-existência SEM o advérbio "nunca": "queria/gostaria de/preferia NÃO ter
+  // nascido|existido". As linhas existentes exigiam "nunca ter nascido"; a forma
+  // negada com "não ter" — igualmente comum e inequívoca como desejo de
+  // não-existência em 1ª pessoa — escapava pro reply normal. A âncora volitiva/
+  // condicional (queria|gostaria|preferia) + "não ter (nascido|existido)" mantém
+  // o benigno "preferia não ter ido/trabalhado/ter filhos" fora do crítico (o
+  // objeto exigido é nascido|existido, não qualquer particípio).
+  /(queria|gostaria|preferia)\s+(de\s+)?n[ãa]o\s+ter\s+(nascido|existido)\b/i,
+  // Variante com a negação no modal: "não (devia/deveria/queria) ter nascido|
+  // existido". Aqui o "não" precede o verbo modal (não há segundo "não" antes de
+  // "ter"), estrutura diferente da linha acima. O objeto exigido (nascido|
+  // existido) ancora contra o arrependimento cotidiano com outro particípio
+  // ("não [modal] ter feito isso"), que continua fora do crítico.
+  /n[ãa]o\s+(devia|deveria|queria)\s+ter\s+(nascido|existido)\b/i,
   // Ideação passiva no subjuntivo com verbo de não-existência: "(seria/era) melhor
   // se eu não existisse / sumisse / desaparecesse". A linha "melhor se eu morresse"
   // (2026-06-15) só cobria "morrer"; estes sinônimos de não-existência no mesmo

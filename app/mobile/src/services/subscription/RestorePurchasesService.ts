@@ -38,7 +38,14 @@ export class RestorePurchasesService {
     }
 
     const rc = getRevenueCatConfig();
-    if (!rc.hasApiKey || !rc.sdkEnabled) {
+    // Gate em `ready` (não só hasApiKey/sdkEnabled): no estado `sdk_not_linked`
+    // (chaves + RC_ENABLED ok mas SDK nativo não integrado no build) ambos eram
+    // true, então o código seguia, billing.restore() devolvia o tier LOCAL
+    // inalterado (provider gateia em config.ready), e um usuário já em plus_*
+    // recebia "Plus restaurado com sucesso!" sem nenhuma chamada real à loja —
+    // falso-sucesso. `!rc.ready` cobre todos os estados não-prontos, simétrico a
+    // provider.purchase()/restore() que já usam config.ready.
+    if (!rc.ready) {
       const err = mapPurchaseError('billing_unavailable');
       return { success: false, tier: previous, demo: false, message: err.userMessage };
     }

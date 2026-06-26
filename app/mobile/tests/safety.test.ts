@@ -241,6 +241,16 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     'seria melhor se eu não existisse',
     'era melhor se eu sumisse',
     'seria melhor se eu desaparecesse',
+    // === Ampliação 2026-06-26 ajuste1 (auditoria backend) ===
+    // Não-existência SEM "nunca": "não ter nascido|existido" com âncora volitiva/
+    // condicional ou com a negação no modal (antes só "nunca ter nascido").
+    'queria não ter nascido',
+    'preferia não ter nascido',
+    'gostaria de não ter nascido',
+    'queria não ter existido',
+    'não devia ter nascido',
+    'não deveria ter nascido',
+    'não queria ter nascido',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -385,6 +395,13 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'tomar uma soneca agora',              // "tomar" sem veneno
     'seria melhor se eu estudasse mais',   // subjuntivo benigno (verbo fora da lista)
     'era melhor se eu saísse mais de casa', // idem
+    // Regressão (2026-06-26 ajuste1): "não ter nascido|existido" exige o objeto
+    // nascido|existido — não pode capturar outros particípios benignos.
+    'não queria ter filhos agora',         // "ter filhos" (objeto fora da lista)
+    'preferia não ter ido na festa',       // "ter ido" benigno
+    'gostaria de não ter trabalhado tanto hoje', // "ter trabalhado" benigno
+    'feliz por ter nascido nessa família', // "ter nascido" positivo (sem negação/volição)
+    'não devia ter feito isso',            // arrependimento cotidiano (objeto fora)
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {

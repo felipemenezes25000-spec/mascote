@@ -2,7 +2,7 @@
  * RevenueCat adapter — falha graciosa sem keys/SDK.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   RevenueCatBillingProvider,
   getRevenueCatConfig,
@@ -105,5 +105,58 @@ describe('RevenueCatBillingProvider', () => {
       expect(packageIdForTier('plus_monthly')).toBe('mascote_plus_monthly');
       expect(packageIdForTier('plus_annual')).toBe('mascote_plus_annual');
     });
+  });
+});
+
+// isDemoBilling()/getBillingProvider() congelam o provider no load do módulo
+// (const PROVIDER), então setar env no teste não os altera — mockamos pra forçar
+// o caminho de produção (não-demo) usando o provider RevenueCat real.
+vi.mock('@/services/subscription/billing-provider', async (importOriginal) => {
+  const actual = await importOriginal<
+    typeof import('@/services/subscription/billing-provider')
+  >();
+  const { revenueCatBillingProvider } = await import(
+    '@/services/subscription/RevenueCatBillingProvider'
+  );
+  return {
+    ...actual,
+    isDemoBilling: () => false,
+    getBillingProvider: () => revenueCatBillingProvider,
+  };
+});
+
+describe('RestorePurchasesService — falso-sucesso em sdk_not_linked', () => {
+  const env = { ...process.env };
+
+  beforeEach(() => {
+    process.env = { ...env };
+  });
+
+  afterEach(() => {
+    process.env = env;
+    __resetRevenueCatSdkForTests();
+  });
+
+  it('NÃO reporta "restaurado com sucesso" quando SDK não linkado mesmo com tier local plus', async () => {
+    // Regressão 2026-06-26 ajuste1: o gate era `!hasApiKey || !sdkEnabled`, então
+    // no estado sdk_not_linked (chaves + RC_ENABLED ok, SDK nativo ausente) o
+    // código seguia, o provider devolvia o tier LOCAL inalterado, e um usuário já
+    // em plus_* recebia success=true / "Plus restaurado com sucesso!" sem nenhuma
+    // chamada real à loja. O gate correto é `!rc.ready`.
+    const { localSubscriptionRepo } = await import('@/repositories/local');
+    const { restorePurchasesService } = await import(
+      '@/services/subscription/RestorePurchasesService'
+    );
+    process.env.EXPO_PUBLIC_BILLING_PROVIDER = 'revenuecat';
+    process.env.EXPO_PUBLIC_RC_ENABLED = 'true';
+    process.env.EXPO_PUBLIC_REVENUECAT_API_KEY = 'test_key';
+    // garante sdk_not_linked (não inicializado)
+    __resetRevenueCatSdkForTests();
+    const uid = 'user-restore-falso-sucesso';
+    await localSubscriptionRepo.setTier(uid, 'plus_monthly');
+
+    const res = await restorePurchasesService.restore(uid);
+    expect(res.success).toBe(false);
+    expect(res.message).not.toMatch(/sucesso/i);
   });
 });

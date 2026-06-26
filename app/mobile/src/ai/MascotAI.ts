@@ -67,8 +67,13 @@ export async function mascotReply(
         const rate = await checkAiRateLimit(uid, tier);
         if (!rate.allowed) {
           return {
+            // Preserva a flag avaliada no input (safe|watch — críticas já
+            // retornaram cedo no gate de safety acima). Sem isto, um 'watch' do
+            // ensemble (ex.: "não aguento mais", sentimento muito negativo sem
+            // keyword) caía pra 'safe' quando o rate-limit estourava — a UI
+            // perdia o disclaimer/banner. Paridade com o ramo catch (abaixo).
             reply: rate.reason ?? 'Limite diário atingido.',
-            safety_flag: 'safe',
+            safety_flag: safety.flag,
             source: 'fallback' as const,
           };
         }
@@ -76,7 +81,7 @@ export async function mascotReply(
         if (!cost.allowed) {
           return {
             reply: cost.reason ?? 'Orçamento de IA esgotado hoje.',
-            safety_flag: 'safe',
+            safety_flag: safety.flag,
             source: 'fallback' as const,
           };
         }
