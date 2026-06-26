@@ -67,6 +67,13 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     'tour.start',
     'tour.step1_title',
     'tour.step4_body',
+    // Fase i18n jun/26: telas cancel + feedback eram 100% PT cru (zero t()),
+    // alcançadas por linhas de settings JÁ traduzidas (link_cancel/link_feedback).
+    'cancel.pause_card_title',
+    'cancel.confirm_title',
+    'cancel.free_done_title',
+    'feedback.title',
+    'feedback.thanks_title',
   ];
 
   it('EN e ES diferem do PT (e não devolvem o path literal)', () => {
@@ -103,6 +110,12 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     setLocale('es');
     expect(t('home.screen.daily_reward_toast_title', 7, 150, 3)).toBe('Día 7 · +150 🪙 +3 💎');
     expect(t('tour.step_kicker', 2, 4)).toBe('PASO 2 DE 4');
+    // jun/26: interpolação por idioma das telas cancel (nome do mascote + loja).
+    setLocale('en');
+    expect(t('cancel.main_sub', 'Lumo')).toBe("Lumo will miss you. But it's your call. No guilt-tripping.");
+    expect(t('cancel.confirm_body', 'App Store')).toContain('App Store');
+    setLocale('es');
+    expect(t('cancel.main_sub', 'Lumo')).toBe('Lumo te va a extrañar. Pero tú decides. Sin manipulación.');
   });
 
   it('first_evo_sub interpola o nome do mascote por idioma', () => {

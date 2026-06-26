@@ -7,6 +7,7 @@ import { Button } from '@/components/Button';
 import { Input, Typography } from '@/components/ui';
 
 import { logger } from '@/lib/logger';
+import { t } from '@/lib/i18n';
 import { useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
@@ -57,14 +58,14 @@ export default function FeedbackScreen() {
         text: text.trim(),
         created_at: new Date().toISOString(),
       });
-      Alert.alert('Obrigado!', 'Seu feedback foi anotado.', [
-        { text: 'OK', onPress: () => router.back() },
+      Alert.alert(t('feedback.thanks_title'), t('feedback.thanks_body'), [
+        { text: t('common.ok'), onPress: () => router.back() },
       ]);
     } catch {
       Alert.alert(
-        'Não consegui salvar',
-        'Tenta de novo em alguns segundos.',
-        [{ text: 'OK' }],
+        t('feedback.fail_title'),
+        t('feedback.fail_body'),
+        [{ text: t('common.ok') }],
       );
     } finally {
       setSubmitting(false);
@@ -80,16 +81,16 @@ export default function FeedbackScreen() {
             hitSlop={10}
             style={styles.close}
             accessibilityRole="button"
-            accessibilityLabel="Voltar"
+            accessibilityLabel={t('common.back')}
           >
             <Typography variant="body" style={styles.closeText}>✕</Typography>
           </Pressable>
-          <Typography variant="mono" tone="secondary" style={styles.kicker}>FEEDBACK</Typography>
+          <Typography variant="mono" tone="secondary" style={styles.kicker}>{t('feedback.kicker')}</Typography>
           <View style={{ width: 36 }} />
         </View>
 
-        <Typography variant="title" style={{ marginTop: theme.spacing.lg }}>Tá curtindo o Mascote?</Typography>
-        <Typography tone="secondary">Sua resposta sincera ajuda a gente a fazer mais bonito.</Typography>
+        <Typography variant="title" style={{ marginTop: theme.spacing.lg }}>{t('feedback.title')}</Typography>
+        <Typography tone="secondary">{t('feedback.subtitle')}</Typography>
 
         <View style={styles.npsRow}>
           {NPS_LABELS.map((emoji, i) => (
@@ -98,7 +99,7 @@ export default function FeedbackScreen() {
               style={[styles.npsBtn, score === i + 1 && styles.npsBtnActive]}
               onPress={() => setScore(i + 1)}
               accessibilityRole="button"
-              accessibilityLabel={`Nota ${i + 1} de 5`}
+              accessibilityLabel={t('feedback.nps_a11y', i + 1)}
               accessibilityState={{ selected: score === i + 1 }}
             >
               <Typography variant="body" style={styles.npsEmoji}>{emoji}</Typography>
@@ -107,16 +108,16 @@ export default function FeedbackScreen() {
         </View>
 
         <Input
-          label="O que te faria voltar amanhã?"
+          label={t('feedback.input_label')}
           value={text}
           onChangeText={setText}
-          placeholder="Pode ser bobagem. Pode ser nada."
+          placeholder={t('feedback.input_placeholder')}
           multiline
           maxLength={1000}
           style={{ minHeight: 120, textAlignVertical: 'top' }}
         />
 
-        <Button label={submitting ? 'Enviando...' : 'Enviar'} onPress={submit} disabled={!score || submitting} />
+        <Button label={submitting ? t('feedback.submitting') : t('feedback.submit')} onPress={submit} disabled={!score || submitting} />
       </ScrollView>
     </SafeAreaView>
   );

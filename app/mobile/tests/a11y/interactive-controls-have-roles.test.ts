@@ -122,11 +122,13 @@ describe('a11y: controles interativos têm accessibilityRole', () => {
 
   it('cancel: ✕ fechar e link destrutivo têm role (✕ era icon-only sem label)', () => {
     const text = read('app/cancel.tsx');
+    // Aceita label cru ("Voltar") ou i18n ({t('common.back')}) — a label segue
+    // garantida, só virou traduzível na Fase i18n da tela cancel (jun/26).
     expect(text, '✕ fechar sem label').toMatch(
-      /accessibilityRole="button"\s+accessibilityLabel="Voltar"/,
+      /accessibilityRole="button"\s+accessibilityLabel=(\{t\('[^']+'\)\}|"[^"]+")/,
     );
     expect(text, 'cancelar mesmo assim sem role').toMatch(
-      /accessibilityLabel="Quero cancelar mesmo assim"/,
+      /accessibilityLabel=(\{t\('cancel\.cancel_anyway'\)\}|"Quero cancelar mesmo assim")/,
     );
   });
 

@@ -6,6 +6,7 @@ import { Button } from '@/components/Button';
 import { Mascot } from '@/components/Mascot';
 import { addDays, settings as settingsDb, todayLocal } from '@/lib/db';
 import { subscriptionService } from '@/services/subscription/SubscriptionService';
+import { t } from '@/lib/i18n';
 import { useTheme } from '@/lib/useTheme';
 import { useStore } from '@/store';
 import type { Theme } from '@/lib/themes';
@@ -34,12 +35,12 @@ export default function Cancel() {
     // tentava usar feature Plus. Padrão consistente com confirmDelete em
     // settings.tsx (dialog destrutivo sempre exige confirmação explícita).
     Alert.alert(
-      'Mudar pra Free?',
-      'Você abre mão dos benefícios Plus (atelier de customização completo, mutações raras, IA emocional). Seus dados ficam aqui.',
+      t('cancel.switch_confirm_title'),
+      t('cancel.switch_confirm_body'),
       [
-        { text: 'Continuo Plus', style: 'cancel' },
+        { text: t('cancel.switch_keep_plus'), style: 'cancel' },
         {
-          text: 'Mudar pra Free',
+          text: t('cancel.free_cta'),
           style: 'destructive',
           onPress: async () => {
             if (!profile) return;
@@ -62,13 +63,10 @@ export default function Cancel() {
                 return;
               }
               await refreshSettings();
-              Alert.alert(
-                'Plano gratuito',
-                'Você voltou pro plano Free. Seus dados e o mascote continuam aqui; recursos premium ficam limitados.',
-              );
+              Alert.alert(t('cancel.free_done_title'), t('cancel.free_done_body'));
               router.back();
             } catch {
-              Alert.alert('Ops', 'Não consegui alterar o plano agora. Tenta de novo.');
+              Alert.alert(t('cancel.err_title'), t('cancel.err_body'));
             }
           },
         },
@@ -87,11 +85,11 @@ export default function Cancel() {
             hitSlop={10}
             style={styles.close}
             accessibilityRole="button"
-            accessibilityLabel="Voltar"
+            accessibilityLabel={t('common.back')}
           >
             <Typography variant="body" style={styles.closeText}>✕</Typography>
           </Pressable>
-          <Typography variant="body" style={styles.kicker}>PAUSAR / CANCELAR</Typography>
+          <Typography variant="body" style={styles.kicker}>{t('cancel.kicker')}</Typography>
           <View style={{ width: 36 }} />
         </View>
 
@@ -99,34 +97,34 @@ export default function Cancel() {
           <>
             <View style={{ alignItems: 'center', gap: theme.spacing.md }}>
               <Mascot personality={mascot.personality} phase={mascot.phase} mood="triste" size={140} />
-              <Typography variant="body" style={styles.title}>Antes de cancelar...</Typography>
+              <Typography variant="body" style={styles.title}>{t('cancel.main_title')}</Typography>
               <Typography variant="body" style={styles.subtitle}>
-                {mascot.name} vai sentir saudade. Mas você decide. Sem manipulação.
+                {t('cancel.main_sub', mascot.name)}
               </Typography>
             </View>
 
             <View style={styles.card}>
-              <Typography variant="body" style={styles.cardTitle}>Que tal pausar por 30 dias?</Typography>
+              <Typography variant="body" style={styles.cardTitle}>{t('cancel.pause_card_title')}</Typography>
               <Typography variant="body" style={styles.cardBody}>
-                Mantém seus dados, sem cobrança, sem notificações. Quando voltar, tudo onde parou.
+                {t('cancel.pause_card_body')}
               </Typography>
-              <Button label="Pausar 30 dias" onPress={pause30} />
+              <Button label={t('cancel.pause_cta')} onPress={pause30} />
             </View>
 
             <View style={styles.card}>
-              <Typography variant="body" style={styles.cardTitle}>Trocar pro plano grátis</Typography>
+              <Typography variant="body" style={styles.cardTitle}>{t('cancel.free_card_title')}</Typography>
               <Typography variant="body" style={styles.cardBody}>
-                Você mantém o mascote e o histórico, com limites de uso.
+                {t('cancel.free_card_body')}
               </Typography>
-              <Button variant="secondary" label="Mudar pra Free" onPress={() => void switchToFree()} />
+              <Button variant="secondary" label={t('cancel.free_cta')} onPress={() => void switchToFree()} />
             </View>
 
             <Pressable
               onPress={() => setStep('confirm')}
               accessibilityRole="button"
-              accessibilityLabel="Quero cancelar mesmo assim"
+              accessibilityLabel={t('cancel.cancel_anyway')}
             >
-              <Typography variant="body" style={styles.cancelDestructive}>Quero cancelar mesmo assim</Typography>
+              <Typography variant="body" style={styles.cancelDestructive}>{t('cancel.cancel_anyway')}</Typography>
             </Pressable>
           </>
         )}
@@ -134,22 +132,20 @@ export default function Cancel() {
         {step === 'pause' && (
           <View style={{ alignItems: 'center', gap: theme.spacing.lg, paddingVertical: theme.spacing.xl }}>
             <Mascot personality={mascot.personality} phase={mascot.phase} mood="exausto" size={150} />
-            <Typography variant="body" style={styles.title}>{mascot.name} entrou em modo descanso.</Typography>
-            <Typography variant="body" style={styles.subtitle}>Volta quando quiser. Tudo aqui esperando.</Typography>
-            <Button label="OK" onPress={() => router.replace('/(tabs)')} />
+            <Typography variant="body" style={styles.title}>{t('cancel.pause_done_title', mascot.name)}</Typography>
+            <Typography variant="body" style={styles.subtitle}>{t('cancel.pause_done_body')}</Typography>
+            <Button label={t('common.ok')} onPress={() => router.replace('/(tabs)')} />
           </View>
         )}
 
         {step === 'confirm' && (
           <View style={{ gap: theme.spacing.md, paddingVertical: theme.spacing.md }}>
-            <Typography variant="body" style={styles.title}>Cancelar assinatura</Typography>
+            <Typography variant="body" style={styles.title}>{t('cancel.confirm_title')}</Typography>
             <Typography variant="body" style={styles.subtitle}>
-              A cobrança é feita pela {Platform.OS === 'ios' ? 'App Store' : 'Google Play'}. O botão
-              abaixo abre o gerenciador de assinaturas direto — lá você cancela
-              quando quiser e mantém o acesso até o fim do período pago.
+              {t('cancel.confirm_body', Platform.OS === 'ios' ? 'App Store' : 'Google Play')}
             </Typography>
             <Button
-              label={Platform.OS === 'ios' ? 'Abrir gerenciar assinaturas' : 'Abrir Google Play'}
+              label={Platform.OS === 'ios' ? t('cancel.open_ios') : t('cancel.open_android')}
               onPress={async () => {
                 // iOS: https://apps.apple.com/account/subscriptions abre direto
                 // o gerenciador no aplicativo da App Store (deep link oficial
@@ -165,15 +161,15 @@ export default function Cancel() {
                   else throw new Error('cannot open');
                 } catch {
                   Alert.alert(
-                    'Não consegui abrir',
+                    t('cancel.open_fail_title'),
                     Platform.OS === 'ios'
-                      ? 'Vá em Ajustes > [Seu nome] > Assinaturas pra gerenciar.'
-                      : 'Abra a Play Store > Conta > Pagamentos e assinaturas.',
+                      ? t('cancel.open_fail_ios')
+                      : t('cancel.open_fail_android'),
                   );
                 }
               }}
             />
-            <Button variant="secondary" label="Voltar" onPress={() => router.back()} />
+            <Button variant="secondary" label={t('common.back')} onPress={() => router.back()} />
           </View>
         )}
       </ScrollView>
