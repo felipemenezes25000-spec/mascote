@@ -1,22 +1,23 @@
 /**
  * Pequenos helpers usados só na Home — extraídos para reduzir a Home file.
  */
+import { t } from '@/lib/i18n';
 import type { EmotionKey } from '@/lib/themes';
 import type { MascotMood } from '@/types';
 
 export function greetingFor(hour: number): string {
-  if (hour < 5) return 'BOA MADRUGADA';
-  if (hour < 12) return 'BOM DIA';
-  if (hour < 18) return 'BOA TARDE';
-  return 'BOA NOITE';
+  if (hour < 5) return t('home.screen.greeting_dawn');
+  if (hour < 12) return t('home.screen.greeting_morning');
+  if (hour < 18) return t('home.screen.greeting_afternoon');
+  return t('home.screen.greeting_evening');
 }
 
-/** Saudação curta para headers estreitos (<380px) — evita truncar "BOA MADRUGADA". */
+/** Saudação curta para headers estreitos (<412px) — evita truncar "BOA MADRUGADA". */
 export function greetingForCompact(hour: number): string {
-  if (hour < 5) return 'Madrugada';
-  if (hour < 12) return 'Bom dia';
-  if (hour < 18) return 'Boa tarde';
-  return 'Boa noite';
+  if (hour < 5) return t('home.screen.greeting_dawn_compact');
+  if (hour < 12) return t('home.screen.greeting_morning_compact');
+  if (hour < 18) return t('home.screen.greeting_afternoon_compact');
+  return t('home.screen.greeting_evening_compact');
 }
 
 export function moodToEmotionKey(mood: MascotMood): EmotionKey {
@@ -35,12 +36,12 @@ export function buildMascotStatusFallback(
   hasActiveEnergy: boolean,
   hasCalmAura: boolean,
 ): string {
-  if (hasActiveEnergy) return 'Com energia — seus hábitos ativos brilham nele.';
-  if (hasCalmAura) return 'Calmo e presente — respira com você.';
-  if (reflective === 'empolgado') return 'Radiante — sentiu sua energia hoje!';
-  if (reflective === 'triste') return 'Um pouco quieto... mas aqui por você.';
-  if (reflective === 'exausto') return 'Precisando de descanso — sem pressa.';
-  return 'Aqui, no seu ritmo.';
+  if (hasActiveEnergy) return t('home.screen.status_active_energy');
+  if (hasCalmAura) return t('home.screen.status_calm_aura');
+  if (reflective === 'empolgado') return t('home.screen.status_excited');
+  if (reflective === 'triste') return t('home.screen.status_sad');
+  if (reflective === 'exausto') return t('home.screen.status_tired');
+  return t('home.screen.status_default');
 }
 
 export const HOME_HABITS = [

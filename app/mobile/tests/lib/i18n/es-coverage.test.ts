@@ -74,6 +74,12 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     'cancel.free_done_title',
     'feedback.title',
     'feedback.thanks_title',
+    // Fase i18n jun/27: saudação do header + status fallback do mascote (helpers.ts)
+    // renderizavam em PT cru em TODA abertura da Home (fluxo já traduzido).
+    'home.screen.greeting_morning',
+    'home.screen.greeting_evening_compact',
+    'home.screen.status_active_energy',
+    'home.screen.status_default',
   ];
 
   it('EN e ES diferem do PT (e não devolvem o path literal)', () => {

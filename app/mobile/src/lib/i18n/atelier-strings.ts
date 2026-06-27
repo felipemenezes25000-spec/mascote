@@ -451,6 +451,22 @@ export const STRINGS_PT = {
       event_a11y_claimed: 'Baú já resgatado.',
       event_a11y_complete: 'Completo, baú disponível.',
       event_a11y_ends: (countdown: string) => `Termina em ${countdown}.`,
+      // Saudação do header (HomeHeader) + status fallback do mascote (bolha do hero).
+      // Renderizam em TODA abertura da Home (fluxo já traduzido) — antes vazavam PT cru.
+      greeting_dawn: 'BOA MADRUGADA',
+      greeting_morning: 'BOM DIA',
+      greeting_afternoon: 'BOA TARDE',
+      greeting_evening: 'BOA NOITE',
+      greeting_dawn_compact: 'Madrugada',
+      greeting_morning_compact: 'Bom dia',
+      greeting_afternoon_compact: 'Boa tarde',
+      greeting_evening_compact: 'Boa noite',
+      status_active_energy: 'Com energia — seus hábitos ativos brilham nele.',
+      status_calm_aura: 'Calmo e presente — respira com você.',
+      status_excited: 'Radiante — sentiu sua energia hoje!',
+      status_sad: 'Um pouco quieto... mas aqui por você.',
+      status_tired: 'Precisando de descanso — sem pressa.',
+      status_default: 'Aqui, no seu ritmo.',
     },
     actions: {
       label_play: 'Jogar',
