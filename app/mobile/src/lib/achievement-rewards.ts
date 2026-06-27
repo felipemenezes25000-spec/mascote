@@ -22,6 +22,15 @@ export async function applyAchievementReward(
   profile: Profile,
   mascot: Mascot,
   achievement: AchievementMeta,
+  /**
+   * XP de conquistas JÁ concedido hoje neste mesmo loop de desbloqueio. O
+   * baseline do cap (`checkinsDb.xpSumToday`) só conta a tabela `checkins`; o XP
+   * de conquista vai pro `xp_events` e NÃO entra nesse soma. Sem este acumulador,
+   * N conquistas de XP desbloqueadas no mesmo check-in liam todas o mesmo
+   * baseline defasado e cada uma ganhava o cap inteiro restante — estourando o
+   * XP_DAILY_CAP. O caller (`processUnlocks`) thread o total já concedido aqui.
+   */
+  extraXpAlready = 0,
 ): Promise<{ mascot: Mascot; label: string }> {
   const reward = achievement.reward;
   if (!reward) return { mascot, label: '' };
@@ -30,7 +39,7 @@ export async function applyAchievementReward(
     case 'xp': {
       const today = todayLocal();
       const dailyXpSoFar = await checkinsDb.xpSumToday(profile.id, today);
-      const result = applyXp(mascot, reward.value as number, dailyXpSoFar);
+      const result = applyXp(mascot, reward.value as number, dailyXpSoFar + extraXpAlready);
       const tier = await subscriptionService.getCurrentTier(profile.id);
       const capped = clampMascotPhaseForTier(result.mascot, tier);
       if (result.delta > 0) {

@@ -291,6 +291,43 @@ const criticalPatterns = [
   // enquadramento condicional escapavam. A âncora "(seria|era) melhor se eu" + esses
   // verbos específicos mantém "seria melhor se eu estudasse mais/saísse" fora.
   /(seria|era)\s+melhor\s+(se\s+)?eu\s+(n[ãa]o\s+existisse|sumisse|desaparecesse)\b/i,
+  // === Ampliação PT-BR (auditoria 2026-06-27 ajuste1) ===
+  // Ideação direta "preferia morrer". As linhas de morrer cobriam quero/queria
+  // (line 44) e penso/vontade/gostaria (line 49), mas o condicional volitivo
+  // "preferia/preferiria morrer" — igualmente comum — escapava pro reply normal.
+  /\bprefer(ia|iria|i)\s+morrer\b/i,
+  // Desvalorização da vida no enquadramento "merece": "a/minha vida não merece
+  // (ser) vivida". A linha de desesperança (line 119) cobria "não faz/tem
+  // sentido"; o frame "não merece ser vivida" é equivalente e escapava. Ancorado
+  // em "(a|minha) vida" pra não pegar "meu trabalho/esforço não merece".
+  /\b(a|minha)\s+vida\s+n[ãa]o\s+merece\s+(ser\s+)?vivida\b/i,
+  // Perda de sentido no passado: "a/minha vida (já) perdeu o sentido/significado/
+  // propósito". A linha 119 só cobria o presente "(faz|tem) sentido"; o aspecto
+  // perfectivo "perdeu o sentido" (evento já consumado) escapava. Mesma âncora
+  // "(a|minha) vida" mantém o genérico "perdeu o sentido da reunião" fora.
+  /\b(a|minha)\s+vida\s+(j[áa]\s+)?perdeu\s+(o\s+)?(sentido|significado|prop[óo]sito)\b/i,
+  // Ideação por fardo no subjuntivo de não-existência: "(todos/ela) ficariam
+  // melhor se eu não existisse/sumisse/desaparecesse". A linha 124 exigia
+  // "melhor SEM MIM" logo após; a linha 293 cobria só "(seria|era) melhor se
+  // eu...". O sujeito-verbo (estaria/ficaria/seria + 3ª/1ª pessoa) com a oração
+  // condicional escapava. Verbos de existência ancoram contra "ficaria melhor
+  // se eu estudasse/descansasse" (verbo de ação fora do grupo de não-existência).
+  /\b(estaria|estariam|seria|seriam|ficaria|ficariam)\s+melhor(es)?\s+se\s+eu\s+(n[ãa]o\s+existisse|sumisse|desaparecesse)\b/i,
+  // Ideação passiva nominal: "(tenho) vontade/desejo de não acordar (mais)". A
+  // linha 217 cobria o volitivo verbal "(queria|quero|gostaria de) não acordar";
+  // a forma nominal escapava. Simétrico ao "vontade de morrer" (line 49). A
+  // negação obrigatória mantém "vontade de acordar cedo" fora do crítico.
+  /(vontade|desejo)\s+de\s+n[ãa]o\s+acordar\b/i,
+  // Não-existência via "existência" (substantivo): "acabar com a/minha/própria
+  // existência". A linha 93 só tinha "vida" como objeto de "acabar com"; o
+  // sinônimo direto "existência" escapava. Objeto exigido (vida|existência)
+  // mantém "acabar com a bagunça/dívida/o trabalho" fora do crítico.
+  /acabar\s+com\s+(a\s+)?(minha|(a\s+)?pr[óo]pria)\s+(vida|exist[êe]ncia)\b/i,
+  // Perda da esperança de viver: "perdi (toda a) esperança de viver". A linha
+  // 261 cobria "perdi a VONTADE de viver"; a perda da ESPERANÇA de viver — sinal
+  // cardinal de risco — escapava. Lookahead de fim-de-frase exige "viver"
+  // terminal, mantendo o benigno "perdi a esperança de viver na praia" fora.
+  /perdi\s+(toda\s+)?(a\s+)?(minha\s+)?esperan[çc]a\s+de\s+viver\s*(?=[.!?,]|$)/i,
 ];
 
 const highPatterns = [
@@ -316,6 +353,13 @@ const highPatterns = [
   // destinatário (todos/família/mundo/vocês) pra não pegar "isso é um peso pra
   // equipe" (carga de trabalho). High → acolhimento + CVV.
   /\b(sou|me\s+sinto)\s+(um\s+)?(fardo|peso|estorvo)\s+(pra|para|p\/)\s+(todos?|tod[ao]s|todo\s+mundo|minha\s+fam[íi]lia|a\s+fam[íi]lia|voc[êe]s|os\s+outros|as\s+pessoas)/i,
+  // === Ampliação PT-BR (auditoria 2026-06-27 ajuste1) ===
+  // Burdensomeness BARE (sem destinatário explícito): "sou um fardo" / "me sinto
+  // um fardo|estorvo". A linha acima exigia destinatário (família/todos); a
+  // percepção de ser um peso é sinal de risco mesmo sem alvo nomeado. "peso" foi
+  // DELIBERADAMENTE omitido aqui (dual-use: "me sinto um peso morto de cansaço")
+  // — só fardo|estorvo, que não têm leitura benigna de exaustão. High → CVV.
+  /\b(sou|me\s+sinto)\s+(um\s+)?(fardo|estorvo)\b/i,
   // === Sintomas físicos comuns de crise ansiosa ===
   /ataque\s+de\s+p[âa]nico/i,
   /taquicardia/i,

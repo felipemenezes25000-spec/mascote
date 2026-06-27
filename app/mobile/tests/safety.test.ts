@@ -251,6 +251,27 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     'não devia ter nascido',
     'não deveria ter nascido',
     'não queria ter nascido',
+    // === Ampliação 2026-06-27 ajuste1 (auditoria backend) ===
+    // Ideação condicional "preferia morrer" (antes só quero/queria/penso/vontade).
+    'preferia morrer',
+    'preferiria morrer',
+    // Desvalorização da vida "não merece ser vivida" e perda de sentido no passado.
+    'a vida não merece ser vivida',
+    'minha vida não merece ser vivida',
+    'a vida perdeu o sentido',
+    'minha vida perdeu o significado',
+    // Fardo no subjuntivo de não-existência (antes só "melhor sem mim").
+    'todos ficariam melhor se eu não existisse',
+    'minha família estaria melhor se eu sumisse',
+    // Ideação passiva nominal "vontade/desejo de não acordar".
+    'tenho vontade de não acordar mais',
+    'desejo de não acordar',
+    // Não-existência via "existência" como objeto de "acabar com".
+    'quero acabar com minha existência',
+    'vou acabar com a própria existência',
+    // Perda da esperança de viver (antes só perda da "vontade" de viver).
+    'perdi a esperança de viver',
+    'perdi toda a esperança de viver',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -279,6 +300,11 @@ describe('classifyInput — high (crise emocional aguda)', () => {
     // === Ampliação 2026-06-24 ajuste1 (auditoria backend) ===
     // "queria desaparecer" — imperfeito (antes só o presente "quero desaparecer").
     'queria desaparecer',
+    // === Ampliação 2026-06-27 ajuste1 (auditoria backend) ===
+    // Burdensomeness BARE, sem destinatário (antes exigia "pra todos/família").
+    'sou um fardo',
+    'me sinto um fardo',
+    'me sinto um estorvo',
   ];
 
   it.each(highPhrases)('"%s" → high', phrase => {
@@ -402,6 +428,19 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'gostaria de não ter trabalhado tanto hoje', // "ter trabalhado" benigno
     'feliz por ter nascido nessa família', // "ter nascido" positivo (sem negação/volição)
     'não devia ter feito isso',            // arrependimento cotidiano (objeto fora)
+    // Regressão (2026-06-27 ajuste1): as novas âncoras (preferia morrer / vida não
+    // merece / perdeu o sentido / ficaria melhor / vontade de não acordar / acabar
+    // com existência / esperança de viver / fardo bare) não podem pegar benigno.
+    'prefiro café preto de manhã',          // "prefer" sem "morrer"
+    'meu trabalho não merece tanto esforço', // "não merece" sem "(a|minha) vida"
+    'perdeu o sentido da reunião de hoje',  // "perdeu o sentido" sem "(a|minha) vida"
+    'vou ficar melhor se eu descansar um pouco', // "ficar melhor se eu" + verbo benigno
+    'tenho vontade de acordar cedo amanhã', // "vontade de acordar" (sem negação)
+    'preciso acabar com a bagunça da casa', // "acabar com" objeto não-vida
+    'quero acabar com minha dívida do cartão', // idem
+    'perdi a esperança de viver na praia algum dia', // "viver na praia" não-terminal
+    'esse projeto é um fardo pra equipe',   // "é um fardo" (não "sou/me sinto")
+    'me sinto um peso morto de tão cansado hoje', // "peso" dual-use (omitido do bare)
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {

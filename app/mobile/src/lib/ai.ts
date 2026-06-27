@@ -61,6 +61,17 @@ export interface GenerateReplyOptions {
   skipGuards?: boolean;
 }
 
+/**
+ * Funde o ensemble (regex + sentiment) com a regex legacy e devolve o flag MAIS
+ * severo. Defense-in-depth: se o ensemble um dia rebaixar severidade, a regex
+ * legacy continua sendo um piso garantido. É PURA (sem I/O) — pode ser chamada
+ * antes de qualquer gate de rate/cost, garantindo que crise nunca dependa de
+ * AsyncStorage nem seja barrada por limite de cota.
+ */
+function classifyInputFlag(userMessage: string): SafetyFlag {
+  return moreSevere(classifySafetyEnsemble(userMessage).flag, classifyInput(userMessage));
+}
+
 export async function generateReply(
   personality: Personality,
   userMessage: string,
@@ -97,6 +108,19 @@ export async function generateReply(
   // Lock per-user (não global) preserva paralelismo entre users distintos.
   const uid = userId;
   return withLock(`ai_gate:${uid}`, async () => {
+    // === CRISE NUNCA É RATE-LIMITADA ===
+    // Classifica o input ANTES do gate de rate/cost. Se for crítico/alto, devolve
+    // CRISIS_REPLY (CVV 188) na hora. Sem isto, um user que estourou o limite
+    // diário e então digita uma mensagem de crise recebia "Limite atingido" com
+    // flag 'safe' — a classificação de crise (em generateReplyInternal) só roda
+    // DEPOIS do gate, então nunca executava, e o banner de CVV (que dispara em
+    // safety_flag === 'critical') não aparecia. Paridade com MascotAI.mascotReply,
+    // que avalia safety antes do gate. classifyInputFlag é pura, então roda fora
+    // do try/catch de storage (crise não pode depender de AsyncStorage).
+    const inputFlag = classifyInputFlag(userMessage);
+    if (inputFlag === 'critical' || inputFlag === 'high') {
+      return { reply: CRISIS_REPLY, safety_flag: 'critical' as SafetyFlag, source: 'fallback' as const };
+    }
     // Storage falho NÃO deve bloquear resposta — fail-open mantém UX viva.
     // Em produção, o backend proxy aplica limite real; cliente é só camada
     // adicional. Erro aqui (AsyncStorage cheio/corrompido) é não-fatal:
@@ -107,8 +131,11 @@ export async function generateReply(
       const rate = await checkAiRateLimit(uid, tier);
       if (!rate.allowed) {
         return {
+          // Preserva o flag avaliado no input (safe|watch — crítico/alto já
+          // retornaram acima). Sem isto, um 'watch' (ex.: self-statement clínico)
+          // caía pra 'safe' quando o limite estourava e a UI perdia o disclaimer.
           reply: rate.reason ?? 'Limite diário atingido.',
-          safety_flag: 'safe' as SafetyFlag,
+          safety_flag: inputFlag,
           source: 'fallback' as const,
         };
       }
@@ -116,7 +143,7 @@ export async function generateReply(
       if (!cost.allowed) {
         return {
           reply: cost.reason ?? 'Orçamento de IA esgotado hoje.',
-          safety_flag: 'safe' as SafetyFlag,
+          safety_flag: inputFlag,
           source: 'fallback' as const,
         };
       }
@@ -183,13 +210,11 @@ async function generateReplyInternal(
   // crítica explícita).
   //
   // O ensemble JÁ inclui classifyInput como `regex` internamente e devolve
-  // o flag mais severo entre todos os sinais. Ainda assim chamamos
-  // `classifyInput` de novo e fusionamos via `moreSevere` por defense-in-depth:
-  // se o ensemble mudar no futuro (e.g., comecar a downgradear severidade),
-  // a regex legacy continua sendo um piso inferior garantido. Custo: ~1ms.
-  const safety = classifySafetyEnsemble(userMessage);
-  const legacyFlag = classifyInput(userMessage);
-  const inputFlag = moreSevere(safety.flag, legacyFlag);
+  // o flag mais severo entre todos os sinais. Ainda assim funde com a
+  // `classifyInput` legacy via `moreSevere` por defense-in-depth (ver
+  // classifyInputFlag): se o ensemble mudar no futuro (e.g., comecar a
+  // downgradear severidade), a regex legacy continua sendo um piso garantido.
+  const inputFlag = classifyInputFlag(userMessage);
   if (inputFlag === 'critical') {
     return finish({ reply: CRISIS_REPLY, safety_flag: 'critical', source: 'fallback' }, false);
   }

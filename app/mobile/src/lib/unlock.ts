@@ -58,6 +58,12 @@ export async function processUnlocks(
   });
   let ctx = buildCtx(currentMascot);
   const ownedAchIds = new Set(ownedAchievements.map(a => a.achievement_id));
+  // Acumula o XP de conquista já concedido NESTE loop pra threadar como baseline
+  // do cap diário — sem isto, várias conquistas de XP no mesmo check-in cada uma
+  // via o cap inteiro restante (checkinsDb.xpSumToday não conta xp_events) e o
+  // total estourava o XP_DAILY_CAP. clampMascotPhaseForTier só mexe em `phase`,
+  // nunca em `xp`, então o delta real é (mascot.xp após − antes).
+  let achievementXpToday = 0;
   for (const ach of achievementCatalog) {
     if (ownedAchIds.has(ach.id)) continue;
     if (ach.check(ctx)) {
@@ -66,7 +72,8 @@ export async function processUnlocks(
          retorna null se já desbloqueado, mas o `ownedAchIds.has(ach.id)` acima
          já filtra esse caso. Race condition entre 2 scans simultâneos. */
       if (unlocked) {
-        const applied = await applyAchievementReward(profile, currentMascot, ach);
+        const applied = await applyAchievementReward(profile, currentMascot, ach, achievementXpToday);
+        achievementXpToday += Math.max(0, applied.mascot.xp - currentMascot.xp);
         currentMascot = applied.mascot;
         ctx = buildCtx(currentMascot);
         result.achievements.push({
