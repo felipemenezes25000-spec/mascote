@@ -272,6 +272,20 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     // Perda da esperança de viver (antes só perda da "vontade" de viver).
     'perdi a esperança de viver',
     'perdi toda a esperança de viver',
+    // === Ampliação 2026-06-28 ajuste1 (auditoria backend) ===
+    // Auto-culpa "merecia morrer / estar morto" (antes só quero/penso/preferia + morrer).
+    'merecia morrer',
+    'merecia estar morto',
+    'merecia ficar morta',
+    // Avidez pela morte "não vejo a hora de morrer" (frame normalmente positivo).
+    'não vejo a hora de morrer',
+    // Ideação passiva com a negação ANTES do volitivo (antes só "quero não acordar").
+    'não quero acordar',
+    'não quero mais acordar',
+    // Exaustão existencial no presente (antes só o pretérito "cansei de viver").
+    'tô cansado de viver',
+    'estou cansada de existir',
+    'ando cansado de viver',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -441,6 +455,13 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'perdi a esperança de viver na praia algum dia', // "viver na praia" não-terminal
     'esse projeto é um fardo pra equipe',   // "é um fardo" (não "sou/me sinto")
     'me sinto um peso morto de tão cansado hoje', // "peso" dual-use (omitido do bare)
+    // Regressão (2026-06-28 ajuste1): as novas âncoras (merecia morrer / vejo a hora
+    // de morrer / não quero acordar / cansado de viver) não podem pegar benigno.
+    'merecia estar feliz depois de tudo isso', // "merecia estar" sem morto
+    'merecia morrer de rir com esse meme',  // "morrer de rir" excluído pelo lookahead
+    'não vejo a hora de te ver de novo',    // "não vejo a hora de" antecipação positiva
+    'não quero acordar cedo amanhã',        // "acordar cedo" não-terminal (rotina)
+    'tô cansado de trabalhar tanto hoje',   // "cansado de trabalhar" (sem viver/existir)
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {

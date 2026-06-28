@@ -328,6 +328,30 @@ const criticalPatterns = [
   // cardinal de risco — escapava. Lookahead de fim-de-frase exige "viver"
   // terminal, mantendo o benigno "perdi a esperança de viver na praia" fora.
   /perdi\s+(toda\s+)?(a\s+)?(minha\s+)?esperan[çc]a\s+de\s+viver\s*(?=[.!?,]|$)/i,
+  // === Ampliação PT-BR (auditoria 2026-06-28 ajuste1) ===
+  // Ideação por auto-culpa: "merecia morrer" / "merecia estar morto". As linhas de
+  // morrer (44/49/298) exigem quero/penso/vontade/gostaria/preferia; o frame de
+  // (des)merecimento — sinal de inutilidade — escapava. "merecia ter morrido"
+  // já é coberto por "ter morrido" (line 142). O lookahead `verg\w` (literal evitado
+  // pelo guard g2-checkin-gentle) + rir/cansa exclui a hipérbole ("merecia morrer de
+  // rir"); o benigno "merecia estar feliz/em paz" não tem o objeto "morrer|morto"
+  // exigido, então fica fora do crítico.
+  /\bmerecia\s+(morrer|(estar|ficar)\s+mort[oa])\b(?!\s+de\s+(rir|cansa|fome|sono|medo|t[ée]dio|nojo|raiva|verg\w|trabalh))/i,
+  // Avidez pela morte: "não vejo a hora de morrer". "não vejo a hora de X" é
+  // normalmente ANTECIPAÇÃO POSITIVA ("não vejo a hora de te ver"), mas ancorado em
+  // "morrer" vira desejo de morte. Lookahead exclui "morrer de rir" (hipérbole).
+  /n[ãa]o\s+vejo\s+a\s+hora\s+de\s+morrer\b(?!\s+de\s+(rir|cansa|fome|sono|medo|t[ée]dio|nojo|raiva|verg\w))/i,
+  // Ideação passiva "não quero (mais) acordar" com a negação ANTES do verbo
+  // volitivo. A line 217 cobre "(quero|queria|gostaria de) não acordar" (verbo
+  // ANTES da negação); a ordem inversa "não quero acordar" — igualmente comum na
+  // fala — escapava. Lookahead de fim-de-frase exige "acordar" TERMINAL, mantendo o
+  // DOMINANTE benigno "não quero acordar cedo/amanhã pro trabalho" fora do crítico.
+  /n[ãa]o\s+quero\s+(mais\s+)?acordar\s*(?=[.!?]|$)/i,
+  // Exaustão existencial no PRESENTE: "(tô|estou|ando) cansad[oa] de viver|existir".
+  // A line 213 cobre só o pretérito "cansei de viver|existir"; a forma presente —
+  // semanticamente idêntica — escapava pro reply normal. Mesma âncora viver|existir
+  // mantém "tô cansado de trabalhar/dessa rotina" (queixa cotidiana) fora do crítico.
+  /\b(t[ôo]|estou|ando)\s+cansad[oa]\s+de\s+(viver|existir)\b/i,
 ];
 
 const highPatterns = [
