@@ -245,12 +245,12 @@ export default function AtelierScreen() {
       return;
     }
     Alert.alert(
-      'Sair sem salvar?',
-      'Suas mudanças no Ateliê serão descartadas.',
+      t('atelier.alerts.discard_changes.title'),
+      t('atelier.alerts.discard_changes.body'),
       [
-        { text: 'Continuar editando', style: 'cancel' },
+        { text: t('atelier.alerts.discard_changes.cancel'), style: 'cancel' },
         {
-          text: 'Descartar',
+          text: t('atelier.alerts.discard_changes.confirm'),
           style: 'destructive',
           onPress: () => {
             void autoSave.clear();
@@ -270,7 +270,7 @@ export default function AtelierScreen() {
       await autoSave.clear();
       router.back();
     } catch (e) {
-      Alert.alert('Erro ao salvar', String(e instanceof Error ? e.message : e));
+      Alert.alert(t('atelier.alerts.save_error.title'), String(e instanceof Error ? e.message : e));
     } finally {
       setSaving(false);
     }
@@ -296,14 +296,14 @@ export default function AtelierScreen() {
 
   const handleReset = (): void => {
     Alert.alert(
-      'Voltar ao DNA puro?',
+      t('atelier.alerts.reset_dna.title'),
       locks.size > 0
-        ? `Vai resetar todos os sliders e padrões — exceto ${locks.size} field${locks.size === 1 ? '' : 's'} travado${locks.size === 1 ? '' : 's'}. Você poderá salvar depois.`
-        : 'Vai resetar todos os sliders e padrões. Você poderá salvar depois.',
+        ? t('atelier.alerts.reset_dna.body_with_locks', locks.size)
+        : t('atelier.alerts.reset_dna.body_default'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('atelier.alerts.reset_dna.cancel'), style: 'cancel' },
         {
-          text: 'Resetar',
+          text: t('atelier.alerts.reset_dna.confirm'),
           onPress: () => {
             const defaults: DraftFields = {
               eye_size: 1,
@@ -405,40 +405,40 @@ export default function AtelierScreen() {
         />
         <View style={styles.section}>
           <MorphSlider
-            label="Tamanho dos olhos"
-            hint="grandes parecem mais fofos; pequenos mais maduros"
+            label={t('atelier.sliders.eye_size.label')}
+            hint={t('atelier.sliders.eye_size.hint')}
             value={draft.eye_size}
             onChange={v => updateDraft({ eye_size: v })}
             locked={locks.has('eye_size')}
             onToggleLock={() => toggleLock('eye_size')}
           />
           <MorphSlider
-            label="Separação dos olhos"
-            hint="afasta ou aproxima os olhos"
+            label={t('atelier.sliders.eye_spread.label')}
+            hint={t('atelier.sliders.eye_spread.hint')}
             value={draft.eye_spread}
             onChange={v => updateDraft({ eye_spread: v })}
             locked={locks.has('eye_spread')}
             onToggleLock={() => toggleLock('eye_spread')}
           />
           <MorphSlider
-            label="Altura do corpo"
-            hint="alonga ou achata vertical"
+            label={t('atelier.sliders.body_height.label')}
+            hint={t('atelier.sliders.body_height.hint')}
             value={draft.body_height}
             onChange={v => updateDraft({ body_height: v })}
             locked={locks.has('body_height')}
             onToggleLock={() => toggleLock('body_height')}
           />
           <MorphSlider
-            label="Largura do corpo"
-            hint="alarga ou afina horizontal"
+            label={t('atelier.sliders.body_width.label')}
+            hint={t('atelier.sliders.body_width.hint')}
             value={draft.body_width}
             onChange={v => updateDraft({ body_width: v })}
             locked={locks.has('body_width')}
             onToggleLock={() => toggleLock('body_width')}
           />
           <RangeSlider
-            label="Inclinação"
-            hint="postura do corpo (negativo = pra trás, positivo = pra frente)"
+            label={t('atelier.sliders.posture.label')}
+            hint={t('atelier.sliders.posture.hint')}
             value={draft.posture_lean}
             min={MIN_POSTURE}
             max={MAX_POSTURE}
@@ -455,16 +455,16 @@ export default function AtelierScreen() {
         />
         <View style={styles.section}>
           <MorphSlider
-            label="Intensidade da aura"
-            hint="partículas e brilho ao redor"
+            label={t('atelier.sliders.aura_intensity.label')}
+            hint={t('atelier.sliders.aura_intensity.hint')}
             value={draft.aura_intensity}
             onChange={v => updateDraft({ aura_intensity: v })}
             locked={locks.has('aura_intensity')}
             onToggleLock={() => toggleLock('aura_intensity')}
           />
           <MorphSlider
-            label="Densidade do padrão"
-            hint="mais ou menos marcas no corpo"
+            label={t('atelier.sliders.pattern_density.label')}
+            hint={t('atelier.sliders.pattern_density.hint')}
             value={draft.pattern_density}
             onChange={v => updateDraft({ pattern_density: v })}
             locked={locks.has('pattern_density')}
@@ -478,32 +478,32 @@ export default function AtelierScreen() {
 
         {/* Apêndices */}
         <SectionHeader
-          title="Apêndices"
-          subtitle="esconde partes que o DNA mostra (não inventa o que não tem)"
+          title={t('atelier.sections.appendages.title')}
+          subtitle={t('atelier.sections.appendages.subtitle')}
         />
         <View style={styles.section}>
           <HideToggleRow
-            label="Esconder cauda"
-            description="apenas se o DNA tiver cauda"
+            label={t('atelier.toggles.hide_tail.label')}
+            description={t('atelier.toggles.hide_tail.description')}
             hidden={draft.force_hide_tail}
             onChange={v => updateDraft({ force_hide_tail: v })}
           />
           <HideToggleRow
-            label="Esconder antenas"
-            description="apenas se o DNA tiver antenas"
+            label={t('atelier.toggles.hide_antennae.label')}
+            description={t('atelier.toggles.hide_antennae.description')}
             hidden={draft.force_hide_antennae}
             onChange={v => updateDraft({ force_hide_antennae: v })}
           />
           <HideToggleRow
-            label="Esconder espinhos"
-            description="apenas se o DNA tiver espinhos"
+            label={t('atelier.toggles.hide_spikes.label')}
+            description={t('atelier.toggles.hide_spikes.description')}
             hidden={draft.force_hide_spikes}
             onChange={v => updateDraft({ force_hide_spikes: v })}
           />
         </View>
 
         {/* Ações */}
-        <SectionHeader title="Ações" />
+        <SectionHeader title={t('atelier.sections.actions.title')} />
         <View style={styles.actionsRow}>
           <PressableScale
             onPress={draftHistory.undo}
@@ -515,12 +515,12 @@ export default function AtelierScreen() {
               },
             ]}
             accessibilityRole="button"
-            accessibilityLabel="Desfazer última mudança"
+            accessibilityLabel={t('atelier.actions.undo')}
             disabled={!draftHistory.canUndo}
           >
             <Icon name="arrow-left" size={16} color={theme.colors.text} strokeWidth={2} />
             <Typography variant="bodyBold" style={styles.actionLabel}>
-              Desfazer
+              {t('atelier.actions.undo')}
             </Typography>
           </PressableScale>
           <PressableScale
@@ -533,12 +533,12 @@ export default function AtelierScreen() {
               },
             ]}
             accessibilityRole="button"
-            accessibilityLabel="Refazer mudança desfeita"
+            accessibilityLabel={t('atelier.actions.redo')}
             disabled={!draftHistory.canRedo}
           >
             <Icon name="arrow-right" size={16} color={theme.colors.text} strokeWidth={2} />
             <Typography variant="bodyBold" style={styles.actionLabel}>
-              Refazer
+              {t('atelier.actions.redo')}
             </Typography>
           </PressableScale>
         </View>
@@ -547,22 +547,22 @@ export default function AtelierScreen() {
             onPress={handleRandomize}
             style={[styles.actionBtn, { backgroundColor: theme.colors.surface }]}
             accessibilityRole="button"
-            accessibilityLabel="Gerar aparência aleatória"
+            accessibilityLabel={t('atelier.actions.random')}
           >
             <Icon name="sparkles" size={16} color={theme.colors.text} strokeWidth={2} />
             <Typography variant="bodyBold" style={styles.actionLabel}>
-              Aleatório
+              {t('atelier.actions.random')}
             </Typography>
           </PressableScale>
           <PressableScale
             onPress={handleReset}
             style={[styles.actionBtn, { backgroundColor: theme.colors.surface }]}
             accessibilityRole="button"
-            accessibilityLabel="Voltar ao DNA puro"
+            accessibilityLabel={t('atelier.actions.reset')}
           >
             <Icon name="arrow-left" size={16} color={theme.colors.text} strokeWidth={2} />
             <Typography variant="bodyBold" style={styles.actionLabel}>
-              DNA puro
+              {t('atelier.actions.reset')}
             </Typography>
           </PressableScale>
         </View>
@@ -572,11 +572,11 @@ export default function AtelierScreen() {
               onPress={() => setCompareOpen(true)}
               style={[styles.actionBtn, { backgroundColor: theme.colors.surface }]}
               accessibilityRole="button"
-              accessibilityLabel="Comparar antes e depois"
+              accessibilityLabel={t('atelier.actions.compare')}
             >
               <Icon name="sparkle" size={16} color={theme.colors.text} strokeWidth={2} />
               <Typography variant="bodyBold" style={styles.actionLabel}>
-                Comparar antes/depois
+                {t('atelier.actions.compare')}
               </Typography>
             </PressableScale>
           </View>
@@ -587,11 +587,11 @@ export default function AtelierScreen() {
             onPress={() => setAttributionOpen(true)}
             style={[styles.actionBtn, { backgroundColor: theme.colors.surface }]}
             accessibilityRole="button"
-            accessibilityLabel="Ver composição morfológica"
+            accessibilityLabel={t('atelier.actions.attribution')}
           >
             <Icon name="info" size={16} color={theme.colors.text} strokeWidth={2} />
             <Typography variant="bodyBold" style={styles.actionLabel}>
-              Composição visual
+              {t('atelier.actions.attribution')}
             </Typography>
           </PressableScale>
         </View>
@@ -599,19 +599,19 @@ export default function AtelierScreen() {
 
         {/* Mutações ativas */}
         <SectionHeader
-          title="Mutações ativas"
+          title={t('atelier.sections.mutations_active.title')}
           subtitle={
             unlockedMutations.length > 0
-              ? `${unlockedMutations.length} desbloqueada${unlockedMutations.length === 1 ? '' : 's'} — afetando o preview`
-              : 'marcos biológicos que ainda virão'
+              ? t('atelier.sections.mutations_active.subtitle_count', unlockedMutations.length)
+              : t('atelier.sections.mutations_active.subtitle_empty')
           }
         />
         <MutationsActiveStrip unlocked={unlockedMutations} />
 
         {/* Personalidades — explorar como ficaria com outra personality */}
         <SectionHeader
-          title="Outras personalidades"
-          subtitle="o mesmo DNA com vibes diferentes (read-only)"
+          title={t('atelier.sections.personalities.title')}
+          subtitle={t('atelier.sections.personalities.subtitle')}
           compact
         />
         <PersonalityPreviewSwatch
@@ -624,8 +624,8 @@ export default function AtelierScreen() {
 
         {/* Looks salvos */}
         <SectionHeader
-          title="Looks salvos"
-          subtitle="customizações nomeadas pra trocar rapidamente"
+          title={t('atelier.sections.looks.title')}
+          subtitle={t('atelier.sections.looks.subtitle')}
         />
         <LookManager
           looks={looks}
@@ -638,19 +638,19 @@ export default function AtelierScreen() {
         {/* Footer info */}
         <View style={styles.footer}>
           <Typography variant="caption" tone="secondary" align="center">
-            🔒 Acessórios e cenas ficam no <Typography variant="caption" style={{ fontWeight: '700' }}>Closet</Typography>.
+            🔒 {t('atelier.footer.closet_hint')}
           </Typography>
           <Typography variant="caption" tone="secondary" align="center">
-            Customização nunca altera o DNA — só esculpe a aparência.
+            {t('atelier.footer.dna_safety')}
           </Typography>
           <PressableScale
             onPress={() => router.push('/atelier-settings')}
             style={styles.preferencesLink}
             accessibilityRole="link"
-            accessibilityLabel="Preferências do Ateliê"
+            accessibilityLabel={t('atelier.footer.preferences_link')}
           >
             <Typography variant="caption" tone="brand" style={{ fontWeight: '700' }}>
-              ⚙ Preferências do Ateliê
+              ⚙ {t('atelier.footer.preferences_link')}
             </Typography>
           </PressableScale>
         </View>
