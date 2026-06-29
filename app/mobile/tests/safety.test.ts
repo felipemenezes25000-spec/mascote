@@ -286,6 +286,23 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     'tô cansado de viver',
     'estou cansada de existir',
     'ando cansado de viver',
+    // === Ampliação 2026-06-29 ajuste1 (auditoria backend) ===
+    // Exaustão sem o "mais" (antes a line 96 exigia "não aguento MAIS viver").
+    'não aguento viver',
+    'não aguento estar vivo',
+    'não aguento mais estar viva',
+    // Perda de sentido impessoal "não há motivo/razão pra viver" (antes só "não
+    // tenho/vejo motivo").
+    'não há motivo pra viver',
+    'não há razão de viver',
+    'não há mais sentido em viver',
+    // Inutilidade em 1ª pessoa "não mereço viver" (antes só o impessoal "minha
+    // vida não merece ser vivida").
+    'não mereço viver',
+    'não mereço mais viver',
+    // Worthlessness "minha vida não vale nada" (antes só "não vale a pena viver").
+    'minha vida não vale nada',
+    'a vida não vale nada',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -462,6 +479,14 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'não vejo a hora de te ver de novo',    // "não vejo a hora de" antecipação positiva
     'não quero acordar cedo amanhã',        // "acordar cedo" não-terminal (rotina)
     'tô cansado de trabalhar tanto hoje',   // "cansado de trabalhar" (sem viver/existir)
+    // Regressão (2026-06-29 ajuste1): as novas âncoras (aguento viver / não há
+    // motivo / não mereço viver / vida não vale nada) não podem pegar benigno.
+    'não aguento mais essa fila do banco',  // "não aguento mais" sem viver/vida
+    'não há motivo pra continuar lendo isso', // "não há motivo" sem viver/vida
+    'não mereço viver assim, vou mudar',    // "mereço viver" não-terminal (continua)
+    'meu trabalho não merece tanto esforço', // "não merece" 3ªp sem "viver"
+    'esse celular não vale nada',           // "não vale nada" sem "(a|minha) vida"
+    'não vale a pena esse curso caro',      // "vale a pena" sem "nada"/viver
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {

@@ -352,6 +352,29 @@ const criticalPatterns = [
   // semanticamente idêntica — escapava pro reply normal. Mesma âncora viver|existir
   // mantém "tô cansado de trabalhar/dessa rotina" (queixa cotidiana) fora do crítico.
   /\b(t[ôo]|estou|ando)\s+cansad[oa]\s+de\s+(viver|existir)\b/i,
+  // === Ampliação PT-BR (auditoria 2026-06-29 ajuste1) ===
+  // Exaustão BARE sem o "mais": "não aguento viver" / "não aguento estar vivo".
+  // A line 96 exigia "não aguento MAIS viver|a vida"; a forma sem "mais" — e o
+  // enquadramento "estar vivo/a" — escapavam pro reply normal. Mantém o "mais"
+  // opcional pra não regredir a forma já coberta. Mesma filosofia conservadora:
+  // "não aguento viver assim" (distress) é flagado por consistência com a linha 96,
+  // que já flaga "não aguento mais viver assim".
+  /n[ãa]o\s+aguento\s+(mais\s+)?(viver|a\s+vida|estar\s+viv[oa])\b/i,
+  // Perda de sentido IMPESSOAL: "não há (mais) motivo/razão/sentido (pra|de|em)
+  // viver". A line 106 exigia o verbo de 1ª pessoa "tenho|vejo"; o enquadramento
+  // impessoal "não HÁ motivo pra viver" caía só no sentiment (frágil). Ancorado em
+  // "viver|a vida" pra não pegar "não há razão pra continuar lendo isso".
+  /n[ãa]o\s+h[áa]\s+(mais\s+)?(motivo|raz[ãa]o|sentido)\s+(pra|para|em|de)\s+(viver|a\s+vida)\b/i,
+  // Inutilidade/auto-desvalor em 1ª pessoa: "não mereço (mais) viver". A line 303
+  // cobria o impessoal "(a|minha) vida não merece ser vivida"; o frame direto de
+  // worthlessness "EU não mereço viver" — fator de risco reconhecido — escapava.
+  // Lookahead terminal mantém o transitivo "não mereço viver assim/essa vida" fora.
+  /n[ãa]o\s+mere[çc]o\s+(mais\s+)?viver\s*(?=[.!?,]|$)/i,
+  // Worthlessness existencial: "(a|minha) vida não vale nada". A line 208 cobria
+  // "a vida não vale (a) pena" (não-vale-a-pena-viver); "não vale nada" é o frame
+  // de desvalor da própria vida. Ancorado em "(a|minha) vida" pra não pegar o
+  // dual-use "esse celular/filme não vale nada".
+  /\b(a|minha)\s+vida\s+n[ãa]o\s+vale\s+nada\b/i,
 ];
 
 const highPatterns = [

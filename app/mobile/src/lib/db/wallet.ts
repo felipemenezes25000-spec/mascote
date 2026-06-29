@@ -17,10 +17,14 @@ export const wallet = {
       const rows = await read<Wallet>('wallet');
       /* v8 ignore next */
       const current = rows.find(w => w.user_id === user_id) ?? freshWallet(user_id);
+      // Sanitiza o saldo persistido: um NaN/negativo vindo de import corrompido
+      // contaminaria toda soma futura (Math.max(0, NaN + x) = NaN, irrecuperável).
+      const curCoins = Number.isFinite(current.coins) ? Math.max(0, current.coins) : 0;
+      const curGems = Number.isFinite(current.gems) ? Math.max(0, current.gems) : 0;
       const next: Wallet = {
         ...current,
-        coins: Math.max(0, current.coins + safeCoins),
-        gems: Math.max(0, current.gems + safeGems),
+        coins: Math.max(0, curCoins + safeCoins),
+        gems: Math.max(0, curGems + safeGems),
         updated_at: new Date().toISOString(),
       };
       /* v8 ignore next 3 */
@@ -37,11 +41,16 @@ export const wallet = {
     return withLock('wallet', async () => {
       const rows = await read<Wallet>('wallet');
       const current = rows.find(w => w.user_id === user_id) ?? freshWallet(user_id);
-      if (current.coins < safeCoins || current.gems < safeGems) return null;
+      // Sanitiza o saldo persistido ANTES da checagem: um saldo NaN faria
+      // `NaN < safeCoins` ser `false`, furando o guard e liberando compra grátis
+      // (e persistindo NaN). Clampar negativos/NaN aqui auto-cura a carteira.
+      const curCoins = Number.isFinite(current.coins) ? Math.max(0, current.coins) : 0;
+      const curGems = Number.isFinite(current.gems) ? Math.max(0, current.gems) : 0;
+      if (curCoins < safeCoins || curGems < safeGems) return null;
       const next: Wallet = {
         ...current,
-        coins: current.coins - safeCoins,
-        gems: current.gems - safeGems,
+        coins: Math.max(0, curCoins - safeCoins),
+        gems: Math.max(0, curGems - safeGems),
         updated_at: new Date().toISOString(),
       };
       /* v8 ignore next 3 */

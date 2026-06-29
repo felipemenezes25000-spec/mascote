@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { wallet } from '@/lib/db';
 
 function uid(): string {
@@ -127,6 +128,33 @@ describe('wallet.spend', () => {
     await wallet.add(u, 10, 0);
     const w = await wallet.spend(u, 0, 0);
     expect(w?.coins).toBe(10);
+  });
+});
+
+describe('wallet.spend — saldo persistido corrompido (auditoria 2026-06-29)', () => {
+  // Simula import malicioso/corrompido com saldo NÃO-finito já no storage.
+  // Sem o saneamento do saldo lido, `'abc' < 100` (ou `NaN < 100`) é `false`,
+  // furando o guard de saldo → compra grátis + persistência de NaN irrecuperável.
+  async function seedCorruptWallet(user_id: string, coins: unknown, gems: unknown) {
+    const raw = await AsyncStorage.getItem('mascote:wallet');
+    const rows = raw ? (JSON.parse(raw) as unknown[]) : [];
+    rows.push({ user_id, coins, gems, updated_at: new Date().toISOString() });
+    await AsyncStorage.setItem('mascote:wallet', JSON.stringify(rows));
+  }
+
+  it('saldo não-numérico não libera compra grátis (spend retorna null)', async () => {
+    const u = uid();
+    await seedCorruptWallet(u, 'abc', 'abc');
+    const result = await wallet.spend(u, 100, 0);
+    expect(result).toBeNull();
+  });
+
+  it('saldo nulo/corrompido é auto-curado para 0 no próximo add', async () => {
+    const u = uid();
+    await seedCorruptWallet(u, 'abc', null);
+    const w = await wallet.add(u, 10, 5);
+    expect(w.coins).toBe(10);
+    expect(w.gems).toBe(5);
   });
 });
 
