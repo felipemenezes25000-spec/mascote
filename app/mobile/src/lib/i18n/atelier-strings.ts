@@ -332,6 +332,12 @@ export const STRINGS_PT = {
     cancel: 'Cancelar',
     save: 'Salvar',
   },
+  tabs: {
+    home: 'Home',
+    chat: 'Conversar',
+    evolution: 'Evolução',
+    report: 'Relatório',
+  },
   tones: {
     carinhoso: 'Carinhoso',
     direto: 'Direto',

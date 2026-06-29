@@ -80,6 +80,12 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     'home.screen.greeting_evening_compact',
     'home.screen.status_active_energy',
     'home.screen.status_default',
+    // Fase i18n jun/29: labels da tab bar (Conversar/Evolução/Relatório)
+    // eram PT cru no (tabs)/_layout.tsx — chrome de navegação visto em TODA
+    // tela do app principal, vazava pra EN/ES. tabs.chat fica de fora dos
+    // samples (ES 'Conversar' == PT de propósito).
+    'tabs.evolution',
+    'tabs.report',
   ];
 
   it('EN e ES diferem do PT (e não devolvem o path literal)', () => {

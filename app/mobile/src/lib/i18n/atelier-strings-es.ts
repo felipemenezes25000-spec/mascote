@@ -334,6 +334,12 @@ export const STRINGS_ES: StringsBundle = {
     cancel: 'Cancelar',
     save: 'Guardar',
   },
+  tabs: {
+    home: 'Inicio',
+    chat: 'Conversar',
+    evolution: 'Evolución',
+    report: 'Informe',
+  },
   tones: {
     carinhoso: 'Cariñoso',
     direto: 'Directo',

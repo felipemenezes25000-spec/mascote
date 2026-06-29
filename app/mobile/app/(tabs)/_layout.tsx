@@ -4,6 +4,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 import { Icon, type IconName } from '@/components/Icon';
 import { useTheme } from '@/lib/useTheme';
 import { makeShadow } from '@/lib/themes';
+import { t } from '@/lib/i18n';
 
 /**
  * Tab bar oficial: 4 abas (Home / Conversar / Evolução / Relatório).
@@ -84,28 +85,28 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('tabs.home'),
           tabBarIcon: renderIcon('home'),
         }}
       />
       <Tabs.Screen
         name="chat"
         options={{
-          title: 'Conversar',
+          title: t('tabs.chat'),
           tabBarIcon: renderIcon('message-circle'),
         }}
       />
       <Tabs.Screen
         name="evolution"
         options={{
-          title: 'Evolução',
+          title: t('tabs.evolution'),
           tabBarIcon: renderIcon('sparkles'),
         }}
       />
       <Tabs.Screen
         name="report"
         options={{
-          title: 'Relatório',
+          title: t('tabs.report'),
           tabBarIcon: renderIcon('bar-chart'),
         }}
       />
