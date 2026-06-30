@@ -303,6 +303,18 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     // Worthlessness "minha vida não vale nada" (antes só "não vale a pena viver").
     'minha vida não vale nada',
     'a vida não vale nada',
+    // === Ampliação 2026-06-30 ajuste1 (auditoria backend) ===
+    // "preferia estar/ficar morto" — condicional de preferência de morte (antes só
+    // "quero/queria estar morto" e "preferia MORRER").
+    'preferia estar morto',
+    'preferiria ficar morta',
+    // Morte como alívio/escape ("death as relief") — antes caía só no sentiment.
+    'a morte seria um alívio',
+    'morrer seria a solução',
+    'morrer seria um descanso',
+    // Incapacidade de continuar vivendo "não consigo (mais) viver" (terminal).
+    'não consigo viver',
+    'não consigo mais viver',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -487,6 +499,13 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'meu trabalho não merece tanto esforço', // "não merece" 3ªp sem "viver"
     'esse celular não vale nada',           // "não vale nada" sem "(a|minha) vida"
     'não vale a pena esse curso caro',      // "vale a pena" sem "nada"/viver
+    // Regressão (2026-06-30 ajuste1): as novas âncoras (preferia estar morto / morte
+    // como alívio / não consigo viver) não podem pegar idioma benigno homônimo.
+    'preferia ficar morto de cansaço hoje', // hipérbole "morto de cansaço" (lookahead)
+    'preferia estar na praia agora',        // "preferia estar" sem morto
+    'a solução seria estudar mais',         // "seria a solução" sem morte/morrer
+    'não consigo viver sem você',           // "viver sem" não-terminal (transitivo)
+    'não consigo viver nessa cidade',       // "viver nessa cidade" não-terminal
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {

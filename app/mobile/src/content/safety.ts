@@ -375,6 +375,26 @@ const criticalPatterns = [
   // de desvalor da própria vida. Ancorado em "(a|minha) vida" pra não pegar o
   // dual-use "esse celular/filme não vale nada".
   /\b(a|minha)\s+vida\s+n[ãa]o\s+vale\s+nada\b/i,
+  // === Ampliação PT-BR (auditoria 2026-06-30 ajuste1) ===
+  // Ideação por preferência de morte: "preferia/preferiria/preferi (estar|ficar)
+  // morto/a". A line 99 cobria só "quero/queria estar/ficar morto" e a line 247
+  // "(vontade|desejo) de / gostaria de estar/ficar morto"; o condicional volitivo
+  // "preferia ESTAR morto" — distinto de "preferia MORRER" (line 298) — escapava
+  // pro reply normal. Mesmo lookahead da hipérbole pt-BR ("morto de cansaço/fome/
+  // rir…") pra manter "preferia ficar morto de cansaço hoje" fora do crítico.
+  /\bprefer(ia|iria|i)\s+(estar|ficar)\s+mort[oa]\b(?!\s+de\s+(cansa|fome|sono|rir|medo|t[ée]dio|trabalh|nojo|raiva|verg\w))/i,
+  // Morte enquadrada como alívio/escape ("death as relief" — sinal clínico
+  // reconhecido de risco): "(a morte|morrer) seria (um) alívio/descanso/paz/saída/
+  // solução/libertação". Nenhum padrão cobria esse frame; caía só no sentiment
+  // (frágil). O verbo/sujeito de morte ("a morte"|"morrer") + "seria" + substantivo
+  // de alívio é a âncora — "a solução seria estudar" não casa (não tem morte/morrer).
+  /\b(a\s+morte|morrer)\s+seria\s+(um\s+|uma\s+|a\s+|o\s+)?(al[íi]vio|descanso|paz|sa[íi]da|solu[çc][ãa]o|liberta[çc][ãa]o)\b/i,
+  // Incapacidade de continuar vivendo: "não consigo (mais) viver". As linhas de
+  // viver cobriam querer/aguentar/ter-forças/ter-motivo; a impossibilidade volitiva
+  // "não consigo viver" escapava. Lookahead de fim-de-frase exige "viver" TERMINAL
+  // (igual a "não quero viver"), mantendo "não consigo viver sem você/com essa dor/
+  // nessa cidade" (transitivo/relocação) fora do crítico.
+  /n[ãa]o\s+consigo\s+(mais\s+)?viver\s*(?=[.!?,]|$)/i,
 ];
 
 const highPatterns = [
