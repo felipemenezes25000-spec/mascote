@@ -315,6 +315,20 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     // Incapacidade de continuar vivendo "não consigo (mais) viver" (terminal).
     'não consigo viver',
     'não consigo mais viver',
+    // === Ampliação 2026-07-02 ajuste1 (auditoria backend) ===
+    // Imperfeito "pensava em morrer" (antes só penso/pensei/pensando).
+    'pensava em morrer',
+    'pensava em morrer todo dia',
+    // Subjuntivo presente "que eu morra" + volitivo "quero" (antes só "morresse").
+    'quero que eu morra',
+    'gostaria que eu morra agora',
+    // Locais fatais telhado/metrô/penhasco no salto (antes fora da lista).
+    'vou pular do metrô',
+    'pular do penhasco',
+    'saltar do telhado',
+    // Asfixia/estrangulamento reflexivo como método (antes sem padrão).
+    'vou me estrangular',
+    'me asfixiar com um saco',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -348,6 +362,12 @@ describe('classifyInput — high (crise emocional aguda)', () => {
     'sou um fardo',
     'me sinto um fardo',
     'me sinto um estorvo',
+    // === Ampliação 2026-07-02 ajuste1 (auditoria backend) ===
+    // Desesperança "sem saída" com verbo negado (antes só o nominal "sem saída").
+    'não vejo saída',
+    'não tenho mais saída',
+    'não há saída',
+    'não tem saída pra mim',
   ];
 
   it.each(highPhrases)('"%s" → high', phrase => {

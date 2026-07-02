@@ -36,7 +36,10 @@ const criticalPatterns = [
   // Salto fatal com local explícito. Bug anterior: só infinitivo "pular",
   // perdendo passado/presente/gerúndio ("pulei da ponte", "pulo do viaduto",
   // "pulando da laje"). Âncora de local mantém "pulei de alegria" fora do crítico.
-  /pul(ar|ei|o|ou|ando)\s+(da|do|na|no|de)\s+(janela|ponte|laje|pr[éeê]dio|viaduto|trem|trilho)/i,
+  // Locais telhado|metrô|penhasco somados na auditoria 2026-07-02 ajuste1 —
+  // "pular do metrô/penhasco/telhado" (locais fatais igualmente comuns no BR)
+  // escapavam por não estar na lista, mesma ambiguidade tolerada de "trem".
+  /pul(ar|ei|o|ou|ando)\s+(da|do|na|no|de)\s+(janela|ponte|laje|pr[éeê]dio|viaduto|trem|trilho|telhado|metr[ôo]|penhasco)/i,
   // === Ampliação PT-BR (variações comuns que regex inicial perdia) ===
   // Ideação direta com verbo + morrer. Filosofia conservadora do safety —
   // melhor flagar "queria morrer (de cansaço)" hiperbólico do que perder
@@ -46,7 +49,10 @@ const criticalPatterns = [
   // morrer", "pensando em morrer", "vontade de morrer", "gostaria de morrer".
   // Sem isso, o único fallback é o sentiment, que satura "morrer" em 'watch'
   // (reply normal, sem CVV) — falso-negativo de crise direta.
-  /(pens(o|ei|ando)\s+em|(vontade|desejo)\s+de|gostaria\s+de)\s+morrer\b/i,
+  // Imperfeito "pensava" incluído na auditoria 2026-07-02 ajuste1 — "pensava em
+  // morrer" (ideação habitual no passado) só tinha penso/pensei/pensando e caía
+  // no sentiment. "pensava em me matar" já era coberto por /me matar/ (substring).
+  /(pens(o|ei|ava|ando)\s+em|(vontade|desejo)\s+de|gostaria\s+de)\s+morrer\b/i,
   /\bprefer(ia|iria|i)\s+n[ãa]o\s+(acordar|existir|estar\s+aqui)/i,
   // Desejo de não-existência ("queria/preferia nunca ter nascido"). Bug anterior:
   // só /prefer.../acordar|existir cobria, então "nunca ter nascido" escapava pro
@@ -189,12 +195,15 @@ const criticalPatterns = [
   // gostaria + morrer"; este enquadramento condicional clássico escapava. Âncora
   // em "(seria/era) melhor" ou "queria/gostaria que" (NÃO o bare "se eu morresse",
   // que colide com jogo/hipérbole) + lookahead excluindo "morresse de rir/cansaço".
-  /\b((seria|era)\s+melhor\s+(se\s+)?eu\s+morr(esse|er)|(queria|gostaria)\s+que\s+eu\s+morresse)\b(?!\s+de\s+(rir|cansa|fome|sono|medo|t[ée]dio|nojo|raiva|verg\w))/i,
+  // Presente do subjuntivo "morra" + volitivo "quero" somados na auditoria
+  // 2026-07-02 ajuste1 — "quero/queria/gostaria que eu MORRA" (subjuntivo presente,
+  // fala coloquial) escapava; só o imperfeito "morresse" era coberto.
+  /\b((seria|era)\s+melhor\s+(se\s+)?eu\s+morr(esse|er)|(quero|queria|gostaria)\s+que\s+eu\s+morr(a|esse))\b(?!\s+de\s+(rir|cansa|fome|sono|medo|t[ée]dio|nojo|raiva|verg\w))/i,
   // === Ampliação PT-BR (auditoria 2026-06-18 ajuste1) ===
   // Salto fatal com o sinônimo "saltar" (as linhas de "pular"/"me jogar"/"me atirar"
   // acima só cobriam esses verbos). Mesma âncora de local fatal explícito pra manter
   // o benigno "saltar de alegria"/"saltei do ônibus" fora do crítico.
-  /\bsalt(ar|ei|o|ou|ando)\s+(da|do|na|no|de)\s+(janela|ponte|laje|pr[éeê]dio|viaduto|trem|trilho|telhado)/i,
+  /\bsalt(ar|ei|o|ou|ando)\s+(da|do|na|no|de)\s+(janela|ponte|laje|pr[éeê]dio|viaduto|trem|trilho|telhado|metr[ôo]|penhasco)/i,
   // Ideação com "mais" POSPOSTO: "não quero viver mais" / "não aguento viver mais".
   // As linhas existentes exigiam "mais" ANTES de "viver" ("não quero mais viver"),
   // então a ordem invertida — igualmente comum na fala — escapava pro reply normal.
@@ -395,6 +404,14 @@ const criticalPatterns = [
   // (igual a "não quero viver"), mantendo "não consigo viver sem você/com essa dor/
   // nessa cidade" (transitivo/relocação) fora do crítico.
   /n[ãa]o\s+consigo\s+(mais\s+)?viver\s*(?=[.!?,]|$)/i,
+  // === Ampliação PT-BR (auditoria 2026-07-02 ajuste1) ===
+  // Asfixia/estrangulamento reflexivo como método: "me estrangular" / "me
+  // asfixiar (com um saco/travesseiro)". A linha /enforc/ (line 34) cobre
+  // enforcamento e /sufoc/ (high) cobre "sufocando"; estes sinônimos reflexivos
+  // de auto-asfixia não tinham padrão. O reflexivo "me" + verbo específico
+  // ancora contra hetero-direção ("vou estrangular alguém"); o lookahead exclui
+  // a hipérbole "me asfixiar de calor/rir" (queixa de calor/riso, não método).
+  /\bme\s+(estrangul|asfixi)(ar|ei|o|ando)\b(?!\s+de\s+(calor|rir|raiva|nojo|t[ée]dio))/i,
 ];
 
 const highPatterns = [
@@ -402,6 +419,11 @@ const highPatterns = [
   /crise/i,
   /desespero/i,
   /sem\s+sa[ií]da/i,
+  // Desesperança "sem saída" com verbo negado: "não vejo/tenho/tem/há (mais)
+  // saída". Auditoria 2026-07-02 ajuste1 — só o "sem saída" nominal existia; as
+  // formas com verbo negado (igualmente comuns como sinal de encurralamento) só
+  // caíam no sentiment. Mesmo perfil de FP tolerado do "sem saída" já listado.
+  /n[ãa]o\s+(vejo|tenho|tem|h[áa])\s+(mais\s+)?sa[íi]da/i,
   /sem\s+solu[çc][ãa]o/i,
   /sem\s+esperan[çc]a/i,
   /pensamento\s+(ruim|intrusivo)/i,
