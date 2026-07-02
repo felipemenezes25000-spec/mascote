@@ -86,6 +86,11 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     // samples (ES 'Conversar' == PT de propósito).
     'tabs.evolution',
     'tabs.report',
+    // Fase i18n jul/02: PersonalTicker (rotaciona no header da Home p/ todo user
+    // com progresso) e o chrome do EvolutionModal montavam frases PT cruas —
+    // buildPersonalStats e os fallbacks do modal não passavam por t().
+    'home.evolution_modal.kicker',
+    'home.evolution_modal.hint',
   ];
 
   it('EN e ES diferem do PT (e não devolvem o path literal)', () => {
@@ -139,6 +144,26 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     expect(en).toContain('brighter');
     setLocale('es');
     expect(t('home.screen.first_evo_sub', 'Lumo')).toContain('Lumo');
+  });
+
+  it('jul/02: PersonalTicker e EvolutionModal interpolam por idioma (não fallback PT)', () => {
+    // Ticker — pluralização singular/plural por idioma.
+    setLocale('en');
+    expect(t('home.ticker.streak', 1)).toBe('current streak: 1 day');
+    expect(t('home.ticker.streak', 5)).toBe('current streak: 5 days');
+    expect(t('home.ticker.checkins', 1)).toBe('1 check-in logged');
+    expect(t('home.ticker.checkins', 3)).toBe('3 check-ins logged');
+    expect(t('home.ticker.level', 5, 'Robo')).toBe('level 5 · Robo');
+    expect(t('home.ticker.level', 2, '')).toBe('level 2');
+    setLocale('es');
+    expect(t('home.ticker.streak', 1)).toBe('racha actual: 1 día');
+    expect(t('home.ticker.streak', 5)).toBe('racha actual: 5 días');
+    expect(t('home.ticker.record', 10)).toBe('tu récord personal: 10 días');
+    // EvolutionModal — título de mudança de fase.
+    setLocale('en');
+    expect(t('home.evolution_modal.title', 'Robo', 'baby')).toBe('Robo evolved into baby');
+    setLocale('es');
+    expect(t('home.evolution_modal.title', 'Robo', 'bebé')).toBe('Robo evolucionó a bebé');
   });
 });
 

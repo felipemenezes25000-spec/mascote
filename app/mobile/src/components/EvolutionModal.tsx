@@ -17,6 +17,7 @@ import { playSfx } from '@/lib/sfx';
 import type { Mascot as MascotType, MascotPhase } from '@/types';
 
 import { emergentPhaseLabels } from '@/lib/phaseLabels';
+import { t } from '@/lib/i18n';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import { CELEBRATION_COLORS as CELEBRATION } from '@/lib/themes';
@@ -147,10 +148,10 @@ export function EvolutionModal({ visible, mascot, fromPhase, onClose, storyTitle
           <View style={styles.textBox}>
             <View style={styles.kickerRow}>
               <Icon name="sparkles" size={11} color={CELEBRATION.gold} strokeWidth={2.4} />
-              <Text style={styles.kicker}>EVOLUÇÃO</Text>
+              <Text style={styles.kicker}>{t('home.evolution_modal.kicker')}</Text>
             </View>
             <Text style={styles.title}>
-              {storyTitle ?? `${mascot.name} mudou para ${emergentPhaseLabels[mascot.phase]}`}
+              {storyTitle ?? t('home.evolution_modal.title', mascot.name, emergentPhaseLabels[mascot.phase])}
             </Text>
             {fromPhase && (
               <View style={styles.fromRow}>
@@ -162,7 +163,7 @@ export function EvolutionModal({ visible, mascot, fromPhase, onClose, storyTitle
             {storyBody ? (
               <Text style={styles.story}>{storyBody}</Text>
             ) : (
-              <Text style={styles.hint}>Você cuidou — ele cresceu.</Text>
+              <Text style={styles.hint}>{t('home.evolution_modal.hint')}</Text>
             )}
             {storyQuote && (
               <View style={styles.quoteBubble}>
@@ -170,8 +171,8 @@ export function EvolutionModal({ visible, mascot, fromPhase, onClose, storyTitle
               </View>
             )}
           </View>
-          <PressableScale style={styles.ctaBtn} onPress={onClose} accessibilityLabel="Continuar" accessibilityRole="button">
-            <Text style={styles.ctaText}>Continuar</Text>
+          <PressableScale style={styles.ctaBtn} onPress={onClose} accessibilityLabel={t('home.evolution_modal.cta')} accessibilityRole="button">
+            <Text style={styles.ctaText}>{t('home.evolution_modal.cta')}</Text>
             <Icon name="arrow-right" size={14} color={theme.tokens.semantic.inkOnBrand} strokeWidth={2.6} />
           </PressableScale>
         </View>

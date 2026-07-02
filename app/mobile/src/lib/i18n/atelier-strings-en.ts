@@ -475,6 +475,18 @@ export const STRINGS_EN: StringsBundle = {
       status_tired: 'Needs some rest — no rush.',
       status_default: 'Here, at your own pace.',
     },
+    ticker: {
+      streak: (n: number) => `current streak: ${n} ${n === 1 ? 'day' : 'days'}`,
+      record: (n: number) => `your personal record: ${n} ${n === 1 ? 'day' : 'days'}`,
+      checkins: (n: number) => `${n} check-in${n === 1 ? '' : 's'} logged`,
+      level: (n: number, name?: string) => `level ${n}${name ? ` · ${name}` : ''}`,
+    },
+    evolution_modal: {
+      kicker: 'EVOLUTION',
+      title: (name: string, phase: string) => `${name} evolved into ${phase}`,
+      hint: 'You showed up — it grew.',
+      cta: 'Continue',
+    },
     actions: {
       label_play: 'Play',
       label_care: 'Care',

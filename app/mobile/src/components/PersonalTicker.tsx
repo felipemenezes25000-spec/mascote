@@ -12,6 +12,7 @@ import Animated, {
 import { useStyles, useTheme } from '@/lib/useTheme';
 import { makeShadow } from '@/lib/themes';
 import type { Theme } from '@/lib/themes';
+import { t } from '@/lib/i18n';
 import { useStore } from '@/store';
 
 export interface PersonalStat {
@@ -37,16 +38,16 @@ export function buildPersonalStats(input: {
   // "comece sua streak hoje" no D1 — duplicava o que a pílula de streak no
   // header já comunica (🔥 0) e fazia o ticker ser ruído no usuário novo.
   if (s > 0) {
-    out.push({ text: `streak atual: ${s} ${s === 1 ? 'dia' : 'dias'}`, emphasis: true });
+    out.push({ text: t('home.ticker.streak', s), emphasis: true });
   }
   if (longest > 0 && longest >= s) {
-    out.push({ text: `seu recorde pessoal: ${longest} ${longest === 1 ? 'dia' : 'dias'}` });
+    out.push({ text: t('home.ticker.record', longest) });
   }
   if (checkins > 0) {
-    out.push({ text: `${checkins} ${checkins === 1 ? 'check-in registrado' : 'check-ins registrados'}` });
+    out.push({ text: t('home.ticker.checkins', checkins) });
   }
   if (level > 1) {
-    out.push({ text: `nível ${level}${input.mascotName ? ` · ${input.mascotName}` : ''}` });
+    out.push({ text: t('home.ticker.level', level, input.mascotName ?? '') });
   }
   // phaseLabel só faz sentido no ticker quando há OUTRA estatística pra rotacionar
   // junto — sozinho viraria "ovo" girando no header do user D1, sem contexto.

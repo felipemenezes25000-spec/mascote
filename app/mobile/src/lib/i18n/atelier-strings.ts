@@ -474,6 +474,24 @@ export const STRINGS_PT = {
       status_tired: 'Precisando de descanso — sem pressa.',
       status_default: 'Aqui, no seu ritmo.',
     },
+    // Ticker de estatísticas pessoais (PersonalTicker) — rotaciona no header da
+    // Home pra TODO usuário com progresso. Antes as frases eram montadas cruas
+    // em PT dentro de buildPersonalStats e vazavam pra EN/ES.
+    ticker: {
+      streak: (n: number) => `streak atual: ${n} ${n === 1 ? 'dia' : 'dias'}`,
+      record: (n: number) => `seu recorde pessoal: ${n} ${n === 1 ? 'dia' : 'dias'}`,
+      checkins: (n: number) => `${n} ${n === 1 ? 'check-in registrado' : 'check-ins registrados'}`,
+      level: (n: number, name?: string) => `nível ${n}${name ? ` · ${name}` : ''}`,
+    },
+    // Chrome do modal de evolução (EvolutionModal) — celebração ao subir de fase.
+    // Os campos de storytelling (storyTitle/Body/Quote) e o phaseLabel vêm da
+    // camada de conteúdo; aqui só o chrome fixo que aparece no fallback.
+    evolution_modal: {
+      kicker: 'EVOLUÇÃO',
+      title: (name: string, phase: string) => `${name} mudou para ${phase}`,
+      hint: 'Você cuidou — ele cresceu.',
+      cta: 'Continuar',
+    },
     actions: {
       label_play: 'Jogar',
       label_care: 'Cuidar',
