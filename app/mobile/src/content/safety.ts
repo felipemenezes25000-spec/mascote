@@ -412,6 +412,35 @@ const criticalPatterns = [
   // ancora contra hetero-direção ("vou estrangular alguém"); o lookahead exclui
   // a hipérbole "me asfixiar de calor/rir" (queixa de calor/riso, não método).
   /\bme\s+(estrangul|asfixi)(ar|ei|o|ando)\b(?!\s+de\s+(calor|rir|raiva|nojo|t[ée]dio))/i,
+  // === Ampliação PT-BR (auditoria 2026-07-04 ajuste1) ===
+  // Salto fatal com ARTIGO entre a preposição e o local: "pular/saltar de UMA
+  // janela / de UM prédio". Os padrões de pular (line 42) e saltar (line 206)
+  // exigem o local IMEDIATAMENTE após da|do|na|no|de, então "pular de uma
+  // janela" — fraseado com artigo, natural e comum no PT-BR — caía no sentiment
+  // (frágil). O local fatal explícito mantém "pular de alegria"/"saltar de um
+  // lado pro outro" (sem local na lista) fora do crítico. ("me jogar/atirar de
+  // um prédio" já casa: aqueles padrões terminam em `(prep)\b`, sem exigir local.)
+  /\b(pul|salt)(ar|ei|o|ou|ando)\s+(de|da|do)\s+(uma?|o|a)\s+(janela|ponte|laje|pr[éeê]dio|viaduto|trem|trilho|telhado|metr[ôo]|penhasco)/i,
+  // Ênclise pt-BR nos verbos de SALTO/DISPARO: "atirar-me/jogar-me/lançar-me da
+  // ponte". A ênclise da line 244 cobre só matar/cortar/enforcar/envenenar/
+  // mutilar (autolesão direta); os verbos de movimento com hífen — válidos em
+  // escrita formal/sob estresse — escapavam. Ancorado em local fatal explícito
+  // (igual a "me jogar"/"me atirar" com espaço) pra manter o benigno
+  // "atirar-me ao trabalho/na leitura" (lançar-se numa tarefa) fora do crítico.
+  /\b(atirar|jogar|lan[çc]ar)-me\s+(da|do|na|no|de)\s+(um\s+|uma\s+)?(janela|ponte|laje|pr[éeê]dio|viaduto|trem|trilho|telhado|metr[ôo]|penhasco)/i,
+  // Afogamento reflexivo como método: "me afogar/afundar no rio/mar/lago". Não
+  // havia padrão de afogamento (só /sufoc/ high cobre asfixia). Ancorado num
+  // CORPO D'ÁGUA explícito pra manter as hipérboles pt-BR fora do crítico:
+  // "me afogar em trabalho/lágrimas/beijos", "me afundar em dívidas" (nenhum é
+  // corpo d'água) continuam safe. Afogamento é método fatal reconhecido.
+  /\bme\s+(afog|afund)(ar|ei|o|ando)\s+(no|na|em|num|numa)\s+(rio|mar|lago|lagoa|oceano|piscina|represa|a[çc]ude|c[óo]rrego|po[çc]o)/i,
+  // Auto-imolação (fogo como método). "me queimar" sozinho é HEAVILY dual-use
+  // (fogão/sol/café/ferro), então exige um ACELERANTE explícito (gasolina/
+  // álcool/querosene…) — "me queimei no fogão"/"me queimar no sol" seguem safe.
+  /\bme\s+queim(ar|ei|o|ando)\s+(com|de|usando)\s+(gasolina|[áa]lcool|fogo|querosene|combust[íi]vel|thinner)/i,
+  // "atear/botar/pôr/colocar fogo em mim" — enquadramento inequívoco de
+  // auto-imolação sem verbo "queimar". Não há leitura benigna de "fogo em mim".
+  /\b(atear|botar|p[ôo]r|colocar)\s+fogo\s+em\s+mim\b/i,
 ];
 
 const highPatterns = [

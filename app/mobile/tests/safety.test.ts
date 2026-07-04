@@ -329,6 +329,22 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     // Asfixia/estrangulamento reflexivo como método (antes sem padrão).
     'vou me estrangular',
     'me asfixiar com um saco',
+    // === Ampliação 2026-07-04 ajuste1 (auditoria backend) ===
+    // Salto com artigo entre preposição e local (antes exigia local imediato).
+    'vou pular de uma janela',
+    'quero pular de um prédio',
+    'vou saltar de uma ponte',
+    // Ênclise nos verbos de salto/disparo (antes só matar/cortar tinham ênclise).
+    'vou atirar-me da ponte',
+    'quero jogar-me da ponte',
+    'lançar-me de um prédio',
+    // Afogamento reflexivo ancorado em corpo d'água (antes sem padrão).
+    'vou me afogar no rio',
+    'quero me afogar no mar',
+    // Auto-imolação com acelerante / "fogo em mim" (antes sem padrão).
+    'vou me queimar com gasolina',
+    'vou atear fogo em mim',
+    'quero pôr fogo em mim',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -526,6 +542,15 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'a solução seria estudar mais',         // "seria a solução" sem morte/morrer
     'não consigo viver sem você',           // "viver sem" não-terminal (transitivo)
     'não consigo viver nessa cidade',       // "viver nessa cidade" não-terminal
+    // Regressão (2026-07-04 ajuste1): salto-com-artigo, ênclise, afogamento e
+    // auto-imolação novos não podem pegar hipérbole/idioma benigno homônimo.
+    'pular de alegria com a notícia',       // "pular de alegria" sem local fatal
+    'saltar de um lado pro outro na dança', // "saltar de um lado" (lado ∉ locais)
+    'atirar-me ao trabalho de cabeça',      // "atirar-me ao" (lançar-se numa tarefa)
+    'tô me afogando em trabalho',           // "afogar em trabalho" (sem corpo d'água)
+    'me afundei em dívidas esse mês',       // "afundar em dívidas" (sem corpo d'água)
+    'me queimei no fogão fazendo almoço',   // "queimar no fogão" (sem acelerante)
+    'vou me queimar no sol se não passar protetor', // "queimar no sol" (sem acelerante)
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {

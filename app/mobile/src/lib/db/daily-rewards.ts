@@ -11,16 +11,27 @@ function freshDailyReward(user_id: string): DailyReward {
   };
 }
 
+// current_day vem de storage/import e alimenta a UI (useHomeBootstrap) e a
+// aritmética de +1/clamp abaixo. Import corrompido ou edição manual pode trazer
+// NaN/Infinity/negativo/fracionário, que envenena a comparação (`NaN >= 7` é
+// false → `NaN + 1` = NaN persiste na UI) e o ciclo de 7 dias. Sanitiza pro
+// intervalo válido [1,7] antes de qualquer uso — mesma defesa do wallet/genoma.
+function safeCurrentDay(value: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 1;
+  return Math.min(7, Math.max(1, Math.floor(value)));
+}
+
 export function predictNextDailyRewardDay(
   state: { last_claimed_date: string | null; current_day: number },
   today: string
 ): number {
-  if (state.last_claimed_date === today) return state.current_day;
+  const current = safeCurrentDay(state.current_day);
+  if (state.last_claimed_date === today) return current;
   if (!state.last_claimed_date) return 1;
   const diff = daysBetween(state.last_claimed_date, today);
-  if (diff === 1) return state.current_day >= 7 ? 1 : state.current_day + 1;
+  if (diff === 1) return current >= 7 ? 1 : current + 1;
   if (diff > 1) return 1;
-  return state.current_day;
+  return current;
 }
 
 export const dailyReward = {
@@ -33,11 +44,12 @@ export const dailyReward = {
       const rows = await read<DailyReward>('daily_reward');
       const current = rows.find(r => r.user_id === user_id) ?? freshDailyReward(user_id);
       if (current.last_claimed_date === today) return null;
-      let nextDay = current.current_day;
+      const currentDay = safeCurrentDay(current.current_day);
+      let nextDay = currentDay;
       if (current.last_claimed_date) {
         const diff = daysBetween(current.last_claimed_date, today);
         if (diff === 1) {
-          nextDay = current.current_day >= 7 ? 1 : current.current_day + 1;
+          nextDay = currentDay >= 7 ? 1 : currentDay + 1;
         } else if (diff > 1) {
           nextDay = 1;
         }

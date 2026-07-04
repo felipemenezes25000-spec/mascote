@@ -389,6 +389,26 @@ describe('predictNextDailyRewardDay', () => {
     // por contrato externo (não deveria acontecer, mas é guard).
   });
 
+  it('current_day corrompido (NaN/negativo/fracionário/>7): sanitiza pro intervalo [1,7]', () => {
+    // Import/edição-manual pode injetar valores inválidos; sem guard o NaN
+    // envenena a UI ("dia NaN") e o ciclo de 7 dias. Sanitiza antes de usar.
+    expect(
+      predictNextDailyRewardDay({ last_claimed_date: null, current_day: Number.NaN }, '2026-05-18')
+    ).toBe(1);
+    // diff=1 partindo de NaN → sanitiza pra 1, incrementa pra 2 (não NaN+1=NaN)
+    expect(
+      predictNextDailyRewardDay({ last_claimed_date: '2026-05-17', current_day: Number.NaN }, '2026-05-18')
+    ).toBe(2);
+    // já claimou hoje, current negativo → clampa pro piso 1
+    expect(
+      predictNextDailyRewardDay({ last_claimed_date: '2026-05-18', current_day: -5 }, '2026-05-18')
+    ).toBe(1);
+    // já claimou hoje, current acima do teto → clampa pro teto 7
+    expect(
+      predictNextDailyRewardDay({ last_claimed_date: '2026-05-18', current_day: 999 }, '2026-05-18')
+    ).toBe(7);
+  });
+
   it('predictor concorda com claim em dia 7 → 1', async () => {
     let d = '2026-05-18';
     for (let i = 0; i < 7; i++) {
