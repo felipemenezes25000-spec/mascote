@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { PressableScale } from '@/components/PressableScale';
+import { t } from '@/lib/i18n';
 import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
@@ -21,7 +22,7 @@ export function ChatReplyRating({ onRate }: Props) {
   if (done) {
     return (
       <View style={styles.wrap}>
-        <Text style={styles.thanks}>Obrigado pelo feedback</Text>
+        <Text style={styles.thanks}>{t('chat.rating.thanks')}</Text>
       </View>
     );
   }
@@ -39,35 +40,35 @@ export function ChatReplyRating({ onRate }: Props) {
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.prompt}>Essa resposta ajudou?</Text>
+      <Text style={styles.prompt}>{t('chat.rating.prompt')}</Text>
       <View style={styles.row}>
         <PressableScale
           style={styles.chip}
           onPress={() => pick('helpful')}
           accessibilityRole="button"
-          accessibilityLabel="Resposta útil"
+          accessibilityLabel={t('chat.rating.helpful_a11y')}
           // chip tem paddingV 6 + xs ~16 = ~28px. hitSlop traz alvo pra ~44px.
           hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
         >
-          <Text style={styles.chipText}>Útil</Text>
+          <Text style={styles.chipText}>{t('chat.rating.helpful')}</Text>
         </PressableScale>
         <PressableScale
           style={styles.chip}
           onPress={() => pick('not_helpful')}
           accessibilityRole="button"
-          accessibilityLabel="Resposta não ajudou"
+          accessibilityLabel={t('chat.rating.not_helpful_a11y')}
           hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
         >
-          <Text style={styles.chipText}>Não ajudou</Text>
+          <Text style={styles.chipText}>{t('chat.rating.not_helpful')}</Text>
         </PressableScale>
         <PressableScale
           style={[styles.chip, styles.chipGhost]}
           onPress={() => pick('repetition')}
           accessibilityRole="button"
-          accessibilityLabel="Já vi essa resposta antes"
+          accessibilityLabel={t('chat.rating.repetition_a11y')}
           hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
         >
-          <Text style={[styles.chipText, styles.chipGhostText]}>Repetiu?</Text>
+          <Text style={[styles.chipText, styles.chipGhostText]}>{t('chat.rating.repetition')}</Text>
         </PressableScale>
       </View>
     </View>

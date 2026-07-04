@@ -492,6 +492,25 @@ export const STRINGS_PT = {
       hint: 'Você cuidou — ele cresceu.',
       cta: 'Continuar',
     },
+    // Barras de Energia/XP (HomeStatsBars) — labels e a11y fixos na Home.
+    stats: {
+      energy_label: 'ENERGIA',
+      energy_a11y: (n: number) => `Energia: ${n} de 100`,
+      level_label: (level: number) => `NÍVEL ${level}`,
+      xp_a11y: (level: number, cur: number, needed: number) =>
+        `Nível ${level}: ${cur} de ${needed} XP até a próxima forma`,
+      xp_next_form: (cur: number, needed: number) => `${cur}/${needed} XP · próxima forma`,
+    },
+    // Strip de memórias contextuais (HomeMemoriesStrip) — label + idade relativa.
+    // O conteúdo da memória (resumo/snippet) é dado do usuário, não é chrome.
+    memories: {
+      label: 'O que ele lembra',
+      age_today: 'hoje',
+      age_yesterday: 'ontem',
+      age_days: (n: number) => `${n} dias atrás`,
+      age_weeks: (n: number) => `${n} ${n === 1 ? 'semana' : 'semanas'} atrás`,
+      age_months: (n: number) => `${n} ${n === 1 ? 'mês' : 'meses'} atrás`,
+    },
     actions: {
       label_play: 'Jogar',
       label_care: 'Cuidar',
@@ -541,6 +560,17 @@ export const STRINGS_PT = {
     date_today: 'Hoje',
     date_yesterday: 'Ontem',
     error_reply: 'Não consegui responder agora. Tenta de novo em um instante.',
+    // Feedback rápido da resposta do mascote (ChatReplyRating) — chrome fixo.
+    rating: {
+      thanks: 'Obrigado pelo feedback',
+      prompt: 'Essa resposta ajudou?',
+      helpful: 'Útil',
+      not_helpful: 'Não ajudou',
+      repetition: 'Repetiu?',
+      helpful_a11y: 'Resposta útil',
+      not_helpful_a11y: 'Resposta não ajudou',
+      repetition_a11y: 'Já vi essa resposta antes',
+    },
   },
   settings: {
     close_a11y: 'Fechar configurações',

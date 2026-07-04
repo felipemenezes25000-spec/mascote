@@ -487,6 +487,22 @@ export const STRINGS_EN: StringsBundle = {
       hint: 'You showed up — it grew.',
       cta: 'Continue',
     },
+    stats: {
+      energy_label: 'ENERGY',
+      energy_a11y: (n: number) => `Energy: ${n} of 100`,
+      level_label: (level: number) => `LEVEL ${level}`,
+      xp_a11y: (level: number, cur: number, needed: number) =>
+        `Level ${level}: ${cur} of ${needed} XP to the next form`,
+      xp_next_form: (cur: number, needed: number) => `${cur}/${needed} XP · next form`,
+    },
+    memories: {
+      label: 'What it remembers',
+      age_today: 'today',
+      age_yesterday: 'yesterday',
+      age_days: (n: number) => `${n} days ago`,
+      age_weeks: (n: number) => `${n} ${n === 1 ? 'week' : 'weeks'} ago`,
+      age_months: (n: number) => `${n} ${n === 1 ? 'month' : 'months'} ago`,
+    },
     actions: {
       label_play: 'Play',
       label_care: 'Care',
@@ -536,6 +552,16 @@ export const STRINGS_EN: StringsBundle = {
     date_today: 'Today',
     date_yesterday: 'Yesterday',
     error_reply: "I couldn't reply right now. Try again in a moment.",
+    rating: {
+      thanks: 'Thanks for the feedback',
+      prompt: 'Did this reply help?',
+      helpful: 'Helpful',
+      not_helpful: "Didn't help",
+      repetition: 'Repeated?',
+      helpful_a11y: 'Helpful reply',
+      not_helpful_a11y: "Reply didn't help",
+      repetition_a11y: "I've seen this reply before",
+    },
   },
   settings: {
     close_a11y: 'Close settings',

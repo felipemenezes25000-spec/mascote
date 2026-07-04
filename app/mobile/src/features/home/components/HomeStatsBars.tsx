@@ -8,6 +8,7 @@ import { useTheme, useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import { Card } from '@/components/Card';
 import { Icon } from '@/components/Icon';
+import { t } from '@/lib/i18n';
 
 import type { Mascot as MascotType } from '@/types';
 
@@ -27,12 +28,12 @@ export function HomeStatsBars({ mascot, toNext }: Props) {
         style={styles.barCard}
         accessible
         accessibilityRole="progressbar"
-        accessibilityLabel={`Energia: ${mascot.energy} de 100`}
+        accessibilityLabel={t('home.stats.energy_a11y', mascot.energy)}
         accessibilityValue={{ min: 0, max: 100, now: mascot.energy }}
       >
         <View style={styles.barHeader}>
           <Icon name="heart" size={12} color={theme.colors.sage} strokeWidth={2.4} fill={theme.colors.sage} />
-          <Typography variant="mono" tone="secondary" style={styles.barLabel}>ENERGIA</Typography>
+          <Typography variant="mono" tone="secondary" style={styles.barLabel}>{t('home.stats.energy_label')}</Typography>
         </View>
         <ProgressBar progress={mascot.energy / 100} fillColor={theme.colors.sage} animated={false} />
         <Typography variant="mono" tone="secondary">{mascot.energy}/100</Typography>
@@ -43,15 +44,15 @@ export function HomeStatsBars({ mascot, toNext }: Props) {
         style={styles.barCard}
         accessible
         accessibilityRole="progressbar"
-        accessibilityLabel={`Nível ${mascot.level}: ${toNext.current} de ${toNext.needed} XP até a próxima forma`}
+        accessibilityLabel={t('home.stats.xp_a11y', mascot.level, toNext.current, toNext.needed)}
         accessibilityValue={{ min: 0, max: toNext.needed, now: toNext.current }}
       >
         <View style={styles.barHeader}>
           <Icon name="zap" size={12} color={theme.colors.primary} strokeWidth={2.4} fill={theme.colors.primary} />
-          <Typography variant="mono" tone="secondary" style={styles.barLabel}>NÍVEL {mascot.level}</Typography>
+          <Typography variant="mono" tone="secondary" style={styles.barLabel}>{t('home.stats.level_label', mascot.level)}</Typography>
         </View>
         <ProgressBar progress={Math.max(0.02, toNext.progress)} fillColor={theme.colors.primary} animated={false} />
-        <Typography variant="mono" tone="secondary">{toNext.current}/{toNext.needed} XP · próxima forma</Typography>
+        <Typography variant="mono" tone="secondary">{t('home.stats.xp_next_form', toNext.current, toNext.needed)}</Typography>
       </Card>
     </View>
   );

@@ -487,6 +487,22 @@ export const STRINGS_ES: StringsBundle = {
       hint: 'Te cuidaste — creció.',
       cta: 'Continuar',
     },
+    stats: {
+      energy_label: 'ENERGÍA',
+      energy_a11y: (n: number) => `Energía: ${n} de 100`,
+      level_label: (level: number) => `NIVEL ${level}`,
+      xp_a11y: (level: number, cur: number, needed: number) =>
+        `Nivel ${level}: ${cur} de ${needed} XP hasta la próxima forma`,
+      xp_next_form: (cur: number, needed: number) => `${cur}/${needed} XP · próxima forma`,
+    },
+    memories: {
+      label: 'Lo que recuerda',
+      age_today: 'hoy',
+      age_yesterday: 'ayer',
+      age_days: (n: number) => `hace ${n} días`,
+      age_weeks: (n: number) => `hace ${n} ${n === 1 ? 'semana' : 'semanas'}`,
+      age_months: (n: number) => `hace ${n} ${n === 1 ? 'mes' : 'meses'}`,
+    },
     actions: {
       label_play: 'Jugar',
       label_care: 'Cuidar',
@@ -536,6 +552,16 @@ export const STRINGS_ES: StringsBundle = {
     date_today: 'Hoy',
     date_yesterday: 'Ayer',
     error_reply: 'No pude responder ahora. Inténtalo de nuevo en un momento.',
+    rating: {
+      thanks: 'Gracias por tu opinión',
+      prompt: '¿Te ayudó esta respuesta?',
+      helpful: 'Útil',
+      not_helpful: 'No ayudó',
+      repetition: '¿Repetida?',
+      helpful_a11y: 'Respuesta útil',
+      not_helpful_a11y: 'La respuesta no ayudó',
+      repetition_a11y: 'Ya vi esta respuesta antes',
+    },
   },
   settings: {
     close_a11y: 'Cerrar ajustes',

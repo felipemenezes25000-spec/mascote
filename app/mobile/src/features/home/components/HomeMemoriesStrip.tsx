@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { ScrollView, View, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useStyles } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 
 import { listMemories } from '@/lib/memory';
@@ -23,11 +24,11 @@ interface Props {
 
 function ageLabel(iso: string): string {
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-  if (days <= 0) return 'hoje';
-  if (days === 1) return 'ontem';
-  if (days < 7) return `${days} dias atrás`;
-  if (days < 30) return `${Math.floor(days / 7)} semanas atrás`;
-  return `${Math.floor(days / 30)} meses atrás`;
+  if (days <= 0) return t('home.memories.age_today');
+  if (days === 1) return t('home.memories.age_yesterday');
+  if (days < 7) return t('home.memories.age_days', days);
+  if (days < 30) return t('home.memories.age_weeks', Math.floor(days / 7));
+  return t('home.memories.age_months', Math.floor(days / 30));
 }
 
 function emojiForKind(kind: MemoryItem['kind']): string {
@@ -71,7 +72,7 @@ export function HomeMemoriesStrip({ userId, refreshKey }: Props) {
   return (
     <View style={styles.wrap}>
       <Typography variant="caption" tone="dim" style={styles.label}>
-        O que ele lembra
+        {t('home.memories.label')}
       </Typography>
       <ScrollView
         horizontal
