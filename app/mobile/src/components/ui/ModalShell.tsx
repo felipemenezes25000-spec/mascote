@@ -10,6 +10,7 @@
 import { Modal, Pressable, View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme } from '@/lib/themes';
 import { Icon } from '@/components/Icon';
 import { Typography } from './Typography';
@@ -35,7 +36,7 @@ export function ModalShell({ visible, onClose, title, children, bottomSheet }: P
     >
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Fechar modal"
+        accessibilityLabel={t('common.close_modal_a11y')}
         onPress={onClose}
         style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}
       />
@@ -49,7 +50,7 @@ export function ModalShell({ visible, onClose, title, children, bottomSheet }: P
         >
           <View style={styles.header}>
             <Typography variant="heading" style={{ flex: 1 }}>{title ?? ''}</Typography>
-            <Pressable onPress={onClose} hitSlop={10} accessibilityLabel="Fechar" accessibilityRole="button">
+            <Pressable onPress={onClose} hitSlop={10} accessibilityLabel={t('common.close')} accessibilityRole="button">
               <Icon name="x" size={20} color={theme.colors.textSecondary} strokeWidth={2.2} />
             </Pressable>
           </View>

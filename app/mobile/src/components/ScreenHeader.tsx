@@ -17,6 +17,7 @@ import { type ReactNode } from 'react';
 import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
+import { t } from '@/lib/i18n';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
@@ -56,7 +57,7 @@ export function ScreenHeader({
           onPress={handleClose}
           style={styles.iconBtn}
           accessibilityRole="button"
-          accessibilityLabel={variant === 'back' ? 'Voltar' : 'Fechar'}
+          accessibilityLabel={variant === 'back' ? t('common.back') : t('common.close')}
           hitSlop={6}
         >
           <Icon

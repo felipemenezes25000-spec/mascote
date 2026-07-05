@@ -333,6 +333,8 @@ export const STRINGS_EN: StringsBundle = {
     back: 'Back',
     cancel: 'Cancel',
     save: 'Save',
+    close: 'Close',
+    close_modal_a11y: 'Close modal',
   },
   tabs: {
     home: 'Home',
@@ -369,6 +371,8 @@ export const STRINGS_EN: StringsBundle = {
       more_a11y: (n: number) => `See ${n} more care actions`,
       more_sub: 'more',
       sheet_title: 'More care',
+      done_today_a11y: 'done today',
+      adjust_hint_a11y: 'Hold to adjust the value',
     },
     banner: {
       night_title: "It's late here",

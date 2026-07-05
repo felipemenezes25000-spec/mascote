@@ -9,6 +9,7 @@ import { useEffect, useRef } from 'react';
 import { Modal, View, StyleSheet, Animated, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import type { Theme, ArchetypeKey } from '@/lib/themes';
 import { Typography } from './Typography';
 import { Button } from '@/components/Button';
@@ -52,7 +53,7 @@ export function EvolutionRevealModal({
     <Modal visible={visible} onRequestClose={onClose} transparent animationType="fade">
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Fechar"
+        accessibilityLabel={t('common.close')}
         onPress={onClose}
         style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}
       />

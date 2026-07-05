@@ -91,6 +91,14 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     // buildPersonalStats e os fallbacks do modal não passavam por t().
     'home.evolution_modal.kicker',
     'home.evolution_modal.hint',
+    // Fase i18n jul/05: a11y-chrome que só o leitor de tela ouvia em PT cru —
+    // botões voltar/fechar do ScreenHeader + backdrops de ModalShell/
+    // EvolutionRevealModal (vistos em quase toda tela) e os sufixos a11y do
+    // QuickActionCard na Home (superfície visível já traduzida via t()).
+    'common.close',
+    'common.close_modal_a11y',
+    'home.quick.done_today_a11y',
+    'home.quick.adjust_hint_a11y',
   ];
 
   it('EN e ES diferem do PT (e não devolvem o path literal)', () => {

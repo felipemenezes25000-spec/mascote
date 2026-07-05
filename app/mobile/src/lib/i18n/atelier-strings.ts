@@ -331,6 +331,8 @@ export const STRINGS_PT = {
     back: 'Voltar',
     cancel: 'Cancelar',
     save: 'Salvar',
+    close: 'Fechar',
+    close_modal_a11y: 'Fechar modal',
   },
   tabs: {
     home: 'Home',
@@ -367,6 +369,8 @@ export const STRINGS_PT = {
       more_a11y: (n: number) => `Ver mais ${n} cuidados`,
       more_sub: 'mais',
       sheet_title: 'Mais cuidados',
+      done_today_a11y: 'feito hoje',
+      adjust_hint_a11y: 'Segure para ajustar valor',
     },
     banner: {
       night_title: 'Tá tarde aqui',

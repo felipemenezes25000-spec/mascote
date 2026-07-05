@@ -4,6 +4,7 @@
  */
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTheme, useStyles } from '@/lib/useTheme';
+import { t } from '@/lib/i18n';
 import { useWebSafeLongPress } from '@/lib/web-safe-long-press';
 import type { Theme } from '@/lib/themes';
 import { Typography } from './Typography';
@@ -29,8 +30,8 @@ export function QuickActionCard({ label, icon, onPress, onLongPress, done, iconC
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${label}${hint ? `, ${hint}` : ''}${done ? ', feito hoje' : ''}`}
-      accessibilityHint={onLongPress ? 'Segure para ajustar valor' : undefined}
+      accessibilityLabel={`${label}${hint ? `, ${hint}` : ''}${done ? `, ${t('home.quick.done_today_a11y')}` : ''}`}
+      accessibilityHint={onLongPress ? t('home.quick.adjust_hint_a11y') : undefined}
       accessibilityState={{ selected: done }}
       onPress={onPress}
       {...longPress}
