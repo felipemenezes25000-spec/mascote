@@ -345,6 +345,30 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     'vou me queimar com gasolina',
     'vou atear fogo em mim',
     'quero pôr fogo em mim',
+    // === Ampliação 2026-07-05 ajuste1 (auditoria backend) ===
+    // Corte das VEIAS — só "abrir as veias" cobria veias; "cortar as veias"
+    // (o eufemismo mais canônico) não tinha "veias" no grupo de anatomia.
+    'cortar as veias',
+    'cortei as veias ontem',
+    'vou cortar as veias',
+    'cortar a veia',
+    // "rasgar os pulsos / as veias" — verbo de autolesão além de cortar/abrir.
+    'rasgar as veias',
+    'rasguei os pulsos',
+    // Arma de fogo via "miolos" (antes só "cabeça"/"em mim").
+    'estourar os miolos',
+    'vou estourar os miolos',
+    'estourar os próprios miolos',
+    'meter uma bala nos miolos',
+    'um tiro nos miolos',
+    // Salto na frente de veículo (antes só "me jogar na frente" casava).
+    'pular na frente do trem',
+    'pular na frente do carro',
+    'vou saltar na frente do metrô',
+    'pular na frente de um ônibus',
+    // "descansar pra sempre" — sibling de "dormir pra sempre".
+    'quero descansar pra sempre',
+    'só queria descansar para sempre',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -551,6 +575,14 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'me afundei em dívidas esse mês',       // "afundar em dívidas" (sem corpo d'água)
     'me queimei no fogão fazendo almoço',   // "queimar no fogão" (sem acelerante)
     'vou me queimar no sol se não passar protetor', // "queimar no sol" (sem acelerante)
+    // Regressão (2026-07-05 ajuste1): veias/rasgar/miolos/salto-frente/descansar
+    // não podem pegar idioma benigno homônimo.
+    'rasguei a perna na cerca',             // "rasgar a perna" (perna ∉ pulsos/veias)
+    'vou estourar os miolos dele naquele jogo', // hetero-direção (lookahead "dele")
+    'pular na frente da fila do banco',     // furar fila (fila ∉ veículos)
+    'pular na frente do gol pra comemorar', // futebol (gol ∉ veículos)
+    'preciso descansar um pouco pra sempre render mais', // palavra entre descansar e "pra sempre"
+    'vou descansar hoje e amanhã trabalho', // "descansar" sem "pra sempre"
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {

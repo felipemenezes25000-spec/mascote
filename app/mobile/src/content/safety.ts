@@ -441,6 +441,40 @@ const criticalPatterns = [
   // "atear/botar/pôr/colocar fogo em mim" — enquadramento inequívoco de
   // auto-imolação sem verbo "queimar". Não há leitura benigna de "fogo em mim".
   /\b(atear|botar|p[ôo]r|colocar)\s+fogo\s+em\s+mim\b/i,
+  // === Ampliação PT-BR (auditoria 2026-07-05 ajuste1) ===
+  // Corte reflexivo das VEIAS: "cortar as veias" / "cortei a veia" é o eufemismo
+  // pt-BR mais canônico de autolesão, mas o grupo de anatomia da linha de "cortar"
+  // (line 82: braços|pulsos|pernas|coxas|pescoço) NÃO incluía "veias" — só o
+  // "abrir os pulsos/veias" (line 172) cobria veias, e só com o verbo "abrir".
+  // "cortar as veias" caía no sentiment (frágil) → reply normal sem CVV. "veias"
+  // não tem leitura benigna com "cortar" num chat de autocuidado (o botânico
+  // "veias da folha" é irreal aqui). Simétrico ao "abrir as veias" já aceito.
+  /cort(ei|o|ar|ando|aram)\s+(o|a|os|as|meu|minha|meus|minhas)?\s*veias?\b/i,
+  // "rasgar os pulsos / as veias" — verbo de autolesão além de cortar/abrir.
+  // Limitado a pulsos|veias (alvos inequívocos): "rasguei a perna na cerca"
+  // (benigno) fica fora porque "perna" não está no grupo. "furar" foi
+  // DELIBERADAMENTE omitido — "furar a veia" é dual-use médico (coleta de
+  // sangue/soro/acesso venoso), geraria falso-positivo em relato clínico.
+  /\brasg(ar|uei|o|a|ando|aram)\s+(o|a|os|as|meu|minha|meus|minhas)?\s*(pulsos?|veias?)\b/i,
+  // Método com arma de fogo via "miolos" (cérebro): "estourar os miolos", "(dar
+  // um) tiro/bala nos miolos". As linhas de tiro/bala (line 142/230) ancoravam em
+  // "cabeça"/"em mim"; o sinônimo pt-BR "miolos" — igualmente inequívoco — caía no
+  // sentiment. O lookahead exclui a hetero-direção ("estourar os miolos DELE" =
+  // ameaça a terceiro, não autolesão), mantendo só a auto-referência crítica.
+  /\b(estourar\s+(os\s+)?(meus\s+|os\s+pr[óo]prios\s+)?miolos|(um\s+)?(tiro|bala)\s+nos?\s+(meus\s+)?miolos|meter\s+(uma\s+)?bala\s+nos?\s+miolos)\b(?!\s+d(ele|ela|esse|essa|aquel))/i,
+  // Salto na frente de VEÍCULO em movimento: "pular/saltar na frente do carro/
+  // trem". A linha de "pular" (line 42) exige um LOCAL fatal (janela/ponte/…)
+  // imediatamente após a preposição, então "na frente do carro" — método fatal
+  // comum no BR — não casava ("me jogar na frente" já casa via line 87). Ancorado
+  // num VEÍCULO explícito pra manter os idiomas "pular na frente da FILA" (furar
+  // fila) e "pular na frente do GOL" (futebol) fora do crítico.
+  /\b(pul|salt)(ar|ei|o|ou|ando)\s+na\s+frente\s+d(o|a|e\s+um|e\s+uma)\s+(carro|trem|metr[ôo]|[ôo]nibus|caminh[ãa]o|ve[íi]culo|moto)/i,
+  // Eufemismo de sono/morte eterna com "descansar": "descansar pra/para sempre".
+  // Sibling direto da linha "dormir pra sempre" (line 71) — mesmo enquadramento de
+  // ideação passiva, só troca o verbo. "quero descansar pra sempre" caía no
+  // sentiment. "descansar" precisa vir IMEDIATAMENTE seguido de "pra/para sempre"
+  // pra não pegar o benigno "descansar um pouco pra sempre render mais amanhã".
+  /\bdescansar\s+(pra|para)\s+sempre\b/i,
 ];
 
 const highPatterns = [

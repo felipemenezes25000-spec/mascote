@@ -54,6 +54,27 @@ describe('runLifeTick', () => {
     expect(result.energy).toBe(80);
   });
 
+  it('micro-tick clampa energy corrompido (NaN/negativo/>100)', () => {
+    // Regressão (auditoria 2026-07-05 ajuste1): o micro-tick devolvia input.energy
+    // CRU; combinado com mascots.updateVitals (que não clampa), um energy
+    // corrompido em storage reentrava e era re-persistido, furando [12..100].
+    const microTick = { hoursSinceInteraction: 0.02 } as const;
+    const at = new Date(NOW - 60_000).toISOString();
+    for (const [bad, expected] of [
+      [NaN, 12],
+      [-50, 12],
+      [150, 100],
+    ] as const) {
+      const r = runLifeTick(
+        baseInput({ energy: bad, lastSimulatedAt: at, lastSeenAt: at, ...microTick }),
+        neutralGenome(),
+        NOW,
+      );
+      expect(r.energy).toBe(expected);
+      expect(r.lifeState.energy).toBe(expected);
+    }
+  });
+
   it('decai energy após horas ausente', () => {
     const result = runLifeTick(baseInput(), neutralGenome(), NOW);
     expect(result.energy).toBeLessThan(80);

@@ -46,19 +46,27 @@ export function runLifeTick(
   const params = genomeToSimParams(genome);
 
   if (elapsedHours < MIN_TICK_HOURS) {
+    // Defense-in-depth: o micro-tick (no-op) devolvia input.energy CRU, enquanto
+    // o caminho principal (line ~75) sempre passa por clampEnergy. orchestrate.ts
+    // persiste esse energy via mascots.updateVitals, que NÃO clampa — então um
+    // energy corrompido em storage (import malformado, parse falho) reentrava e
+    // era re-gravado como NaN/negativo/>100 quando o foco reabria em < 3 min,
+    // furando o contrato energy∈[12..100] e produzindo "NaN%" na UI. Clampar aqui
+    // fecha o único caminho de tick que escapava do clamp.
+    const safeEnergy = clampEnergy(input.energy);
     const state = input.lastSimulatedAt
       ? {
           user_id: input.userId,
-          energy: input.energy,
+          energy: safeEnergy,
           mood: input.mood,
           last_simulated_at: input.lastSimulatedAt,
           absence_hours: input.hoursSinceInteraction,
           total_simulated_hours: 0,
         }
-      : freshLifeState(input.userId, input.energy, input.mood, nowIso);
+      : freshLifeState(input.userId, safeEnergy, input.mood, nowIso);
     return {
       lifeState: state,
-      energy: input.energy,
+      energy: safeEnergy,
       mood: input.mood,
       events: [],
     };
