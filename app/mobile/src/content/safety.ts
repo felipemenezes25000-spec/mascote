@@ -475,6 +475,28 @@ const criticalPatterns = [
   // sentiment. "descansar" precisa vir IMEDIATAMENTE seguido de "pra/para sempre"
   // pra não pegar o benigno "descansar um pouco pra sempre render mais amanhã".
   /\bdescansar\s+(pra|para)\s+sempre\b/i,
+  // === Ampliação PT-BR (auditoria 2026-07-06 ajuste1) ===
+  // Salto fatal REFLEXIVO com ARTIGO entre a preposição e o local: "me atirar/me
+  // jogar/me lançar de UM prédio / de UMA ponte". As linhas de "me atirar" (line
+  // 182) e "me jogar" flexionado (line 152) exigem o local IMEDIATAMENTE após
+  // da|do|na|no|de, então "me joguei de um prédio" / "me atirar de uma ponte"
+  // (fraseado com artigo, natural no PT-BR, ou narrado no passado) caíam no
+  // sentiment (frágil). Sibling direto do fix de "pular/saltar de uma janela"
+  // (line 423). "me lançar" (com espaço) NÃO tinha padrão algum — só a ênclise
+  // "lançar-me" (line 430) — então "me lançar de um prédio" escapava por completo.
+  // Âncora de local fatal explícito mantém os benignos "me jogar/atirar de cabeça
+  // no projeto" e "me lançar de paraquedas" fora do crítico (cabeça|paraquedas não
+  // estão no grupo de local). "me jogar" INFINITIVO já casa via line 87 (termina
+  // em prep\b, sem exigir local) — aqui cobrimos as flexões que faltavam.
+  /\bme\s+(atir|jog|lan[çc])(ar|ei|o|ou|uei|ando)\s+(da|do|na|no|de)\s+(uma?\s+|o\s+|a\s+)?(janela|ponte|laje|pr[éeê]dio|viaduto|trem|trilho|telhado|metr[ôo]|penhasco|carro)/i,
+  // Não-existência via "parar/deixar de existir". A line 108 cobre "não quero
+  // (mais) existir" (volitivo negado); o frame "quero PARAR/DEIXAR de existir" —
+  // desejo direto e inequívoco de cessar a própria existência — escapava pro
+  // reply normal. Exige um gatilho volitivo de 1ª pessoa (quero|vou|penso em…)
+  // ANTES pra excluir o metafórico impessoal "esse problema vai deixar de existir"
+  // (sujeito externo) e o hábito "quero parar de fumar / deixar de comer doce"
+  // (o objeto exigido é "existir", não "fumar"/"comer").
+  /\b(quero|queria|gostaria\s+de|vou|penso\s+em|pensando\s+em|preciso|desejo|tenho\s+vontade\s+de)\s+(parar|deixar)\s+de\s+existir\b/i,
 ];
 
 const highPatterns = [

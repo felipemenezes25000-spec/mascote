@@ -369,6 +369,24 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     // "descansar pra sempre" — sibling de "dormir pra sempre".
     'quero descansar pra sempre',
     'só queria descansar para sempre',
+    // === auditoria 2026-07-06 ajuste1 ===
+    // Salto fatal reflexivo com ARTIGO entre prep e local (line 152/182 exigiam
+    // local imediato) + "me lançar" que não tinha padrão (só ênclise line 430).
+    'me atirar de um prédio',
+    'me atirar de uma ponte',
+    'me joguei de um prédio',
+    'me joguei de uma ponte',
+    'vou me lançar de um prédio',
+    'me lançar de uma janela',
+    'me lancei da ponte',
+    // "parar/deixar de existir" — desejo direto de não-existência (line 108 só
+    // cobria "não quero existir").
+    'quero parar de existir',
+    'queria parar de existir',
+    'quero deixar de existir',
+    'gostaria de deixar de existir',
+    'vou deixar de existir',
+    'penso em parar de existir',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -583,6 +601,16 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'pular na frente do gol pra comemorar', // futebol (gol ∉ veículos)
     'preciso descansar um pouco pra sempre render mais', // palavra entre descansar e "pra sempre"
     'vou descansar hoje e amanhã trabalho', // "descansar" sem "pra sempre"
+    // Regressão (2026-07-06 ajuste1): salto-reflexivo-com-artigo e "parar/deixar
+    // de existir" não podem pegar idioma benigno homônimo.
+    'me atirar de cabeça no projeto',       // "de cabeça" (cabeça ∉ locais fatais)
+    'me joguei de cabeça no trabalho novo',
+    'vou me lançar de paraquedas no domingo', // "de paraquedas" (∉ locais fatais)
+    'me joguei de paraquedas e amei',
+    'quero parar de fumar de vez',          // objeto "fumar" ≠ "existir"
+    'quero deixar de ser tão preguiçoso',   // objeto "ser preguiçoso" ≠ "existir"
+    'preciso parar de comer tanto doce',    // objeto "comer" ≠ "existir"
+    'esse bug vai deixar de existir no próximo release', // sujeito externo (sem volitivo 1ª pessoa)
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {
