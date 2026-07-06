@@ -42,6 +42,9 @@ export const STRINGS_EN: StringsBundle = {
       aura_intensity: { label: 'Aura intensity', hint: 'particles and glow around' },
       pattern_density: { label: 'Pattern density', hint: 'more or fewer marks on the body' },
       posture: { label: 'Lean', hint: 'body posture (negative = back, positive = forward)' },
+      lock_a11y: (label: string) => `Lock ${label}`,
+      unlock_a11y: (label: string) => `Unlock ${label}`,
+      reset_a11y: (label: string) => `Reset ${label}`,
     },
     toggles: {
       hide_tail: { label: 'Hide tail', description: 'only if the DNA has a tail' },
@@ -88,6 +91,27 @@ export const STRINGS_EN: StringsBundle = {
       delete_action: 'Delete snapshot',
       delete_confirm_title: 'Delete snapshot?',
       delete_confirm_body: 'Automatic snapshots can be regenerated soon.',
+    },
+    looks: {
+      save_cta: 'Save look',
+      import_cta: 'Import',
+      save_a11y: 'Save current customization as a new look',
+      import_a11y: 'Import a look pasted from the clipboard',
+      apply_a11y: (name: string, isAuto: boolean) =>
+        `Apply look ${name}${isAuto ? ' (automatic)' : ''}. Long-press to share or delete.`,
+      name_placeholder: 'Look name (e.g. Festive)',
+      limit_warn: (max: number) => `You hit ${max} looks — saving replaces the oldest.`,
+      copied_title: 'Look copied!',
+      copied_body: (name: string) =>
+        `"${name}" was copied to the clipboard. Paste it to share.`,
+      copy_error_title: 'Copy failed',
+      nothing_title: 'Nothing to import',
+      nothing_body: 'Your clipboard is empty. Copy a look JSON and try again.',
+      invalid_title: 'Invalid look',
+      import_error_title: 'Import failed',
+      action_prompt: 'Choose an action:',
+      action_share: 'Share',
+      action_delete: 'Delete',
     },
     celebration: {
       title_new_mutation: 'New mutation active!',
@@ -335,6 +359,11 @@ export const STRINGS_EN: StringsBundle = {
     save: 'Save',
     close: 'Close',
     close_modal_a11y: 'Close modal',
+    error_boundary: {
+      title: 'Something went wrong',
+      body: "That's on us. Try again? If it keeps happening, reload the app.",
+      retry: 'Try again',
+    },
   },
   tabs: {
     home: 'Home',
@@ -556,6 +585,7 @@ export const STRINGS_EN: StringsBundle = {
     date_today: 'Today',
     date_yesterday: 'Yesterday',
     error_reply: "I couldn't reply right now. Try again in a moment.",
+    typing_a11y: 'Mascot is typing',
     rating: {
       thanks: 'Thanks for the feedback',
       prompt: 'Did this reply help?',

@@ -42,6 +42,9 @@ export const STRINGS_ES: StringsBundle = {
       aura_intensity: { label: 'Intensidad del aura', hint: 'partículas y brillo alrededor' },
       pattern_density: { label: 'Densidad del patrón', hint: 'más o menos marcas en el cuerpo' },
       posture: { label: 'Inclinación', hint: 'postura del cuerpo (negativo = atrás, positivo = adelante)' },
+      lock_a11y: (label: string) => `Bloquear ${label}`,
+      unlock_a11y: (label: string) => `Desbloquear ${label}`,
+      reset_a11y: (label: string) => `Restablecer ${label}`,
     },
     toggles: {
       hide_tail: { label: 'Ocultar cola', description: 'solo si el ADN tiene cola' },
@@ -88,6 +91,27 @@ export const STRINGS_ES: StringsBundle = {
       delete_action: 'Eliminar captura',
       delete_confirm_title: '¿Eliminar captura?',
       delete_confirm_body: 'Las capturas automáticas se regeneran pronto.',
+    },
+    looks: {
+      save_cta: 'Guardar look',
+      import_cta: 'Importar',
+      save_a11y: 'Guardar la personalización actual como un nuevo look',
+      import_a11y: 'Importar un look pegado del portapapeles',
+      apply_a11y: (name: string, isAuto: boolean) =>
+        `Aplicar look ${name}${isAuto ? ' (automático)' : ''}. Mantén pulsado para compartir o eliminar.`,
+      name_placeholder: 'Nombre del look (ej: Festivo)',
+      limit_warn: (max: number) => `Llegaste a ${max} looks — guardar reemplaza el más antiguo.`,
+      copied_title: '¡Look copiado!',
+      copied_body: (name: string) =>
+        `"${name}" se copió al portapapeles. Pégalo para compartir.`,
+      copy_error_title: 'Error al copiar',
+      nothing_title: 'Nada para importar',
+      nothing_body: 'Tu portapapeles está vacío. Copia un look JSON e inténtalo de nuevo.',
+      invalid_title: 'Look inválido',
+      import_error_title: 'Error al importar',
+      action_prompt: 'Elige una acción:',
+      action_share: 'Compartir',
+      action_delete: 'Eliminar',
     },
     celebration: {
       title_new_mutation: '¡Nueva mutación activa!',
@@ -335,6 +359,11 @@ export const STRINGS_ES: StringsBundle = {
     save: 'Guardar',
     close: 'Cerrar',
     close_modal_a11y: 'Cerrar ventana',
+    error_boundary: {
+      title: 'Algo salió mal',
+      body: 'La culpa es nuestra. ¿Lo intentas de nuevo? Si persiste, recarga la app.',
+      retry: 'Intentar de nuevo',
+    },
   },
   tabs: {
     home: 'Inicio',
@@ -556,6 +585,7 @@ export const STRINGS_ES: StringsBundle = {
     date_today: 'Hoy',
     date_yesterday: 'Ayer',
     error_reply: 'No pude responder ahora. Inténtalo de nuevo en un momento.',
+    typing_a11y: 'La mascota está escribiendo',
     rating: {
       thanks: 'Gracias por tu opinión',
       prompt: '¿Te ayudó esta respuesta?',

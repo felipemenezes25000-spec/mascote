@@ -40,6 +40,10 @@ export const STRINGS_PT = {
       aura_intensity: { label: 'Intensidade da aura', hint: 'partículas e brilho ao redor' },
       pattern_density: { label: 'Densidade do padrão', hint: 'mais ou menos marcas no corpo' },
       posture: { label: 'Inclinação', hint: 'postura do corpo (negativo = pra trás, positivo = pra frente)' },
+      // a11y dos botões de lock/reset de cada slider (MorphSlider).
+      lock_a11y: (label: string) => `Travar ${label}`,
+      unlock_a11y: (label: string) => `Destravar ${label}`,
+      reset_a11y: (label: string) => `Resetar ${label}`,
     },
     toggles: {
       hide_tail: { label: 'Esconder cauda', description: 'apenas se o DNA tiver cauda' },
@@ -86,6 +90,28 @@ export const STRINGS_PT = {
       delete_action: 'Apagar snapshot',
       delete_confirm_title: 'Apagar snapshot?',
       delete_confirm_body: 'Snapshots automáticos podem ser regenerados em breve.',
+    },
+    // Chrome do LookManager (salvar/importar/aplicar looks) dentro do /atelier.
+    looks: {
+      save_cta: 'Salvar look',
+      import_cta: 'Importar',
+      save_a11y: 'Salvar customização atual como novo look',
+      import_a11y: 'Importar look colado da área de transferência',
+      apply_a11y: (name: string, isAuto: boolean) =>
+        `Aplicar look ${name}${isAuto ? ' (automático)' : ''}. Toque longo para compartilhar ou apagar.`,
+      name_placeholder: 'Nome do look (ex: Festivo)',
+      limit_warn: (max: number) => `Você atingiu ${max} looks — salvar substitui o mais antigo.`,
+      copied_title: 'Look copiado!',
+      copied_body: (name: string) =>
+        `"${name}" foi copiado pra área de transferência. Cole pra compartilhar.`,
+      copy_error_title: 'Erro ao copiar',
+      nothing_title: 'Nada pra importar',
+      nothing_body: 'Sua área de transferência está vazia. Copie um look JSON e tente de novo.',
+      invalid_title: 'Look inválido',
+      import_error_title: 'Erro ao importar',
+      action_prompt: 'Escolha uma ação:',
+      action_share: 'Compartilhar',
+      action_delete: 'Apagar',
     },
     celebration: {
       title_new_mutation: 'Nova mutação ativa!',
@@ -333,6 +359,12 @@ export const STRINGS_PT = {
     save: 'Salvar',
     close: 'Fechar',
     close_modal_a11y: 'Fechar modal',
+    // Fallback global de crash (ErrorBoundary) — visto por qualquer usuário.
+    error_boundary: {
+      title: 'Algo deu errado',
+      body: 'A culpa é da gente. Tenta de novo? Se persistir, recarrega o app.',
+      retry: 'Tentar de novo',
+    },
   },
   tabs: {
     home: 'Home',
@@ -564,6 +596,7 @@ export const STRINGS_PT = {
     date_today: 'Hoje',
     date_yesterday: 'Ontem',
     error_reply: 'Não consegui responder agora. Tenta de novo em um instante.',
+    typing_a11y: 'Mascote está digitando',
     // Feedback rápido da resposta do mascote (ChatReplyRating) — chrome fixo.
     rating: {
       thanks: 'Obrigado pelo feedback',

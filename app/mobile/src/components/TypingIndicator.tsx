@@ -9,6 +9,7 @@
 
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
+import { t } from '@/lib/i18n';
 import { useStyles } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 import { useStore } from '@/store';
@@ -61,7 +62,7 @@ export function TypingIndicator({ mascotColor }: Props) {
     <View
       style={styles.row}
       accessibilityRole="alert"
-      accessibilityLabel="Mascote está digitando"
+      accessibilityLabel={t('chat.typing_a11y')}
       accessibilityLiveRegion="polite"
     >
       <View style={[styles.bubble, bubbleStyle]}>

@@ -99,6 +99,16 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     'common.close_modal_a11y',
     'home.quick.done_today_a11y',
     'home.quick.adjust_hint_a11y',
+    // Fase i18n jul/06: chrome/a11y que vazava PT cru dentro de superfície já
+    // traduzida (ou global) — ErrorBoundary (tela de crash vista por QUALQUER
+    // user), TypingIndicator (a11y no chat) e LookManager (chrome do /atelier,
+    // componente 100% PT cru renderizado dentro da tela atelier traduzida).
+    'common.error_boundary.title',
+    'common.error_boundary.body',
+    'chat.typing_a11y',
+    'atelier.looks.save_cta',
+    'atelier.looks.nothing_title',
+    'atelier.looks.action_prompt',
   ];
 
   it('EN e ES diferem do PT (e não devolvem o path literal)', () => {
@@ -141,6 +151,15 @@ describe('i18n: troca de idioma entrega tradução (não cai no fallback pt)', (
     expect(t('cancel.confirm_body', 'App Store')).toContain('App Store');
     setLocale('es');
     expect(t('cancel.main_sub', 'Lumo')).toBe('Lumo te va a extrañar. Pero tú decides. Sin manipulación.');
+    // jul/06: interpolação por idioma do chrome do LookManager (atelier) e dos
+    // a11y de lock/reset do MorphSlider.
+    setLocale('en');
+    expect(t('atelier.looks.limit_warn', 5)).toBe('You hit 5 looks — saving replaces the oldest.');
+    expect(t('atelier.looks.apply_a11y', 'Festive', true)).toContain('(automatic)');
+    expect(t('atelier.sliders.lock_a11y', 'Eye size')).toBe('Lock Eye size');
+    setLocale('es');
+    expect(t('atelier.looks.limit_warn', 5)).toBe('Llegaste a 5 looks — guardar reemplaza el más antiguo.');
+    expect(t('atelier.sliders.reset_a11y', 'Inclinación')).toBe('Restablecer Inclinación');
   });
 
   it('first_evo_sub interpola o nome do mascote por idioma', () => {

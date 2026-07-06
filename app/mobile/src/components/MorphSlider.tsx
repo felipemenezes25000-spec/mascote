@@ -21,6 +21,7 @@ import {
 } from 'react-native';
 import { Icon } from '@/components/Icon';
 import { PressableScale } from '@/components/PressableScale';
+import { t } from '@/lib/i18n';
 import { MAX_MULT, MIN_MULT, clampMultiplier } from '@/lib/dna';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
@@ -129,7 +130,7 @@ export function MorphSlider({
               },
             ]}
             accessibilityRole="button"
-            accessibilityLabel={locked ? `Destravar ${label}` : `Travar ${label}`}
+            accessibilityLabel={locked ? t('atelier.sliders.unlock_a11y', label) : t('atelier.sliders.lock_a11y', label)}
             accessibilityState={{ checked: locked }}
           >
             <Icon
@@ -147,7 +148,7 @@ export function MorphSlider({
             hitSlop={{ top: 12, bottom: 12 }}
             style={styles.resetBtn}
             accessibilityRole="button"
-            accessibilityLabel={`Resetar ${label}`}
+            accessibilityLabel={t('atelier.sliders.reset_a11y', label)}
           >
             <Icon name="x" size={12} color={theme.colors.textSecondary} strokeWidth={2.2} />
             <Text style={styles.resetText}>reset</Text>

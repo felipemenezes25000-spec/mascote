@@ -19,6 +19,7 @@ import { Typography } from '@/components/ui';
 import { MAX_LOOKS_PER_USER, type AtelierLook } from '@/lib/db';
 import { exportLook, importLook } from '@/lib/dna/lookShare';
 import { LookThumbnail } from './LookThumbnail';
+import { t } from '@/lib/i18n';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
 
@@ -52,11 +53,11 @@ export function LookManager({
         () => undefined,
       );
       Alert.alert(
-        'Look copiado!',
-        `"${look.name}" foi copiado pra área de transferência. Cole pra compartilhar.`,
+        t('atelier.looks.copied_title'),
+        t('atelier.looks.copied_body', look.name),
       );
     } catch (e) {
-      Alert.alert('Erro ao copiar', String(e instanceof Error ? e.message : e));
+      Alert.alert(t('atelier.looks.copy_error_title'), String(e instanceof Error ? e.message : e));
     }
   };
 
@@ -65,14 +66,14 @@ export function LookManager({
       const text = await Clipboard.getStringAsync();
       if (!text) {
         Alert.alert(
-          'Nada pra importar',
-          'Sua área de transferência está vazia. Copie um look JSON e tente de novo.',
+          t('atelier.looks.nothing_title'),
+          t('atelier.looks.nothing_body'),
         );
         return;
       }
       const result = importLook(text);
       if (!result.ok) {
-        Alert.alert('Look inválido', result.error);
+        Alert.alert(t('atelier.looks.invalid_title'), result.error);
         return;
       }
       await onImport(result.name, result.snapshot);
@@ -80,7 +81,7 @@ export function LookManager({
         () => undefined,
       );
     } catch (e) {
-      Alert.alert('Erro ao importar', String(e instanceof Error ? e.message : e));
+      Alert.alert(t('atelier.looks.import_error_title'), String(e instanceof Error ? e.message : e));
     }
   };
 
@@ -119,15 +120,15 @@ export function LookManager({
   const handleLongPress = (look: AtelierLook): void => {
     Alert.alert(
       `"${look.name}"`,
-      'Escolha uma ação:',
+      t('atelier.looks.action_prompt'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Compartilhar',
+          text: t('atelier.looks.action_share'),
           onPress: () => void handleExport(look),
         },
         {
-          text: 'Apagar',
+          text: t('atelier.looks.action_delete'),
           style: 'destructive',
           onPress: () => {
             void onDelete(look.id);
@@ -160,7 +161,7 @@ export function LookManager({
               },
             ]}
             accessibilityRole="button"
-            accessibilityLabel={`Aplicar look ${look.name}${look.is_auto ? ' (automático)' : ''}. Toque longo para compartilhar ou apagar.`}
+            accessibilityLabel={t('atelier.looks.apply_a11y', look.name, look.is_auto)}
           >
             <LookThumbnail look={look} size={20} />
             <Typography variant="caption" style={{ fontWeight: '700' }}>
@@ -181,14 +182,14 @@ export function LookManager({
                 },
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Salvar customização atual como novo look"
+              accessibilityLabel={t('atelier.looks.save_a11y')}
             >
               <Icon name="plus" size={14} color={theme.colors.primary} strokeWidth={2.5} />
               <Typography
                 variant="caption"
                 style={{ color: theme.colors.primary, fontWeight: '700' }}
               >
-                Salvar look
+                {t('atelier.looks.save_cta')}
               </Typography>
             </PressableScale>
             <PressableScale
@@ -202,14 +203,14 @@ export function LookManager({
                 },
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Importar look colado da área de transferência"
+              accessibilityLabel={t('atelier.looks.import_a11y')}
             >
               <Icon name="share" size={14} color={theme.colors.textSecondary} strokeWidth={2} />
               <Typography
                 variant="caption"
                 style={{ color: theme.colors.textSecondary, fontWeight: '700' }}
               >
-                Importar
+                {t('atelier.looks.import_cta')}
               </Typography>
             </PressableScale>
           </>
@@ -221,7 +222,7 @@ export function LookManager({
           <TextInput
             value={name}
             onChangeText={setName}
-            placeholder="Nome do look (ex: Festivo)"
+            placeholder={t('atelier.looks.name_placeholder')}
             placeholderTextColor={theme.colors.textSecondary}
             maxLength={30}
             autoFocus
@@ -241,7 +242,7 @@ export function LookManager({
             hitSlop={6}
             style={[styles.iconBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
             accessibilityRole="button"
-            accessibilityLabel="Cancelar"
+            accessibilityLabel={t('common.cancel')}
           >
             <Icon name="x" size={16} color={theme.colors.textSecondary} strokeWidth={2.2} />
           </PressableScale>
@@ -250,7 +251,7 @@ export function LookManager({
             hitSlop={6}
             style={[styles.iconBtn, { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
             accessibilityRole="button"
-            accessibilityLabel="Salvar"
+            accessibilityLabel={t('common.save')}
           >
             <Icon name="check" size={16} color={theme.tokens.semantic.inkOnBrand} strokeWidth={2.5} />
           </PressableScale>
@@ -259,7 +260,7 @@ export function LookManager({
 
       {atLimit ? (
         <Typography variant="caption" tone="secondary" style={styles.warn}>
-          Você atingiu {MAX_LOOKS_PER_USER} looks — salvar substitui o mais antigo.
+          {t('atelier.looks.limit_warn', MAX_LOOKS_PER_USER)}
         </Typography>
       ) : null}
     </View>

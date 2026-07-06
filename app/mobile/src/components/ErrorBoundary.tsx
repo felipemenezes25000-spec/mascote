@@ -7,6 +7,7 @@
 
 import { Component, type ReactNode } from 'react';
 import { Appearance, Pressable, StyleSheet, Text, View } from 'react-native';
+import { t } from '@/lib/i18n';
 import { logger } from '@/lib/logger';
 
 interface Props {
@@ -52,9 +53,9 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <View style={[styles.wrap, { backgroundColor: c.bg }]}>
           <Text style={styles.emoji}>🌿</Text>
-          <Text style={[styles.title, { color: c.text }]}>Algo deu errado</Text>
+          <Text style={[styles.title, { color: c.text }]}>{t('common.error_boundary.title')}</Text>
           <Text style={[styles.body, { color: c.textDim }]}>
-            A culpa é da gente. Tenta de novo? Se persistir, recarrega o app.
+            {t('common.error_boundary.body')}
           </Text>
           {__DEV__ && this.state.error && (
             <Text style={[styles.debug, { color: c.debug }]}>{String(this.state.error.message)}</Text>
@@ -63,9 +64,9 @@ export class ErrorBoundary extends Component<Props, State> {
             onPress={this.reset}
             style={styles.btn}
             accessibilityRole="button"
-            accessibilityLabel="Tentar de novo"
+            accessibilityLabel={t('common.error_boundary.retry')}
           >
-            <Text style={styles.btnText}>Tentar de novo</Text>
+            <Text style={styles.btnText}>{t('common.error_boundary.retry')}</Text>
           </Pressable>
         </View>
       );
