@@ -387,6 +387,14 @@ describe('classifyInput — críticas (suicídio, automutilação)', () => {
     'gostaria de deixar de existir',
     'vou deixar de existir',
     'penso em parar de existir',
+    // === auditoria 2026-07-07 ajuste1 ===
+    // Planejamento da própria morte (plano = sinal cardinal de risco); o
+    // substantivo "minha morte" como objeto do planejamento não tinha padrão.
+    'estou planejando minha morte',
+    'planejo minha morte',
+    'planejei minha morte',
+    'to planejando a minha morte',
+    'já planejei a minha própria morte',
   ];
 
   it.each(criticalPhrases)('"%s" → critical', phrase => {
@@ -611,6 +619,11 @@ describe('classifyInput — safe (autocuidado normal)', () => {
     'quero deixar de ser tão preguiçoso',   // objeto "ser preguiçoso" ≠ "existir"
     'preciso parar de comer tanto doce',    // objeto "comer" ≠ "existir"
     'esse bug vai deixar de existir no próximo release', // sujeito externo (sem volitivo 1ª pessoa)
+    // Regressão (2026-07-07 ajuste1): "planejar minha morte" exige possessivo
+    // "minha" + objeto "morte"; planejamento benigno não pode virar crise.
+    'planejando a morte do vilão no meu livro', // "a morte" 3ª pessoa (∉ "minha morte")
+    'planejo minha aposentadoria com calma',    // objeto "aposentadoria" ≠ "morte"
+    'estou planejando minha festa de aniversário', // objeto "festa" ≠ "morte"
   ];
 
   it.each(safePhrases)('"%s" → safe', phrase => {

@@ -116,6 +116,35 @@ describe('exportAll / importAll', () => {
     expect(r.skipped).toEqual([]);
     expect(r.imported).toEqual([]);
   });
+
+  // Guard de tier-escalation (auditoria 2026-07-07 ajuste1): backup editado
+  // não pode promover free → premium sem passar pela RevenueCat.
+  it('importAll BLOQUEIA upgrade de tier via subscription_state (free → plus_annual)', async () => {
+    const p = await profiles.upsert({ display_name: 'F' });
+    const r = await importAll({
+      profiles: [{ id: p.id, display_name: 'F', age_band: null, timezone: 'UTC', locale: 'pt', created_at: '2026-01-01' }] as any,
+      subscription_state: [{ tier: 'plus_annual', updatedAt: '2026-01-01' }] as any,
+    });
+    expect(r.skipped).toContain('subscription_state');
+    // A chave lida por getTier permanece ausente/free — premium não foi concedido.
+    const raw = await AsyncStorage.getItem(`mascote:subscription:${p.id}`);
+    expect(raw).toBeNull();
+  });
+
+  it('importAll PERMITE downgrade de tier via subscription_state (plus_annual → free)', async () => {
+    const p = await profiles.upsert({ display_name: 'F' });
+    await AsyncStorage.setItem(
+      `mascote:subscription:${p.id}`,
+      JSON.stringify({ tier: 'plus_annual', updatedAt: '2026-01-01' }),
+    );
+    const r = await importAll({
+      profiles: [{ id: p.id, display_name: 'F', age_band: null, timezone: 'UTC', locale: 'pt', created_at: '2026-01-01' }] as any,
+      subscription_state: [{ tier: 'free', updatedAt: '2026-06-01' }] as any,
+    });
+    expect(r.imported).toContain('subscription_state');
+    const raw = await AsyncStorage.getItem(`mascote:subscription:${p.id}`);
+    expect(JSON.parse(raw!).tier).toBe('free');
+  });
 });
 
 describe('notifications', () => {

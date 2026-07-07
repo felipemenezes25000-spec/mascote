@@ -497,6 +497,19 @@ const criticalPatterns = [
   // (sujeito externo) e o hábito "quero parar de fumar / deixar de comer doce"
   // (o objeto exigido é "existir", não "fumar"/"comer").
   /\b(quero|queria|gostaria\s+de|vou|penso\s+em|pensando\s+em|preciso|desejo|tenho\s+vontade\s+de)\s+(parar|deixar)\s+de\s+existir\b/i,
+  // === Ampliação PT-BR (auditoria 2026-07-07 ajuste1) ===
+  // Planejamento da própria morte: "estou planejando minha morte" / "planejo /
+  // planejei / to planejando (a) minha (própria) morte". Ter um PLANO é um dos
+  // sinais cardinais de risco em triagem de suicidalidade — mais grave que a
+  // ideação passiva. A forma via método já era coberta ("planejo tirar minha
+  // vida" casa por /tir(ar…)\s+…\s+minha…\s+vida/ e "planos de me matar" por
+  // /me matar/), mas o substantivo "minha morte" como objeto do planejamento não
+  // tinha padrão — caía no sentiment (frágil) → reply normal sem CVV. O
+  // possessivo "minha" é obrigatório pra excluir o benigno "planejando a morte do
+  // vilão no meu livro" (autoria: "a morte", 3ª pessoa) e não colidir com
+  // "planejo minha viagem/aposentadoria/festa" (objeto ≠ morte). "própria"
+  // opcional cobre "planejei a minha própria morte".
+  /\bplanej(ar|ei|o|ando|ava)\s+(a\s+)?minha\s+(pr[óo]pria\s+)?morte\b/i,
 ];
 
 const highPatterns = [

@@ -230,7 +230,34 @@ export async function importAll(data: Record<string, any[]>): Promise<ImportResu
       } else if (t === 'memory_tfidf') {
         await AsyncStorage.setItem(MEMORY_TFIDF_EXPORT_KEY(uid), JSON.stringify(row));
       } else if (t === 'subscription_state') {
-        await AsyncStorage.setItem(SUB_EXPORT_KEY(uid), JSON.stringify(row));
+        // Guard contra tier-escalation via import. O caminho de UI (settings.tsx)
+        // chama importAll DIRETO — nunca passa pelo guard de downgrade em
+        // sync-local.importSnapshot — e SUB_EXPORT_KEY é exatamente a chave que
+        // localSubscriptionRepo.getTier lê. Sem este guard, um backup editado à
+        // mão com {subscription_state:[{tier:'plus_annual'}]} + profile.id casando
+        // era gravado verbatim → premium (mundos 9-10, chat ilimitado, cenas)
+        // desbloqueado de graça, sem passar pela RevenueCat. Política (idêntica à
+        // de importSnapshot): import só MANTÉM ou DESCE tier; upgrades reais vêm
+        // via restorePurchases. Aplicar aqui, no ponto de persistência, protege
+        // ambos os caminhos (importAll direto e importSnapshot, que chama importAll).
+        const tierRank: Record<string, number> = { free: 0, plus_monthly: 1, plus_annual: 2 };
+        const incomingTier = (row as { tier?: unknown }).tier;
+        const incomingRank = typeof incomingTier === 'string' ? (tierRank[incomingTier] ?? 0) : 0;
+        let currentRank = 0;
+        try {
+          const currentRaw = await AsyncStorage.getItem(SUB_EXPORT_KEY(uid));
+          const currentTier = currentRaw ? (JSON.parse(currentRaw)?.tier as unknown) : undefined;
+          currentRank = typeof currentTier === 'string' ? (tierRank[currentTier] ?? 0) : 0;
+        } catch {
+          // Storage corrompido/ausente → trata como 'free' (rank 0): qualquer
+          // upgrade fica bloqueado, fail-safe pro lado seguro.
+        }
+        if (incomingRank <= currentRank) {
+          await AsyncStorage.setItem(SUB_EXPORT_KEY(uid), JSON.stringify(row));
+        } else {
+          skipped.push(t);
+          continue;
+        }
       } else if (t === 'personalization_prefs') {
         await AsyncStorage.setItem(PERSONALIZATION_EXPORT_KEY(uid), JSON.stringify(row));
       } else if (t === 'life_state') {

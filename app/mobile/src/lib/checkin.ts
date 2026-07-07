@@ -172,8 +172,20 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
       reference: { habit: kind, value },
     });
   }
-  if (!isDedupedHit) {
-    await walletDb.add(profile.id, coinsToGive, 0);
+  // Moedas seguem O MESMO gate do XP (`result.delta > 0`). Bug anterior: a wallet
+  // só checava `!isDedupedHit`, sem o `delta > 0` que o xpEvents.add acima tem —
+  // apesar do comentário deste bloco prometer gatear TODAS as side-effects igual.
+  // Efeito: após bater o cap diário de XP (`applyXp` devolve delta=0 e
+  // `dailyXpSoFar` congela), todo check-in com um NOVO par (kind,value) gera uma
+  // idempotency_key distinta → não-deduped → creditava COINS_PER_CHECKIN mesmo com
+  // 0 XP. Como não há teto de moedas e elas são gastáveis (closet/streak-freeze),
+  // dava pra FARMAR moedas ilimitadamente pós-cap (ex.: água value 1,2,3,…). Com o
+  // gate simétrico, o cap diário de XP passa a limitar moedas também (intenção
+  // original documentada em applyCheckinFully). `coinsAwarded` reflete o crédito
+  // REAL — antes `coinsGained` reportava coinsToGive mesmo quando nada era creditado.
+  const coinsAwarded = !isDedupedHit && result.delta > 0 ? coinsToGive : 0;
+  if (coinsAwarded > 0) {
+    await walletDb.add(profile.id, coinsAwarded, 0);
   }
 
   let finalMascot = tierCapped;
@@ -351,7 +363,7 @@ async function applyCheckinFullyCore(input: CheckinInput): Promise<CheckinOutcom
     mascot: finalMascot,
     streak: streakResult.streak,
     xpGained: totalXpGained,
-    coinsGained: coinsToGive,
+    coinsGained: coinsAwarded,
     gemsGained: gems,
     leveledUp: finalLeveled,
     phaseChanged: finalPhaseChanged,

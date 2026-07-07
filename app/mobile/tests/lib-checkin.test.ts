@@ -145,6 +145,27 @@ describe('applyCheckinFully — XP cap diário (150)', () => {
     const xp = await checkins.xpSumToday(profile.id, today);
     expect(xp).toBeLessThanOrEqual(150);
   });
+
+  // Regressão (auditoria 2026-07-07 ajuste1): moedas seguem o gate do XP. Após
+  // o cap diário (delta=0), check-ins com pares (kind,value) distintos NÃO podem
+  // continuar creditando moedas — senão dava farm ilimitado (economia sem teto).
+  it('para de creditar moedas após o cap de XP (moedas gateadas em delta>0)', async () => {
+    const { profile, mascot } = await setupUser();
+    let m = mascot;
+    // 40 check-ins de água com value distinto: XP satura em 150, mas cada par
+    // (water, i) tem idempotency_key única → não-deduped.
+    for (let i = 0; i < 40; i++) {
+      const out = await applyCheckinFully({ profile, mascot: m, kind: 'water', value: i });
+      m = out.mascot;
+    }
+    const xp = await checkins.xpSumToday(profile.id, todayLocal());
+    expect(xp).toBeLessThanOrEqual(150);
+    // Moedas NÃO podem exceder o que caberia enquanto houve XP (cap 150 / ~mínimo
+    // por check-in). Piso concreto contra farm ilimitado: 40 check-ins × 5 = 200
+    // moedas seria o bug; com o gate, fica muito abaixo (só os pré-cap creditam).
+    const w = await walletDb.get(profile.id);
+    expect(w.coins).toBeLessThan(40 * COINS_PER_CHECKIN);
+  });
 });
 
 describe('applyCheckinFully — streak milestone (multiplos de 7)', () => {
