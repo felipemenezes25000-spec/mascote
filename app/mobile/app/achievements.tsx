@@ -8,11 +8,10 @@ import { Icon } from '@/components/Icon';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { StaggeredView } from '@/components/StaggeredView';
 import { achievementCatalog } from '@/content/achievements';
-import { achievements, checkins, messages, missions, streaks } from '@/lib/db';
+import { achievements } from '@/lib/db';
 import { useStore } from '@/store';
 import { useStyles, useTheme } from '@/lib/useTheme';
 import type { Theme } from '@/lib/themes';
-import type { AchievementContext } from '@/content/achievements';
 
 import { Typography } from '@/components/ui';
 export default function AchievementsScreen() {
@@ -21,35 +20,16 @@ export default function AchievementsScreen() {
   const profile = useStore(s => s.profile);
   const mascot = useStore(s => s.mascot);
   const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set());
-  const [ctx, setCtx] = useState<AchievementContext | null>(null);
 
   useEffect(() => {
-    if (!profile || !mascot) return;
+    if (!profile) return;
     void load();
-  }, [profile?.id, mascot?.id]);
+  }, [profile?.id]);
 
   async function load() {
-    if (!profile || !mascot) return;
+    if (!profile) return;
     const owned = await achievements.listUnlocked(profile.id);
     setUnlockedIds(new Set(owned.map(o => o.achievement_id)));
-    const allCheckins = await checkins.listAll(profile.id);
-    const allMissions = await missions.list(profile.id);
-    const msgCount = await messages.count(profile.id, 'user');
-    const streak = await streaks.get(profile.id);
-    const daysSince = Math.floor(
-      (Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24)
-    );
-    setCtx({
-      level: mascot.level,
-      totalXp: mascot.xp,
-      totalCheckins: allCheckins.length,
-      currentStreak: streak.current_streak,
-      longestStreak: streak.longest_streak,
-      daysSinceCreated: daysSince,
-      messagesSent: msgCount,
-      missionsCompleted: allMissions.filter(m => m.status === 'completed').length,
-      habitVariety: new Set(allCheckins.map(c => c.habit_kind)).size,
-    });
   }
 
   if (!profile || !mascot) return <Redirect href="/splash" />;

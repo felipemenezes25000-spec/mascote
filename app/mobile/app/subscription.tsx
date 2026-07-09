@@ -141,6 +141,7 @@ export default function SubscriptionActive() {
           disabled={restoring || !profile}
           accessibilityRole="button"
           accessibilityLabel="Restaurar compras anteriores"
+          accessibilityState={{ disabled: restoring || !profile, busy: restoring }}
         >
           <Typography variant="body" style={styles.restoreText}>
             {restoring ? 'Restaurando…' : 'Restaurar compras'}

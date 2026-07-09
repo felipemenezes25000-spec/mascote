@@ -516,6 +516,7 @@ export default function AtelierScreen() {
             ]}
             accessibilityRole="button"
             accessibilityLabel={t('atelier.actions.undo')}
+            accessibilityState={{ disabled: !draftHistory.canUndo }}
             disabled={!draftHistory.canUndo}
           >
             <Icon name="arrow-left" size={16} color={theme.colors.text} strokeWidth={2} />
@@ -534,6 +535,7 @@ export default function AtelierScreen() {
             ]}
             accessibilityRole="button"
             accessibilityLabel={t('atelier.actions.redo')}
+            accessibilityState={{ disabled: !draftHistory.canRedo }}
             disabled={!draftHistory.canRedo}
           >
             <Icon name="arrow-right" size={16} color={theme.colors.text} strokeWidth={2} />

@@ -573,6 +573,7 @@ export default function ChatTab() {
             style={[styles.sendBtn, (!input.trim() || sending) && { opacity: 0.4 }]}
             accessibilityRole="button"
             accessibilityLabel={t('chat.send_a11y')}
+            accessibilityState={{ disabled: !input.trim() || sending, busy: sending }}
             hitSlop={8}
           >
             {sending ? (
