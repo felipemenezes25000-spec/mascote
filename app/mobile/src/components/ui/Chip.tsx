@@ -2,7 +2,7 @@
  * Chip — toggleable tag pill (selected/unselected) ou link.
  * Diferente do `Badge` (estático), Chip é interativo e tem estado.
  */
-import { Pressable, StyleSheet, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, type AccessibilityRole, type ViewStyle } from 'react-native';
 import { useTheme } from '@/lib/useTheme';
 import { Typography } from './Typography';
 
@@ -13,14 +13,20 @@ interface Props {
   leading?: React.ReactNode;
   trailing?: React.ReactNode;
   style?: ViewStyle;
+  /**
+   * Papel de acessibilidade. Default 'button'. Grupos de escolha única
+   * (dentro de um container `radiogroup`) devem passar 'radio' pra que o
+   * leitor de tela anuncie posição no conjunto + estado selecionado.
+   */
+  accessibilityRole?: AccessibilityRole;
 }
 
-export function Chip({ label, selected, onPress, leading, trailing, style }: Props) {
+export function Chip({ label, selected, onPress, leading, trailing, style, accessibilityRole = 'button' }: Props) {
   const theme = useTheme();
   return (
     <Pressable
       onPress={onPress}
-      accessibilityRole="button"
+      accessibilityRole={accessibilityRole}
       accessibilityState={{ selected }}
       // hitSlop 8 estende alvo de toque pra ~44x44 mesmo em chips compactos
       // (padding 12x6 + caption ~16 = ~28px de altura visual). Sem o slop, o

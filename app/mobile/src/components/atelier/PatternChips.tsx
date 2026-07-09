@@ -55,6 +55,7 @@ export function PatternChips({ value, onChange }: PatternChipsProps) {
               label={`${opt.emoji}  ${opt.label}`}
               selected={isSelected}
               onPress={() => handleSelect(opt.value)}
+              accessibilityRole="radio"
             />
           </View>
         );

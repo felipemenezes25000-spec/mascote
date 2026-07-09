@@ -29,7 +29,7 @@ export function EvolutionRevealModal({
   archetype,
   title,
   body,
-  ctaLabel = 'Continuar',
+  ctaLabel,
   onClose,
 }: Props) {
   const theme = useTheme();
@@ -75,7 +75,7 @@ export function EvolutionRevealModal({
           </View>
           <Typography variant="title" align="center" style={{ color: accent }}>{title}</Typography>
           <Typography tone="secondary" align="center">{body}</Typography>
-          <Button label={ctaLabel} onPress={onClose} />
+          <Button label={ctaLabel ?? t('common.continue')} onPress={onClose} />
         </Animated.View>
       </SafeAreaView>
     </Modal>

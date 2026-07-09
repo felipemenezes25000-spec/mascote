@@ -36,6 +36,7 @@ export function ThemePresetChips({ activePresetId, onSelect }: ThemePresetChipsP
             label={`${preset.emoji}  ${preset.label}`}
             selected={activePresetId === preset.id}
             onPress={() => handleSelect(preset)}
+            accessibilityRole="radio"
           />
         </View>
       ))}

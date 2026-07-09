@@ -198,6 +198,36 @@ describe('a11y: controles interativos têm accessibilityRole', () => {
     );
   });
 
+  // Auditoria 2026-07-07 (ajuste2): PatternChips e ThemePresetChips são grupos
+  // de escolha única (container accessibilityRole="radiogroup") mas os `Chip`
+  // filhos anunciavam como "button" — o leitor de tela perdia a semântica de
+  // radio (posição no conjunto + selecionado) que o grupo promete. Chip ganhou
+  // override opcional de role; ambos os grupos passam role="radio".
+  it('atelier: PatternChips/ThemePresetChips têm radiogroup com filhos radio', () => {
+    for (const rel of [
+      'src/components/atelier/PatternChips.tsx',
+      'src/components/atelier/ThemePresetChips.tsx',
+    ]) {
+      const text = read(rel);
+      expect(text, `${rel}: container sem role="radiogroup"`).toMatch(
+        /accessibilityRole="radiogroup"/,
+      );
+      expect(text, `${rel}: Chip filho sem role="radio"`).toMatch(
+        /accessibilityRole="radio"/,
+      );
+    }
+  });
+
+  it('Chip: default de role é button, mas aceita override', () => {
+    const text = read('src/components/ui/Chip.tsx');
+    expect(text, 'Chip não expõe override de accessibilityRole').toMatch(
+      /accessibilityRole\?:\s*AccessibilityRole/,
+    );
+    expect(text, 'Chip não usa mais o role default button').toMatch(
+      /accessibilityRole = 'button'/,
+    );
+  });
+
   // Guarda global auto-mantida: nenhum Pressable/PressableScale/TouchableOpacity
   // com onPress pode ficar sem accessibilityRole, EXCETO os casos intencionais
   // abaixo (backdrops sem conteúdo, no-op de stop-propagation, imagebutton).
